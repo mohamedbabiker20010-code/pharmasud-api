@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>قائمة الأدوية - صيدلية الزاريات</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+        body { font-family: 'Cairo', sans-serif; }
+    </style>
+</head>
+<body class="bg-[#0F172A] text-white min-h-screen">
+    <div x-data="medicinesListApp()" x-init="init()">
+        <!-- Header -->
+        <header class="bg-[#1E293B] border-b border-gray-700 sticky top-0 z-10">
+            <div class="max-w-3xl mx-auto px-4 py-4">
+                <div class="flex justify-between items-center">
+                    <h1 class="text-xl font-bold">قائمة الأدوية</h1>
+                    <a href="/dashboard" class="text-gray-400 hover:text-white flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                        الرجوع
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Search and Filter -->
+        <div class="max-w-3xl mx-auto px-4 py-4">
+            <div class="bg-[#1E293B] rounded-lg p-4 space-y-4">
+                <!-- Search -->
+                <div class="relative">
+                    <input 
+                        type="text" 
+                        x-model="searchQuery"
+                        @input="searchMedicines()"
+                        placeholder="ابحث بالاسم أو الباركود..."
+                        class="w-full bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-3 pr-10 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                    >
+                    <svg class="absolute left-3 top-3.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
+
+                <!-- Category Filter -->
+                <div class="flex gap-2 overflow-x-auto pb-2">
+                    <button 
+                        @click="selectedCategory = ''; searchMedicines()"
+                        :class="selectedCategory === '' ? 'bg-blue-600' : 'bg-[#0F172A] border border-gray-600'"
+                        class="px-4 py-2 rounded-lg whitespace-nowrap text-sm"
+                    >
+                        الكل
+                    </button>
+                    <template x-for="category in categories" :key="category">
+                        <button 
+                            @click="selectedCategory = category; searchMedicines()"
+                            :class="selectedCategory === category ? 'bg-blue-600' : 'bg-[#0F172A] border border-gray-600'"
+                            class="px-4 py-2 rounded-lg whitespace-nowrap text-sm"
+                            x-text="category"
+                        ></button>
+                    </template>
+                </div>
+
+                <!-- Add Button -->
+                <a 
+                    href="/medicine-form"
+                    class="block w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg font-bold text-center"
+                >
+                    + إضافة دواء جديد
+                </a>
+            </div>
+        </div>
+
+        <!-- Medicines Grid -->
+        <div class="max-w-3xl mx-auto px-4 pb-8">
+            <div x-show="loading" class="text-center py-8">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                <p class="text-gray-400 mt-4">جاري التحميل...</p>
+            </div>
+
+            <div x-show="!loading && medicines.length === 0" class="text-center py-8">
+                <svg class="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                </svg>
+                <p class="text-gray-400">لا توجد أدوية</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <template x-for="medicine in medicines" :key="medicine.id">
+                    <div class="bg-[#1E293B] rounded-lg overflow-hidden">
+                        <!-- Image -->
+                        <div class="h-32 bg-[#0F172A] flex items-center justify-center relative">
+                            <img :src="medicine.image_url" class="h-full w-full object-contain p-4" :alt="medicine.trade_name">
+                            <!-- Stock Status -->
+                            <div 
+                                class="absolute top-2 right-2 w-3 h-3 rounded-full"
+                                :class="{
+                                    'bg-green-500': medicine.stock_status === 'available',
+                                    'bg-yellow-500': medicine.stock_status === 'low',
+                                    'bg-red-500': medicine.stock_status === 'out'
+                                }"
+                            ></div>
+                        </div>
+                        
+                        <!-- Content -->
+                        <div class="p-4">
+                            <h3 class="font-bold text-lg mb-1" x-text="medicine.trade_name"></h3>
+                            <p class="text-gray-400 text-sm mb-2" x-text="medicine.scientific_name || medicine.category"></p>
+                            
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="text-blue-400 font-bold" x-text="medicine.sale_price + ' ج.س'"></span>
+                                <span class="text-gray-400 text-sm" x-text="'مخزون: ' + medicine.total_stock + ' ' + medicine.base_unit"></span>
+                            </div>
+                            
+                            <!-- Actions -->
+                            <div class="flex gap-2">
+                                <a 
+                                    :href="'/medicine-form?id=' + medicine.id"
+                                    class="flex-1 bg-blue-600 hover:bg-blue-700 py-2 rounded-lg text-sm text-center"
+                                >
+                                    تعديل
+                                </a>
+                                <button 
+                                    @click="deleteMedicine(medicine.id, medicine.trade_name)"
+                                    x-show="isAdmin"
+                                    class="px-3 bg-red-600 hover:bg-red-700 py-2 rounded-lg text-sm"
+                                >
+                                    حذف
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function medicinesListApp() {
+            return {
+                medicines: [],
+                categories: [],
+                searchQuery: '',
+                selectedCategory: '',
+                loading: true,
+                isAdmin: false,
+
+                async init() {
+                    // Check if admin
+                    const user = JSON.parse(localStorage.getItem('user') || '{}');
+                    this.isAdmin = user.role === 'admin';
+                    
+                    await this.loadCategories();
+                    await this.loadMedicines();
+                },
+
+                async loadCategories() {
+                    try {
+                        const response = await fetch('/api/medicines/categories/list', {
+                            headers: {
+                                'Authorization': 'Bearer ' + localStorage.getItem('token')
+                            }
+                        });
+                        const data = await response.json();
+                        this.categories = data.categories;
+                    } catch (error) {
+                        console.error('Error loading categories:', error);
+                    }
+                },
+
+                async loadMedicines() {
+                    this.loading = true;
+                    try {
+                        let url = '/api/medicines/';
+                        const params = new URLSearchParams();
+                        
+                        if (this.searchQuery) {
+                            params.append('search', this.searchQuery);
+                        }
+                        if (this.selectedCategory) {
+                            params.append('category', this.selectedCategory);
+                        }
+                        
+                        if (params.toString()) {
+                            url += '?' + params.toString();
+                        }
+
+                        const response = await fetch(url, {
+                            headers: {
+                                'Authorization': 'Bearer ' + localStorage.getItem('token')
+                            }
+                        });
+                        const data = await response.json();
+                        this.medicines = data.medicines;
+                    } catch (error) {
+                        console.error('Error loading medicines:', error);
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                searchMedicines() {
+                    // Debounce search
+                    clearTimeout(this.searchTimeout);
+                    this.searchTimeout = setTimeout(() => {
+                        this.loadMedicines();
+                    }, 300);
+                },
+
+                async deleteMedicine(id, name) {
+                    if (!confirm(`هل تريد حذف "${name}"؟`)) {
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch(`/api/medicines/${id}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Authorization': 'Bearer ' + localStorage.getItem('token')
+                            }
+                        });
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            alert('تم الحذف بنجاح');
+                            this.loadMedicines();
+                        } else {
+                            alert(data.message || 'لا يمكن الحذف');
+                        }
+                    } catch (error) {
+                        alert('فشل في الاتصال بالسيرفر');
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>

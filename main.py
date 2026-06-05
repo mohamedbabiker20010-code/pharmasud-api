@@ -1,8 +1,8 @@
 """
 PharmaSUD - Main FastAPI Application
-Stage 2 - Version 2.0.0
+Stage 3 - Version 3.0.0
 
-Main entry point with health checks, dashboard, and authentication.
+Main entry point with health checks, dashboard, authentication, and medicines management.
 """
 
 from fastapi import FastAPI, Depends, HTTPException, Request
@@ -24,12 +24,13 @@ from auth import (
     activate_product_key, create_admin_user, authenticate_user,
     get_current_user, require_admin, check_system_status
 )
+from medicines import router as medicines_router
 
 # Initialize FastAPI app
 app = FastAPI(
     title="PharmaSUD API",
-    description="Pharmacy Point of Sale System - Stage 2",
-    version="2.0.0"
+    description="Pharmacy Point of Sale System - Stage 3",
+    version="3.0.0"
 )
 
 # Create tables on startup (if they don't exist)
@@ -44,6 +45,12 @@ async def create_tables():
 
 # Templates configuration
 templates = Jinja2Templates(directory="templates")
+
+# Static files configuration
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Include medicines router
+app.include_router(medicines_router)
 
 # CORS configuration - restrict in production
 app.add_middleware(
@@ -236,6 +243,22 @@ def dashboard_page():
 def pos_page():
     """POS Page (requires auth)."""
     return HTMLResponse(content=POS_HTML)
+
+
+# ═══════════════════════════════════════════════════════════
+# Stage 3: Medicine Management Routes
+# ═══════════════════════════════════════════════════════════
+
+@app.get("/medicines", response_class=HTMLResponse)
+def medicines_list_page():
+    """Medicines List Page."""
+    return HTMLResponse(content=MEDICINES_LIST_HTML)
+
+
+@app.get("/medicine-form", response_class=HTMLResponse)
+def medicine_form_page():
+    """Medicine Add/Edit Form Page."""
+    return HTMLResponse(content=MEDICINE_FORM_HTML)
 
 
 # ═══════════════════════════════════════════════════════════
@@ -1011,4 +1034,22 @@ POS_HTML = f"""
 </html>
 """
 
-# ✅ انتهى - main.py - المرحلة 2
+# ✅ انتهى - main.py - المرحلة 3
+
+# Stage 3: Import HTML templates from files
+# Read the templates from the templates directory
+import os
+
+TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "templates")
+
+try:
+    with open(os.path.join(TEMPLATE_DIR, "medicines_list.html"), "r", encoding="utf-8") as f:
+        MEDICINES_LIST_HTML = f.read()
+except FileNotFoundError:
+    MEDICINES_LIST_HTML = "<h1>Medicines List - Template not found</h1>"
+
+try:
+    with open(os.path.join(TEMPLATE_DIR, "medicine_form.html"), "r", encoding="utf-8") as f:
+        MEDICINE_FORM_HTML = f.read()
+except FileNotFoundError:
+    MEDICINE_FORM_HTML = "<h1>Medicine Form - Template not found</h1>"

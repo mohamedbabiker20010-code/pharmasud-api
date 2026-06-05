@@ -98,6 +98,155 @@ class SystemStatus(BaseModel):
 
 
 # ═══════════════════════════════════════════════════════════
+# Pydantic Models for Medicines (Stage 3)
+# ═══════════════════════════════════════════════════════════
+
+# Medicine categories (fixed list)
+MEDICINE_CATEGORIES = [
+    "مسكنات ومضادات الالتهاب",
+    "مضادات حيوية",
+    "أدوية القلب والضغط",
+    "أدوية السكري",
+    "أدوية الجهاز الهضمي",
+    "أدوية الجهاز التنفسي",
+    "فيتامينات ومكملات",
+    "أدوية الجلد",
+    "قطرات وأدوية العيون",
+    "أدوية الأعصاب",
+    "أدوية نسائية",
+    "أدوية الأطفال",
+    "مستلزمات طبية",
+    "أخرى"
+]
+
+
+class MedicineCreate(BaseModel):
+    """Schema for creating a new medicine."""
+    trade_name: str = Field(..., min_length=1, max_length=100, description="Trade name in Arabic")
+    scientific_name: Optional[str] = Field(None, max_length=100, description="Scientific name")
+    category: str = Field(..., description="Medicine category")
+    barcode: Optional[str] = Field(None, max_length=50, description="Barcode number")
+    sale_price: float = Field(..., gt=0, description="Sale price")
+    purchase_price: float = Field(..., gt=0, description="Purchase price (admin only)")
+    base_unit: str = Field(..., description="Base unit: box, strip, tablet, etc.")
+    min_stock: int = Field(default=10, ge=0, description="Minimum stock for alert")
+    image_path: Optional[str] = Field(None, description="Path to medicine image")
+    
+    @validator('category')
+    def validate_category(cls, v):
+        if v not in MEDICINE_CATEGORIES:
+            raise ValueError(f'التصنيف يجب أن يكون واحداً من: {", ".join(MEDICINE_CATEGORIES)}')
+        return v
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "trade_name": "بانادول أزرق",
+                "scientific_name": "Paracetamol 500mg",
+                "category": "مسكنات ومضادات الالتهاب",
+                "barcode": "6251234567890",
+                "sale_price": 350.00,
+                "purchase_price": 280.00,
+                "base_unit": "strip",
+                "min_stock": 10
+            }
+        }
+
+
+class MedicineUpdate(BaseModel):
+    """Schema for updating a medicine."""
+    trade_name: Optional[str] = Field(None, min_length=1, max_length=100)
+    scientific_name: Optional[str] = Field(None, max_length=100)
+    category: Optional[str] = None
+    barcode: Optional[str] = Field(None, max_length=50)
+    sale_price: Optional[float] = Field(None, gt=0)
+    purchase_price: Optional[float] = Field(None, gt=0)
+    base_unit: Optional[str] = None
+    min_stock: Optional[int] = Field(None, ge=0)
+    image_path: Optional[str] = None
+    
+    @validator('category')
+    def validate_category(cls, v):
+        if v is not None and v not in MEDICINE_CATEGORIES:
+            raise ValueError(f'التصنيف يجب أن يكون واحداً من: {", ".join(MEDICINE_CATEGORIES)}')
+        return v
+
+
+class UnitCreate(BaseModel):
+    """Schema for creating units for a medicine."""
+    units: list = Field(..., description="List of units with conversion factors")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "units": [
+                    {"unit_name": "علبة", "conversion_factor": 10},
+                    {"unit_name": "شريط", "conversion_factor": 1},
+                    {"unit_name": "قرص", "conversion_factor": 0.1}
+                ]
+            }
+        }
+
+
+class MedicineResponse(BaseModel):
+    """Schema for medicine response (employee view - hides purchase_price)."""
+    id: str
+    trade_name: str
+    scientific_name: Optional[str]
+    category: str
+    barcode: Optional[str]
+    sale_price: float
+    base_unit: str
+    min_stock: int
+    total_stock: int
+    stock_status: str  # available, low, out
+    image_url: Optional[str]
+    units: list
+    
+    class Config:
+        from_attributes = True
+
+
+class MedicineResponseAdmin(BaseModel):
+    """Schema for medicine response (admin view - includes purchase_price)."""
+    id: str
+    trade_name: str
+    scientific_name: Optional[str]
+    category: str
+    barcode: Optional[str]
+    sale_price: float
+    purchase_price: float
+    base_unit: str
+    min_stock: int
+    total_stock: int
+    stock_status: str
+    image_url: Optional[str]
+    units: list
+    
+    class Config:
+        from_attributes = True
+
+
+class MedicineListResponse(BaseModel):
+    """Schema for list of medicines."""
+    medicines: list
+    total: int
+
+
+class BarcodeSearchResponse(BaseModel):
+    """Schema for barcode search response."""
+    found: bool
+    medicine: Optional[dict] = None
+    barcode: str
+
+
+class MedicineDeleteResponse(BaseModel):
+    """Schema for medicine deletion response."""
+    success: bool
+    message: str
+
+
+# ✅ انتهى - models.py - المرحلة 3
 # SQLAlchemy Database Models (Original - Stage 1)
 # ═══════════════════════════════════════════════════════════
 
@@ -160,6 +309,7 @@ class Medicine(Base):
     purchase_price = Column(Numeric(10, 2))
     base_unit = Column(String(20), default="strip")
     min_stock = Column(Integer, default=10)
+    image_path = Column(String(255))  # New: Image path for medicine
     created_at = Column(DateTime, server_default=text("NOW()"))
 
     # Relationships
