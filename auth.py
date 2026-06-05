@@ -27,8 +27,8 @@ load_dotenv()
 
 # Security Configuration
 SECRET_KEY = os.getenv("SECRET_KEY", "pharmasud-secret-key-change-in-production")
-from jose import JWTError, jwt
-from passlib.context import CryptContext
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_HOURS = 24
 
 # Password Hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
