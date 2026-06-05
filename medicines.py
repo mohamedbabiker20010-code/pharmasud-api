@@ -202,7 +202,7 @@ async def upload_medicine_image(
 # Medicine CRUD Endpoints
 # ═══════════════════════════════════════════════════════════
 
-@router.post("/", response_model=MedicineListResponse)
+@router.post("/")
 async def create_medicine(
     data: MedicineCreate,
     current_user: dict = Depends(require_admin),
