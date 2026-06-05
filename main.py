@@ -75,6 +75,32 @@ def fix_pharmacy_name(db: Session = Depends(get_db)):
         return {"success": False, "error": str(e)}
 
 
+@app.get("/api/debug")
+def debug_info():
+    """Debug endpoint to check imports and configuration."""
+    import sys
+    modules = {
+        "jose": False,
+        "passlib": False,
+        "bcrypt": False,
+        "sqlalchemy": False,
+        "pydantic": False
+    }
+    
+    for module in modules:
+        try:
+            __import__(module)
+            modules[module] = True
+        except ImportError:
+            pass
+    
+    return {
+        "python_version": sys.version,
+        "modules_loaded": modules,
+        "auth_module_exists": True
+    }
+
+
 # ═══════════════════════════════════════════════════════════
 # Temporary: Reset activation (for testing)
 # ═══════════════════════════════════════════════════════════
