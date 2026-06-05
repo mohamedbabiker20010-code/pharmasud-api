@@ -56,6 +56,26 @@ app.add_middleware(
 
 
 # ═══════════════════════════════════════════════════════════
+# Temporary: Update pharmacy name (Remove after testing)
+# ═════════════════�═════════════════════════════════════════════════════
+
+@app.get("/api/fix-name")
+def fix_pharmacy_name(db: Session = Depends(get_db)):
+    """Temporary: Fix pharmacy name to الزاريات"""
+    try:
+        from sqlalchemy import text
+        db.execute(text("""
+            UPDATE pharmacies 
+            SET name = 'صيدلية الزاريات'
+            WHERE product_key = 'PHARM-SDN-2026-RAHMA-X7K9'
+        """))
+        db.commit()
+        return {"success": True, "message": "Pharmacy name updated"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+# ═══════════════════════════════════════════════════════════
 # Temporary Seed Route (Remove after testing)
 # ═══════════════════════════════════════════════════════════
 
@@ -87,7 +107,7 @@ def seed_database(db: Session = Depends(get_db)):
         """), {
             "id": pharmacy_id,
             "product_key": "PHARM-SDN-2026-RAHMA-X7K9",
-            "name": "صيدلية الرحمة",
+            "name": "صيدلية الزاريات",
             "owner_name": "محمد أحمد",
             "phone": "0912345678",
             "is_active": False
@@ -98,7 +118,7 @@ def seed_database(db: Session = Depends(get_db)):
             "success": True,
             "message": "Sample pharmacy added successfully",
             "product_key": "PHARM-SDN-2026-RAHMA-X7K9",
-            "pharmacy_name": "صيدلية الرحمة",
+            "pharmacy_name": "صيدلية الزاريات",
             "pharmacy_id": pharmacy_id
         }
     except Exception as e:
