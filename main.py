@@ -224,28 +224,31 @@ def reset_admin(db: Session = Depends(get_db)):
         db.execute(text("DELETE FROM users"))
         db.commit()
         
-        # Get pharmacy ID
-        pharmacy = db.query(Pharmacy).first()
-        if not pharmacy:
+        # Get pharmacy ID directly via SQL
+        result = db.execute(text("SELECT id FROM pharmacies LIMIT 1"))
+        pharmacy_row = result.fetchone()
+        
+        if not pharmacy_row:
             return {"success": False, "error": "No pharmacy found"}
+        
+        pharmacy_id = str(pharmacy_row[0])
         
         # Create new admin user
         hashed_password = bcrypt.hashpw("abeer2026".encode(), bcrypt.gensalt()).decode()
+        user_id = str(uuid4())
         
-        new_user = {
-            "id": str(uuid4()),
-            "pharmacy_id": str(pharmacy.id),
+        db.execute(text("""
+            INSERT INTO users (id, pharmacy_id, full_name, username, password_hash, role, is_active)
+            VALUES (:id, :pharmacy_id, :full_name, :username, :password_hash, :role, :is_active)
+        """), {
+            "id": user_id,
+            "pharmacy_id": pharmacy_id,
             "full_name": "abeer alfadil",
             "username": "D. Abeer",
             "password_hash": hashed_password,
             "role": "admin",
             "is_active": True
-        }
-        
-        db.execute(text("""
-            INSERT INTO users (id, pharmacy_id, full_name, username, password_hash, role, is_active)
-            VALUES (:id, :pharmacy_id, :full_name, :username, :password_hash, :role, :is_active)
-        """), new_user)
+        })
         
         db.commit()
         
@@ -260,7 +263,8 @@ def reset_admin(db: Session = Depends(get_db)):
         }
     except Exception as e:
         db.rollback()
-        return {"success": False, "error": str(e)}
+        import traceback
+        return {"success": False, "error": str(e), "traceback": traceback.format_exc()}
 
 
 # ═══════════════════════════════════════════════════════════
