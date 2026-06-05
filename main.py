@@ -211,6 +211,22 @@ def test_database(db: Session = Depends(get_db)):
         )
 
 
+# Temporary: Fix database schema
+@app.get("/api/fix-schema")
+def fix_schema(db: Session = Depends(get_db)):
+    """Add missing columns to database schema."""
+    try:
+        # Check if image_path column exists
+        db.execute(text("""
+            ALTER TABLE medicines 
+            ADD COLUMN IF NOT EXISTS image_path VARCHAR(255)
+        """))
+        db.commit()
+        return {"success": True, "message": "Schema updated successfully"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
 # ═══════════════════════════════════════════════════════════
 # HTML Page Routes
 # ═══════════════════════════════════════════════════════════
