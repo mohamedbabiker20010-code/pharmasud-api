@@ -210,7 +210,16 @@ def create_admin_user(
         }
     
     # Check if pharmacy exists and is activated
-    pharmacy = db.query(Pharmacy).filter(Pharmacy.id == pharmacy_id).first()
+    from uuid import UUID as UUID_Class
+    try:
+        pharmacy_uuid = UUID_Class(pharmacy_id)
+    except ValueError:
+        return {
+            "success": False,
+            "message": "معرف الصيدلية غير صالح"
+        }
+    
+    pharmacy = db.query(Pharmacy).filter(Pharmacy.id == pharmacy_uuid).first()
     if not pharmacy:
         return {
             "success": False,
@@ -225,7 +234,7 @@ def create_admin_user(
     
     # Check if admin already exists
     existing_admin = db.query(User).filter(
-        User.pharmacy_id == pharmacy_id,
+        User.pharmacy_id == pharmacy_uuid,
         User.role == "admin"
     ).first()
     
@@ -248,7 +257,7 @@ def create_admin_user(
     
     new_admin = User(
         id=uuid4(),
-        pharmacy_id=pharmacy_id,
+        pharmacy_id=pharmacy_uuid,
         username=username,
         full_name=full_name,
         password_hash=get_password_hash(password),
