@@ -1,15 +1,105 @@
 """
-PharmaSUD - SQLAlchemy Models
-Stage 1 - Version 1.0.0
+PharmaSUD - SQLAlchemy Models + Pydantic Schemas
+Stage 2 - Version 2.0.0
 
 Defines all database tables and relationships for the pharmacy POS system.
+Includes Pydantic models for authentication and validation.
 """
 
 import uuid
 from sqlalchemy import Column, String, Integer, Boolean, DateTime, Date, Numeric, ForeignKey, CheckConstraint, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
+from pydantic import BaseModel, Field, validator
+from typing import Optional
 from database import Base
+
+
+# ═══════════════════════════════════════════════════════════
+# Pydantic Models for Authentication (Stage 2)
+# ═══════════════════════════════════════════════════════════
+
+class ProductKeyActivate(BaseModel):
+    """Schema for product key activation."""
+    product_key: str = Field(..., min_length=10, max_length=100, description="Product activation key")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "product_key": "PHARM-SDN-2026-RAHMA-X7K9"
+            }
+        }
+
+
+class AdminCreate(BaseModel):
+    """Schema for creating first admin user."""
+    pharmacy_id: str = Field(..., description="Pharmacy UUID")
+    full_name: str = Field(..., min_length=2, max_length=100, description="Full name in Arabic or English")
+    username: str = Field(..., min_length=3, max_length=50, description="Unique username")
+    password: str = Field(..., min_length=6, max_length=100, description="Password (min 6 characters)")
+    confirm_password: str = Field(..., description="Password confirmation")
+    
+    @validator('username')
+    def username_alphanumeric(cls, v):
+        if not v.isalnum():
+            raise ValueError('اسم المستخدم يجب أن يكون حروف أبجدية وأرقام فقط')
+        return v
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "pharmacy_id": "550e8400-e29b-41d4-a716-446655440000",
+                "full_name": "محمد أحمد",
+                "username": "admin",
+                "password": "123456",
+                "confirm_password": "123456"
+            }
+        }
+
+
+class UserLogin(BaseModel):
+    """Schema for user login."""
+    username: str = Field(..., description="Username")
+    password: str = Field(..., description="Password")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "username": "admin",
+                "password": "123456"
+            }
+        }
+
+
+class TokenResponse(BaseModel):
+    """Schema for token response."""
+    success: bool
+    token: Optional[str] = None
+    role: Optional[str] = None
+    full_name: Optional[str] = None
+    pharmacy_name: Optional[str] = None
+    message: Optional[str] = None
+
+
+class UserResponse(BaseModel):
+    """Schema for current user info."""
+    user_id: str
+    username: str
+    role: str
+    full_name: Optional[str] = None
+    pharmacy_name: Optional[str] = None
+
+
+class SystemStatus(BaseModel):
+    """Schema for system activation status."""
+    status: str = Field(..., description="needs_activation, needs_setup, or ready")
+    pharmacy_id: Optional[str] = None
+    message: str
+
+
+# ═══════════════════════════════════════════════════════════
+# SQLAlchemy Database Models (Original - Stage 1)
+# ═══════════════════════════════════════════════════════════
 
 
 class Pharmacy(Base):
@@ -156,4 +246,4 @@ class SaleItem(Base):
     batch = relationship("Batch", back_populates="sale_items")
 
 
-# END - models.py - Stage 1
+# ✅ انتهى - models.py - المرحلة 2

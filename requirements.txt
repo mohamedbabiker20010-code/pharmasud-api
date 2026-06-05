@@ -1,4 +1,4 @@
-# PharmaSUD API - Stage 1
+# PharmaSUD API - Stage 2
 # Pharmacy Point of Sale System
 # Python 3.8+ Required
 
@@ -16,7 +16,10 @@ python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 python-multipart==0.0.6
 
+# Templates & Frontend
+jinja2==3.1.3
+
 # Environment Configuration
 python-dotenv==1.0.0
 
-# END - requirements.txt - Stage 1
+# END - requirements.txt - Stage 2
