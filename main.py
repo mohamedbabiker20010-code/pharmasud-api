@@ -56,6 +56,56 @@ app.add_middleware(
 
 
 # ═══════════════════════════════════════════════════════════
+# Temporary Seed Route (Remove after testing)
+# ═══════════════════════════════════════════════════════════
+
+@app.get("/api/seed")
+def seed_database(db: Session = Depends(get_db)):
+    """Temporary endpoint to add sample data for testing."""
+    try:
+        from uuid import uuid4
+        from sqlalchemy import text
+        
+        # Check if pharmacy already exists
+        result = db.execute(text(
+            "SELECT id FROM pharmacies WHERE product_key = 'PHARM-SDN-2026-RAHMA-X7K9'"
+        ))
+        existing = result.fetchone()
+        
+        if existing:
+            return {
+                "success": True,
+                "message": "Sample pharmacy already exists",
+                "product_key": "PHARM-SDN-2026-RAHMA-X7K9"
+            }
+        
+        # Insert sample pharmacy
+        pharmacy_id = str(uuid4())
+        db.execute(text("""
+            INSERT INTO pharmacies (id, product_key, name, owner_name, phone, is_active, created_at)
+            VALUES (:id, :product_key, :name, :owner_name, :phone, :is_active, NOW())
+        """), {
+            "id": pharmacy_id,
+            "product_key": "PHARM-SDN-2026-RAHMA-X7K9",
+            "name": "صيدلية الرحمة",
+            "owner_name": "محمد أحمد",
+            "phone": "0912345678",
+            "is_active": False
+        })
+        db.commit()
+        
+        return {
+            "success": True,
+            "message": "Sample pharmacy added successfully",
+            "product_key": "PHARM-SDN-2026-RAHMA-X7K9",
+            "pharmacy_name": "صيدلية الرحمة",
+            "pharmacy_id": pharmacy_id
+        }
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+# ═══════════════════════════════════════════════════════════
 # Public Routes (No Authentication Required)
 # ═══════════════════════════════════════════════════════════
 
