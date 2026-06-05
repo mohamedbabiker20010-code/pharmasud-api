@@ -211,19 +211,54 @@ def test_database(db: Session = Depends(get_db)):
         )
 
 
-# Temporary: Fix database schema
-@app.get("/api/fix-schema")
-def fix_schema(db: Session = Depends(get_db)):
-    """Add missing columns to database schema."""
+# Temporary: Reset admin account
+@app.get("/api/reset-admin")
+def reset_admin(db: Session = Depends(get_db)):
+    """Delete all users and create new admin account."""
+    from uuid import uuid4
+    import bcrypt
+    
     try:
-        # Check if image_path column exists
-        db.execute(text("""
-            ALTER TABLE medicines 
-            ADD COLUMN IF NOT EXISTS image_path VARCHAR(255)
-        """))
+        # Delete all existing users
+        db.execute(text("DELETE FROM users"))
         db.commit()
-        return {"success": True, "message": "Schema updated successfully"}
+        
+        # Get pharmacy ID
+        pharmacy = db.query(Pharmacy).first()
+        if not pharmacy:
+            return {"success": False, "error": "No pharmacy found"}
+        
+        # Create new admin user
+        hashed_password = bcrypt.hashpw("abeer2026".encode(), bcrypt.gensalt()).decode()
+        
+        new_user = {
+            "id": str(uuid4()),
+            "pharmacy_id": str(pharmacy.id),
+            "full_name": "abeer alfadil",
+            "username": "D. Abeer",
+            "password_hash": hashed_password,
+            "role": "admin",
+            "is_active": True
+        }
+        
+        db.execute(text("""
+            INSERT INTO users (id, pharmacy_id, full_name, username, password_hash, role, is_active)
+            VALUES (:id, :pharmacy_id, :full_name, :username, :password_hash, :role, :is_active)
+        """), new_user)
+        
+        db.commit()
+        
+        return {
+            "success": True,
+            "message": "Admin account reset successfully",
+            "user": {
+                "full_name": "abeer alfadil",
+                "username": "D. Abeer",
+                "role": "admin"
+            }
+        }
     except Exception as e:
+        db.rollback()
         return {"success": False, "error": str(e)}
 
 
