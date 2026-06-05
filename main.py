@@ -241,15 +241,23 @@ def activate_product(data: ProductKeyActivate, db: Session = Depends(get_db)):
 @app.post("/api/auth/create-admin", response_model=TokenResponse)
 def create_admin(data: AdminCreate, db: Session = Depends(get_db)):
     """Create first admin user after product activation."""
-    result = create_admin_user(
-        pharmacy_id=data.pharmacy_id,
-        full_name=data.full_name,
-        username=data.username,
-        password=data.password,
-        confirm_password=data.confirm_password,
-        db=db
-    )
-    return result
+    try:
+        result = create_admin_user(
+            pharmacy_id=data.pharmacy_id,
+            full_name=data.full_name,
+            username=data.username,
+            password=data.password,
+            confirm_password=data.confirm_password,
+            db=db
+        )
+        return result
+    except Exception as e:
+        import traceback
+        return {
+            "success": False,
+            "message": f"Error: {str(e)}",
+            "traceback": traceback.format_exc()
+        }
 
 
 @app.post("/api/auth/login", response_model=TokenResponse)
