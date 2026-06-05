@@ -23,6 +23,16 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Create tables on startup (if they don't exist)
+@app.on_event("startup")
+async def create_tables():
+    """Create database tables on startup."""
+    try:
+        Base.metadata.create_all(bind=engine)
+        print("✅ Database tables created successfully")
+    except Exception as e:
+        print(f"⚠️ Could not create tables: {e}")
+
 # CORS configuration - restrict in production
 app.add_middleware(
     CORSMiddleware,
