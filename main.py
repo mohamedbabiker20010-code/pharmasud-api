@@ -76,7 +76,39 @@ def fix_pharmacy_name(db: Session = Depends(get_db)):
 
 
 # ═══════════════════════════════════════════════════════════
-# Temporary Seed Route (Remove after testing)
+# Temporary: Reset activation (for testing)
+# ═══════════════════════════════════════════════════════════
+
+@app.get("/api/reset-activation")
+def reset_activation(db: Session = Depends(get_db)):
+    """Temporary: Reset pharmacy to inactive (for testing activation flow)"""
+    try:
+        from sqlalchemy import text
+        # Reset pharmacy to inactive
+        db.execute(text("""
+            UPDATE pharmacies 
+            SET is_active = false, activated_at = NULL
+            WHERE product_key = 'PHARM-SDN-2026-RAHMA-X7K9'
+        """))
+        # Delete all users (admins/employees)
+        db.execute(text("""
+            DELETE FROM users 
+            WHERE pharmacy_id IN (
+                SELECT id FROM pharmacies WHERE product_key = 'PHARM-SDN-2026-RAHMA-X7K9'
+            )
+        """))
+        db.commit()
+        return {
+            "success": True, 
+            "message": "System reset successfully. Pharmacy is now inactive.",
+            "note": "You can now test the activation flow at /activate"
+        }
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+# ═══════════════════════════════════════════════════════════
+# Temporary: Update pharmacy name (Remove after testing)
 # ═══════════════════════════════════════════════════════════
 
 @app.get("/api/seed")
