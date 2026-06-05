@@ -18,7 +18,8 @@ import os
 from database import engine, get_db, test_connection, get_tables_count, Base
 from models import (
     ProductKeyActivate, AdminCreate, UserLogin, 
-    TokenResponse, UserResponse, SystemStatus
+    TokenResponse, UserResponse, SystemStatus,
+    Pharmacy  # Added for reset-admin endpoint
 )
 from auth import (
     activate_product_key, create_admin_user, authenticate_user,
