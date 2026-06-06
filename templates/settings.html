@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الإعدادات - صيدلية الزاريات</title>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0F172A;
+            color: #F8FAFC;
+            min-height: 100vh;
+        }
+        .container { max-width: 800px; margin: 0 auto; padding: 24px 20px; }
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 24px; padding-bottom: 16px;
+            border-bottom: 1px solid #334155;
+        }
+        .header h1 { font-size: 20px; display: flex; align-items: center; gap: 8px; }
+        .back-link { color: #94A3B8; text-decoration: none; font-size: 14px; }
+        .back-link:hover { color: #3B82F6; }
+
+        /* Tabs */
+        .tabs {
+            display: flex; gap: 4px; margin-bottom: 24px;
+            background: #1E293B; border-radius: 10px; padding: 4px;
+        }
+        .tab-btn {
+            flex: 1; padding: 10px; border: none; border-radius: 8px;
+            background: transparent; color: #94A3B8; font-size: 14px;
+            cursor: pointer; font-family: inherit; transition: all 0.2s;
+        }
+        .tab-btn:hover { color: #F8FAFC; background: #334155; }
+        .tab-btn.active { background: #3B82F6; color: white; }
+
+        /* Panels */
+        .panel { display: none; }
+        .panel.active { display: block; }
+        .panel-card {
+            background: #1E293B; border: 1px solid #334155;
+            border-radius: 12px; padding: 24px;
+        }
+        .panel-card h2 {
+            font-size: 15px; color: #94A3B8; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+        }
+
+        /* Messages */
+        .alert {
+            padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 14px;
+        }
+        .alert-success { background: #065F46; color: #6EE7B7; border: 1px solid #047857; }
+        .alert-error { background: #7F1D1D; color: #FCA5A5; border: 1px solid #DC2626; }
+
+        /* Employee List */
+        .emp-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 16px; background: #0F172A; border-radius: 8px; margin-bottom: 8px;
+        }
+        .emp-row:last-child { margin-bottom: 0; }
+        .emp-info { flex: 1; }
+        .emp-info .name { font-weight: 600; font-size: 14px; }
+        .emp-info .meta { font-size: 12px; color: #94A3B8; }
+        .emp-info .role-badge {
+            display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px;
+        }
+        .role-admin { background: #1E3A5F; color: #60A5FA; }
+        .role-employee { background: #065F46; color: #6EE7B7; }
+        .status-dot {
+            display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-left: 6px;
+        }
+        .status-active { background: #6EE7B7; }
+        .status-inactive { background: #FCA5A5; }
+        .emp-actions { display: flex; gap: 8px; }
+        .emp-actions button {
+            padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer;
+            font-size: 12px; font-family: inherit;
+        }
+        .btn-toggle-on { background: #065F46; color: #6EE7B7; }
+        .btn-toggle-off { background: #78350F; color: #FCD34D; }
+        .btn-delete { background: #7F1D1D; color: #FCA5A5; }
+
+        /* Forms */
+        .form-group {
+            display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px;
+        }
+        .form-group label { font-size: 13px; color: #94A3B8; }
+        .form-group label .required { color: #EF4444; }
+        .form-group input {
+            background: #0F172A; border: 1px solid #334155; padding: 10px 12px;
+            border-radius: 8px; color: #F8FAFC; font-size: 14px; font-family: inherit;
+        }
+        .form-group input:focus { outline: none; border-color: #3B82F6; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+        .submit-btn {
+            width: 100%; margin-top: 8px; padding: 12px; border: none; border-radius: 8px;
+            background: #3B82F6; color: white; font-size: 14px; font-weight: 600;
+            cursor: pointer; font-family: inherit;
+        }
+        .submit-btn:hover { background: #2563EB; }
+        .submit-btn:disabled { background: #334155; color: #64748B; cursor: not-allowed; }
+        .submit-btn.danger { background: #DC2626; }
+        .submit-btn.danger:hover { background: #B91C1C; }
+        .submit-btn.green { background: #059669; }
+        .submit-btn.green:hover { background: #047857; }
+
+        .divider { border: none; border-top: 1px solid #334155; margin: 20px 0; }
+
+        .loading {
+            text-align: center; padding: 40px; color: #64748B;
+        }
+        .loading .spinner {
+            display: inline-block; width: 28px; height: 28px;
+            border: 3px solid #334155; border-top-color: #3B82F6;
+            border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 8px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .no-data { text-align: center; padding: 30px; color: #64748B; font-size: 13px; }
+
+        /* Confirmation Dialog */
+        .confirm-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+            display: flex; align-items: center; justify-content: center; z-index: 100;
+        }
+        .confirm-dialog {
+            background: #1E293B; border: 1px solid #DC2626; border-radius: 12px;
+            padding: 24px; max-width: 380px; width: 90%; text-align: center;
+        }
+        .confirm-dialog h3 { color: #FCA5A5; margin-bottom: 12px; font-size: 15px; }
+        .confirm-dialog p { color: #94A3B8; font-size: 14px; margin-bottom: 16px; }
+        .confirm-dialog .btn-row { display: flex; gap: 12px; justify-content: center; }
+        .confirm-dialog button {
+            padding: 8px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-family: inherit;
+        }
+        .confirm-dialog .btn-yes { background: #DC2626; color: white; }
+        .confirm-dialog .btn-no { background: #334155; color: #94A3B8; }
+
+        @media (max-width: 600px) {
+            .form-row { grid-template-columns: 1fr; }
+            .emp-row { flex-direction: column; gap: 12px; }
+            .emp-actions { width: 100%; justify-content: flex-end; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" x-data="settingsApp()" x-init="init()">
+        <!-- Header -->
+        <div class="header">
+            <h1>⚙️ الإعدادات</h1>
+            <a href="/dashboard" class="back-link">← الرجوع</a>
+        </div>
+
+        <!-- Messages -->
+        <div x-show="message.text" x-transition>
+            <div :class="'alert alert-' + message.type" x-text="message.text"></div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn" :class="{ active: activeTab === 'employees' }" @click="activeTab='employees'">👥 الموظفين</button>
+            <button class="tab-btn" :class="{ active: activeTab === 'password' }" @click="activeTab='password'">🔑 تغيير كلمة السر</button>
+            <button class="tab-btn" :class="{ active: activeTab === 'pharmacy' }" @click="activeTab='pharmacy'; loadPharmacy()">🏥 إعدادات الصيدلية</button>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- TAB 1: EMPLOYEES -->
+        <!-- ============================================ -->
+        <div class="panel" :class="{ active: activeTab === 'employees' }">
+            <div class="panel-card">
+                <h2>👥 قائمة الموظفين</h2>
+
+                <div class="loading" x-show="loadingEmployees">
+                    <div class="spinner"></div>
+                    <p>جاري تحميل الموظفين...</p>
+                </div>
+
+                <template x-for="emp in employees" :key="emp.id">
+                    <div class="emp-row" x-show="!loadingEmployees">
+                        <div class="emp-info">
+                            <div class="name">
+                                <span class="status-dot" :class="emp.is_active ? 'status-active' : 'status-inactive'"></span>
+                                <span x-text="emp.full_name || emp.username"></span>
+                            </div>
+                            <div class="meta">
+                                <span class="role-badge" :class="emp.role === 'admin' ? 'role-admin' : 'role-employee'" x-text="emp.role === 'admin' ? 'مدير' : 'موظف'"></span>
+                                <span style="margin-right:8px;">@<span x-text="emp.username"></span></span>
+                                <span style="color:#64748B; font-size:11px;" x-show="!emp.is_active"> | ❌ معطل</span>
+                            </div>
+                        </div>
+                        <div class="emp-actions">
+                            <button class="btn-toggle-on" x-show="!emp.is_active" @click="toggleEmployee(emp)">✅ تفعيل</button>
+                            <button class="btn-toggle-off" x-show="emp.is_active" @click="toggleEmployee(emp)">⏸ تعطيل</button>
+                            <button class="btn-delete" @click="confirmDelete(emp)" x-show="emp.role !== 'admin' || emp.id !== currentUserId">🗑 حذف</button>
+                        </div>
+                    </div>
+                </template>
+
+                <div class="no-data" x-show="!loadingEmployees && employees.length === 0">
+                    لا يوجد موظفين بعد
+                </div>
+
+                <hr class="divider">
+
+                <!-- Add Employee Form -->
+                <h2 style="margin-bottom:16px;">➕ إضافة موظف جديد</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>الاسم الكامل <span class="required">*</span></label>
+                        <input type="text" x-model="empForm.full_name" placeholder="مثال: أحمد محمد">
+                    </div>
+                    <div class="form-group">
+                        <label>اسم المستخدم <span class="required">*</span></label>
+                        <input type="text" x-model="empForm.username" placeholder="ahmed">
+                    </div>
+                    <div class="form-group">
+                        <label>كلمة السر <span class="required">*</span></label>
+                        <input type="password" x-model="empForm.password" placeholder="6 أحرف على الأقل">
+                    </div>
+                    <div class="form-group">
+                        <label>الدور</label>
+                        <select x-model="empForm.role" style="background:#0F172A;border:1px solid #334155;padding:10px 12px;border-radius:8px;color:#F8FAFC;font-size:14px;font-family:inherit;">
+                            <option value="employee">موظف</option>
+                            <option value="admin">مدير</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="submit-btn green" @click="addEmployee()" :disabled="!empForm.full_name || !empForm.username || !empForm.password">
+                    ➕ إضافة موظف
+                </button>
+            </div>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- TAB 2: CHANGE PASSWORD -->
+        <!-- ============================================ -->
+        <div class="panel" :class="{ active: activeTab === 'password' }">
+            <div class="panel-card">
+                <h2>🔑 تغيير كلمة السر</h2>
+                <div class="form-group">
+                    <label>كلمة السر الحالية <span class="required">*</span></label>
+                    <input type="password" x-model="passForm.current" placeholder="أدخل كلمة السر الحالية">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>كلمة السر الجديدة <span class="required">*</span></label>
+                        <input type="password" x-model="passForm.new_pass" placeholder="6 أحرف على الأقل">
+                    </div>
+                    <div class="form-group">
+                        <label>تأكيد كلمة السر الجديدة <span class="required">*</span></label>
+                        <input type="password" x-model="passForm.confirm" placeholder="أعد كتابة كلمة السر">
+                    </div>
+                </div>
+                <button class="submit-btn" @click="changePassword()" 
+                        :disabled="!passForm.current || !passForm.new_pass || !passForm.confirm || passForm.new_pass !== passForm.confirm">
+                    🔄 تغيير كلمة السر
+                </button>
+                <p x-show="passForm.new_pass && passForm.confirm && passForm.new_pass !== passForm.confirm"
+                   style="color:#FCA5A5;font-size:13px;margin-top:8px;">⚠️ كلمتا السر غير متطابقتين</p>
+            </div>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- TAB 3: PHARMACY SETTINGS -->
+        <!-- ============================================ -->
+        <div class="panel" :class="{ active: activeTab === 'pharmacy' }">
+            <div class="panel-card">
+                <h2>🏥 إعدادات الصيدلية</h2>
+
+                <div class="loading" x-show="loadingPharmacy">
+                    <div class="spinner"></div>
+                    <p>جاري تحميل الإعدادات...</p>
+                </div>
+
+                <template x-if="!loadingPharmacy">
+                    <div>
+                        <div class="form-group">
+                            <label>اسم الصيدلية <span class="required">*</span></label>
+                            <input type="text" x-model="pharmacyForm.name" placeholder="صيدلية الزاريات">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>اسم المالك</label>
+                                <input type="text" x-model="pharmacyForm.owner_name" placeholder="اسم المالك">
+                            </div>
+                            <div class="form-group">
+                                <label>رقم الهاتف</label>
+                                <input type="text" x-model="pharmacyForm.phone" placeholder="+249xxxxxxxx">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>العنوان</label>
+                            <textarea x-model="pharmacyForm.address" 
+                                      style="background:#0F172A;border:1px solid #334155;padding:10px 12px;border-radius:8px;color:#F8FAFC;font-size:14px;font-family:inherit;resize:vertical;min-height:60px;"
+                                      placeholder="عنوان الصيدلية"></textarea>
+                        </div>
+                        <button class="submit-btn green" @click="savePharmacy()" :disabled="!pharmacyForm.name">
+                            💾 حفظ الإعدادات
+                        </button>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- Confirm Delete Dialog -->
+        <div x-show="showConfirm" class="confirm-overlay" x-transition>
+            <div class="confirm-dialog">
+                <h3>🗑 تأكيد الحذف</h3>
+                <p>هل أنت متأكد من حذف <strong x-text="deleteTarget?.full_name || deleteTarget?.username"></strong>؟</p>
+                <div class="btn-row">
+                    <button class="btn-no" @click="showConfirm=false">إلغاء</button>
+                    <button class="btn-yes" @click="doDelete()">نعم، احذف</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function settingsApp() {
+            return {
+                activeTab: 'employees',
+                message: { text: '', type: '' },
+                currentUserId: localStorage.getItem('user_id') || '',
+
+                // Employees
+                loadingEmployees: true,
+                employees: [],
+                empForm: { full_name: '', username: '', password: '', role: 'employee' },
+                showConfirm: false,
+                deleteTarget: null,
+
+                // Password
+                passForm: { current: '', new_pass: '', confirm: '' },
+
+                // Pharmacy
+                loadingPharmacy: true,
+                pharmacyForm: { name: '', owner_name: '', phone: '', address: '' },
+
+                // Messages
+                showMessage(text, type = 'success') {
+                    this.message = { text, type };
+                    setTimeout(() => { this.message = { text: '', type: '' }; }, 4000);
+                },
+
+                // Init
+                async init() {
+                    const token = localStorage.getItem('token');
+                    if (!token) { window.location.href = '/login'; return; }
+                    this.currentUserId = localStorage.getItem('user_id') || '';
+                    await this.loadEmployees();
+                },
+
+                // ========== EMPLOYEES ==========
+                async loadEmployees() {
+                    this.loadingEmployees = true;
+                    try {
+                        const token = localStorage.getItem('token');
+                        const r = await fetch('/api/settings/employees', {
+                            headers: { 'Authorization': 'Bearer ' + token }
+                        });
+                        if (!r.ok) { throw new Error('غير مصرح'); }
+                        const data = await r.json();
+                        this.employees = data.employees || [];
+                    } catch (e) {
+                        this.showMessage('فشل تحميل الموظفين: ' + e.message, 'error');
+                    } finally {
+                        this.loadingEmployees = false;
+                    }
+                },
+
+                async addEmployee() {
+                    try {
+                        const token = localStorage.getItem('token');
+                        const r = await fetch('/api/settings/employees', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                            body: JSON.stringify(this.empForm)
+                        });
+                        const data = await r.json();
+                        if (r.ok) {
+                            this.showMessage(data.message, 'success');
+                            this.empForm = { full_name: '', username: '', password: '', role: 'employee' };
+                            await this.loadEmployees();
+                        } else {
+                            this.showMessage(data.detail || data.message || 'فشل الإضافة', 'error');
+                        }
+                    } catch (e) {
+                        this.showMessage('فشل الاتصال: ' + e.message, 'error');
+                    }
+                },
+
+                confirmDelete(emp) {
+                    this.deleteTarget = emp;
+                    this.showConfirm = true;
+                },
+
+                async doDelete() {
+                    this.showConfirm = false;
+                    if (!this.deleteTarget) return;
+                    try {
+                        const token = localStorage.getItem('token');
+                        const r = await fetch('/api/settings/employees/' + this.deleteTarget.id, {
+                            method: 'DELETE',
+                            headers: { 'Authorization': 'Bearer ' + token }
+                        });
+                        const data = await r.json();
+                        if (r.ok) {
+                            this.showMessage(data.message, 'success');
+                            await this.loadEmployees();
+                        } else {
+                            this.showMessage(data.detail || data.message || 'فشل الحذف', 'error');
+                        }
+                    } catch (e) {
+                        this.showMessage('فشل الاتصال: ' + e.message, 'error');
+                    }
+                    this.deleteTarget = null;
+                },
+
+                async toggleEmployee(emp) {
+                    try {
+                        const token = localStorage.getItem('token');
+                        const r = await fetch('/api/settings/employees/' + emp.id + '/toggle', {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                            body: JSON.stringify({ is_active: !emp.is_active })
+                        });
+                        const data = await r.json();
+                        if (r.ok) {
+                            this.showMessage(data.message, 'success');
+                            await this.loadEmployees();
+                        } else {
+                            this.showMessage(data.detail || data.message || 'فشل التعديل', 'error');
+                        }
+                    } catch (e) {
+                        this.showMessage('فشل الاتصال: ' + e.message, 'error');
+                    }
+                },
+
+                // ========== PASSWORD ==========
+                async changePassword() {
+                    if (this.passForm.new_pass !== this.passForm.confirm) {
+                        this.showMessage('كلمتا السر غير متطابقتين', 'error');
+                        return;
+                    }
+                    try {
+                        const token = localStorage.getItem('token');
+                        const r = await fetch('/api/settings/change-password', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                            body: JSON.stringify({
+                                current_password: this.passForm.current,
+                                new_password: this.passForm.new_pass
+                            })
+                        });
+                        const data = await r.json();
+                        if (r.ok) {
+                            this.showMessage(data.message, 'success');
+                            this.passForm = { current: '', new_pass: '', confirm: '' };
+                        } else {
+                            this.showMessage(data.detail || data.message || 'فشل التغيير', 'error');
+                        }
+                    } catch (e) {
+                        this.showMessage('فشل الاتصال: ' + e.message, 'error');
+                    }
+                },
+
+                // ========== PHARMACY ==========
+                async loadPharmacy() {
+                    if (!this.loadingPharmacy && this.pharmacyForm.name) return; // Already loaded
+                    this.loadingPharmacy = true;
+                    try {
+                        const token = localStorage.getItem('token');
+                        const r = await fetch('/api/settings/pharmacy', {
+                            headers: { 'Authorization': 'Bearer ' + token }
+                        });
+                        if (!r.ok) throw new Error('غير مصرح');
+                        const data = await r.json();
+                        this.pharmacyForm = {
+                            name: data.name || '',
+                            owner_name: data.owner_name || '',
+                            phone: data.phone || '',
+                            address: data.address || ''
+                        };
+                    } catch (e) {
+                        this.showMessage('فشل تحميل الإعدادات: ' + e.message, 'error');
+                    } finally {
+                        this.loadingPharmacy = false;
+                    }
+                },
+
+                async savePharmacy() {
+                    try {
+                        const token = localStorage.getItem('token');
+                        const r = await fetch('/api/settings/pharmacy', {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                            body: JSON.stringify(this.pharmacyForm)
+                        });
+                        const data = await r.json();
+                        if (r.ok) {
+                            this.showMessage(data.message, 'success');
+                            // Update stored pharmacy name
+                            localStorage.setItem('pharmacy_name', this.pharmacyForm.name);
+                        } else {
+                            this.showMessage(data.detail || data.message || 'فشل الحفظ', 'error');
+                        }
+                    } catch (e) {
+                        this.showMessage('فشل الاتصال: ' + e.message, 'error');
+                    }
+                }
+            };
+        }
+    </script>
+</body>
+</html>

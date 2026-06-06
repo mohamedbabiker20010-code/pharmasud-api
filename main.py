@@ -27,6 +27,7 @@ from auth import (
 from medicines import router as medicines_router
 from batches import router as batches_router
 from inventory import router as inventory_router
+from settings import router as settings_router
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -67,6 +68,9 @@ app.include_router(batches_router)
 
 # Include inventory router (Stage 4)
 app.include_router(inventory_router)
+
+# Include settings router (Stage 4.5)
+app.include_router(settings_router)
 
 # CORS configuration - restrict in production
 app.add_middleware(
@@ -287,6 +291,12 @@ def batch_receive_page():
 def inventory_page():
     """Inventory Management Page (Stage 4)."""
     return HTMLResponse(content=INVENTORY_HTML)
+
+
+@app.get("/settings", response_class=HTMLResponse)
+def settings_page():
+    """Settings & Admin Page (Stage 4.5)."""
+    return HTMLResponse(content=SETTINGS_HTML)
 
 
 # ═══════════════════════════════════════════════════════════
@@ -1022,6 +1032,9 @@ DASHBOARD_HTML = f"""
         <a href="/pos" class="nav-item">
             <span class="icon">🛒</span> نقطة البيع
         </a>
+        <a href="/settings" class="nav-item">
+            <span class="icon">⚙️</span> الإعدادات
+        </a>
         <div class="sidebar-footer">
             <button class="logout-btn" onclick="logout()" style="width:100%;">🚪 تسجيل الخروج</button>
         </div>
@@ -1100,6 +1113,12 @@ DASHBOARD_HTML = f"""
                 <p>تقارير المبيعات والأرباح وتحليل المخزون</p>
                 <span class="card-status status-coming">🔄 قريباً</span>
             </div>
+            <a href="/settings" class="nav-card">
+                <div class="card-icon">⚙️</div>
+                <h3>الإعدادات</h3>
+                <p>إدارة الموظفين، تغيير كلمة السر، إعدادات الصيدلية</p>
+                <span class="card-status status-active">✅ مفعل</span>
+            </a>
         </div>
     </div>
 
@@ -1294,4 +1313,11 @@ try:
 except FileNotFoundError:
     INVENTORY_HTML = "<h1>Inventory - Template not found</h1>"
 
-# ✅ انتهى - main.py - المرحلة 4
+# Stage 4.5: Load settings template
+try:
+    with open(os.path.join(TEMPLATE_DIR, "settings.html"), "r", encoding="utf-8") as f:
+        SETTINGS_HTML = f.read()
+except FileNotFoundError:
+    SETTINGS_HTML = "<h1>Settings - Template not found</h1>"
+
+# ✅ انتهى - main.py - المرحلة 4.5

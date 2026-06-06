@@ -535,4 +535,66 @@ class SaleItem(Base):
     batch = relationship("Batch", back_populates="sale_items")
 
 
-# ✅ انتهى - models.py - المرحلة 4
+# ═══════════════════════════════════════════════════════════
+# Pydantic Models for Settings & Admin (Stage 4.5)
+# ═══════════════════════════════════════════════════════════
+
+
+class EmployeeCreate(BaseModel):
+    """Schema for creating a new employee."""
+    full_name: str = Field(..., min_length=2, max_length=100, description="Full name")
+    username: str = Field(..., min_length=3, max_length=50, description="Unique username")
+    password: str = Field(..., min_length=6, max_length=100, description="Password")
+    role: str = Field(default="employee", description="Role: admin or employee")
+
+
+class EmployeeResponse(BaseModel):
+    """Schema for employee data in response."""
+    id: str
+    full_name: Optional[str]
+    username: str
+    role: str
+    is_active: bool
+    created_at: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class EmployeeListResponse(BaseModel):
+    """Schema for list of employees."""
+    employees: list[EmployeeResponse]
+    total: int
+
+
+class PasswordChange(BaseModel):
+    """Schema for changing password."""
+    current_password: str = Field(..., min_length=1, description="Current password")
+    new_password: str = Field(..., min_length=6, max_length=100, description="New password")
+
+
+class PharmacyUpdate(BaseModel):
+    """Schema for updating pharmacy settings."""
+    name: Optional[str] = Field(None, min_length=1, max_length=100, description="Pharmacy name")
+    owner_name: Optional[str] = Field(None, min_length=1, max_length=100, description="Owner name")
+    phone: Optional[str] = Field(None, max_length=20, description="Phone number")
+    address: Optional[str] = Field(None, description="Address")
+
+
+class PharmacySettingsResponse(BaseModel):
+    """Schema for pharmacy settings response."""
+    id: str
+    name: str
+    owner_name: Optional[str]
+    phone: Optional[str]
+    address: Optional[str]
+    is_active: bool
+    created_at: Optional[str] = None
+
+
+class EmployeeStatusToggle(BaseModel):
+    """Schema for enabling/disabling an employee."""
+    is_active: bool
+
+
+# ✅ انتهى - models.py - المرحلة 4.5
