@@ -882,104 +882,285 @@ DASHBOARD_HTML = f"""
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم - PharmaSUD</title>
-    {COMMON_STYLES}
+    <title>لوحة التحكم - صيدلية الزاريات</title>
     <style>
-        body {{ justify-content: flex-start; padding-top: 40px; }}
-        .container {{ max-width: 900px; }}
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        body {{
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0F172A;
+            color: #F8FAFC;
+            min-height: 100vh;
+            display: flex;
+            justify-content: flex-start;
+            padding: 0;
+        }}
+        .sidebar {{
+            width: 220px;
+            background: #1E293B;
+            min-height: 100vh;
+            padding: 24px 0;
+            border-left: 1px solid #334155;
+            flex-shrink: 0;
+        }}
+        .sidebar .logo {{
+            padding: 0 20px 24px;
+            border-bottom: 1px solid #334155;
+            margin-bottom: 16px;
+        }}
+        .sidebar .logo h1 {{ font-size: 18px; color: #3B82F6; }}
+        .sidebar .logo p {{ font-size: 11px; color: #64748B; margin-top: 2px; }}
+        .nav-item {{
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: #94A3B8;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.2s;
+            border-right: 3px solid transparent;
+        }}
+        .nav-item:hover, .nav-item.active {{
+            background: #334155;
+            color: #F8FAFC;
+            border-right-color: #3B82F6;
+        }}
+        .nav-item .icon {{ font-size: 18px; }}
+        .nav-item .badge {{
+            background: #3B82F6;
+            color: white;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-right: auto;
+        }}
+        .sidebar-footer {{
+            position: absolute;
+            bottom: 0;
+            width: 220px;
+            padding: 16px 20px;
+            border-top: 1px solid #334155;
+        }}
+        .main-content {{
+            flex: 1;
+            padding: 32px 40px;
+            overflow-y: auto;
+        }}
         .header {{
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 30px;
+            margin-bottom: 28px;
             padding-bottom: 20px;
             border-bottom: 1px solid #334155;
         }}
-        .user-info {{ text-align: left; }}
-        .user-info span {{ color: #94A3B8; font-size: 14px; }}
+        .header h2 {{ font-size: 22px; }}
+        .header-left {{ text-align: left; }}
+        .header-left .name {{ font-weight: 600; }}
+        .header-left .pharmacy {{ font-size: 13px; color: #94A3B8; }}
         .logout-btn {{
             background: #DC2626;
-            width: auto;
+            border: none;
+            color: white;
             padding: 8px 16px;
-            font-size: 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background 0.2s;
         }}
         .logout-btn:hover {{ background: #B91C1C; }}
-        .grid {{
+        .stats-grid {{
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
         }}
-        .card {{
-            background: #334155;
-            padding: 24px;
+        .stat-card {{
+            background: #1E293B;
+            padding: 20px;
             border-radius: 12px;
             text-align: center;
+            border: 1px solid #334155;
         }}
-        .card h3 {{ color: #94A3B8; font-size: 14px; margin-bottom: 8px; }}
-        .card p {{ font-size: 32px; font-weight: 700; color: #3B82F6; }}
+        .stat-card .stat-icon {{ font-size: 24px; margin-bottom: 8px; }}
+        .stat-card .stat-value {{ font-size: 28px; font-weight: 700; color: #3B82F6; }}
+        .stat-card .stat-label {{ font-size: 13px; color: #94A3B8; margin-top: 4px; }}
+        .nav-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+        }}
+        .nav-card {{
+            background: #1E293B;
+            border: 1px solid #334155;
+            border-radius: 14px;
+            padding: 28px 24px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.25s;
+            cursor: pointer;
+            display: block;
+        }}
+        .nav-card:hover {{
+            border-color: #3B82F6;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px -5px rgba(59, 130, 246, 0.15);
+        }}
+        .nav-card .card-icon {{ font-size: 32px; margin-bottom: 12px; }}
+        .nav-card h3 {{ font-size: 16px; margin-bottom: 6px; }}
+        .nav-card p {{ font-size: 13px; color: #94A3B8; line-height: 1.5; }}
+        .nav-card .card-status {{
+            display: inline-block;
+            margin-top: 12px;
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 6px;
+        }}
+        .status-active {{ background: #065F46; color: #6EE7B7; }}
+        .status-coming {{ background: #1E3A5F; color: #60A5FA; }}
+        @media (max-width: 768px) {{
+            .sidebar {{ display: none; }}
+            .main-content {{ padding: 20px; }}
+        }}
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="logo" style="margin:0;">
-                <h1 style="font-size:20px;">لوحة التحكم</h1>
-            </div>
-            <div class="user-info">
-                <span id="userName">جاري التحميل...</span><br>
-                <span id="pharmacyName" style="font-size:12px;"></span>
-            </div>
-            <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
+    <!-- Sidebar -->
+    <div class="sidebar" style="position:relative;">
+        <div class="logo">
+            <h1>⚕️ PharmaSUD</h1>
+            <p>صيدلية الزاريات</p>
         </div>
-        
-        <div class="grid">
-            <div class="card">
-                <h3>الأدوية</h3>
-                <p>-</p>
-            </div>
-            <div class="card">
-                <h3>المبيعات اليوم</h3>
-                <p>-</p>
-            </div>
-            <div class="card">
-                <h3>الموظفين</h3>
-                <p>-</p>
-            </div>
-        </div>
-        
-        <div style="margin-top: 40px; text-align: center; color: #64748B;">
-            <p>المرحلة الثالثة قادمة قريباً...</p>
+        <a href="/dashboard" class="nav-item active">
+            <span class="icon">📊</span> لوحة التحكم
+        </a>
+        <a href="/medicines" class="nav-item">
+            <span class="icon">💊</span> الأدوية
+            <span class="badge" id="medCount">-</span>
+        </a>
+        <a href="/medicine-form" class="nav-item">
+            <span class="icon">➕</span> إضافة دواء
+        </a>
+        <a href="/pos" class="nav-item">
+            <span class="icon">🛒</span> نقطة البيع
+        </a>
+        <div class="sidebar-footer">
+            <button class="logout-btn" onclick="logout()" style="width:100%;">🚪 تسجيل الخروج</button>
         </div>
     </div>
-    
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="header">
+            <h2>📋 لوحة التحكم</h2>
+            <div class="header-left">
+                <div class="name" id="userName">جاري التحميل...</div>
+                <div class="pharmacy" id="pharmacyName"></div>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">💊</div>
+                <div class="stat-value" id="statMedicines">-</div>
+                <div class="stat-label">إجمالي الأدوية</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📦</div>
+                <div class="stat-value" id="statLowStock">-</div>
+                <div class="stat-label">منخفضة المخزون</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🛒</div>
+                <div class="stat-value" id="statSales">0</div>
+                <div class="stat-label">مبيعات اليوم</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">👤</div>
+                <div class="stat-value" id="statEmployees">1</div>
+                <div class="stat-label">الموظفين</div>
+            </div>
+        </div>
+
+        <!-- Navigation Cards -->
+        <h3 style="margin-bottom: 16px; color: #94A3B8; font-size: 15px;">🖱️ اختر وجهتك</h3>
+        <div class="nav-grid">
+            <a href="/medicines" class="nav-card">
+                <div class="card-icon">💊</div>
+                <h3>إدارة الأدوية</h3>
+                <p>عرض، بحث، تصفية وتعديل جميع الأدوية في الصيدلية</p>
+                <span class="card-status status-active">✅ مفعل</span>
+            </a>
+            <a href="/medicine-form" class="nav-card">
+                <div class="card-icon">➕</div>
+                <h3>إضافة دواء جديد</h3>
+                <p>إضافة دواء مع الباركود، الصورة، الوحدات وسعر البيع</p>
+                <span class="card-status status-active">✅ مفعل</span>
+            </a>
+            <a href="/pos" class="nav-card" style="opacity:0.7;">
+                <div class="card-icon">🛒</div>
+                <h3>نقطة البيع (POS)</h3>
+                <p>نظام البيع السريع وإدارة الفواتير</p>
+                <span class="card-status status-coming">🔄 قريباً</span>
+            </a>
+            <div class="nav-card" style="opacity:0.5; cursor:default;">
+                <div class="card-icon">📈</div>
+                <h3>التقارير</h3>
+                <p>تقارير المبيعات والأرباح وتحليل المخزون</p>
+                <span class="card-status status-coming">🔄 قريباً</span>
+            </div>
+        </div>
+    </div>
+
     <script>
         const token = localStorage.getItem('token');
         const role = localStorage.getItem('role');
-        
+
         // Check authentication
         if (!token) {{
             window.location.href = '/login';
         }}
-        
+
         // Check admin role
         if (role !== 'admin') {{
             window.location.href = '/pos';
         }}
-        
+
         // Display user info
         document.getElementById('userName').textContent = localStorage.getItem('full_name') || 'مستخدم';
         document.getElementById('pharmacyName').textContent = localStorage.getItem('pharmacy_name') || '';
-        
+
+        // Fetch medicines count
+        async function loadStats() {{
+            try {{
+                const response = await fetch('/api/medicines/', {{
+                    headers: {{ 'Authorization': 'Bearer ' + token }}
+                }});
+                if (response.ok) {{
+                    const data = await response.json();
+                    const medicines = data.medicines || [];
+                    const total = data.total || medicines.length;
+                    document.getElementById('statMedicines').textContent = total;
+                    document.getElementById('medCount').textContent = total;
+                    
+                    // Count low stock (total_stock < min_stock or total_stock === 0)
+                    const lowStock = medicines.filter(m => m.stock_status === 'out' || m.stock_status === 'low').length;
+                    document.getElementById('statLowStock').textContent = lowStock;
+                }}
+            }} catch (err) {{
+                console.error('Failed to load stats:', err);
+            }}
+        }}
+        loadStats();
+
         // Verify token validity
         async function checkAuth() {{
             try {{
                 const response = await fetch('/api/auth/me', {{
                     headers: {{ 'Authorization': 'Bearer ' + token }}
                 }});
-                
                 if (!response.ok) {{
-                    // Token expired or invalid
                     localStorage.clear();
                     window.location.href = '/login';
                 }}
@@ -987,9 +1168,8 @@ DASHBOARD_HTML = f"""
                 console.error('Auth check failed:', err);
             }}
         }}
-        
         checkAuth();
-        
+
         // Logout function
         function logout() {{
             localStorage.clear();
