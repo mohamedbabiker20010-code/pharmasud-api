@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الفاتورة - PharmaSUD</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0F172A;
+            color: #F8FAFC;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .invoice-container {
+            background: #1E293B;
+            border-radius: 16px;
+            padding: 32px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        .invoice-header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #334155;
+            margin-bottom: 20px;
+        }
+        .invoice-header h1 {
+            font-size: 22px;
+            color: #3B82F6;
+            margin-bottom: 4px;
+        }
+        .invoice-header .sub {
+            font-size: 13px;
+            color: #94A3B8;
+        }
+        .invoice-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            padding: 16px;
+            background: #0F172A;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            font-size: 13px;
+        }
+        .invoice-info .label { color: #64748B; }
+        .invoice-info .value { color: #F8FAFC; text-align: left; }
+        .invoice-info .full-width {
+            grid-column: 1 / -1;
+        }
+        .items-section {
+            margin-bottom: 16px;
+        }
+        .items-header {
+            display: grid;
+            grid-template-columns: 3fr 1fr 1fr 1fr;
+            padding: 8px 12px;
+            background: #334155;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #94A3B8;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .item-row {
+            display: grid;
+            grid-template-columns: 3fr 1fr 1fr 1fr;
+            padding: 8px 12px;
+            font-size: 13px;
+            border-bottom: 1px solid #1E293B;
+        }
+        .item-row:last-child { border-bottom: none; }
+        .item-row .item-name {
+            font-weight: 600;
+        }
+        .item-row .item-unit {
+            font-size: 11px;
+            color: #94A3B8;
+        }
+        .item-row .amount { text-align: left; color: #22C55E; }
+        .total-section {
+            background: #0F172A;
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .total-row .label { color: #94A3B8; font-size: 14px; }
+        .total-row .value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #22C55E;
+        }
+        .payment-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+        .payment-cash { background: #065F46; color: #6EE7B7; }
+        .payment-bankak { background: #1E3A5F; color: #60A5FA; }
+        .payment-fory { background: #5B21B6; color: #A78BFA; }
+        .payment-transfer { background: #78350F; color: #FBBF24; }
+        .footer {
+            text-align: center;
+            padding-top: 16px;
+            border-top: 1px solid #334155;
+            color: #64748B;
+            font-size: 12px;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+        .loading .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #334155;
+            border-top: 4px solid #3B82F6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .error-msg {
+            text-align: center;
+            padding: 40px;
+            color: #EF4444;
+        }
+        .error-msg .icon { font-size: 48px; margin-bottom: 12px; }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 16px;
+            color: #3B82F6;
+            text-decoration: none;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="invoice-container" id="app">
+        <!-- Loading -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>جاري تحميل الفاتورة...</p>
+        </div>
+        
+        <!-- Error -->
+        <div class="error-msg" id="error" style="display:none;">
+            <div class="icon">⚠️</div>
+            <h2>الفاتورة غير موجودة</h2>
+            <p style="margin-top:8px;color:#94A3B8;" id="errorMessage">قد يكون الرابط غير صحيح أو تم حذف الفاتورة</p>
+        </div>
+        
+        <!-- Invoice Content -->
+        <div id="invoiceContent" style="display:none;">
+            <div class="invoice-header">
+                <h1>🏥 <span id="pharmacyName">-</span></h1>
+                <div class="sub" id="pharmacyAddress"></div>
+            </div>
+            
+            <div class="invoice-info">
+                <div><span class="label">فاتورة رقم</span></div>
+                <div class="value">#<span id="invoiceNumber">-</span></div>
+                <div><span class="label">التاريخ</span></div>
+                <div class="value" id="invoiceDate">-</div>
+                <div><span class="label">الكاشير</span></div>
+                <div class="value" id="cashierName">-</div>
+                <div class="full-width" id="customerRow" style="display:none;">
+                    <span class="label">العميل: </span>
+                    <span class="value" id="customerName"></span>
+                </div>
+            </div>
+            
+            <div class="items-section">
+                <div class="items-header">
+                    <span>الدواء</span>
+                    <span>الكمية</span>
+                    <span>السعر</span>
+                    <span style="text-align:left;">الإجمالي</span>
+                </div>
+                <div id="itemsList"></div>
+            </div>
+            
+            <div class="total-section">
+                <div class="total-row">
+                    <span class="label">المجموع الكلي</span>
+                    <span class="value" id="totalAmount">0 ج.س</span>
+                </div>
+                <div id="paymentBadge"></div>
+            </div>
+            
+            <div class="footer">
+                <p>شكراً لثقتكم - دمتم بصحة</p>
+                <p style="font-size:10px;margin-top:4px;">pharmasud.onrender.com</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Get invoice number from URL
+        const pathParts = window.location.pathname.split('/');
+        const invoiceNumber = pathParts[pathParts.length - 1];
+        
+        // Load invoice data
+        async function loadInvoice() {
+            try {
+                const response = await fetch('/api/public/invoice/' + invoiceNumber);
+                
+                if (!response.ok) {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('error').style.display = 'block';
+                    document.getElementById('errorMessage').textContent = 
+                        response.status === 404 ? 'الفاتورة غير موجودة' : 'حدث خطأ في تحميل الفاتورة';
+                    return;
+                }
+                
+                const data = await response.json();
+                
+                if (!data.success) {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('error').style.display = 'block';
+                    return;
+                }
+                
+                // Fill in data
+                document.getElementById('pharmacyName').textContent = data.pharmacy_name || 'صيدلية';
+                document.getElementById('pharmacyAddress').textContent = 
+                    [data.pharmacy_address, data.pharmacy_phone].filter(Boolean).join(' - ');
+                document.getElementById('invoiceNumber').textContent = data.invoice_number;
+                document.getElementById('invoiceDate').textContent = data.created_at ? 
+                    data.created_at.substring(0, 10) + ' ' + data.created_at.substring(11, 16) : '-';
+                document.getElementById('cashierName').textContent = data.cashier_name || 'غير معروف';
+                
+                if (data.customer_name) {
+                    document.getElementById('customerRow').style.display = 'block';
+                    document.getElementById('customerName').textContent = data.customer_name;
+                }
+                
+                // Payment method badge
+                const methodMap = {
+                    'نقدي': { cls: 'payment-cash', emoji: '💵' },
+                    'بنكك': { cls: 'payment-bankak', emoji: '📱' },
+                    'فوري': { cls: 'payment-fory', emoji: '📲' },
+                    'تحويل بنكي': { cls: 'payment-transfer', emoji: '🏦' }
+                };
+                const pm = methodMap[data.payment_method] || { cls: 'payment-cash', emoji: '💵' };
+                document.getElementById('paymentBadge').innerHTML = 
+                    '<span class="payment-badge ' + pm.cls + '">' + pm.emoji + ' ' + data.payment_method + '</span>';
+                
+                // Items
+                const itemsList = document.getElementById('itemsList');
+                itemsList.innerHTML = '';
+                
+                (data.items || []).forEach(item => {
+                    const row = document.createElement('div');
+                    row.className = 'item-row';
+                    row.innerHTML = `
+                        <div>
+                            <div class="item-name">${item.medicine_name}</div>
+                            <div class="item-unit">${item.unit_name || ''}</div>
+                        </div>
+                        <div>×${item.quantity}</div>
+                        <div>${Number(item.unit_price).toLocaleString('ar-SA')}</div>
+                        <div class="amount">${Number(item.total_price).toLocaleString('ar-SA')} ج</div>
+                    `;
+                    itemsList.appendChild(row);
+                });
+                
+                // Total
+                document.getElementById('totalAmount').textContent = 
+                    Number(data.total_amount).toLocaleString('ar-SA') + ' ج.س';
+                
+                // Show invoice
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('invoiceContent').style.display = 'block';
+                
+            } catch (err) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('errorMessage').textContent = 'حدث خطأ في الاتصال بالخادم';
+            }
+        }
+        
+        loadInvoice();
+    </script>
+</body>
+</html>
+<!-- ✅ انتهى - invoice_view.html - المرحلة 5 -->

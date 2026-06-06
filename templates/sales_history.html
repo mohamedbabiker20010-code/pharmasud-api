@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سجل المبيعات - PharmaSUD</title>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0F172A;
+            color: #F8FAFC;
+            min-height: 100vh;
+        }
+        .sidebar {
+            width: 220px;
+            background: #1E293B;
+            min-height: 100vh;
+            padding: 24px 0;
+            border-left: 1px solid #334155;
+            position: fixed;
+            right: 0;
+            top: 0;
+        }
+        .sidebar .logo {
+            padding: 0 20px 24px;
+            border-bottom: 1px solid #334155;
+            margin-bottom: 16px;
+        }
+        .sidebar .logo h1 { font-size: 18px; color: #3B82F6; }
+        .sidebar .logo p { font-size: 11px; color: #64748B; margin-top: 2px; }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: #94A3B8;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.2s;
+            border-right: 3px solid transparent;
+        }
+        .nav-item:hover, .nav-item.active {
+            background: #334155;
+            color: #F8FAFC;
+            border-right-color: #3B82F6;
+        }
+        .nav-item .icon { font-size: 18px; }
+        .sidebar-footer {
+            position: absolute;
+            bottom: 0;
+            width: 220px;
+            padding: 16px 20px;
+            border-top: 1px solid #334155;
+        }
+        .main-content {
+            margin-right: 220px;
+            padding: 32px 40px;
+            min-height: 100vh;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #334155;
+        }
+        .header h2 { font-size: 22px; }
+        .header-left { text-align: left; }
+        .header-left .name { font-weight: 600; }
+        .header-left .pharmacy { font-size: 13px; color: #94A3B8; }
+        .logout-btn {
+            background: #DC2626;
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background 0.2s;
+        }
+        .logout-btn:hover { background: #B91C1C; }
+        
+        /* Filters */
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .filter-btn {
+            background: #1E293B;
+            border: 1px solid #334155;
+            color: #94A3B8;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        .filter-btn:hover { border-color: #3B82F6; color: #F8FAFC; }
+        .filter-btn.active {
+            background: #3B82F6;
+            border-color: #3B82F6;
+            color: white;
+        }
+        .filter-select {
+            background: #1E293B;
+            border: 1px solid #334155;
+            color: #F8FAFC;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .filter-select:focus { outline: none; border-color: #3B82F6; }
+        
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .stat-box {
+            background: #1E293B;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            padding: 14px 20px;
+            flex: 1;
+        }
+        .stat-box .stat-label { font-size: 12px; color: #64748B; }
+        .stat-box .stat-value { font-size: 22px; font-weight: 700; color: #3B82F6; margin-top: 4px; }
+        .stat-box .stat-value.green { color: #22C55E; }
+        
+        /* Sales List */
+        .sale-card {
+            background: #1E293B;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .sale-card:hover { border-color: #3B82F6; }
+        .sale-card .sale-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .sale-card .sale-number {
+            font-size: 15px;
+            font-weight: 700;
+            color: #3B82F6;
+        }
+        .sale-card .sale-date {
+            font-size: 12px;
+            color: #64748B;
+        }
+        .sale-card .sale-body {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .sale-card .sale-info {
+            font-size: 13px;
+            color: #94A3B8;
+        }
+        .sale-card .sale-info .cashier { color: #F8FAFC; }
+        .sale-card .sale-amount {
+            font-size: 18px;
+            font-weight: 700;
+            color: #22C55E;
+        }
+        .sale-card .sale-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .sale-card .sale-actions button {
+            background: #334155;
+            border: none;
+            color: #94A3B8;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        .sale-card .sale-actions button:hover { background: #475569; color: #F8FAFC; }
+        
+        .payment-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .pay-cash { background: #065F46; color: #6EE7B7; }
+        .pay-bankak { background: #1E3A5F; color: #60A5FA; }
+        .pay-fory { background: #5B21B6; color: #A78BFA; }
+        .pay-transfer { background: #78350F; color: #FBBF24; }
+        
+        /* Detail Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal {
+            background: #1E293B;
+            border-radius: 16px;
+            padding: 24px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal h2 { font-size: 18px; margin-bottom: 16px; }
+        .modal .close-btn {
+            float: left;
+            background: none;
+            border: none;
+            color: #94A3B8;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        .modal .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 16px;
+            padding: 12px;
+            background: #0F172A;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+        .modal .detail-grid .label { color: #64748B; }
+        .modal .detail-grid .value { text-align: left; }
+        
+        .modal .detail-items {
+            margin-bottom: 16px;
+        }
+        .modal .detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #334155;
+            font-size: 13px;
+        }
+        .modal .detail-item:last-child { border-bottom: none; }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 20px;
+        }
+        .pagination button {
+            background: #1E293B;
+            border: 1px solid #334155;
+            color: #F8FAFC;
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .pagination button:hover { border-color: #3B82F6; }
+        .pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748B;
+        }
+        .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+        
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .main-content { margin-right: 0; padding: 20px; }
+            .filters { flex-wrap: wrap; }
+            .stats-bar { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div x-data="salesApp()" x-init="init()">
+        <!-- Sidebar -->
+        <div class="sidebar" style="position:relative;">
+            <div class="logo">
+                <h1>⚕️ PharmaSUD</h1>
+                <p>صيدلية الزاريات</p>
+            </div>
+            <a href="/dashboard" class="nav-item">
+                <span class="icon">📊</span> لوحة التحكم
+            </a>
+            <a href="/medicines" class="nav-item">
+                <span class="icon">💊</span> الأدوية
+            </a>
+            <a href="/inventory" class="nav-item">
+                <span class="icon">📦</span> المخزون
+            </a>
+            <a href="/batch-receive" class="nav-item">
+                <span class="icon">📥</span> استلام شحنة
+            </a>
+            <a href="/pos" class="nav-item">
+                <span class="icon">🛒</span> نقطة البيع
+            </a>
+            <a href="/sales-history" class="nav-item active">
+                <span class="icon">📋</span> سجل المبيعات
+            </a>
+            <a href="/settings" class="nav-item">
+                <span class="icon">⚙️</span> الإعدادات
+            </a>
+            <div class="sidebar-footer">
+                <button class="logout-btn" @click="logout()" style="width:100%;">🚪 تسجيل الخروج</button>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="header">
+                <h2>📋 سجل المبيعات</h2>
+                <div class="header-left">
+                    <div class="name" x-text="userName"></div>
+                    <div class="pharmacy" x-text="pharmacyName"></div>
+                </div>
+            </div>
+            
+            <!-- Stats -->
+            <div class="stats-bar">
+                <div class="stat-box">
+                    <div class="stat-label">إجمالي الفواتير</div>
+                    <div class="stat-value" x-text="totalSales"></div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">إجمالي المبيعات</div>
+                    <div class="stat-value green" x-text="formatCurrency(totalAmount) + ' ج.س'"></div>
+                </div>
+            </div>
+            
+            <!-- Filters -->
+            <div class="filters">
+                <button class="filter-btn" :class="{ 'active': filter.date === 'today' }" @click="setFilter('date', 'today')">
+                    📅 اليوم
+                </button>
+                <button class="filter-btn" :class="{ 'active': filter.date === 'week' }" @click="setFilter('date', 'week')">
+                    📅 هذا الأسبوع
+                </button>
+                <button class="filter-btn" :class="{ 'active': filter.date === 'month' }" @click="setFilter('date', 'month')">
+                    📅 هذا الشهر
+                </button>
+                <button class="filter-btn" :class="{ 'active': !filter.date }" @click="setFilter('date', '')">
+                    📅 الكل
+                </button>
+                
+                <select class="filter-select" x-model="filter.payment" @change="loadSales(1)">
+                    <option value="">💳 كل طرق الدفع</option>
+                    <option value="cash">💵 نقدي</option>
+                    <option value="bankak">📱 بنكك</option>
+                    <option value="fory">📲 فوري</option>
+                    <option value="transfer">🏦 تحويل بنكي</option>
+                </select>
+            </div>
+            
+            <!-- Sales List -->
+            <div id="salesList">
+                <template x-if="sales.length === 0">
+                    <div class="empty-state">
+                        <div class="icon">📋</div>
+                        <p>لا توجد مبيعات</p>
+                        <p style="font-size:13px;margin-top:4px;">ابدأ بأول عملية بيع من صفحة POS</p>
+                    </div>
+                </template>
+                
+                <template x-for="sale in sales" :key="sale.sale_id">
+                    <div class="sale-card">
+                        <div class="sale-header">
+                            <div class="sale-number">فاتورة #<span x-text="sale.invoice_number"></span></div>
+                            <div class="sale-date" x-text="sale.created_at ? sale.created_at.substring(0, 16) : ''"></div>
+                        </div>
+                        <div class="sale-body">
+                            <div class="sale-info">
+                                <span class="cashier" x-text="sale.cashier_name"></span>
+                                <span> · </span>
+                                <span x-text="sale.items_count + ' صنف'"></span>
+                                <span> · </span>
+                                <span class="payment-badge" :class="'pay-' + getPaymentClass(sale.payment_method)" x-text="sale.payment_method"></span>
+                            </div>
+                            <div class="sale-amount" x-text="formatCurrency(sale.total_amount) + ' ج'"></div>
+                        </div>
+                        <div class="sale-actions">
+                            <button @click="viewDetail(sale.sale_id)">🔍 عرض</button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+            
+            <!-- Pagination -->
+            <div class="pagination" x-show="sales.length > 0">
+                <button :disabled="page <= 1" @click="loadSales(page - 1)">السابق</button>
+                <span style="font-size:13px;color:#94A3B8;padding:8px 12px;">صفحة <span x-text="page"></span></span>
+                <button :disabled="sales.length < perPage" @click="loadSales(page + 1)">التالي</button>
+            </div>
+        </div>
+        
+        <!-- Detail Modal -->
+        <div class="modal-overlay" x-show="detailModal.show" x-cloak style="display:none;" @click.self="detailModal.show = false">
+            <div class="modal">
+                <button class="close-btn" @click="detailModal.show = false">✕</button>
+                <h2>📄 فاتورة #<span x-text="detailModal.invoice_number"></span></h2>
+                
+                <div class="detail-grid">
+                    <div><span class="label">التاريخ:</span></div>
+                    <div class="value" x-text="detailModal.date"></div>
+                    <div><span class="label">الكاشير:</span></div>
+                    <div class="value" x-text="detailModal.cashier"></div>
+                    <div><span class="label">طريقة الدفع:</span></div>
+                    <div class="value" x-text="detailModal.payment"></div>
+                    <div x-show="detailModal.customer">
+                        <span class="label">العميل:</span>
+                    </div>
+                    <div class="value" x-show="detailModal.customer" x-text="detailModal.customer"></div>
+                </div>
+                
+                <div class="detail-items">
+                    <template x-for="item in detailModal.items" :key="item.id">
+                        <div class="detail-item">
+                            <div>
+                                <div x-text="item.medicine_name"></div>
+                                <div style="font-size:11px;color:#64748B;" x-text="item.batch_number ? 'شحنة: ' + item.batch_number : ''"></div>
+                            </div>
+                            <div style="text-align:left;">
+                                <div x-text="item.quantity + ' × ' + formatCurrency(item.unit_price)"></div>
+                                <div style="color:#22C55E;" x-text="formatCurrency(item.total_price) + ' ج'"></div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+                
+                <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:700;padding:12px 0;border-top:1px solid #334155;">
+                    <span style="color:#94A3B8;">الإجمالي</span>
+                    <span style="color:#22C55E;" x-text="formatCurrency(detailModal.total) + ' ج.س'"></span>
+                </div>
+                
+                <div style="margin-top:12px;">
+                    <button @click="detailModal.show = false" style="width:100%;padding:10px;background:#334155;color:#F8FAFC;border:none;border-radius:8px;cursor:pointer;">
+                        إغلاق
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function salesApp() {
+            return {
+                // User
+                token: '',
+                userName: '',
+                pharmacyName: '',
+                
+                // Data
+                sales: [],
+                totalSales: 0,
+                totalAmount: 0,
+                page: 1,
+                perPage: 50,
+                
+                // Filters
+                filter: {
+                    date: '',
+                    payment: ''
+                },
+                
+                // Detail Modal
+                detailModal: {
+                    show: false,
+                    invoice_number: '',
+                    date: '',
+                    cashier: '',
+                    payment: '',
+                    customer: '',
+                    items: [],
+                    total: 0
+                },
+                
+                init() {
+                    this.token = localStorage.getItem('token');
+                    this.userName = localStorage.getItem('full_name') || 'مستخدم';
+                    this.pharmacyName = localStorage.getItem('pharmacy_name') || '';
+                    
+                    if (!this.token) {
+                        window.location.href = '/login';
+                        return;
+                    }
+                    
+                    // Verify token
+                    fetch('/api/auth/me', {
+                        headers: { 'Authorization': 'Bearer ' + this.token }
+                    }).then(r => {
+                        if (!r.ok) { localStorage.clear(); window.location.href = '/login'; }
+                    }).catch(() => {});
+                    
+                    this.loadSales(1);
+                },
+                
+                loadSales(page) {
+                    this.page = page;
+                    
+                    let url = '/api/sales/?page=' + page + '&per_page=' + this.perPage;
+                    if (this.filter.date) url += '&date_filter=' + this.filter.date;
+                    if (this.filter.payment) url += '&payment=' + this.filter.payment;
+                    
+                    fetch(url, {
+                        headers: { 'Authorization': 'Bearer ' + this.token }
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        this.sales = data.sales || [];
+                        this.totalSales = data.total_sales || 0;
+                        this.totalAmount = data.total_amount || 0;
+                    })
+                    .catch(err => {
+                        console.error('Failed to load sales:', err);
+                    });
+                },
+                
+                setFilter(type, value) {
+                    if (type === 'date') {
+                        this.filter.date = value;
+                    }
+                    this.loadSales(1);
+                },
+                
+                viewDetail(saleId) {
+                    fetch('/api/sales/' + saleId, {
+                        headers: { 'Authorization': 'Bearer ' + this.token }
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            this.detailModal = {
+                                show: true,
+                                invoice_number: data.invoice_number || '',
+                                date: data.created_at ? data.created_at.substring(0, 16) : '',
+                                cashier: data.cashier_name || '',
+                                payment: data.payment_method || '',
+                                customer: data.customer_name || '',
+                                items: data.items || [],
+                                total: data.total_amount || 0
+                            };
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Failed to load sale detail:', err);
+                    });
+                },
+                
+                getPaymentClass(method) {
+                    const map = {
+                        'نقدي': 'cash',
+                        'بنكك': 'bankak',
+                        'فوري': 'fory',
+                        'تحويل بنكي': 'transfer'
+                    };
+                    return map[method] || 'cash';
+                },
+                
+                formatCurrency(value) {
+                    const num = Number(value);
+                    if (isNaN(num)) return '0';
+                    return num.toLocaleString('ar-SA');
+                },
+                
+                logout() {
+                    localStorage.clear();
+                    window.location.href = '/login';
+                }
+            };
+        }
+    </script>
+</body>
+</html>
+<!-- ✅ انتهى - sales_history.html - المرحلة 5 -->

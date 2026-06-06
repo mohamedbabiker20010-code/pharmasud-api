@@ -28,12 +28,14 @@ from medicines import router as medicines_router
 from batches import router as batches_router
 from inventory import router as inventory_router
 from settings import router as settings_router
+from sales import router as sales_router
+from sales import public_router as sales_public_router
 
 # Initialize FastAPI app
 app = FastAPI(
     title="PharmaSUD API",
-    description="Pharmacy Point of Sale System - Stage 4 (Batch & FEFO)",
-    version="4.0.0"
+    description="Pharmacy Point of Sale System - Stage 5 (POS & Sales)",
+    version="5.0.0"
 )
 
 # Create tables on startup (if they don't exist)
@@ -51,6 +53,15 @@ async def create_tables():
                 print("✅ Added supplier_name column to batches table")
         except Exception as e:
             print(f"⚠️ Could not add supplier_name column: {e}")
+        
+        # Add unit_name column to sale_items if not exists (Stage 5)
+        try:
+            with engine.connect() as conn:
+                conn.execute(text("ALTER TABLE sale_items ADD COLUMN IF NOT EXISTS unit_name VARCHAR(20)"))
+                conn.commit()
+                print("✅ Added unit_name column to sale_items table")
+        except Exception as e:
+            print(f"⚠️ Could not add unit_name column: {e}")
     except Exception as e:
         print(f"⚠️ Could not create tables: {e}")
 
@@ -72,6 +83,12 @@ app.include_router(inventory_router)
 # Include settings router (Stage 4.5)
 app.include_router(settings_router)
 
+# Include sales router (Stage 5)
+app.include_router(sales_router)
+
+# Include public router (Stage 5 - no JWT required)
+app.include_router(sales_public_router)
+
 # CORS configuration - restrict in production
 app.add_middleware(
     CORSMiddleware,
@@ -91,9 +108,16 @@ def root():
     """Root endpoint - API status."""
     return {
         "status": "PharmaSUD API Running",
-        "version": "4.0.0",
-        "stage": "Stage 4 - Batch & FEFO"
+        "version": "5.0.0",
+        "stage": "Stage 5 - POS & Sales"
     }
+
+
+@app.get("/ping")
+def ping():
+    """Ping endpoint - keeps Render free tier alive.
+    Called every 10 minutes from the frontend to prevent sleep."""
+    return {"status": "alive", "timestamp": datetime.now().isoformat()}
 
 
 @app.get("/health")
@@ -263,6 +287,19 @@ def dashboard_page():
 def pos_page():
     """POS Page (requires auth)."""
     return HTMLResponse(content=POS_HTML)
+
+
+@app.get("/sales-history", response_class=HTMLResponse)
+def sales_history_page():
+    """Sales History Page (requires auth)."""
+    return HTMLResponse(content=SALES_HISTORY_HTML)
+
+
+@app.get("/invoice/{invoice_number}", response_class=HTMLResponse)
+def invoice_view_page(invoice_number: int):
+    """Public Invoice View Page (no JWT required).
+    Used when scanning QR code on receipt."""
+    return HTMLResponse(content=INVOICE_VIEW_HTML)
 
 
 # ═══════════════════════════════════════════════════════════
@@ -1032,6 +1069,9 @@ DASHBOARD_HTML = f"""
         <a href="/pos" class="nav-item">
             <span class="icon">🛒</span> نقطة البيع
         </a>
+        <a href="/sales-history" class="nav-item">
+            <span class="icon">📋</span> سجل المبيعات
+        </a>
         <a href="/settings" class="nav-item">
             <span class="icon">⚙️</span> الإعدادات
         </a>
@@ -1101,11 +1141,17 @@ DASHBOARD_HTML = f"""
                 <p>استلام شحنات جديدة مع الباركود، وتحويل الوحدات تلقائياً</p>
                 <span class="card-status status-active">✅ مفعل</span>
             </a>
-            <a href="/pos" class="nav-card" style="opacity:0.7;">
+            <a href="/pos" class="nav-card">
                 <div class="card-icon">🛒</div>
                 <h3>نقطة البيع (POS)</h3>
-                <p>نظام البيع السريع وإدارة الفواتير</p>
-                <span class="card-status status-coming">🔄 قريباً</span>
+                <p>نظام البيع السريع مع الباركود، السلة، وإدارة الفواتير</p>
+                <span class="card-status status-active">✅ مفعل</span>
+            </a>
+            <a href="/sales-history" class="nav-card">
+                <div class="card-icon">📋</div>
+                <h3>سجل المبيعات</h3>
+                <p>عرض الفواتير، التصفية حسب التاريخ والموظف وطريقة الدفع</p>
+                <span class="card-status status-active">✅ مفعل</span>
             </a>
             <div class="nav-card" style="opacity:0.5; cursor:default;">
                 <div class="card-icon">📈</div>
@@ -1189,95 +1235,15 @@ DASHBOARD_HTML = f"""
 </html>
 """
 
-# POS HTML (Protected - Employee)
-POS_HTML = f"""
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نقطة البيع - PharmaSUD</title>
-    {COMMON_STYLES}
-    <style>
-        body {{ justify-content: flex-start; padding-top: 40px; }}
-        .container {{ max-width: 800px; }}
-        .header {{
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #334155;
-        }}
-        .logout-btn {{
-            background: #DC2626;
-            width: auto;
-            padding: 8px 16px;
-            font-size: 14px;
-        }}
-        .logout-btn:hover {{ background: #B91C1C; }}
-        .pos-area {{
-            background: #334155;
-            padding: 40px;
-            border-radius: 12px;
-            text-align: center;
-        }}
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <div class="logo" style="margin:0;">
-                <h1 style="font-size:20px;">نقطة البيع</h1>
-            </div>
-            <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
-        </div>
-        
-        <div class="pos-area">
-            <h2>مرحباً، <span id="userName">-</span></h2>
-            <p style="color: #94A3B8; margin-top: 10px;">نظام البيع سيتم تفعيله في المرحلة القادمة</p>
-        </div>
-    </div>
-    
-    <script>
-        const token = localStorage.getItem('token');
-        const fullName = localStorage.getItem('full_name');
-        
-        // Check authentication
-        if (!token) {{
-            window.location.href = '/login';
-        }}
-        
-        // Display user info
-        document.getElementById('userName').textContent = fullName || 'موظف';
-        
-        // Verify token validity
-        async function checkAuth() {{
-            try {{
-                const response = await fetch('/api/auth/me', {{
-                    headers: {{ 'Authorization': 'Bearer ' + token }}
-                }});
-                
-                if (!response.ok) {{
-                    localStorage.clear();
-                    window.location.href = '/login';
-                }}
-            }} catch (err) {{
-                console.error('Auth check failed:', err);
-            }}
-        }}
-        
-        checkAuth();
-        
-        // Logout function
-        function logout() {{
-            localStorage.clear();
-            window.location.href = '/login';
-        }}
-    </script>
-</body>
-</html>
-"""
+# POS HTML (Protected)
+# Now loaded from templates/pos.html (Stage 5)
+POS_HTML = None  # Will be loaded at the bottom of the file
+
+# Sales History HTML (Protected)
+SALES_HISTORY_HTML = None  # Will be loaded at the bottom of the file
+
+# Invoice View HTML (Public)
+INVOICE_VIEW_HTML = None  # Will be loaded at the bottom of the file
 
 # ✅ انتهى - main.py - المرحلة 3
 
@@ -1320,4 +1286,23 @@ try:
 except FileNotFoundError:
     SETTINGS_HTML = "<h1>Settings - Template not found</h1>"
 
-# ✅ انتهى - main.py - المرحلة 4.5
+# Stage 5: Load POS, sales history, and invoice view templates
+try:
+    with open(os.path.join(TEMPLATE_DIR, "pos.html"), "r", encoding="utf-8") as f:
+        POS_HTML = f.read()
+except FileNotFoundError:
+    POS_HTML = "<h1>POS - Template not found</h1>"
+
+try:
+    with open(os.path.join(TEMPLATE_DIR, "sales_history.html"), "r", encoding="utf-8") as f:
+        SALES_HISTORY_HTML = f.read()
+except FileNotFoundError:
+    SALES_HISTORY_HTML = "<h1>Sales History - Template not found</h1>"
+
+try:
+    with open(os.path.join(TEMPLATE_DIR, "invoice_view.html"), "r", encoding="utf-8") as f:
+        INVOICE_VIEW_HTML = f.read()
+except FileNotFoundError:
+    INVOICE_VIEW_HTML = "<h1>Invoice View - Template not found</h1>"
+
+# ✅ انتهى - main.py - المرحلة 5

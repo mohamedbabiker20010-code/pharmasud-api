@@ -1,0 +1,1507 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>نقطة البيع - PharmaSUD</title>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0F172A;
+            color: #F8FAFC;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Header */
+        .pos-header {
+            background: #1E293B;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #334155;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        .pos-header .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .pos-header .logo-section h1 {
+            font-size: 18px;
+            color: #3B82F6;
+        }
+        .pos-header .user-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+            color: #94A3B8;
+        }
+        .pos-header .user-section .name {
+            color: #F8FAFC;
+            font-weight: 600;
+        }
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-danger-sm {
+            background: #DC2626;
+            color: white;
+        }
+        .btn-danger-sm:hover { background: #B91C1C; }
+        .btn-icon {
+            background: #334155;
+            color: #94A3B8;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+        .btn-icon:hover { background: #475569; color: #F8FAFC; }
+        
+        /* Main Layout */
+        .pos-layout {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 60px);
+            overflow: hidden;
+        }
+        
+        /* Left Panel - Products */
+        .pos-products {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border-left: 1px solid #334155;
+        }
+        
+        /* Search Area */
+        .search-area {
+            padding: 12px 16px;
+            background: #1E293B;
+            border-bottom: 1px solid #334155;
+        }
+        .search-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .search-row input {
+            flex: 1;
+            padding: 10px 14px;
+            background: #334155;
+            border: 2px solid #475569;
+            border-radius: 8px;
+            color: #F8FAFC;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+        .search-row input:focus {
+            outline: none;
+            border-color: #3B82F6;
+        }
+        .search-row input::placeholder { color: #64748B; }
+        .btn-scan {
+            background: #3B82F6;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
+        .btn-scan:hover { background: #2563EB; }
+        
+        /* Quick Medicines */
+        .quick-meds {
+            padding: 8px 16px;
+            background: #0F172A;
+            border-bottom: 1px solid #334155;
+        }
+        .quick-meds-label {
+            font-size: 11px;
+            color: #64748B;
+            margin-bottom: 6px;
+        }
+        .quick-meds-grid {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+        .quick-meds-grid::-webkit-scrollbar { height: 3px; }
+        .quick-meds-grid::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+        .quick-med-btn {
+            background: #1E293B;
+            border: 1px solid #334155;
+            color: #F8FAFC;
+            padding: 6px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            white-space: nowrap;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .quick-med-btn:hover {
+            background: #3B82F6;
+            border-color: #3B82F6;
+        }
+        .quick-med-btn .price {
+            color: #22C55E;
+            font-size: 11px;
+            margin-right: 4px;
+        }
+        
+        /* Search Results */
+        .search-results {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 16px;
+        }
+        .search-results::-webkit-scrollbar { width: 5px; }
+        .search-results::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+        .search-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: #64748B;
+        }
+        .search-empty .icon { font-size: 48px; margin-bottom: 12px; }
+        .search-empty p { font-size: 14px; }
+        .medicine-card {
+            background: #1E293B;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .medicine-card:hover {
+            border-color: #3B82F6;
+            background: #1E3A5F;
+        }
+        .medicine-card .med-img {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: #334155;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+        .medicine-card .med-img img {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+        .medicine-card .med-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .medicine-card .med-info .name {
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .medicine-card .med-info .details {
+            font-size: 12px;
+            color: #94A3B8;
+            margin-top: 2px;
+        }
+        .medicine-card .med-info .stock {
+            font-size: 11px;
+            color: #64748B;
+            margin-top: 2px;
+        }
+        .medicine-card .med-price {
+            font-size: 16px;
+            font-weight: 700;
+            color: #22C55E;
+            white-space: nowrap;
+        }
+        
+        /* Right Panel - Cart */
+        .pos-cart {
+            width: 380px;
+            display: flex;
+            flex-direction: column;
+            background: #1E293B;
+            overflow: hidden;
+        }
+        .cart-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .cart-header h2 { font-size: 16px; }
+        .cart-header .count {
+            background: #3B82F6;
+            color: white;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+        .cart-items {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 12px;
+        }
+        .cart-items::-webkit-scrollbar { width: 4px; }
+        .cart-items::-webkit-scrollbar-thumb { background: #475569; border-radius: 2px; }
+        .cart-empty {
+            text-align: center;
+            padding: 40px 16px;
+            color: #64748B;
+        }
+        .cart-empty .icon { font-size: 36px; margin-bottom: 8px; }
+        .cart-empty p { font-size: 13px; }
+        .cart-item {
+            background: #0F172A;
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+        }
+        .cart-item .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 8px;
+        }
+        .cart-item .item-header .item-name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .cart-item .item-header .item-unit {
+            font-size: 11px;
+            color: #94A3B8;
+        }
+        .cart-item .item-header .item-total {
+            font-size: 14px;
+            font-weight: 700;
+            color: #22C55E;
+        }
+        .cart-item .item-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: space-between;
+        }
+        .cart-item .qty-controls {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .cart-item .qty-btn {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #475569;
+            background: #1E293B;
+            color: #F8FAFC;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .cart-item .qty-btn:hover { background: #334155; border-color: #3B82F6; }
+        .cart-item .qty-btn.danger:hover { border-color: #EF4444; color: #EF4444; }
+        .cart-item .qty-value {
+            font-size: 16px;
+            font-weight: 700;
+            min-width: 30px;
+            text-align: center;
+        }
+        .cart-item .item-price {
+            font-size: 12px;
+            color: #94A3B8;
+        }
+        .cart-footer {
+            padding: 12px 16px;
+            border-top: 1px solid #334155;
+            background: #0F172A;
+        }
+        .cart-footer .total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .cart-footer .total-row .label { font-size: 14px; color: #94A3B8; }
+        .cart-footer .total-row .amount {
+            font-size: 22px;
+            font-weight: 700;
+            color: #22C55E;
+        }
+        .btn-checkout {
+            width: 100%;
+            padding: 14px;
+            background: #3B82F6;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-checkout:hover { background: #2563EB; }
+        .btn-checkout:disabled {
+            background: #475569;
+            cursor: not-allowed;
+        }
+        
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal {
+            background: #1E293B;
+            border-radius: 16px;
+            padding: 24px;
+            width: 100%;
+            max-width: 400px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        .modal h2 { font-size: 18px; margin-bottom: 20px; text-align: center; }
+        .modal .modal-img {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            background: #334155;
+            margin: 0 auto 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+        }
+        .modal .modal-img img {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            object-fit: cover;
+        }
+        .modal .medicine-name {
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        .unit-select {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .unit-btn {
+            background: #334155;
+            border: 2px solid #475569;
+            color: #F8FAFC;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .unit-btn:hover { border-color: #3B82F6; }
+        .unit-btn.selected {
+            border-color: #3B82F6;
+            background: #1E3A5F;
+        }
+        .unit-btn .unit-price {
+            display: block;
+            font-size: 11px;
+            color: #22C55E;
+            margin-top: 4px;
+        }
+        .modal .qty-input-area {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .modal .qty-input-area label {
+            font-size: 14px;
+            color: #94A3B8;
+        }
+        .modal .qty-input-area input {
+            width: 70px;
+            padding: 8px;
+            background: #0F172A;
+            border: 2px solid #475569;
+            border-radius: 6px;
+            color: #F8FAFC;
+            font-size: 16px;
+            text-align: center;
+        }
+        .modal .qty-input-area input:focus {
+            outline: none;
+            border-color: #3B82F6;
+        }
+        .modal .stock-info {
+            text-align: center;
+            font-size: 12px;
+            color: #94A3B8;
+            margin-bottom: 16px;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .modal-actions button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-confirm {
+            background: #3B82F6;
+            color: white;
+        }
+        .btn-confirm:hover { background: #2563EB; }
+        .btn-cancel {
+            background: #334155;
+            color: #94A3B8;
+        }
+        .btn-cancel:hover { background: #475569; color: #F8FAFC; }
+        
+        /* Payment Modal */
+        .payment-methods {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .payment-btn {
+            background: #334155;
+            border: 2px solid #475569;
+            color: #F8FAFC;
+            padding: 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .payment-btn:hover { border-color: #3B82F6; }
+        .payment-btn.selected {
+            border-color: #22C55E;
+            background: #065F46;
+        }
+        .payment-btn .pay-icon { font-size: 24px; display: block; margin-bottom: 4px; }
+        .payment-total {
+            text-align: center;
+            font-size: 28px;
+            font-weight: 700;
+            color: #22C55E;
+            margin-bottom: 16px;
+        }
+        .modal .form-group {
+            margin-bottom: 12px;
+        }
+        .modal .form-group label {
+            display: block;
+            font-size: 13px;
+            color: #94A3B8;
+            margin-bottom: 6px;
+        }
+        .modal .form-group input {
+            width: 100%;
+            padding: 10px 14px;
+            background: #0F172A;
+            border: 2px solid #475569;
+            border-radius: 8px;
+            color: #F8FAFC;
+            font-size: 14px;
+        }
+        .modal .form-group input:focus {
+            outline: none;
+            border-color: #3B82F6;
+        }
+        
+        /* Toast / Alert */
+        .toast {
+            position: fixed;
+            top: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 200;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: none;
+            max-width: 400px;
+            text-align: center;
+        }
+        .toast.show { display: block; animation: slideDown 0.3s ease; }
+        .toast.success { background: #059669; color: white; }
+        .toast.error { background: #DC2626; color: white; }
+        .toast.warning { background: #D97706; color: white; }
+        @keyframes slideDown {
+            from { transform: translateX(-50%) translateY(-20px); opacity: 0; }
+            to { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
+        
+        /* Loading Spinner */
+        .spinner-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.8);
+            z-index: 300;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .spinner-overlay .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #334155;
+            border-top: 4px solid #3B82F6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        .spinner-overlay p { color: #94A3B8; font-size: 14px; }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .pos-layout { flex-direction: column; height: auto; }
+            .pos-cart {
+                width: 100%;
+                height: 50vh;
+                border-top: 1px solid #334155;
+            }
+            .pos-products { height: 50vh; }
+        }
+        
+        /* Barcode Scanner Placeholder */
+        #scanner-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 400;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        #scanner-overlay.active { display: flex; }
+        #scanner-overlay video {
+            max-width: 100%;
+            max-height: 70vh;
+            border-radius: 12px;
+        }
+        #scanner-close {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: #DC2626;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+    
+    <!-- Loading -->
+    <div class="spinner-overlay" id="loadingOverlay" style="display:none;">
+        <div class="spinner"></div>
+        <p>جاري معالجة البيع...</p>
+    </div>
+    
+    <!-- Barcode Scanner -->
+    <div id="scanner-overlay">
+        <button id="scanner-close" onclick="stopScanner()">✕ إغلاق</button>
+        <video id="scanner-video" playsinline></video>
+        <p style="color:#94A3B8; margin-top: 12px; font-size:14px;">وجّه الكاميرا نحو الباركود</p>
+    </div>
+    
+    <!-- Main App -->
+    <div x-data="posApp()" x-init="init()">
+        <!-- Header -->
+        <div class="pos-header">
+            <div class="logo-section">
+                <h1>⚕️ PharmaSUD</h1>
+                <span style="font-size:12px;color:#64748B;background:#334155;padding:2px 8px;border-radius:4px;">POS</span>
+            </div>
+            <div class="user-section">
+                <span><span class="name" x-text="userName"></span></span>
+                <button class="btn-sm btn-danger-sm" @click="logout()">🚪 خروج</button>
+            </div>
+        </div>
+        
+        <!-- Layout -->
+        <div class="pos-layout">
+            <!-- Products Panel -->
+            <div class="pos-products">
+                <!-- Search -->
+                <div class="search-area">
+                    <div class="search-row">
+                        <input type="text" x-model="searchQuery" @input.debounce="searchMedicines" 
+                               placeholder="🔍 ابحث باسم الدواء..." @keydown.enter="searchMedicines">
+                        <button class="btn-scan" @click="startScanner">📷 مسح</button>
+                    </div>
+                </div>
+                
+                <!-- Quick Medicines -->
+                <div class="quick-meds">
+                    <div class="quick-meds-label">⚡ الأدوية السريعة</div>
+                    <div class="quick-meds-grid">
+                        <template x-for="med in quickMeds" :key="med.medicine_id">
+                            <button class="quick-med-btn" @click="addToCart(med)">
+                                <span x-text="med.trade_name"></span>
+                                <span class="price" x-text="med.sale_price + ' ج'"></span>
+                            </button>
+                        </template>
+                        <template x-if="quickMeds.length === 0">
+                            <span style="font-size:12px;color:#64748B;">لا توجد أدوية</span>
+                        </template>
+                    </div>
+                </div>
+                
+                <!-- Search Results -->
+                <div class="search-results">
+                    <template x-if="searchResults.length > 0">
+                        <template x-for="med in searchResults" :key="med.medicine_id">
+                            <div class="medicine-card" @click="showUnitModal(med)">
+                                <div class="med-img">
+                                    <template x-if="med.image_url">
+                                        <img :src="med.image_url" :alt="med.trade_name">
+                                    </template>
+                                    <template x-if="!med.image_url">
+                                        💊
+                                    </template>
+                                </div>
+                                <div class="med-info">
+                                    <div class="name" x-text="med.trade_name"></div>
+                                    <div class="details" x-text="med.scientific_name || ''"></div>
+                                    <div class="stock">المخزون: <span x-text="med.available_stock"></span></div>
+                                </div>
+                                <div class="med-price" x-text="med.sale_price + ' ج'"></div>
+                            </div>
+                        </template>
+                    </template>
+                    <template x-if="searchResults.length === 0 && searchQuery.length > 0">
+                        <div class="search-empty">
+                            <div class="icon">🔍</div>
+                            <p>لا توجد نتائج لـ "<span x-text="searchQuery"></span>"</p>
+                        </div>
+                    </template>
+                    <template x-if="searchResults.length === 0 && searchQuery.length === 0">
+                        <div class="search-empty">
+                            <div class="icon">🛒</div>
+                            <p>ابحث عن دواء أو استخدم الباركود</p>
+                            <p style="font-size:12px;margin-top:4px;">أو اختر من الأدوية السريعة أعلاه</p>
+                        </div>
+                    </template>
+                </div>
+            </div>
+            
+            <!-- Cart Panel -->
+            <div class="pos-cart">
+                <div class="cart-header">
+                    <h2>🛒 السلة</h2>
+                    <span class="count" x-text="cart.items.length + ' صنف'"></span>
+                </div>
+                <div class="cart-items">
+                    <template x-if="cart.items.length === 0">
+                        <div class="cart-empty">
+                            <div class="icon">🛒</div>
+                            <p>السلة فارغة</p>
+                            <p style="font-size:12px;margin-top:4px;">أضف أدوية من القائمة</p>
+                        </div>
+                    </template>
+                    <template x-for="(item, index) in cart.items" :key="item.medicine_id">
+                        <div class="cart-item">
+                            <div class="item-header">
+                                <div>
+                                    <div class="item-name" x-text="item.trade_name"></div>
+                                    <div class="item-unit" x-text="item.unit_name"></div>
+                                </div>
+                                <div class="item-total" x-text="formatCurrency(item.total_price)"></div>
+                            </div>
+                            <div class="item-controls">
+                                <div class="qty-controls">
+                                    <button class="qty-btn danger" @click="removeFromCart(index)" title="حذف">
+                                        🗑
+                                    </button>
+                                    <button class="qty-btn" @click="updateQuantity(index, item.quantity - 1)">−</button>
+                                    <span class="qty-value" x-text="item.quantity"></span>
+                                    <button class="qty-btn" @click="updateQuantity(index, item.quantity + 1)">+</button>
+                                </div>
+                                <div class="item-price" x-text="formatCurrency(item.unit_price) + ' للوحدة'"></div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+                <div class="cart-footer">
+                    <div class="total-row">
+                        <span class="label">الإجمالي</span>
+                        <span class="amount" x-text="formatCurrency(cart.total) + ' ج.س'"></span>
+                    </div>
+                    <button class="btn-checkout" :disabled="cart.items.length === 0" @click="showPaymentModal()">
+                        إتمام البيع
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Unit Selection Modal -->
+        <div class="modal-overlay" x-show="unitModal.show" x-cloak style="display:none;" @click.self="unitModal.show = false">
+            <div class="modal">
+                <div class="modal-img">
+                    <template x-if="unitModal.medicine && unitModal.medicine.image_url">
+                        <img :src="unitModal.medicine.image_url" :alt="unitModal.medicine.trade_name">
+                    </template>
+                    <template x-if="!unitModal.medicine || !unitModal.medicine.image_url">
+                        💊
+                    </template>
+                </div>
+                <div class="medicine-name" x-text="unitModal.medicine ? unitModal.medicine.trade_name : ''"></div>
+                <div class="unit-select">
+                    <template x-for="unit in unitModal.units" :key="unit.unit_name">
+                        <button class="unit-btn" :class="{ 'selected': unitModal.selectedUnit === unit.unit_name }"
+                                @click="unitModal.selectedUnit = unit.unit_name">
+                            <span x-text="unit.unit_name"></span>
+                            <span class="unit-price" x-text="formatCurrency(unit.sale_price) + ' ج'"></span>
+                        </button>
+                    </template>
+                </div>
+                <div class="qty-input-area">
+                    <label>الكمية:</label>
+                    <input type="number" x-model.number="unitModal.quantity" min="1" max="999">
+                </div>
+                <div class="stock-info">
+                    المخزون المتاح: <span x-text="unitModal.available_stock"></span>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-cancel" @click="unitModal.show = false">إلغاء</button>
+                    <button class="btn-confirm" @click="confirmAddToCart()">➕ إضافة للسلة</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Payment Modal -->
+        <div class="modal-overlay" x-show="paymentModal.show" x-cloak style="display:none;" @click.self="paymentModal.show = false">
+            <div class="modal">
+                <h2>💳 إتمام البيع</h2>
+                <div class="payment-total" x-text="formatCurrency(cart.total) + ' ج.س'"></div>
+                
+                <div style="margin-bottom:12px;text-align:center;font-size:13px;color:#94A3B8;">اختر طريقة الدفع</div>
+                <div class="payment-methods">
+                    <button class="payment-btn" :class="{ 'selected': paymentModal.method === 'cash' }" @click="paymentModal.method = 'cash'">
+                        <span class="pay-icon">💵</span>
+                        نقدي
+                    </button>
+                    <button class="payment-btn" :class="{ 'selected': paymentModal.method === 'bankak' }" @click="paymentModal.method = 'bankak'">
+                        <span class="pay-icon">📱</span>
+                        بنكك
+                    </button>
+                    <button class="payment-btn" :class="{ 'selected': paymentModal.method === 'fory' }" @click="paymentModal.method = 'fory'">
+                        <span class="pay-icon">📲</span>
+                        فوري
+                    </button>
+                    <button class="payment-btn" :class="{ 'selected': paymentModal.method === 'transfer' }" @click="paymentModal.method = 'transfer'">
+                        <span class="pay-icon">🏦</span>
+                        تحويل بنكي
+                    </button>
+                </div>
+                
+                <div class="form-group">
+                    <label>اسم العميل (اختياري)</label>
+                    <input type="text" x-model="paymentModal.customerName" placeholder="أدخل اسم العميل (اختياري)">
+                </div>
+                
+                <div class="modal-actions">
+                    <button class="btn-cancel" @click="paymentModal.show = false">إلغاء</button>
+                    <button class="btn-confirm" @click="completeSale()" :disabled="!paymentModal.method">
+                        ✅ تأكيد البيع
+                    </button>
+                </div>
+                
+                <div x-show="saleProcessing" style="text-align:center;margin-top:12px;">
+                    <div class="spinner" style="width:24px;height:24px;border-width:3px;margin:0 auto 8px;"></div>
+                    <span style="color:#94A3B8;font-size:13px;">جاري معالجة البيع...</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Invoice Display (hidden, used for PDF) -->
+        <div id="invoice-print-area" style="display:none;"></div>
+    </div>
+    
+    <script>
+        // ============================================================
+        // Alpine.js POS Application
+        // ============================================================
+        function posApp() {
+            return {
+                // User
+                token: '',
+                userName: 'جاري التحميل...',
+                pharmacyName: '',
+                
+                // Search
+                searchQuery: '',
+                searchResults: [],
+                searchTimer: null,
+                
+                // Quick Medicines
+                quickMeds: [],
+                
+                // Cart
+                cart: {
+                    items: [],
+                    total: 0,
+                    items_count: 0
+                },
+                
+                // Unit Modal
+                unitModal: {
+                    show: false,
+                    medicine: null,
+                    units: [],
+                    selectedUnit: '',
+                    quantity: 1,
+                    available_stock: 0,
+                    currentUnitPrice: 0
+                },
+                
+                // Payment Modal
+                paymentModal: {
+                    show: false,
+                    method: 'cash',
+                    customerName: ''
+                },
+                
+                saleProcessing: false,
+                
+                // ============================================================
+                // INIT
+                // ============================================================
+                init() {
+                    // Get auth data
+                    this.token = localStorage.getItem('token');
+                    this.userName = localStorage.getItem('full_name') || 'موظف';
+                    this.pharmacyName = localStorage.getItem('pharmacy_name') || 'صيدلية الزاريات';
+                    
+                    // Check auth
+                    if (!this.token) {
+                        window.location.href = '/login';
+                        return;
+                    }
+                    
+                    // Verify token
+                    fetch('/api/auth/me', {
+                        headers: { 'Authorization': 'Bearer ' + this.token }
+                    }).then(r => {
+                        if (!r.ok) { localStorage.clear(); window.location.href = '/login'; }
+                    }).catch(() => {});
+                    
+                    // Load quick medicines
+                    this.loadQuickMedicines();
+                    
+                    // Ping every 10 minutes to keep Render alive
+                    setInterval(() => { fetch('/ping').catch(() => {}); }, 600000);
+                },
+                
+                // ============================================================
+                // QUICK MEDICINES
+                // ============================================================
+                loadQuickMedicines() {
+                    fetch('/api/sales/pos/quick-medicines', {
+                        headers: { 'Authorization': 'Bearer ' + this.token }
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        this.quickMeds = data.medicines || [];
+                    })
+                    .catch(() => {});
+                },
+                
+                // ============================================================
+                // SEARCH
+                // ============================================================
+                searchMedicines() {
+                    const q = this.searchQuery.trim();
+                    if (q.length === 0) {
+                        this.searchResults = [];
+                        return;
+                    }
+                    
+                    fetch('/api/sales/pos/search?q=' + encodeURIComponent(q), {
+                        headers: { 'Authorization': 'Bearer ' + this.token }
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        this.searchResults = data.results || [];
+                    })
+                    .catch(() => {
+                        this.showToast('حدث خطأ في البحث', 'error');
+                    });
+                },
+                
+                // ============================================================
+                // BARCODE SCANNER
+                // ============================================================
+                startScanner() {
+                    const overlay = document.getElementById('scanner-overlay');
+                    overlay.classList.add('active');
+                    
+                    // Try to use ZXing or simple camera input
+                    // For now, show a manual barcode input prompt
+                    const barcode = prompt('أدخل الباركود يدوياً:');
+                    if (barcode && barcode.trim()) {
+                        this.searchByBarcode(barcode.trim());
+                    }
+                    overlay.classList.remove('active');
+                },
+                
+                searchByBarcode(barcode) {
+                    fetch('/api/sales/pos/barcode/' + encodeURIComponent(barcode), {
+                        headers: { 'Authorization': 'Bearer ' + this.token }
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.found && data.medicine) {
+                            this.showUnitModal(data.medicine);
+                        } else {
+                            this.showToast('الباركود غير موجود: ' + barcode, 'warning');
+                        }
+                    })
+                    .catch(() => {
+                        this.showToast('حدث خطأ في البحث بالباركود', 'error');
+                    });
+                },
+                
+                // ============================================================
+                // UNIT SELECTION MODAL
+                // ============================================================
+                showUnitModal(medicine) {
+                    this.unitModal.medicine = medicine;
+                    this.unitModal.units = medicine.units || [];
+                    this.unitModal.selectedUnit = medicine.units && medicine.units.length > 0 ? medicine.units[0].unit_name : '';
+                    this.unitModal.quantity = 1;
+                    this.unitModal.available_stock = medicine.available_stock || 0;
+                    this.unitModal.show = true;
+                    
+                    // Set current unit price
+                    this.updateCurrentUnitPrice();
+                },
+                
+                updateCurrentUnitPrice() {
+                    const unit = this.unitModal.units.find(u => u.unit_name === this.unitModal.selectedUnit);
+                    this.unitModal.currentUnitPrice = unit ? unit.sale_price : (this.unitModal.medicine ? this.unitModal.medicine.sale_price : 0);
+                },
+                
+                confirmAddToCart() {
+                    const med = this.unitModal.medicine;
+                    if (!med) return;
+                    
+                    const qty = this.unitModal.quantity;
+                    if (qty <= 0) {
+                        this.showToast('الكمية باید تكون أكبر من صفر', 'warning');
+                        return;
+                    }
+                    
+                    if (qty > this.unitModal.available_stock) {
+                        this.showToast('المخزون المتاح: ' + this.unitModal.available_stock + ' فقط', 'error');
+                        return;
+                    }
+                    
+                    // Get unit price
+                    const unit = this.unitModal.units.find(u => u.unit_name === this.unitModal.selectedUnit);
+                    const unitPrice = unit ? unit.sale_price : med.sale_price;
+                    const totalPrice = unitPrice * qty;
+                    
+                    // Check if same medicine + unit already in cart
+                    const existing = this.cart.items.findIndex(
+                        i => i.medicine_id === med.medicine_id && i.unit_name === this.unitModal.selectedUnit
+                    );
+                    
+                    if (existing >= 0) {
+                        // Update existing item
+                        const newQty = this.cart.items[existing].quantity + qty;
+                        if (newQty > this.unitModal.available_stock) {
+                            this.showToast('المخزون المتاح: ' + this.unitModal.available_stock + ' فقط', 'error');
+                            return;
+                        }
+                        this.cart.items[existing].quantity = newQty;
+                        this.cart.items[existing].total_price = unitPrice * newQty;
+                    } else {
+                        // Add new item
+                        this.cart.items.push({
+                            medicine_id: med.medicine_id,
+                            trade_name: med.trade_name,
+                            image_url: med.image_url,
+                            unit_name: this.unitModal.selectedUnit,
+                            unit_price: unitPrice,
+                            quantity: qty,
+                            total_price: totalPrice,
+                            available_stock: this.unitModal.available_stock
+                        });
+                    }
+                    
+                    // Update cart totals
+                    this.calculateTotal();
+                    
+                    // Close modal
+                    this.unitModal.show = false;
+                    this.searchQuery = '';
+                    this.searchResults = [];
+                    
+                    this.showToast('✅ تمت إضافة ' + med.trade_name + ' للسلة', 'success');
+                },
+                
+                // ============================================================
+                // CART OPERATIONS
+                // ============================================================
+                calculateTotal() {
+                    let total = 0;
+                    this.cart.items.forEach(item => {
+                        total += item.total_price;
+                    });
+                    this.cart.total = total;
+                    this.cart.items_count = this.cart.items.length;
+                },
+                
+                updateQuantity(index, newQty) {
+                    if (newQty <= 0) {
+                        this.removeFromCart(index);
+                        return;
+                    }
+                    
+                    const item = this.cart.items[index];
+                    if (newQty > item.available_stock) {
+                        this.showToast('المخزون المتاح: ' + item.available_stock + ' فقط', 'error');
+                        return;
+                    }
+                    
+                    this.cart.items[index].quantity = newQty;
+                    this.cart.items[index].total_price = item.unit_price * newQty;
+                    this.calculateTotal();
+                },
+                
+                removeFromCart(index) {
+                    this.cart.items.splice(index, 1);
+                    this.calculateTotal();
+                },
+                
+                clearCart() {
+                    this.cart.items = [];
+                    this.cart.total = 0;
+                    this.cart.items_count = 0;
+                },
+                
+                // ============================================================
+                // PAYMENT
+                // ============================================================
+                showPaymentModal() {
+                    if (this.cart.items.length === 0) {
+                        this.showToast('السلة فارغة', 'warning');
+                        return;
+                    }
+                    this.paymentModal.method = 'cash';
+                    this.paymentModal.customerName = '';
+                    this.paymentModal.show = true;
+                },
+                
+                // ============================================================
+                // COMPLETE SALE
+                // ============================================================
+                completeSale() {
+                    if (!this.paymentModal.method) {
+                        this.showToast('اختر طريقة الدفع', 'warning');
+                        return;
+                    }
+                    
+                    this.saleProcessing = true;
+                    
+                    // Build request body
+                    const items = this.cart.items.map(item => ({
+                        medicine_id: item.medicine_id,
+                        unit_name: item.unit_name,
+                        quantity: item.quantity,
+                        unit_price: item.unit_price
+                    }));
+                    
+                    const payload = {
+                        items: items,
+                        payment_method: this.paymentModal.method,
+                        customer_name: this.paymentModal.customerName || null,
+                        total_amount: this.cart.total
+                    };
+                    
+                    // Show loading
+                    document.getElementById('loadingOverlay').style.display = 'flex';
+                    this.paymentModal.show = false;
+                    
+                    fetch('/api/sales/create', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + this.token
+                        },
+                        body: JSON.stringify(payload)
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        document.getElementById('loadingOverlay').style.display = 'none';
+                        this.saleProcessing = false;
+                        
+                        if (data.success) {
+                            // Generate invoice PDF
+                            this.generateInvoice(data);
+                            
+                            // Clear cart
+                            this.clearCart();
+                            
+                            // Reload quick medicines
+                            this.loadQuickMedicines();
+                            
+                            this.showToast('✅ ' + data.message, 'success');
+                        } else {
+                            let msg = data.message || 'حدث خطأ';
+                            if (data.details && data.details.length > 0) {
+                                msg += '\n' + data.details.map(d => 
+                                    '• ' + d.medicine_name + ': المطلوب ' + d.requested + '، المتوفر ' + d.available
+                                ).join('\n');
+                            }
+                            this.showToast(msg, 'error');
+                        }
+                    })
+                    .catch(err => {
+                        document.getElementById('loadingOverlay').style.display = 'none';
+                        this.saleProcessing = false;
+                        this.showToast('حدث خطأ في الاتصال بالخادم', 'error');
+                    });
+                },
+                
+                // ============================================================
+                // INVOICE PDF GENERATION
+                // ============================================================
+                generateInvoice(saleData) {
+                    try {
+                        const { jsPDF } = window.jspdf;
+                        const doc = new jsPDF({
+                            orientation: 'portrait',
+                            unit: 'mm',
+                            format: [80, 200]
+                        });
+                        
+                        const pageWidth = 80;
+                        let y = 10;
+                        const margin = 5;
+                        const lineHeight = 5;
+                        
+                        // Colors
+                        const primaryColor = [59, 130, 246]; // #3B82F6
+                        const textColor = [30, 41, 59];
+                        const mutedColor = [100, 116, 139];
+                        
+                        // Helper function for centered text
+                        function centerText(text, y, fontSize = 8, bold = false) {
+                            doc.setFontSize(fontSize);
+                            doc.setFont('helvetica', bold ? 'bold' : 'normal');
+                            const textWidth = doc.getStringUnitWidth(text) * fontSize / doc.internal.scaleFactor;
+                            const x = (pageWidth - textWidth) / 2;
+                            doc.text(text, x, y);
+                        }
+                        
+                        // Helper for RTL text
+                        function rtlText(text, x, y, fontSize = 7) {
+                            doc.setFontSize(fontSize);
+                            doc.setFont('helvetica', 'normal');
+                            // For Arabic, we need reverse the string
+                            const reversed = text.split('').reverse().join('');
+                            doc.text(reversed, x, y, { align: 'left' });
+                        }
+                        
+                        // ========================================
+                        // HEADER
+                        // ========================================
+                        // Pharmacy name
+                        doc.setFontSize(10);
+                        doc.setFont('helvetica', 'bold');
+                        doc.setTextColor(...primaryColor);
+                        const pharmName = this.pharmacyName || 'صيدلية الزاريات';
+                        centerText(pharmName, y, 10, true);
+                        y += 6;
+                        
+                        // Pharmacy address
+                        doc.setFontSize(6);
+                        doc.setFont('helvetica', 'normal');
+                        doc.setTextColor(...mutedColor);
+                        centerText('السودان', y, 6);
+                        y += 4;
+                        
+                        // Separator
+                        y += 2;
+                        doc.setDrawColor(200, 200, 200);
+                        doc.line(margin, y, pageWidth - margin, y);
+                        y += 4;
+                        
+                        // ========================================
+                        // INVOICE INFO
+                        // ========================================
+                        doc.setFontSize(7);
+                        doc.setFont('helvetica', 'bold');
+                        doc.setTextColor(...textColor);
+                        
+                        const kv = (label, value) => {
+                            doc.text(label + ': ', margin, y);
+                            doc.setFont('helvetica', 'normal');
+                            const valStr = value ? String(value) : '-';
+                            // For Arabic values, reverse
+                            const reversedVal = valStr.split('').reverse().join('');
+                            doc.text(reversedVal, margin + 30, y, { align: 'right' });
+                            doc.setFont('helvetica', 'bold');
+                            y += 4;
+                        };
+                        
+                        kv('فاتورة رقم', '#' + (saleData.invoice_number || ''));
+                        kv('التاريخ', saleData.created_at ? saleData.created_at.substring(0, 10) : '');
+                        kv('الوقت', saleData.created_at ? saleData.created_at.substring(11, 16) : '');
+                        kv('الكاشير', saleData.cashier_name || this.userName);
+                        if (saleData.customer_name) {
+                            kv('العميل', saleData.customer_name);
+                        }
+                        
+                        // Separator
+                        doc.setDrawColor(200, 200, 200);
+                        doc.line(margin, y, pageWidth - margin, y);
+                        y += 4;
+                        
+                        // ========================================
+                        // ITEMS
+                        // ========================================
+                        doc.setFontSize(6);
+                        doc.setFont('helvetica', 'bold');
+                        doc.setTextColor(...mutedColor);
+                        
+                        // Header row
+                        const col1 = margin;        // الدواء
+                        const col2 = 42;            // الكمية
+                        const col3 = 55;            // السعر
+                        const colW = pageWidth - margin * 2;
+                        
+                        doc.text('الدواء', col1, y);
+                        doc.text('الكمية', col2, y);
+                        doc.text('السعر', col3, y);
+                        y += 4;
+                        
+                        doc.setDrawColor(200, 200, 200);
+                        doc.line(margin, y, pageWidth - margin, y);
+                        y += 3;
+                        
+                        // Items
+                        doc.setFont('helvetica', 'normal');
+                        doc.setTextColor(...textColor);
+                        
+                        const items = saleData.items || [];
+                        let maxY = y;
+                        
+                        items.forEach(item => {
+                            const name = item.medicine_name || '-';
+                            const reversedName = name.split('').reverse().join('');
+                            doc.text(reversedName, margin, y);
+                            doc.text(String(item.quantity), col2, y);
+                            doc.text(formatCurrency(item.total_price) + ' ج', col3, y);
+                            y += 4;
+                            
+                            // Unit name
+                            if (item.unit_name) {
+                                doc.setFontSize(5);
+                                doc.setTextColor(...mutedColor);
+                                const reversedUnit = item.unit_name.split('').reverse().join('');
+                                doc.text(reversedUnit, margin + 15, y - 1);
+                                doc.setFontSize(6);
+                                doc.setTextColor(...textColor);
+                            }
+                            
+                            // Batch info
+                            if (item.batch_number) {
+                                doc.setFontSize(5);
+                                doc.setTextColor(...mutedColor);
+                                const batchReversed = ('شحنة ' + item.batch_number).split('').reverse().join('');
+                                doc.text(batchReversed, margin, y + 1);
+                                y += 3;
+                                doc.setFontSize(6);
+                                doc.setTextColor(...textColor);
+                            }
+                            
+                            y += 1;
+                        });
+                        
+                        // ========================================
+                        // TOTAL
+                        // ========================================
+                        y += 2;
+                        doc.setDrawColor(200, 200, 200);
+                        doc.line(margin, y, pageWidth - margin, y);
+                        y += 4;
+                        
+                        doc.setFontSize(9);
+                        doc.setFont('helvetica', 'bold');
+                        doc.setTextColor(...primaryColor);
+                        
+                        const totalStr = 'المجموع الكلي: ' + formatCurrency(this.cart.total || saleData.total_amount || 0) + ' ج.س';
+                        const reversedTotal = totalStr.split('').reverse().join('');
+                        centerText(reversedTotal, y, 9, true);
+                        y += 6;
+                        
+                        // Payment method
+                        doc.setFontSize(7);
+                        doc.setFont('helvetica', 'normal');
+                        doc.setTextColor(...mutedColor);
+                        const payStr = 'طريقة الدفع: ' + (saleData.payment_method || 'نقدي');
+                        const reversedPay = payStr.split('').reverse().join('');
+                        centerText(reversedPay, y, 7);
+                        y += 6;
+                        
+                        // ========================================
+                        // FOOTER
+                        // ========================================
+                        doc.setDrawColor(200, 200, 200);
+                        doc.line(margin, y, pageWidth - margin, y);
+                        y += 4;
+                        
+                        doc.setFontSize(6);
+                        doc.setFont('helvetica', 'bold');
+                        doc.setTextColor(...primaryColor);
+                        
+                        const footer = 'شكراً لثقتكم - دمتم بصحة';
+                        const reversedFooter = footer.split('').reverse().join('');
+                        centerText(reversedFooter, y, 6, true);
+                        y += 4;
+                        
+                        // Invoice URL
+                        doc.setFontSize(4);
+                        doc.setFont('helvetica', 'normal');
+                        doc.setTextColor(...mutedColor);
+                        const url = 'pharmasud-api.onrender.com/invoice/' + (saleData.invoice_number || '');
+                        const reversedUrl = url.split('').reverse().join('');
+                        centerText(reversedUrl, y, 4);
+                        
+                        // ========================================
+                        // SAVE
+                        // ========================================
+                        doc.save('فاتورة-' + (saleData.invoice_number || 'unknown') + '.pdf');
+                        
+                    } catch (err) {
+                        console.error('PDF generation failed:', err);
+                        this.showToast('تم البيع لكن فشل توليد PDF', 'warning');
+                    }
+                },
+                
+                // ============================================================
+                // UTILITIES
+                // ============================================================
+                formatCurrency(value) {
+                    const num = Number(value);
+                    if (isNaN(num)) return '0';
+                    return num.toLocaleString('ar-SA');
+                },
+                
+                showToast(message, type = 'success') {
+                    const toast = document.getElementById('toast');
+                    toast.textContent = message;
+                    toast.className = 'toast ' + type + ' show';
+                    
+                    setTimeout(() => {
+                        toast.classList.remove('show');
+                    }, 3000);
+                },
+                
+                logout() {
+                    localStorage.clear();
+                    window.location.href = '/login';
+                }
+            };
+        }
+        
+        // Scanner functions (called from Alpine)
+        function stopScanner() {
+            document.getElementById('scanner-overlay').classList.remove('active');
+            const video = document.getElementById('scanner-video');
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach(t => t.stop());
+                video.srcObject = null;
+            }
+        }
+    </script>
+</body>
+</html>
+<!-- ✅ انتهى - pos.html - المرحلة 5 -->

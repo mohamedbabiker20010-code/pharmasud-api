@@ -385,7 +385,131 @@ class AvailableBatchResponse(BaseModel):
     batches: list[BatchResponse]
 
 
-# ✅ انتهى - Pydantic Models للمرحلة 4
+# ═══════════════════════════════════════════════════════════
+# Pydantic Models for Sales & POS (Stage 5)
+# ═══════════════════════════════════════════════════════════
+
+
+class SaleCreateItem(BaseModel):
+    """Schema for a single item in a sale request."""
+    medicine_id: str = Field(..., description="Medicine UUID")
+    unit_name: str = Field(..., description="Unit sold: علبة, شريط, قرص")
+    quantity: int = Field(..., gt=0, description="Quantity sold")
+    unit_price: float = Field(..., gt=0, description="Price per unit")
+
+
+class SaleCreate(BaseModel):
+    """Schema for creating a new sale."""
+    items: list[SaleCreateItem] = Field(..., min_length=1, description="Items in the sale")
+    payment_method: str = Field(..., description="Payment method: cash, bankak, fory, transfer")
+    customer_name: Optional[str] = Field(None, max_length=100, description="Customer name (optional)")
+    total_amount: float = Field(..., gt=0, description="Total sale amount")
+
+    @validator('payment_method')
+    def validate_payment(cls, v):
+        allowed = ['cash', 'bankak', 'fory', 'transfer']
+        if v not in allowed:
+            raise ValueError(f'طريقة الدفع должна быть واحدة من: {", ".join(allowed)}')
+        return v
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "items": [
+                    {"medicine_id": "uuid...", "unit_name": "شريط", "quantity": 2, "unit_price": 350}
+                ],
+                "payment_method": "cash",
+                "customer_name": "أحمد",
+                "total_amount": 700
+            }
+        }
+
+
+class SaleItemResponse(BaseModel):
+    """Schema for a single item in sale response."""
+    id: str
+    medicine_id: str
+    medicine_name: str
+    unit_name: Optional[str] = None
+    quantity: int
+    unit_price: float
+    total_price: float
+    batch_id: Optional[str] = None
+    batch_number: Optional[str] = None
+    expiry_date: Optional[str] = None
+
+
+class SaleResponse(BaseModel):
+    """Schema for sale response after creation."""
+    success: bool
+    sale_id: Optional[str] = None
+    invoice_number: Optional[int] = None
+    total_amount: Optional[float] = None
+    payment_method: Optional[str] = None
+    customer_name: Optional[str] = None
+    cashier_name: Optional[str] = None
+    pharmacy_name: Optional[str] = None
+    items: Optional[list[SaleItemResponse]] = None
+    created_at: Optional[str] = None
+    message: Optional[str] = None
+    error_type: Optional[str] = None
+    details: Optional[list[dict]] = None
+
+
+class SaleListItem(BaseModel):
+    """Schema for sale list item (summary)."""
+    sale_id: str
+    invoice_number: int
+    total_amount: float
+    payment_method: str
+    customer_name: Optional[str] = None
+    cashier_name: Optional[str] = None
+    items_count: int
+    created_at: str
+
+    class Config:
+        from_attributes = True
+
+
+class SalesListResponse(BaseModel):
+    """Schema for list of sales."""
+    sales: list[SaleListItem]
+    total_sales: int
+    total_amount: float
+    page: int
+    per_page: int
+
+
+class POSSearchResult(BaseModel):
+    """Schema for POS search result."""
+    medicine_id: str
+    trade_name: str
+    scientific_name: Optional[str] = None
+    sale_price: float
+    available_stock: int
+    image_url: Optional[str] = None
+    units: list[dict]
+
+
+class POSSearchResponse(BaseModel):
+    """Schema for POS search response."""
+    results: list[POSSearchResult]
+
+
+class QuickMedicine(BaseModel):
+    """Schema for quick access medicine."""
+    medicine_id: str
+    trade_name: str
+    sale_price: float
+    image_url: Optional[str] = None
+
+
+class QuickMedicinesResponse(BaseModel):
+    """Schema for quick medicines response."""
+    medicines: list[QuickMedicine]
+
+
+# ✅ انتهى - Pydantic Models للمرحلة 5
 # ═══════════════════════════════════════════════════════════
 
 
@@ -526,6 +650,7 @@ class SaleItem(Base):
     medicine_id = Column(UUID(as_uuid=True), ForeignKey("medicines.id"))
     batch_id = Column(UUID(as_uuid=True), ForeignKey("batches.id"))
     quantity = Column(Integer, nullable=False)
+    unit_name = Column(String(20))  # Unit sold: علبة, شريط, قرص
     unit_price = Column(Numeric(10, 2), nullable=False)
     total_price = Column(Numeric(10, 2), nullable=False)
 
