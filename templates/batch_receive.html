@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>استلام شحنة جديدة - صيدلية الزاريات</title>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0F172A;
+            color: #F8FAFC;
+            min-height: 100vh;
+        }
+        .container { max-width: 700px; margin: 0 auto; padding: 24px 20px; }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #334155;
+        }
+        .header h1 { font-size: 20px; display: flex; align-items: center; gap: 8px; }
+        .back-link {
+            color: #94A3B8;
+            text-decoration: none;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .back-link:hover { color: #3B82F6; }
+
+        /* Search / Barcode */
+        .search-section {
+            background: #1E293B;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .search-section h2 { font-size: 14px; color: #94A3B8; margin-bottom: 12px; }
+        .search-row {
+            display: flex;
+            gap: 8px;
+        }
+        .search-row input {
+            flex: 1;
+            background: #0F172A;
+            border: 1px solid #334155;
+            padding: 10px 14px;
+            border-radius: 8px;
+            color: #F8FAFC;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        .search-row input:focus { outline: none; border-color: #3B82F6; }
+        .search-row button {
+            background: #3B82F6;
+            border: none;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+        .search-row button:hover { background: #2563EB; }
+        .search-row button.secondary {
+            background: #334155;
+        }
+        .search-row button.secondary:hover { background: #475569; }
+
+        /* Medicine Preview */
+        .medicine-preview {
+            background: #1E293B;
+            border: 1px solid #3B82F6;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .medicine-preview img {
+            width: 64px;
+            height: 64px;
+            border-radius: 8px;
+            object-fit: cover;
+            background: #0F172A;
+        }
+        .medicine-preview .info h3 { font-size: 16px; }
+        .medicine-preview .info p { font-size: 13px; color: #94A3B8; }
+        .medicine-preview .info .category {
+            display: inline-block;
+            background: #1E3A5F;
+            color: #60A5FA;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-top: 4px;
+        }
+
+        /* Form */
+        .form-section {
+            background: #1E293B;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 24px;
+        }
+        .form-section h2 { font-size: 14px; color: #94A3B8; margin-bottom: 16px; }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .form-group { display: flex; flex-direction: column; gap: 4px; }
+        .form-group.full { grid-column: 1 / -1; }
+        .form-group label {
+            font-size: 13px;
+            color: #94A3B8;
+        }
+        .form-group label .required { color: #EF4444; }
+        .form-group input, .form-group select {
+            background: #0F172A;
+            border: 1px solid #334155;
+            padding: 10px 12px;
+            border-radius: 8px;
+            color: #F8FAFC;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #3B82F6;
+        }
+        .form-group select option { background: #1E293B; color: #F8FAFC; }
+        .form-group .hint { font-size: 11px; color: #64748B; }
+
+        .submit-btn {
+            width: 100%;
+            margin-top: 20px;
+            background: #059669;
+            border: none;
+            color: white;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .submit-btn:hover { background: #047857; }
+        .submit-btn:disabled {
+            background: #334155;
+            color: #64748B;
+            cursor: not-allowed;
+        }
+        .submit-btn.loading {
+            background: #2563EB;
+            pointer-events: none;
+        }
+
+        /* Messages */
+        .alert {
+            padding: 14px 16px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+        .alert-success { background: #065F46; color: #6EE7B7; border: 1px solid #047857; }
+        .alert-error { background: #7F1D1D; color: #FCA5A5; border: 1px solid #DC2626; }
+        .alert-warning { background: #78350F; color: #FCD34D; border: 1px solid #D97706; }
+        .alert-info { background: #1E3A5F; color: #93C5FD; border: 1px solid #3B82F6; }
+
+        /* Confirmation Dialog */
+        .confirm-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        .confirm-dialog {
+            background: #1E293B;
+            border: 1px solid #DC2626;
+            border-radius: 14px;
+            padding: 28px;
+            max-width: 420px;
+            width: 90%;
+            text-align: center;
+        }
+        .confirm-dialog h3 { color: #FCA5A5; margin-bottom: 12px; font-size: 16px; }
+        .confirm-dialog p { color: #94A3B8; font-size: 14px; margin-bottom: 20px; line-height: 1.6; }
+        .confirm-dialog .btn-row { display: flex; gap: 12px; justify-content: center; }
+        .confirm-dialog .btn-confirm {
+            background: #DC2626;
+            border: none;
+            color: white;
+            padding: 10px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        .confirm-dialog .btn-confirm:hover { background: #B91C1C; }
+        .confirm-dialog .btn-cancel {
+            background: #334155;
+            border: none;
+            color: #94A3B8;
+            padding: 10px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        .confirm-dialog .btn-cancel:hover { background: #475569; }
+
+        /* Result Box */
+        .result-box {
+            background: #1E293B;
+            border: 1px solid #047857;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .result-box .success-icon { font-size: 48px; margin-bottom: 12px; }
+        .result-box h3 { color: #6EE7B7; margin-bottom: 8px; }
+        .result-box .detail { color: #94A3B8; font-size: 14px; }
+        .result-box .detail span { color: #F8FAFC; font-weight: 600; }
+        .result-box .new-btn {
+            display: inline-block;
+            margin-top: 16px;
+            background: #3B82F6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        @media (max-width: 600px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .search-row { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" x-data="batchReceiveApp()">
+        <!-- Header -->
+        <div class="header">
+            <h1>📥 استلام شحنة جديدة</h1>
+            <a href="/dashboard" class="back-link">← الرجوع</a>
+        </div>
+
+        <!-- Messages -->
+        <div x-show="message.text" x-transition>
+            <div :class="'alert alert-' + message.type" x-text="message.text"></div>
+        </div>
+
+        <!-- Step 1: Search Medicine -->
+        <div class="search-section">
+            <h2>🔍 الخطوة 1: ابحث عن الدواء</h2>
+            <div class="search-row">
+                <input type="text" 
+                       x-model="searchQuery" 
+                       @keyup.enter="searchMedicine()"
+                       placeholder="امسح الباركود أو اكتب اسم الدواء...">
+                <button @click="searchMedicine()">🔍 بحث</button>
+            </div>
+        </div>
+
+        <!-- Medicine Preview -->
+        <div x-show="selectedMedicine" x-transition>
+            <div class="medicine-preview">
+                <img :src="selectedMedicine.image_url" alt="">
+                <div class="info">
+                    <h3 x-text="selectedMedicine.trade_name"></h3>
+                    <p x-text="selectedMedicine.scientific_name || ''"></p>
+                    <span class="category" x-text="selectedMedicine.category"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Batch Form -->
+        <div x-show="selectedMedicine" x-transition>
+            <div class="form-section">
+                <h2>📋 الخطوة 2: بيانات الشحنة</h2>
+                <div class="form-grid">
+                    <div class="form-group full">
+                        <label>رقم الشحنة <span class="required">*</span></label>
+                        <input type="text" x-model="form.batch_number" placeholder="مثال: BATCH-2026-001">
+                        <span class="hint">أدخل رقماً مميزاً للشحنة</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label>الكمية <span class="required">*</span></label>
+                        <input type="number" x-model="form.quantity" min="1" placeholder="5">
+                    </div>
+
+                    <div class="form-group">
+                        <label>الوحدة <span class="required">*</span></label>
+                        <select x-model="form.unit_name">
+                            <option value="">اختر الوحدة</option>
+                            <template x-for="unit in selectedMedicine.units" :key="unit.id">
+                                <option :value="unit.unit_name" x-text="unit.unit_name"></option>
+                            </template>
+                            <option :value="selectedMedicine.base_unit" x-text="selectedMedicine.base_unit"></option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>تاريخ الانتهاء <span class="required">*</span></label>
+                        <input type="date" x-model="form.expiry_date">
+                    </div>
+
+                    <div class="form-group">
+                        <label>سعر الشراء (للعلبة) <span class="required">*</span></label>
+                        <input type="number" x-model="form.purchase_price" step="0.01" min="0" placeholder="280.00">
+                    </div>
+
+                    <div class="form-group">
+                        <label>رقم فاتورة المورد</label>
+                        <input type="text" x-model="form.supplier_invoice" placeholder="INV-2026-4455">
+                    </div>
+
+                    <div class="form-group full">
+                        <label>اسم المورد</label>
+                        <input type="text" x-model="form.supplier_name" placeholder="شركة الدواء السودانية">
+                    </div>
+                </div>
+
+                <!-- Unit conversion info -->
+                <div x-show="form.quantity && form.unit_name && form.unit_name !== selectedMedicine.base_unit" 
+                     style="margin-top: 12px; padding: 10px; background: #0F172A; border-radius: 8px; font-size: 13px; color: #94A3B8;">
+                    <span>⚡ سيتم تحويل <span x-text="form.quantity"></span> <span x-text="form.unit_name"></span>
+                    إلى الوحدة الأساسية (عند الإرسال)</span>
+                </div>
+
+                <button class="submit-btn" 
+                        @click="submitBatch()"
+                        :disabled="!canSubmit"
+                        :class="{ loading: submitting }">
+                    <span x-show="!submitting">📦 استلام الشحنة</span>
+                    <span x-show="submitting">جاري الاستلام...</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Result -->
+        <div x-show="result.show" x-transition>
+            <div class="result-box">
+                <div class="success-icon">✅</div>
+                <h3 x-text="result.message"></h3>
+                <div class="detail" x-show="result.quantity_stored">
+                    الكمية المخزنة: <span x-text="result.quantity_stored + ' ' + result.unit_converted"></span>
+                </div>
+                <div class="detail" x-show="result.expiry_warning" style="color: #FCD34D; margin-top: 8px;" x-text="result.expiry_warning"></div>
+                <button class="new-btn" @click="resetForm()">➕ استلام شحنة أخرى</button>
+            </div>
+        </div>
+
+        <!-- Confirmation Dialog for Short Expiry -->
+        <div x-show="showConfirm" class="confirm-overlay" x-transition>
+            <div class="confirm-dialog">
+                <h3>⚠️ تحذير: صلاحية قصيرة</h3>
+                <p x-text="confirmMessage"></p>
+                <div class="btn-row">
+                    <button class="btn-cancel" @click="cancelConfirm()">إلغاء</button>
+                    <button class="btn-confirm" @click="confirmSubmit()">تأكيد الاستلام</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function batchReceiveApp() {
+            return {
+                // State
+                searchQuery: '',
+                selectedMedicine: null,
+                submitting: false,
+                showConfirm: false,
+                confirmMessage: '',
+                pendingConfirmData: null,
+
+                message: { text: '', type: '' },
+
+                form: {
+                    batch_number: '',
+                    quantity: '',
+                    unit_name: '',
+                    expiry_date: '',
+                    purchase_price: '',
+                    supplier_invoice: '',
+                    supplier_name: ''
+                },
+
+                result: {
+                    show: false,
+                    message: '',
+                    quantity_stored: null,
+                    unit_converted: '',
+                    expiry_warning: null
+                },
+
+                // Computed
+                get canSubmit() {
+                    return this.selectedMedicine &&
+                           this.form.batch_number &&
+                           this.form.quantity > 0 &&
+                           this.form.unit_name &&
+                           this.form.expiry_date &&
+                           this.form.purchase_price > 0;
+                },
+
+                // Methods
+                showMessage(text, type = 'success') {
+                    this.message = { text, type };
+                    setTimeout(() => { this.message = { text: '', type: '' }; }, 5000);
+                },
+
+                // البحث عن الدواء
+                async searchMedicine() {
+                    const query = this.searchQuery.trim();
+                    if (!query) return;
+
+                    // First try barcode search
+                    try {
+                        const token = localStorage.getItem('token');
+                        if (!token) {
+                            window.location.href = '/login';
+                            return;
+                        }
+
+                        // Try barcode first
+                        let response = await fetch(`/api/medicines/barcode/${encodeURIComponent(query)}`, {
+                            headers: { 'Authorization': 'Bearer ' + token }
+                        });
+
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data.found && data.medicine) {
+                                this.selectMedicine(data.medicine);
+                                return;
+                            }
+                        }
+
+                        // If not found by barcode, search by name
+                        response = await fetch(`/api/medicines/?search=${encodeURIComponent(query)}`, {
+                            headers: { 'Authorization': 'Bearer ' + token }
+                        });
+
+                        if (response.ok) {
+                            const data = await response.json();
+                            const medicines = data.medicines || [];
+                            if (medicines.length === 1) {
+                                this.selectMedicine(medicines[0]);
+                            } else if (medicines.length > 1) {
+                                // Show first result (or we could show a dropdown)
+                                this.selectMedicine(medicines[0]);
+                                this.showMessage(`تم العثور على ${medicines.length} نتائج. تم اختيار أولها.`, 'info');
+                            } else {
+                                this.showMessage('لم يتم العثور على الدواء', 'error');
+                            }
+                        }
+                    } catch (err) {
+                        this.showMessage('فشل الاتصال: ' + err.message, 'error');
+                    }
+                },
+
+                // اختيار دواء
+                selectMedicine(medicine) {
+                    this.selectedMedicine = medicine;
+                    this.message = { text: '', type: '' };
+                    this.result.show = false;
+                    // Auto-fill batch number suggestion
+                    const today = new Date();
+                    const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
+                    this.form.batch_number = `BATCH-${dateStr}-`;
+                },
+
+                // إرسال الشحنة
+                async submitBatch() {
+                    if (!this.canSubmit || this.submitting) return;
+                    this.submitting = true;
+
+                    try {
+                        const token = localStorage.getItem('token');
+                        if (!token) {
+                            window.location.href = '/login';
+                            return;
+                        }
+
+                        const body = {
+                            medicine_id: this.selectedMedicine.id,
+                            batch_number: this.form.batch_number,
+                            quantity: parseFloat(this.form.quantity),
+                            unit_name: this.form.unit_name,
+                            expiry_date: this.form.expiry_date,
+                            purchase_price: parseFloat(this.form.purchase_price),
+                            supplier_invoice: this.form.supplier_invoice || null,
+                            supplier_name: this.form.supplier_name || null
+                        };
+
+                        const response = await fetch('/api/batches/receive', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': 'Bearer ' + token
+                            },
+                            body: JSON.stringify(body)
+                        });
+
+                        const data = await response.json();
+
+                        if (response.ok && data.success) {
+                            // Check if there's a DANGER warning (less than 30 days)
+                            if (data.expiry_warning && data.expiry_warning.includes('خطر')) {
+                                // Show confirmation dialog
+                                this.showConfirm = true;
+                                this.confirmMessage = data.expiry_warning;
+                                this.pendingConfirmData = body;
+                                this.submitting = false;
+                                return;
+                            }
+
+                            // Success!
+                            this.showResult(data);
+                        } else {
+                            this.showMessage(data.detail || data.message || 'فشل في استلام الشحنة', 'error');
+                        }
+                    } catch (err) {
+                        this.showMessage('فشل الاتصال: ' + err.message, 'error');
+                    } finally {
+                        this.submitting = false;
+                    }
+                },
+
+                // تأكيد الاستلام بعد تحذير
+                async confirmSubmit() {
+                    this.showConfirm = false;
+                    this.submitting = true;
+
+                    try {
+                        const token = localStorage.getItem('token');
+                        const response = await fetch('/api/batches/receive/confirm-short-expiry', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': 'Bearer ' + token
+                            },
+                            body: JSON.stringify({
+                                batch_data: this.pendingConfirmData,
+                                confirmed: true
+                            })
+                        });
+
+                        const data = await response.json();
+                        if (response.ok && data.success) {
+                            this.showResult(data);
+                        } else {
+                            this.showMessage(data.detail || data.message || 'فشل في استلام الشحنة', 'error');
+                        }
+                    } catch (err) {
+                        this.showMessage('فشل الاتصال: ' + err.message, 'error');
+                    } finally {
+                        this.submitting = false;
+                    }
+                },
+
+                // إلغاء التأكيد
+                cancelConfirm() {
+                    this.showConfirm = false;
+                    this.pendingConfirmData = null;
+                    this.showMessage('تم إلغاء استلام الشحنة', 'warning');
+                },
+
+                // عرض النتيجة
+                showResult(data) {
+                    this.result = {
+                        show: true,
+                        message: data.message || 'تم استلام الشحنة بنجاح',
+                        quantity_stored: data.quantity_stored,
+                        unit_converted: data.unit_converted,
+                        expiry_warning: data.expiry_warning
+                    };
+                    this.showMessage('', '');
+                },
+
+                // إعادة تعيين النموذج
+                resetForm() {
+                    this.form = {
+                        batch_number: '',
+                        quantity: '',
+                        unit_name: '',
+                        expiry_date: '',
+                        purchase_price: '',
+                        supplier_invoice: '',
+                        supplier_name: ''
+                    };
+                    this.result = { show: false, message: '', quantity_stored: null, unit_converted: '', expiry_warning: null };
+                    this.searchQuery = '';
+                    this.selectedMedicine = null;
+                    this.message = { text: '', type: '' };
+                }
+            };
+        }
+    </script>
+</body>
+</html>

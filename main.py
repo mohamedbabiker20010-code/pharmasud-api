@@ -25,12 +25,14 @@ from auth import (
     get_current_user, require_admin, check_system_status
 )
 from medicines import router as medicines_router
+from batches import router as batches_router
+from inventory import router as inventory_router
 
 # Initialize FastAPI app
 app = FastAPI(
     title="PharmaSUD API",
-    description="Pharmacy Point of Sale System - Stage 3",
-    version="3.0.0"
+    description="Pharmacy Point of Sale System - Stage 4 (Batch & FEFO)",
+    version="4.0.0"
 )
 
 # Create tables on startup (if they don't exist)
@@ -52,6 +54,12 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 # Include medicines router
 app.include_router(medicines_router)
 
+# Include batches router (Stage 4)
+app.include_router(batches_router)
+
+# Include inventory router (Stage 4)
+app.include_router(inventory_router)
+
 # CORS configuration - restrict in production
 app.add_middleware(
     CORSMiddleware,
@@ -71,8 +79,8 @@ def root():
     """Root endpoint - API status."""
     return {
         "status": "PharmaSUD API Running",
-        "version": "2.0.0",
-        "stage": "Stage 2"
+        "version": "4.0.0",
+        "stage": "Stage 4 - Batch & FEFO"
     }
 
 
@@ -259,6 +267,18 @@ def medicines_list_page():
 def medicine_form_page():
     """Medicine Add/Edit Form Page."""
     return HTMLResponse(content=MEDICINE_FORM_HTML)
+
+
+@app.get("/batch-receive", response_class=HTMLResponse)
+def batch_receive_page():
+    """Batch Receive Page (Stage 4)."""
+    return HTMLResponse(content=BATCH_RECEIVE_HTML)
+
+
+@app.get("/inventory", response_class=HTMLResponse)
+def inventory_page():
+    """Inventory Management Page (Stage 4)."""
+    return HTMLResponse(content=INVENTORY_HTML)
 
 
 # ═══════════════════════════════════════════════════════════
@@ -985,6 +1005,12 @@ DASHBOARD_HTML = f"""
         <a href="/medicine-form" class="nav-item">
             <span class="icon">➕</span> إضافة دواء
         </a>
+        <a href="/inventory" class="nav-item">
+            <span class="icon">📦</span> المخزون
+        </a>
+        <a href="/batch-receive" class="nav-item">
+            <span class="icon">📥</span> استلام شحنة
+        </a>
         <a href="/pos" class="nav-item">
             <span class="icon">🛒</span> نقطة البيع
         </a>
@@ -1040,6 +1066,18 @@ DASHBOARD_HTML = f"""
                 <div class="card-icon">➕</div>
                 <h3>إضافة دواء جديد</h3>
                 <p>إضافة دواء مع الباركود، الصورة، الوحدات وسعر البيع</p>
+                <span class="card-status status-active">✅ مفعل</span>
+            </a>
+            <a href="/inventory" class="nav-card">
+                <div class="card-icon">📦</div>
+                <h3>المخزون والشحنات</h3>
+                <p>عرض المخزون بالشحنات، تواريخ الانتهاء، وحالة التخزين</p>
+                <span class="card-status status-active">✅ مفعل</span>
+            </a>
+            <a href="/batch-receive" class="nav-card">
+                <div class="card-icon">📥</div>
+                <h3>استلام شحنة</h3>
+                <p>استلام شحنات جديدة مع الباركود، وتحويل الوحدات تلقائياً</p>
                 <span class="card-status status-active">✅ مفعل</span>
             </a>
             <a href="/pos" class="nav-card" style="opacity:0.7;">
@@ -1222,6 +1260,7 @@ import os
 
 TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "templates")
 
+# Load Stage 3 templates
 try:
     with open(os.path.join(TEMPLATE_DIR, "medicines_list.html"), "r", encoding="utf-8") as f:
         MEDICINES_LIST_HTML = f.read()
@@ -1233,3 +1272,18 @@ try:
         MEDICINE_FORM_HTML = f.read()
 except FileNotFoundError:
     MEDICINE_FORM_HTML = "<h1>Medicine Form - Template not found</h1>"
+
+# Stage 4: Load batch receive and inventory templates
+try:
+    with open(os.path.join(TEMPLATE_DIR, "batch_receive.html"), "r", encoding="utf-8") as f:
+        BATCH_RECEIVE_HTML = f.read()
+except FileNotFoundError:
+    BATCH_RECEIVE_HTML = "<h1>Batch Receive - Template not found</h1>"
+
+try:
+    with open(os.path.join(TEMPLATE_DIR, "inventory.html"), "r", encoding="utf-8") as f:
+        INVENTORY_HTML = f.read()
+except FileNotFoundError:
+    INVENTORY_HTML = "<h1>Inventory - Template not found</h1>"
+
+# ✅ انتهى - main.py - المرحلة 4

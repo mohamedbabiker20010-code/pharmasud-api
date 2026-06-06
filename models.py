@@ -246,8 +246,146 @@ class MedicineDeleteResponse(BaseModel):
     message: str
 
 
-# ✅ انتهى - models.py - المرحلة 3
-# SQLAlchemy Database Models (Original - Stage 1)
+# ═══════════════════════════════════════════════════════════
+# Pydantic Models for Batches & Inventory (Stage 4)
+# ═══════════════════════════════════════════════════════════
+
+
+class BatchReceive(BaseModel):
+    """Schema for receiving a new batch/shipment."""
+    medicine_id: str = Field(..., description="Medicine UUID")
+    batch_number: str = Field(..., min_length=1, max_length=50, description="Batch number")
+    quantity: float = Field(..., gt=0, description="Quantity received")
+    unit_name: str = Field(..., description="Unit of the quantity (e.g. علبة, شريط)")
+    expiry_date: str = Field(..., description="Expiry date (YYYY-MM-DD)")
+    purchase_price: float = Field(..., gt=0, description="Purchase price per unit")
+    supplier_invoice: Optional[str] = Field(None, max_length=50, description="Supplier invoice number")
+    supplier_name: Optional[str] = Field(None, max_length=100, description="Supplier name")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "medicine_id": "uuid...",
+                "batch_number": "BATCH-2026-001",
+                "quantity": 5,
+                "unit_name": "علبة",
+                "expiry_date": "2028-06-15",
+                "purchase_price": 280.00,
+                "supplier_invoice": "INV-2026-4455",
+                "supplier_name": "شركة الدواء السودانية"
+            }
+        }
+
+
+class BatchReceiveConfirm(BaseModel):
+    """Schema for confirming receipt of short-expiry batch."""
+    batch_data: BatchReceive
+    confirmed: bool = Field(..., description="User confirmation for short expiry")
+
+
+class BatchResponse(BaseModel):
+    """Schema for a single batch in response."""
+    batch_id: str
+    batch_number: str
+    quantity: int
+    expiry_date: str
+    expiry_status: str  # منتهي, ينتهي قريباً, تحذير, سليم
+    days_remaining: int
+    purchase_price: Optional[float] = None
+    supplier_invoice: Optional[str] = None
+    supplier_name: Optional[str] = None
+    received_at: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class BatchReceiveResponse(BaseModel):
+    """Schema for batch receive response."""
+    success: bool
+    batch_id: Optional[str] = None
+    quantity_stored: Optional[int] = None
+    unit_converted: Optional[str] = None
+    expiry_warning: Optional[str] = None
+    message: Optional[str] = None
+
+
+class FEFOAllocation(BaseModel):
+    """Schema for a single batch allocation in FEFO."""
+    batch_id: str
+    quantity: int
+    expiry_date: str
+
+
+class FEFOResult(BaseModel):
+    """Schema for FEFO batch allocation result."""
+    success: bool
+    medicine_id: str
+    trade_name: str
+    quantity_needed: int
+    allocated: list[FEFOAllocation]
+    remaining: int
+
+
+class MedicineInventoryItem(BaseModel):
+    """Schema for inventory list item."""
+    medicine_id: str
+    trade_name: str
+    scientific_name: Optional[str] = None
+    category: str
+    image_url: Optional[str] = None
+    total_stock: int
+    base_unit: str
+    stock_status: str  # available, low, out
+    nearest_expiry: Optional[str] = None
+    nearest_expiry_status: Optional[str] = None
+    batches_count: int
+
+    class Config:
+        from_attributes = True
+
+
+class InventoryListResponse(BaseModel):
+    """Schema for inventory list."""
+    medicines: list[MedicineInventoryItem]
+    total: int
+
+
+class BatchDetailResponse(BaseModel):
+    """Schema for batch details of a medicine."""
+    medicine_id: str
+    trade_name: str
+    scientific_name: Optional[str] = None
+    image_url: Optional[str] = None
+    base_unit: str
+    total_stock: int
+    batches: list[BatchResponse]
+
+
+class ExpiredItem(BaseModel):
+    """Schema for expired item in report."""
+    medicine_name: str
+    batch_number: str
+    quantity: int
+    expiry_date: str
+    days_expired: int
+
+
+class ExpiredReportResponse(BaseModel):
+    """Schema for expired items report."""
+    expired: list[ExpiredItem]
+    total_expired_items: int
+
+
+class AvailableBatchResponse(BaseModel):
+    """Schema for available batches (FEFO-ready)."""
+    medicine_id: str
+    trade_name: str
+    total_available: int
+    batches: list[BatchResponse]
+
+
+# ✅ انتهى - Pydantic Models للمرحلة 4
 # ═══════════════════════════════════════════════════════════
 
 
@@ -343,6 +481,7 @@ class Batch(Base):
     expiry_date = Column(Date, nullable=False)
     purchase_price = Column(Numeric(10, 2))
     supplier_invoice = Column(String(50))
+    supplier_name = Column(String(100))
     received_at = Column(DateTime, server_default=text("NOW()"))
     is_active = Column(Boolean, default=True)
 
@@ -396,4 +535,4 @@ class SaleItem(Base):
     batch = relationship("Batch", back_populates="sale_items")
 
 
-# ✅ انتهى - models.py - المرحلة 2
+# ✅ انتهى - models.py - المرحلة 4
