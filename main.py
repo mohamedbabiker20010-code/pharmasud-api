@@ -19,7 +19,6 @@ from database import engine, get_db, test_connection, get_tables_count, Base
 from models import (
     ProductKeyActivate, AdminCreate, UserLogin, 
     TokenResponse, UserResponse, SystemStatus,
-    Pharmacy  # Added for reset-admin endpoint
 )
 from auth import (
     activate_product_key, create_admin_user, authenticate_user,
@@ -209,62 +208,7 @@ def test_database(db: Session = Depends(get_db)):
         raise HTTPException(
             status_code=500,
             detail={"status": "error", "message": str(e)}
-        )
-
-
-# Temporary: Reset admin account
-@app.get("/api/reset-admin")
-def reset_admin(db: Session = Depends(get_db)):
-    """Delete all users and create new admin account."""
-    from uuid import uuid4
-    import bcrypt
-    
-    try:
-        # Delete all existing users
-        db.execute(text("DELETE FROM users"))
-        db.commit()
-        
-        # Get pharmacy ID directly via SQL
-        result = db.execute(text("SELECT id FROM pharmacies LIMIT 1"))
-        pharmacy_row = result.fetchone()
-        
-        if not pharmacy_row:
-            return {"success": False, "error": "No pharmacy found"}
-        
-        pharmacy_id = str(pharmacy_row[0])
-        
-        # Create new admin user
-        hashed_password = bcrypt.hashpw("abeer2026".encode(), bcrypt.gensalt()).decode()
-        user_id = str(uuid4())
-        
-        db.execute(text("""
-            INSERT INTO users (id, pharmacy_id, full_name, username, password_hash, role, is_active)
-            VALUES (:id, :pharmacy_id, :full_name, :username, :password_hash, :role, :is_active)
-        """), {
-            "id": user_id,
-            "pharmacy_id": pharmacy_id,
-            "full_name": "abeer alfadil",
-            "username": "D. Abeer",
-            "password_hash": hashed_password,
-            "role": "admin",
-            "is_active": True
-        })
-        
-        db.commit()
-        
-        return {
-            "success": True,
-            "message": "Admin account reset successfully",
-            "user": {
-                "full_name": "abeer alfadil",
-                "username": "D. Abeer",
-                "role": "admin"
-            }
-        }
-    except Exception as e:
-        db.rollback()
-        import traceback
-        return {"success": False, "error": str(e), "traceback": traceback.format_exc()}
+)
 
 
 # ═══════════════════════════════════════════════════════════
