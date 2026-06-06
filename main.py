@@ -42,6 +42,14 @@ async def create_tables():
     try:
         Base.metadata.create_all(bind=engine)
         print("✅ Database tables created successfully")
+        # Add supplier_name column if not exists (Stage 4)
+        try:
+            with engine.connect() as conn:
+                conn.execute(text("ALTER TABLE batches ADD COLUMN IF NOT EXISTS supplier_name VARCHAR(100)"))
+                conn.commit()
+                print("✅ Added supplier_name column to batches table")
+        except Exception as e:
+            print(f"⚠️ Could not add supplier_name column: {e}")
     except Exception as e:
         print(f"⚠️ Could not create tables: {e}")
 
