@@ -278,16 +278,19 @@
                 <template x-if="!loadingPharmacy">
                     <div>
                         <div class="form-group">
-                            <label>اسم الصيدلية <span class="required">*</span></label>
-                            <input type="text" x-model="pharmacyForm.name" placeholder="صيدلية الزاريات">
+                            <label>🔒 اسم الصيدلية <span style="color:#FCD34D;font-size:11px;">(مقفول)</span></label>
+                            <input type="text" x-model="pharmacyForm.name" disabled
+                                   style="background:#0F172A;border:1px solid #334155;padding:10px 12px;border-radius:8px;color:#64748B;font-size:14px;font-family:inherit;cursor:not-allowed;">
+                            <p style="font-size:11px;color:#FCD34D;margin-top:4px;">🔒 لا يمكن تعديل اسم الصيدلية — اتصل بالمطور لتغييره</p>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label>اسم المالك</label>
-                                <input type="text" x-model="pharmacyForm.owner_name" placeholder="اسم المالك">
+                                <label>🔒 اسم المالك <span style="color:#FCD34D;font-size:11px;">(مقفول)</span></label>
+                                <input type="text" x-model="pharmacyForm.owner_name" disabled
+                                       style="background:#0F172A;border:1px solid #334155;padding:10px 12px;border-radius:8px;color:#64748B;font-size:14px;font-family:inherit;cursor:not-allowed;">
                             </div>
                             <div class="form-group">
-                                <label>رقم الهاتف</label>
+                                <label>📞 رقم الهاتف</label>
                                 <input type="text" x-model="pharmacyForm.phone" placeholder="+249xxxxxxxx">
                             </div>
                         </div>
@@ -297,8 +300,8 @@
                                       style="background:#0F172A;border:1px solid #334155;padding:10px 12px;border-radius:8px;color:#F8FAFC;font-size:14px;font-family:inherit;resize:vertical;min-height:60px;"
                                       placeholder="عنوان الصيدلية"></textarea>
                         </div>
-                        <button class="submit-btn green" @click="savePharmacy()" :disabled="!pharmacyForm.name">
-                            💾 حفظ الإعدادات
+                        <button class="submit-btn green" @click="savePharmacy()">
+                            💾 حفظ بيانات الاتصال
                         </button>
                     </div>
                 </template>

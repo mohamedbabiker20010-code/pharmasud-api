@@ -276,11 +276,8 @@ async def update_pharmacy_settings(
     if not pharmacy:
         raise HTTPException(status_code=404, detail="الصيدلية غير موجودة")
 
-    # تحديث الحقول المطلوبة فقط
-    if data.name is not None:
-        pharmacy.name = data.name
-    if data.owner_name is not None:
-        pharmacy.owner_name = data.owner_name
+    # ⚠️ اسم الصيدلية واسم المالك مقفولان — لا يمكن تغييرهما بعد التفعيل
+    # المحافظة على الأمان ومنع إعادة البيع
     if data.phone is not None:
         pharmacy.phone = data.phone
     if data.address is not None:
