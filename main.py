@@ -30,6 +30,7 @@ from inventory import router as inventory_router
 from settings import router as settings_router
 from sales import router as sales_router
 from sales import public_router as sales_public_router
+from reports import router as reports_router  # المرحلة 6: التقارير
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -88,6 +89,9 @@ app.include_router(sales_router)
 
 # Include public router (Stage 5 - no JWT required)
 app.include_router(sales_public_router)
+
+# Include reports router (Stage 6 - التقارير)
+app.include_router(reports_router)
 
 # CORS configuration - restrict in production
 app.add_middleware(
@@ -334,6 +338,34 @@ def inventory_page():
 def settings_page():
     """Settings & Admin Page (Stage 4.5)."""
     return HTMLResponse(content=SETTINGS_HTML)
+
+
+# ═══════════════════════════════════════════════════════════
+# المرحلة 6: صفحات التقارير
+# ═══════════════════════════════════════════════════════════
+
+@app.get("/reports-sales", response_class=HTMLResponse)
+def reports_sales_page():
+    """Sales Report Page."""
+    return HTMLResponse(content=REPORTS_SALES_HTML)
+
+
+@app.get("/reports-profits", response_class=HTMLResponse)
+def reports_profits_page():
+    """Profit Report Page (Admin only check done in JS)."""
+    return HTMLResponse(content=REPORTS_PROFITS_HTML)
+
+
+@app.get("/reports-slow-moving", response_class=HTMLResponse)
+def reports_slow_moving_page():
+    """Slow Moving Medicines Report Page."""
+    return HTMLResponse(content=REPORTS_SLOW_MOVING_HTML)
+
+
+@app.get("/reports-purchase-forecast", response_class=HTMLResponse)
+def reports_purchase_forecast_page():
+    """Purchase Forecast Page."""
+    return HTMLResponse(content=PURCHASE_FORECAST_HTML)
 
 
 # ═══════════════════════════════════════════════════════════
@@ -894,346 +926,8 @@ LOGIN_HTML = f"""
 </html>
 """
 
-# Dashboard HTML (Protected - Admin)
-DASHBOARD_HTML = f"""
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم - صيدلية الزاريات</title>
-    <style>
-        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        body {{
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #0F172A;
-            color: #F8FAFC;
-            min-height: 100vh;
-            display: flex;
-            justify-content: flex-start;
-            padding: 0;
-        }}
-        .sidebar {{
-            width: 220px;
-            background: #1E293B;
-            min-height: 100vh;
-            padding: 24px 0;
-            border-left: 1px solid #334155;
-            flex-shrink: 0;
-        }}
-        .sidebar .logo {{
-            padding: 0 20px 24px;
-            border-bottom: 1px solid #334155;
-            margin-bottom: 16px;
-        }}
-        .sidebar .logo h1 {{ font-size: 18px; color: #3B82F6; }}
-        .sidebar .logo p {{ font-size: 11px; color: #64748B; margin-top: 2px; }}
-        .nav-item {{
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 20px;
-            color: #94A3B8;
-            text-decoration: none;
-            font-size: 14px;
-            transition: all 0.2s;
-            border-right: 3px solid transparent;
-        }}
-        .nav-item:hover, .nav-item.active {{
-            background: #334155;
-            color: #F8FAFC;
-            border-right-color: #3B82F6;
-        }}
-        .nav-item .icon {{ font-size: 18px; }}
-        .nav-item .badge {{
-            background: #3B82F6;
-            color: white;
-            font-size: 11px;
-            padding: 2px 8px;
-            border-radius: 10px;
-            margin-right: auto;
-        }}
-        .sidebar-footer {{
-            position: absolute;
-            bottom: 0;
-            width: 220px;
-            padding: 16px 20px;
-            border-top: 1px solid #334155;
-        }}
-        .main-content {{
-            flex: 1;
-            padding: 32px 40px;
-            overflow-y: auto;
-        }}
-        .header {{
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 28px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #334155;
-        }}
-        .header h2 {{ font-size: 22px; }}
-        .header-left {{ text-align: left; }}
-        .header-left .name {{ font-weight: 600; }}
-        .header-left .pharmacy {{ font-size: 13px; color: #94A3B8; }}
-        .logout-btn {{
-            background: #DC2626;
-            border: none;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 13px;
-            transition: background 0.2s;
-        }}
-        .logout-btn:hover {{ background: #B91C1C; }}
-        .stats-grid {{
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 16px;
-            margin-bottom: 32px;
-        }}
-        .stat-card {{
-            background: #1E293B;
-            padding: 20px;
-            border-radius: 12px;
-            text-align: center;
-            border: 1px solid #334155;
-        }}
-        .stat-card .stat-icon {{ font-size: 24px; margin-bottom: 8px; }}
-        .stat-card .stat-value {{ font-size: 28px; font-weight: 700; color: #3B82F6; }}
-        .stat-card .stat-label {{ font-size: 13px; color: #94A3B8; margin-top: 4px; }}
-        .nav-grid {{
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 20px;
-        }}
-        .nav-card {{
-            background: #1E293B;
-            border: 1px solid #334155;
-            border-radius: 14px;
-            padding: 28px 24px;
-            text-decoration: none;
-            color: inherit;
-            transition: all 0.25s;
-            cursor: pointer;
-            display: block;
-        }}
-        .nav-card:hover {{
-            border-color: #3B82F6;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px -5px rgba(59, 130, 246, 0.15);
-        }}
-        .nav-card .card-icon {{ font-size: 32px; margin-bottom: 12px; }}
-        .nav-card h3 {{ font-size: 16px; margin-bottom: 6px; }}
-        .nav-card p {{ font-size: 13px; color: #94A3B8; line-height: 1.5; }}
-        .nav-card .card-status {{
-            display: inline-block;
-            margin-top: 12px;
-            font-size: 12px;
-            padding: 4px 10px;
-            border-radius: 6px;
-        }}
-        .status-active {{ background: #065F46; color: #6EE7B7; }}
-        .status-coming {{ background: #1E3A5F; color: #60A5FA; }}
-        @media (max-width: 768px) {{
-            .sidebar {{ display: none; }}
-            .main-content {{ padding: 20px; }}
-        }}
-    </style>
-</head>
-<body>
-    <!-- Sidebar -->
-    <div class="sidebar" style="position:relative;">
-        <div class="logo">
-            <h1>⚕️ PharmaSUD</h1>
-            <p>صيدلية الزاريات</p>
-        </div>
-        <a href="/dashboard" class="nav-item active">
-            <span class="icon">📊</span> لوحة التحكم
-        </a>
-        <a href="/medicines" class="nav-item">
-            <span class="icon">💊</span> الأدوية
-            <span class="badge" id="medCount">-</span>
-        </a>
-        <a href="/medicine-form" class="nav-item">
-            <span class="icon">➕</span> إضافة دواء
-        </a>
-        <a href="/inventory" class="nav-item">
-            <span class="icon">📦</span> المخزون
-        </a>
-        <a href="/batch-receive" class="nav-item">
-            <span class="icon">📥</span> استلام شحنة
-        </a>
-        <a href="/pos" class="nav-item">
-            <span class="icon">🛒</span> نقطة البيع
-        </a>
-        <a href="/sales-history" class="nav-item">
-            <span class="icon">📋</span> سجل المبيعات
-        </a>
-        <a href="/settings" class="nav-item">
-            <span class="icon">⚙️</span> الإعدادات
-        </a>
-        <div class="sidebar-footer">
-            <button class="logout-btn" onclick="logout()" style="width:100%;">🚪 تسجيل الخروج</button>
-        </div>
-    </div>
-
-    <!-- Main Content -->
-    <div class="main-content">
-        <div class="header">
-            <h2>📋 لوحة التحكم</h2>
-            <div class="header-left">
-                <div class="name" id="userName">جاري التحميل...</div>
-                <div class="pharmacy" id="pharmacyName"></div>
-            </div>
-        </div>
-
-        <!-- Stats -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon">💊</div>
-                <div class="stat-value" id="statMedicines">-</div>
-                <div class="stat-label">إجمالي الأدوية</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">📦</div>
-                <div class="stat-value" id="statLowStock">-</div>
-                <div class="stat-label">منخفضة المخزون</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">🛒</div>
-                <div class="stat-value" id="statSales">0</div>
-                <div class="stat-label">مبيعات اليوم</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">👤</div>
-                <div class="stat-value" id="statEmployees">1</div>
-                <div class="stat-label">الموظفين</div>
-            </div>
-        </div>
-
-        <!-- Navigation Cards -->
-        <h3 style="margin-bottom: 16px; color: #94A3B8; font-size: 15px;">🖱️ اختر وجهتك</h3>
-        <div class="nav-grid">
-            <a href="/medicines" class="nav-card">
-                <div class="card-icon">💊</div>
-                <h3>إدارة الأدوية</h3>
-                <p>عرض، بحث، تصفية وتعديل جميع الأدوية في الصيدلية</p>
-                <span class="card-status status-active">✅ مفعل</span>
-            </a>
-            <a href="/medicine-form" class="nav-card">
-                <div class="card-icon">➕</div>
-                <h3>إضافة دواء جديد</h3>
-                <p>إضافة دواء مع الباركود، الصورة، الوحدات وسعر البيع</p>
-                <span class="card-status status-active">✅ مفعل</span>
-            </a>
-            <a href="/inventory" class="nav-card">
-                <div class="card-icon">📦</div>
-                <h3>المخزون والشحنات</h3>
-                <p>عرض المخزون بالشحنات، تواريخ الانتهاء، وحالة التخزين</p>
-                <span class="card-status status-active">✅ مفعل</span>
-            </a>
-            <a href="/batch-receive" class="nav-card">
-                <div class="card-icon">📥</div>
-                <h3>استلام شحنة</h3>
-                <p>استلام شحنات جديدة مع الباركود، وتحويل الوحدات تلقائياً</p>
-                <span class="card-status status-active">✅ مفعل</span>
-            </a>
-            <a href="/pos" class="nav-card">
-                <div class="card-icon">🛒</div>
-                <h3>نقطة البيع (POS)</h3>
-                <p>نظام البيع السريع مع الباركود، السلة، وإدارة الفواتير</p>
-                <span class="card-status status-active">✅ مفعل</span>
-            </a>
-            <a href="/sales-history" class="nav-card">
-                <div class="card-icon">📋</div>
-                <h3>سجل المبيعات</h3>
-                <p>عرض الفواتير، التصفية حسب التاريخ والموظف وطريقة الدفع</p>
-                <span class="card-status status-active">✅ مفعل</span>
-            </a>
-            <div class="nav-card" style="opacity:0.5; cursor:default;">
-                <div class="card-icon">📈</div>
-                <h3>التقارير</h3>
-                <p>تقارير المبيعات والأرباح وتحليل المخزون</p>
-                <span class="card-status status-coming">🔄 قريباً</span>
-            </div>
-            <a href="/settings" class="nav-card">
-                <div class="card-icon">⚙️</div>
-                <h3>الإعدادات</h3>
-                <p>إدارة الموظفين، تغيير كلمة السر، إعدادات الصيدلية</p>
-                <span class="card-status status-active">✅ مفعل</span>
-            </a>
-        </div>
-    </div>
-
-    <script>
-        const token = localStorage.getItem('token');
-        const role = localStorage.getItem('role');
-
-        // Check authentication
-        if (!token) {{
-            window.location.href = '/login';
-        }}
-
-        // Check admin role
-        if (role !== 'admin') {{
-            window.location.href = '/pos';
-        }}
-
-        // Display user info
-        document.getElementById('userName').textContent = localStorage.getItem('full_name') || 'مستخدم';
-        document.getElementById('pharmacyName').textContent = localStorage.getItem('pharmacy_name') || '';
-
-        // Fetch medicines count
-        async function loadStats() {{
-            try {{
-                const response = await fetch('/api/medicines/', {{
-                    headers: {{ 'Authorization': 'Bearer ' + token }}
-                }});
-                if (response.ok) {{
-                    const data = await response.json();
-                    const medicines = data.medicines || [];
-                    const total = data.total || medicines.length;
-                    document.getElementById('statMedicines').textContent = total;
-                    document.getElementById('medCount').textContent = total;
-                    
-                    // Count low stock (total_stock < min_stock or total_stock === 0)
-                    const lowStock = medicines.filter(m => m.stock_status === 'out' || m.stock_status === 'low').length;
-                    document.getElementById('statLowStock').textContent = lowStock;
-                }}
-            }} catch (err) {{
-                console.error('Failed to load stats:', err);
-            }}
-        }}
-        loadStats();
-
-        // Verify token validity
-        async function checkAuth() {{
-            try {{
-                const response = await fetch('/api/auth/me', {{
-                    headers: {{ 'Authorization': 'Bearer ' + token }}
-                }});
-                if (!response.ok) {{
-                    localStorage.clear();
-                    window.location.href = '/login';
-                }}
-            }} catch (err) {{
-                console.error('Auth check failed:', err);
-            }}
-        }}
-        checkAuth();
-
-        // Logout function
-        function logout() {{
-            localStorage.clear();
-            window.location.href = '/login';
-        }}
-    </script>
-</body>
-</html>
-"""
+# Dashboard HTML (Stage 6 - loaded from file)
+DASHBOARD_HTML = None  # Will be loaded at the bottom of the file
 
 # POS HTML (Protected)
 # Now loaded from templates/pos.html (Stage 5)
@@ -1244,6 +938,12 @@ SALES_HISTORY_HTML = None  # Will be loaded at the bottom of the file
 
 # Invoice View HTML (Public)
 INVOICE_VIEW_HTML = None  # Will be loaded at the bottom of the file
+
+# Stage 6: Report HTML templates
+REPORTS_SALES_HTML = None
+REPORTS_PROFITS_HTML = None
+REPORTS_SLOW_MOVING_HTML = None
+PURCHASE_FORECAST_HTML = None
 
 # ✅ انتهى - main.py - المرحلة 3
 
@@ -1305,4 +1005,136 @@ try:
 except FileNotFoundError:
     INVOICE_VIEW_HTML = "<h1>Invoice View - Template not found</h1>"
 
-# ✅ انتهى - main.py - المرحلة 5
+# Stage 6: Load report templates
+try:
+    with open(os.path.join(TEMPLATE_DIR, "dashboard.html"), "r", encoding="utf-8") as f:
+        DASHBOARD_HTML = f.read()
+except FileNotFoundError:
+    print("⚠️ dashboard.html not found - using fallback")
+
+try:
+    with open(os.path.join(TEMPLATE_DIR, "reports_sales.html"), "r", encoding="utf-8") as f:
+        REPORTS_SALES_HTML = f.read()
+except FileNotFoundError:
+    REPORTS_SALES_HTML = "<h1>Sales Report - Template not found</h1>"
+
+try:
+    with open(os.path.join(TEMPLATE_DIR, "reports_profits.html"), "r", encoding="utf-8") as f:
+        REPORTS_PROFITS_HTML = f.read()
+except FileNotFoundError:
+    REPORTS_PROFITS_HTML = "<h1>Profit Report - Template not found</h1>"
+
+try:
+    with open(os.path.join(TEMPLATE_DIR, "reports_slow_moving.html"), "r", encoding="utf-8") as f:
+        REPORTS_SLOW_MOVING_HTML = f.read()
+except FileNotFoundError:
+    REPORTS_SLOW_MOVING_HTML = "<h1>Slow Moving - Template not found</h1>"
+
+try:
+    with open(os.path.join(TEMPLATE_DIR, "purchase_forecast.html"), "r", encoding="utf-8") as f:
+        PURCHASE_FORECAST_HTML = f.read()
+except FileNotFoundError:
+    PURCHASE_FORECAST_HTML = "<h1>Purchase Forecast - Template not found</h1>"
+
+# ✅ انتهى - main.py - المرحلة 6
+
+# ═══════════════════════════════════════════════════════════
+# المرحلة 6: Endpoint تجريبي لتوليد بيانات المبيعات
+# ═══════════════════════════════════════════════════════════
+
+@app.get("/api/test/generate-sales-data")
+def generate_test_sales(current_user: dict = Depends(require_admin), db: Session = Depends(get_db)):
+    """Generate 30 days of test sales data for report testing."""
+    import random
+    from datetime import date, timedelta, datetime
+    
+    pharmacy_id = current_user["pharmacy_id"]
+    user_id = current_user["user_id"]
+    
+    # Get medicines with batches
+    meds = db.execute(text("""
+        SELECT m.id, m.trade_name, m.sale_price, m.base_unit
+        FROM medicines m
+        WHERE m.pharmacy_id = :pid
+    """), {"pid": pharmacy_id}).fetchall()
+    
+    if not meds:
+        return {"error": "No medicines found"}
+    
+    # Get active batches
+    batches = db.execute(text("""
+        SELECT b.id, b.medicine_id, b.quantity, b.purchase_price, b.expiry_date
+        FROM batches b
+        JOIN medicines m ON b.medicine_id = m.id
+        WHERE m.pharmacy_id = :pid AND b.is_active = true AND b.quantity > 0 AND b.expiry_date > NOW()
+    """), {"pid": pharmacy_id}).fetchall()
+    
+    if not batches:
+        return {"error": "No active batches"}
+    
+    med_batches = {}
+    for b in batches:
+        mid = str(b[1])
+        if mid not in med_batches:
+            med_batches[mid] = []
+        med_batches[mid].append({
+            "id": str(b[0]), "qty": b[2], "purchase_price": float(b[3] or 0), "expiry": b[4]
+        })
+    
+    med_map = {}
+    for m in meds:
+        med_map[str(m[0])] = {"name": m[1], "sale_price": float(m[3] or m[2] or 0) if m[3] else float(m[2] or 0), "base_unit": m[4] or "شريط"}
+    
+    today = date.today()
+    sales_created = 0
+    
+    for day_offset in range(30, 0, -1):
+        sale_date = today - timedelta(days=day_offset)
+        daily_count = random.randint(3, 8)
+        
+        for _ in range(daily_count):
+            available = [m for m in med_map if m in med_batches]
+            if not available:
+                continue
+            med_id = random.choice(available)
+            mdata = med_map[med_id]
+            batch_list = med_batches[med_id]
+            if not batch_list:
+                continue
+            batch = random.choice(batch_list)
+            
+            pm = random.choices(["cash", "bankak", "fory", "transfer"], weights=[60, 25, 10, 5], k=1)[0]
+            qty = random.randint(1, 5)
+            unit_price = mdata["sale_price"]
+            total_price = round(qty * unit_price, 2)
+            
+            sale_time = datetime.combine(sale_date, datetime.min.time()) + timedelta(
+                hours=random.randint(8, 20), minutes=random.randint(0, 59))
+            
+            customer = random.choice(["أحمد", "محمد", "خالد", "فاطمة", "مريم", None, None])
+            
+            result = db.execute(text("""
+                INSERT INTO sales (pharmacy_id, user_id, customer_name, total_amount, payment_method, created_at)
+                VALUES (:pid, :uid, :customer, :amount, :pm, :created)
+                RETURNING id, invoice_number
+            """), {"pid": pharmacy_id, "uid": user_id, "customer": customer, "amount": total_price, "pm": pm, "created": sale_time}).first()
+            
+            sale_id = str(result[0])
+            
+            db.execute(text("""
+                INSERT INTO sale_items (sale_id, medicine_id, batch_id, quantity, unit_price, total_price, unit_name)
+                VALUES (:sid, :mid, :bid, :qty, :price, :total, :unit)
+            """), {"sid": sale_id, "mid": med_id, "bid": batch["id"], "qty": qty, "price": unit_price, "total": total_price, "unit": mdata["base_unit"]})
+            
+            sales_created += 1
+    
+    # Set one batch to expire soon
+    if batches:
+        import uuid as uuid_mod
+        target_batch = batches[0]
+        near_expiry = today + timedelta(days=20)
+        db.execute(text("UPDATE batches SET expiry_date = :exp WHERE id = :bid"), 
+                   {"exp": near_expiry, "bid": target_batch[0]})
+    
+    db.commit()
+    return {"success": True, "sales_created": sales_created, "message": f"✅ تم إنشاء {sales_created} مبيعة تجريبية! راجع الداشبورد."}

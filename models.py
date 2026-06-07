@@ -722,4 +722,188 @@ class EmployeeStatusToggle(BaseModel):
     is_active: bool
 
 
-# ✅ انتهى - models.py - المرحلة 4.5
+# ═══════════════════════════════════════════════════════════
+# المرحلة 6: Pydantic Models للتقارير ولوحة التحكم
+# ═══════════════════════════════════════════════════════════
+
+# ── المهمة 1: الداشبورد الرئيسي ──
+
+class TopMedicineItem(BaseModel):
+    """أكثر الأدوية مبيعاً."""
+    trade_name: str
+    quantity_sold: int
+    revenue: float
+
+
+class DailySummary(BaseModel):
+    """ملخص اليوم."""
+    revenue: float
+    invoices_count: int
+    profit: float
+    top_medicines: list[TopMedicineItem] = []
+
+
+class AlertItem(BaseModel):
+    """تنبيه فردي."""
+    type: str  # expiry_warning | low_stock
+    medicine_name: str
+    batch: Optional[str] = None
+    days_remaining: Optional[int] = None
+    current_stock: Optional[int] = None
+    min_stock: Optional[int] = None
+    severity: str  # high | medium | low
+
+
+class WeeklyChartItem(BaseModel):
+    """نقطة في رسم مبيعات 7 أيام."""
+    date: str
+    day_name: str
+    revenue: float
+
+
+class DashboardResponse(BaseModel):
+    """استجابة الداشبورد الكاملة."""
+    today: DailySummary
+    inventory_summary: dict
+    alerts: list[AlertItem] = []
+    weekly_chart: list[WeeklyChartItem] = []
+
+
+# ── المهمة 2: تقرير المبيعات ──
+
+class PaymentBreakdownItem(BaseModel):
+    """توزيع طريقة دفع واحدة."""
+    amount: float
+    count: int
+    percentage: float
+
+
+class PaymentBreakdown(BaseModel):
+    """توزيع كل طرق الدفع."""
+    cash: PaymentBreakdownItem
+    bankak: PaymentBreakdownItem
+    fory: PaymentBreakdownItem
+    transfer: PaymentBreakdownItem
+
+
+class TopDayItem(BaseModel):
+    """أعلى يوم مبيعاً."""
+    date: str
+    revenue: float
+    invoices: int
+
+
+class SalesReportSummary(BaseModel):
+    """ملخص تقرير المبيعات."""
+    total_revenue: float
+    invoices_count: int
+    average_invoice: float
+    payment_breakdown: PaymentBreakdown
+    top_days: list[TopDayItem] = []
+
+
+class SaleListItem(BaseModel):
+    """عنصر مبيعة واحدة في القائمة."""
+    invoice_number: int
+    created_at: str
+    cashier_name: str
+    payment_method: str
+    customer_name: Optional[str] = None
+    total_amount: float
+    items_count: int
+
+
+class SalesReportResponse(BaseModel):
+    """استجابة تقرير المبيعات."""
+    summary: SalesReportSummary
+    sales: list[SaleListItem] = []
+    total_records: int
+
+
+# ── المهمة 3: تقرير الأرباح ──
+
+class ProfitByMedicine(BaseModel):
+    """ربح دواء واحد."""
+    trade_name: str
+    quantity_sold: int
+    revenue: float
+    cost: float
+    profit: float
+    margin_percentage: float
+
+
+class MonthlyComparison(BaseModel):
+    """مقارنة شهر."""
+    month: str  # YYYY-MM
+    month_name: str
+    profit: float
+
+
+class ProfitReportSummary(BaseModel):
+    """ملخص تقرير الأرباح."""
+    total_revenue: float
+    total_cost: float
+    net_profit: float
+    profit_margin: float
+
+
+class ProfitReportResponse(BaseModel):
+    """استجابة تقرير الأرباح."""
+    summary: ProfitReportSummary
+    by_medicine: list[ProfitByMedicine] = []
+    monthly_comparison: list[MonthlyComparison] = []
+
+
+# ── المهمة 4: الأدوية الراكدة ──
+
+class SlowMovingMedicine(BaseModel):
+    """دواء راكد واحد."""
+    medicine_id: str
+    trade_name: str
+    total_stock: int
+    base_unit: str
+    last_sale_date: Optional[str] = None
+    days_since_last_sale: int
+    nearest_expiry: Optional[str] = None
+    days_to_expiry: Optional[int] = None
+    stock_value: float
+    risk_level: str  # critical | high | medium
+
+
+class SlowMovingResponse(BaseModel):
+    """استجابة الأدوية الراكدة."""
+    total_slow_moving_value: float
+    medicines: list[SlowMovingMedicine] = []
+
+
+# ── المهمة 5: توقعات الشراء ──
+
+class ForecastMedicine(BaseModel):
+    """توقع شراء دواء واحد."""
+    medicine_id: str
+    trade_name: str
+    base_unit: str
+    current_stock: int
+    avg_daily_sales: float
+    days_remaining: int
+    expected_runout_date: Optional[str] = None
+    suggested_order_quantity: int
+    priority: str  # critical | high | medium | ok
+    priority_label: str
+
+
+class ForecastSummary(BaseModel):
+    """ملخص التوقعات."""
+    critical_count: int
+    high_count: int
+    medium_count: int
+    ok_count: int
+
+
+class PurchaseForecastResponse(BaseModel):
+    """استجابة توقعات الشراء."""
+    forecast: list[ForecastMedicine] = []
+    summary: ForecastSummary
+
+
+# ✅ انتهى - models.py - المرحلة 6

@@ -1,7 +1,7 @@
 # PharmaSUD - Project Status
-## Last Updated: 2026-06-06
-## Current Stage: Stage 5 Complete (POS & Sales System)
-## Version: 5.0.0
+## Last Updated: 2026-06-07
+## Current Stage: Stage 6 - Reports & Dashboard (Complete)
+## Version: 6.0.0
 ## Live URL: https://pharmasud-api.onrender.com
 ## GitHub: https://github.com/mohamedbabiker20010-code/pharmasud-api
 
@@ -41,7 +41,7 @@
 - ✅ Inventory display with batch details
 - ✅ Supplier tracking
 
-### Stage 5 — POS & Sales System (Complete) — **NEW** 🆕
+### Stage 5 — POS & Sales System (Complete)
 - ✅ Alpine.js cart UI with +/- controls
 - ✅ Barcode search + text search
 - ✅ Quick medicines (top 6 selling)
@@ -55,6 +55,20 @@
 - ✅ Stock verification before sale
 - ✅ Insufficient stock rejection with clear error
 
+### Stage 5.5 — Security Hardening (Complete)
+- ✅ Fixed sidebar position:relative bug (content pushed below viewport)
+- ✅ Locked pharmacy name + owner_name (cannot be edited after activation)
+- ✅ Security audit: JWT, auth, SQL injection, XSS, CORS, file upload
+- ✅ Confirmed no bulk delete/reset functionality exists
+
+### Stage 6 — Reports & Dashboard 🆕
+- ✅ **Main Dashboard** (`/dashboard`) — Live stats, top medicines, alerts, weekly CSS bar chart
+- ✅ **Sales Report** (`/reports-sales`) — Filter by period/payment/cashier, payment distribution bars
+- ✅ **Profit Report** (`/reports-profits`) — Admin only (403 for employees), profit by medicine, monthly comparison
+- ✅ **Slow Moving Report** (`/reports-slow-moving`) — Medicines not sold in 30+ days, critical risk detection
+- ✅ **Purchase Forecast** (`/reports-purchase-forecast`) — Smart reorder predictions based on 30-day avg daily sales
+- ✅ **Test Data Generator** (`/api/test/generate-sales-data`) — Creates 30 days of test sales
+
 ---
 
 ## 📊 Current Database State
@@ -66,33 +80,8 @@
 | medicines | 3 | ✅ Test data loaded |
 | units | 3+ | ✅ Per medicine |
 | batches | 4 | ✅ Active (with data) |
-| sales | 2 | ✅ Test sales completed |
-| sale_items | 3 | ✅ Sale items logged |
-
----
-
-## 💊 Test Data
-
-### Medicines (3):
-| Trade Name | Category | Sale Price | Stock |
-|-----------|----------|-----------|-------|
-| Milga | فيتامينات ومكملات | 450 ج | 140 strip |
-| Fertilex Forte Women | فيتامينات ومكملات | 5,000 ج | 30 box |
-| Genuphil | فيتامينات ومكملات | 850 ج | 200 box |
-
-### Batches (4 active):
-| Medicine | Batch | Qty | Expiry | Status |
-|----------|-------|-----|--------|--------|
-| Milga | BATCH-A | 45 | 2026-08-15 | 🟡 تحذير (70 يوم) |
-| Milga | BATCH-B | 95 | 2027-03-20 | 🟢 سليم |
-| Fertilex | BATCH-D | 30 | 2027-12-01 | 🟢 سليم |
-| Genuphil | BATCH-C | 200 | 2027-06-15 | 🟢 سليم |
-
-### Test Sales Completed:
-| Invoice | Amount | Method | Customer |
-|---------|--------|--------|----------|
-| #1 | 27,000 ج | نقدي | أحمد محمد |
-| #2 | 2,250 ج | بنكك | - |
+| sales | 2+ | ✅ Test sales |
+| sale_items | 3+ | ✅ Sale items logged |
 
 ---
 
@@ -109,125 +98,100 @@
 
 ```
 pharmasud/
-├── main.py                    (1,380+ lines - routes, HTML templates)
+├── main.py                    (1,100+ lines - routes, HTML templates, test data generator)
 ├── database.py                (DB connection, engine)
-├── models.py                  (SQLAlchemy models + Pydantic schemas)
+├── models.py                  (SQLAlchemy models + Pydantic schemas + Stage 6 report models)
 ├── auth.py                    (JWT, password hashing, auth middleware)
 ├── medicines.py               (Medicine CRUD, image upload, barcode)
 ├── batches.py                 (Batch receive, FEFO engine)
 ├── inventory.py               (Inventory display, expiry reports)
 ├── settings.py                (Employee management, pharmacy settings)
 ├── sales.py                   (Sales, FEFO transaction, public invoice)
+├── reports.py                 (NEW Stage 6 — Dashboard, sales report, profit report,
+│                               slow-moving, purchase forecast)
 ├── requirements.txt           (Dependencies)
 ├── .env                       (Environment variables - not in repo)
 ├── STATUS.md                  (This file)
+├── generate_test_data.py      (Local script for generating test data)
 ├── templates/
 │   ├── activate.html          (Product key activation page)
 │   ├── setup.html             (Admin setup page)
 │   ├── login.html             (Login page)
-│   ├── dashboard.html         (Admin dashboard)
+│   ├── dashboard.html         (NEW Stage 6 — Main dashboard with live stats and chart)
 │   ├── medicines_list.html    (Medicine grid)
 │   ├── medicine_form.html     (Add/edit medicine form)
 │   ├── batch_receive.html     (Batch receiving page)
 │   ├── inventory.html         (Inventory management)
 │   ├── settings.html          (System settings)
-│   ├── pos.html               (🆕 POS interface with Alpine.js)
-│   ├── invoice_view.html      (🆕 Public invoice view)
-│   └── sales_history.html     (🆕 Sales history with filters)
-└── static/
-    └── medicines/             (Uploaded medicine images)
+│   ├── pos.html               (POS interface with Alpine.js)
+│   ├── invoice_view.html      (Public invoice view)
+│   ├── sales_history.html     (Sales history with filters)
+│   ├── reports_sales.html     (NEW Stage 6 — Sales report with filters)
+│   ├── reports_profits.html   (NEW Stage 6 — Profit report, admin only)
+│   ├── reports_slow_moving.html (NEW Stage 6 — Slow moving medicines)
+│   └── purchase_forecast.html (NEW Stage 6 — Purchase forecast)
+├── static/
+│   └── medicines/             (Uploaded medicine images)
 ```
 
 ---
 
-## 🔗 All API Endpoints
+## 🔗 Stage 6 API Endpoints
 
-### Public (No Auth Required)
+### Reports API (Protected - JWT Required)
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/` | API status |
-| GET | `/ping` | 🔴 Keep Render alive |
-| GET | `/health` | Database health check |
-| GET | `/api/status` | System activation status |
-| GET | `/api/public/invoice/{number}` | 🔴 View invoice (QR scan) |
-| POST | `/api/auth/activate` | Activate product key |
-| POST | `/api/auth/create-admin` | Create first admin |
-| POST | `/api/auth/login` | Login to get JWT |
+| GET | `/api/reports/dashboard` | Main dashboard data (today's stats, alerts, weekly chart) |
+| GET | `/api/reports/sales` | Sales report with period/payment/cashier filters |
+| GET | `/api/reports/profits` | **Admin only** — Profit report by medicine, monthly comparison |
+| GET | `/api/reports/slow-moving` | Slow-moving medicines (not sold in 30+ days) |
+| GET | `/api/reports/purchase-forecast` | Smart reorder predictions based on sales velocity |
 
-### Protected (JWT Required)
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/auth/me` | Current user info |
-| GET | `/api/medicines/` | List all medicines |
-| GET | `/api/medicines/{id}` | Medicine details |
-| POST | `/api/medicines/` | Add new medicine |
-| POST | `/api/medicines/upload/{id}` | Upload medicine image |
-| PUT | `/api/medicines/{id}` | Update medicine |
-| DELETE | `/api/medicines/{id}` | Delete medicine |
-| GET | `/api/medicines/search?q=` | Search by name/barcode |
-| GET | `/api/medicines/barcode/{code}` | Search by barcode |
-| POST | `/api/batches/receive` | Receive new batch |
-| GET | `/api/batches/available/{id}` | Available batches (FEFO) |
-| GET | `/api/inventory/` | Full inventory |
-| GET | `/api/inventory/expired` | Expired items report |
-| GET | `/api/inventory/{id}/batches` | Batch details per medicine |
-| GET | `/api/sales/` | 🆕 Sales history (with filters) |
-| GET | `/api/sales/{id}` | 🆕 Sale detail |
-| POST | `/api/sales/create` | 🆕 Create sale (FEFO + Transaction) |
-| GET | `/api/sales/pos/search?q=` | 🆕 POS search |
-| GET | `/api/sales/pos/quick-medicines` | 🆕 Top 6 selling medicines |
-| GET | `/api/sales/pos/barcode/{code}` | 🆕 POS barcode search |
-| GET | `/api/settings/employees` | Employee list |
-| POST | `/api/settings/employees` | Add employee |
-| DELETE | `/api/settings/employees/{id}` | Delete employee |
-| PATCH | `/api/settings/employees/{id}/toggle` | Enable/disable employee |
-| POST | `/api/settings/change-password` | Change own password |
-| GET | `/api/settings/pharmacy` | Pharmacy settings |
-| PUT | `/api/settings/pharmacy` | Update pharmacy settings |
-
-### HTML Pages
+### Stage 6 HTML Pages
 | Path | Auth | Description |
 |------|------|-------------|
-| `/activate` | No | Product key activation |
-| `/setup` | No | Admin setup |
-| `/login` | No | Login page |
-| `/dashboard` | Admin | Admin dashboard |
-| `/medicines` | JWT | Medicine list |
-| `/medicine-form` | JWT | Add/edit medicine |
-| `/batch-receive` | JWT | Receive batch |
-| `/inventory` | JWT | Inventory view |
-| `/pos` | JWT | 🆕 POS interface |
-| `/sales-history` | JWT | 🆕 Sales history |
-| `/settings` | JWT | System settings |
-| `/invoice/{number}` | **No** | 🆕 Public invoice view |
+| `/dashboard` | JWT | **UPDATED** — Main dashboard with live stats, alerts, weekly chart |
+| `/reports-sales` | JWT | Sales report with period/payment/cashier filters |
+| `/reports-profits` | Admin | Profit report (403 for employees) |
+| `/reports-slow-moving` | JWT | Slow-moving medicines analysis |
+| `/reports-purchase-forecast` | JWT | Purchase quantity recommendations |
+
+### Test Endpoints (Stage 6)
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/test/generate-sales-data` | **Admin only** — Generate 30 days of test sales data |
 
 ---
 
 ## ⚠️ Known Issues & Notes
 
 1. **Render Free Tier Sleep**: Server goes to sleep after 15 min inactivity.
-   - **Fix**: `/ping` endpoint called every 10 min from POS frontend.
+   - **Fix**: `/ping` endpoint called every 10 min from frontend.
    - First request after sleep takes ~30 seconds to wake up.
 
 2. **CORS Open**: Currently set to `*` for development.
    - **TODO**: Restrict to specific domains in production.
 
-3. **No Reports Yet**: Stage 6 (Reports & Analytics) not started.
+3. **No Reports Yet**: (RESOLVED ✓) Stage 6 now has full reports.
 
 4. **Test Data**: Test medicines/batches should be cleaned for production launch.
 
+5. **Stage 6 — Testing Needed**:
+   - Generate test data via `/api/test/generate-sales-data`
+   - Verify each report endpoint returns correct data
+   - Test profit report with employee account (should get 403)
+   - Verify slow-moving report shows correct risk levels
+   - Check purchase forecast priority ordering
+
 ---
 
-## 🎯 Next Steps (Stage 6 — Reports & Analytics)
+## 🚀 Quick Start — Generate Test Data
 
-1. 📈 **Sales Reports** — Daily/weekly/monthly summaries
-2. 💰 **Profit Calculation** — (sale_price - purchase_price) × quantity
-3. 📊 **Charts with Chart.js** — Sales trends, top medicines
-4. 📉 **Low Stock Alerts** — Dashboard notifications
-5. 🏆 **Best Selling** — Products and categories
-6. 👤 **Employee Performance** — Sales per cashier
-7. 💳 **Payment Analysis** — Cash vs digital payments
-8. 📥 **Export to Excel** — Downloadable reports
+1. Login as admin (D. Abeer / abeer2026)
+2. Visit: `/api/test/generate-sales-data` (must be logged in)
+3. Wait for "✅ تم إنشاء X مبيعة تجريبية!"
+4. Visit `/dashboard` to see live stats
+5. Visit report pages to see data
 
 ---
 
@@ -254,4 +218,4 @@ setInterval(() => { fetch('/ping').catch(() => {}); }, 600000);
 
 ---
 
-*تم التحديث: 6 يونيو 2026 — المرحلة الخامسة مكتملة 🚀*
+*تم التحديث: 7 يونيو 2026 — المرحلة السادسة (التقارير) مكتملة 🚀*

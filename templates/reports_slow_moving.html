@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الأدوية بطيئة الحركة - PharmaSUD</title>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0F172A;
+            color: #F8FAFC;
+            min-height: 100vh;
+        }
+
+        /* ─── Sidebar ─── */
+        .sidebar {
+            width: 220px;
+            background: #1E293B;
+            min-height: 100vh;
+            padding: 24px 0;
+            border-left: 1px solid #334155;
+            position: fixed;
+            right: 0;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar .logo {
+            padding: 0 20px 24px;
+            border-bottom: 1px solid #334155;
+            margin-bottom: 16px;
+        }
+        .sidebar .logo h1 {
+            font-size: 18px;
+            color: #3B82F6;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .sidebar .logo h1 svg { flex-shrink: 0; }
+        .sidebar .logo p {
+            font-size: 11px;
+            color: #64748B;
+            margin-top: 2px;
+            margin-right: 30px;
+        }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: #94A3B8;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.2s;
+            border-right: 3px solid transparent;
+        }
+        .nav-item:hover, .nav-item.active {
+            background: #334155;
+            color: #F8FAFC;
+            border-right-color: #3B82F6;
+        }
+        .nav-item .icon { font-size: 18px; width: 22px; text-align: center; }
+        .nav-item .badge {
+            background: #EF4444;
+            color: white;
+            font-size: 10px;
+            padding: 1px 6px;
+            border-radius: 10px;
+            margin-right: auto;
+        }
+        .sidebar-footer {
+            margin-top: auto;
+            padding: 16px 20px;
+            border-top: 1px solid #334155;
+        }
+        .sidebar-footer .nav-item {
+            border-right: none;
+            color: #EF4444;
+            padding: 12px 0;
+        }
+        .sidebar-footer .nav-item:hover {
+            background: transparent;
+            color: #FCA5A5;
+        }
+
+        /* ─── Mobile toggle ─── */
+        .mobile-toggle {
+            display: none;
+            background: #334155;
+            border: none;
+            color: #F8FAFC;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-left: 12px;
+        }
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 99;
+        }
+
+        /* ─── Main Content ─── */
+        .main-content {
+            margin-right: 220px;
+            padding: 32px 40px;
+            min-height: 100vh;
+        }
+
+        /* ─── Header ─── */
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #334155;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .header-right { display: flex; align-items: center; gap: 12px; }
+        .header-right h2 { font-size: 22px; }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 13px;
+            color: #94A3B8;
+        }
+        .header-left .date { direction: ltr; }
+        .header-left .user-info { text-align: left; }
+        .header-left .user-info .name { color: #F8FAFC; font-weight: 600; }
+        .header-left .user-info .pharmacy { font-size: 12px; color: #64748B; }
+        .notification-bell {
+            position: relative;
+            background: #334155;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94A3B8;
+            transition: all 0.2s;
+        }
+        .notification-bell:hover { background: #475569; color: #F8FAFC; }
+
+        /* ─── Filter Bar ─── */
+        .filter-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .filter-group label {
+            font-size: 13px;
+            color: #94A3B8;
+            font-weight: 600;
+        }
+        .filter-select {
+            background: #1E293B;
+            border: 1px solid #334155;
+            color: #F8FAFC;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            cursor: pointer;
+            outline: none;
+            transition: border-color 0.2s;
+            min-width: 100px;
+        }
+        .filter-select:hover, .filter-select:focus { border-color: #3B82F6; }
+        .filter-btn {
+            background: #3B82F6;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .filter-btn:hover { background: #2563EB; }
+        .filter-stats {
+            font-size: 13px;
+            color: #64748B;
+        }
+        .filter-stats strong { color: #F8FAFC; }
+
+        /* ─── Summary Cards ─── */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        .summary-card {
+            background: #1E293B;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 20px;
+            transition: border-color 0.2s;
+        }
+        .summary-card:hover { border-color: #475569; }
+        .summary-card .card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12px;
+            font-size: 18px;
+        }
+        .summary-card .card-label {
+            font-size: 13px;
+            color: #94A3B8;
+            margin-bottom: 4px;
+        }
+        .summary-card .card-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #F8FAFC;
+        }
+        .summary-card .card-sub {
+            font-size: 12px;
+            color: #64748B;
+            margin-top: 4px;
+        }
+        .card-blue .card-icon { background: rgba(59,130,246,0.15); color: #3B82F6; }
+        .card-yellow .card-icon { background: rgba(245,158,11,0.15); color: #F59E0B; }
+        .card-red .card-icon { background: rgba(239,68,68,0.15); color: #EF4444; }
+        .card-green .card-icon { background: rgba(34,197,94,0.15); color: #22C55E; }
+
+        /* ─── Section Card ─── */
+        .section-card {
+            background: #1E293B;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 28px;
+        }
+        .section-card .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid #334155;
+        }
+        .section-card .card-header h3 {
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-card .card-header .subtitle {
+            font-size: 12px;
+            color: #64748B;
+        }
+        .section-card .card-body { padding: 16px 20px; }
+
+        /* ─── Slow Moving Table ─── */
+        .report-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .report-table th {
+            font-size: 12px;
+            color: #64748B;
+            text-align: right;
+            padding: 10px 8px;
+            border-bottom: 1px solid #334155;
+            font-weight: 600;
+            white-space: nowrap;
+            user-select: none;
+        }
+        .report-table td {
+            font-size: 13px;
+            padding: 12px 8px;
+            border-bottom: 1px solid #1E293B;
+        }
+        .report-table tbody tr {
+            transition: background 0.15s;
+        }
+        .report-table tbody tr:hover { background: rgba(59,130,246,0.04); }
+        .report-table tr:last-child td { border-bottom: none; }
+        .report-table .med-name {
+            font-weight: 600;
+            color: #F8FAFC;
+        }
+        .report-table .stock-val {
+            font-weight: 600;
+            direction: ltr;
+        }
+        .report-table .num {
+            direction: ltr;
+            text-align: right;
+        }
+
+        /* ─── Risk Badge ─── */
+        .risk-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .risk-critical {
+            background: rgba(185,28,28,0.2);
+            color: #FCA5A5;
+            border: 1px solid rgba(185,28,28,0.35);
+        }
+        .risk-high {
+            background: rgba(239,68,68,0.12);
+            color: #FCA5A5;
+            border: 1px solid rgba(239,68,68,0.25);
+        }
+        .risk-medium {
+            background: rgba(245,158,11,0.12);
+            color: #FDE68A;
+            border: 1px solid rgba(245,158,11,0.25);
+        }
+        .risk-low {
+            background: rgba(34,197,94,0.12);
+            color: #86EFAC;
+            border: 1px solid rgba(34,197,94,0.25);
+        }
+
+        /* ─── Expiry Warning ─── */
+        .expiry-urgent { color: #EF4444; font-weight: 600; }
+        .expiry-warning { color: #F59E0B; font-weight: 600; }
+        .expiry-ok { color: #22C55E; }
+        .expiry-far { color: #94A3B8; }
+        .expiry-none { color: #64748B; font-style: italic; }
+
+        /* ─── Recommendations ─── */
+        .recommendations-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .rec-card {
+            background: rgba(59,130,246,0.06);
+            border: 1px solid rgba(59,130,246,0.2);
+            border-radius: 10px;
+            padding: 16px;
+            transition: border-color 0.2s;
+        }
+        .rec-card:hover { border-color: rgba(59,130,246,0.4); }
+        .rec-card.rec-critical {
+            background: rgba(185,28,28,0.08);
+            border-color: rgba(185,28,28,0.25);
+        }
+        .rec-card.rec-critical:hover { border-color: rgba(185,28,28,0.45); }
+        .rec-card.rec-high {
+            background: rgba(239,68,68,0.06);
+            border-color: rgba(239,68,68,0.2);
+        }
+        .rec-card.rec-high:hover { border-color: rgba(239,68,68,0.4); }
+        .rec-card.rec-medium {
+            background: rgba(245,158,11,0.06);
+            border-color: rgba(245,158,11,0.2);
+        }
+        .rec-card.rec-medium:hover { border-color: rgba(245,158,11,0.4); }
+        .rec-card .rec-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .rec-card .rec-header .rec-icon {
+            font-size: 20px;
+        }
+        .rec-card .rec-header .rec-title {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .rec-card .rec-desc {
+            font-size: 13px;
+            color: #94A3B8;
+            line-height: 1.6;
+        }
+
+        /* ─── Loading & Error States ─── */
+        .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            gap: 16px;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #334155;
+            border-top-color: #3B82F6;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { color: #94A3B8; font-size: 14px; }
+
+        .error-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        .error-state .err-icon { font-size: 48px; margin-bottom: 12px; }
+        .error-state .err-msg { color: #EF4444; font-size: 16px; margin-bottom: 8px; }
+        .error-state .err-detail { color: #94A3B8; font-size: 13px; margin-bottom: 16px; }
+        .retry-btn {
+            background: #3B82F6;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-family: inherit;
+            transition: background 0.2s;
+        }
+        .retry-btn:hover { background: #2563EB; }
+
+        .no-data {
+            text-align: center;
+            padding: 40px 20px;
+            color: #64748B;
+            font-size: 14px;
+        }
+        .no-data .no-data-icon { font-size: 40px; margin-bottom: 12px; }
+        .no-data .no-data-sub { color: #475569; font-size: 13px; margin-top: 4px; }
+
+        /* ─── Responsive ─── */
+        @media (max-width: 1200px) {
+            .cards-grid { grid-template-columns: repeat(2, 1fr); }
+            .recommendations-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 992px) {
+            .main-content { padding: 24px 20px; }
+            .cards-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .sidebar.mobile-open { display: flex; }
+            .sidebar-overlay.mobile-open { display: block; }
+            .main-content { margin-right: 0; padding: 16px; }
+            .mobile-toggle { display: flex; }
+            .cards-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .header-right h2 { font-size: 17px; }
+            .header-left { gap: 8px; }
+            .header-left .date { display: none; }
+            .summary-card { padding: 14px; }
+            .summary-card .card-value { font-size: 18px; }
+
+            .recommendations-grid { grid-template-columns: 1fr; }
+
+            .report-table { font-size: 12px; }
+            .report-table th, .report-table td { padding: 8px 6px; }
+            /* Hide less important columns on mobile */
+            .report-table .col-base-unit,
+            .report-table .col-stock-value { display: none; }
+        }
+        @media (max-width: 480px) {
+            .cards-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+            .summary-card .card-value { font-size: 16px; }
+            .filter-bar { flex-direction: column; align-items: stretch; }
+            .filter-group { justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+<div x-data="slowMovingApp()" x-init="init()">
+    <!-- Sidebar Overlay (mobile) -->
+    <div class="sidebar-overlay"
+         :class="{ 'mobile-open': sidebarOpen }"
+         @click="sidebarOpen = false"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" :class="{ 'mobile-open': sidebarOpen }">
+        <div class="logo">
+            <h1>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                </svg>
+                PharmaSUD
+            </h1>
+            <p>نظام إدارة الصيدلية</p>
+        </div>
+
+        <a href="/dashboard" class="nav-item">
+            <span class="icon">📊</span> لوحة التحكم
+        </a>
+        <a href="/medicines-list" class="nav-item">
+            <span class="icon">💊</span> الأدوية
+        </a>
+        <a href="/inventory" class="nav-item">
+            <span class="icon">📦</span> المخزون
+        </a>
+        <a href="/batch-receive" class="nav-item">
+            <span class="icon">🚚</span> استلام دفعة
+        </a>
+        <a href="/pos" class="nav-item">
+            <span class="icon">🛒</span> نقطة البيع
+        </a>
+        <a href="/sales-history" class="nav-item">
+            <span class="icon">📋</span> سجل المبيعات
+        </a>
+        <a href="/settings" class="nav-item">
+            <span class="icon">⚙️</span> الإعدادات
+        </a>
+
+        <div class="sidebar-footer">
+            <a href="#" @click.prevent="logout()" class="nav-item">
+                <span class="icon">🚪</span> تسجيل الخروج
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <div class="dashboard-header">
+            <div class="header-right">
+                <button class="mobile-toggle" @click="sidebarOpen = !sidebarOpen" aria-label="القائمة">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="6" x2="21" y2="6"/>
+                        <line x1="3" y1="12" x2="21" y2="12"/>
+                        <line x1="3" y1="18" x2="21" y2="18"/>
+                    </svg>
+                </button>
+                <h2>🐢 الأدوية بطيئة الحركة</h2>
+            </div>
+            <div class="header-left">
+                <span class="date" x-text="currentDate"></span>
+                <div class="user-info">
+                    <div class="name" x-text="userName || 'مستخدم'"></div>
+                    <div class="pharmacy" x-text="pharmacyName || 'الصيدلية'"></div>
+                </div>
+                <button class="notification-bell" @click="sidebarOpen = false" title="الإشعارات">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+            <div class="filter-group">
+                <label>⏱️ لم تُبَع منذ:</label>
+                <select class="filter-select" x-model="selectedDays" @change="loadReport()">
+                    <option value="15">15 يوم</option>
+                    <option value="30" selected>30 يوم</option>
+                    <option value="45">45 يوم</option>
+                    <option value="60">60 يوم</option>
+                    <option value="90">90 يوم</option>
+                    <option value="180">6 أشهر</option>
+                    <option value="365">سنة</option>
+                </select>
+                <button class="filter-btn" @click="loadReport()">
+                    <span>🔄</span> تحديث
+                </button>
+            </div>
+            <div class="filter-stats" x-show="!loading && !error">
+                <span>إجمالي الأدوية: <strong x-text="medicines.length"></strong></span>
+                <span style="margin-right: 16px;">
+                    القيمة الراكدة: <strong x-text="formatCurrency(totalSlowMovingValue)"></strong>
+                </span>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <template x-if="loading">
+            <div class="loading-state">
+                <div class="spinner"></div>
+                <div class="loading-text">جاري تحميل تقرير الأدوية بطيئة الحركة...</div>
+            </div>
+        </template>
+
+        <!-- Error State -->
+        <template x-if="error">
+            <div class="error-state">
+                <div class="err-icon">⚠️</div>
+                <div class="err-msg">تعذر تحميل التقرير</div>
+                <div class="err-detail" x-text="errorMessage"></div>
+                <button class="retry-btn" @click="loadReport()">إعادة المحاولة</button>
+            </div>
+        </template>
+
+        <!-- Report Content -->
+        <template x-if="!loading && !error">
+            <div>
+                <!-- Summary Cards -->
+                <div class="cards-grid">
+                    <div class="summary-card card-blue">
+                        <div class="card-icon">🐢</div>
+                        <div class="card-label">أدوية بطيئة الحركة</div>
+                        <div class="card-value" x-text="medicines.length"></div>
+                        <div class="card-sub" x-text="'خلال آخر ' + selectedDays + ' يوم'"></div>
+                    </div>
+                    <div class="summary-card card-red">
+                        <div class="card-icon">🔴🔴</div>
+                        <div class="card-label">حرجة (راكدة + منتهية)</div>
+                        <div class="card-value" x-text="countByRisk('critical')"></div>
+                        <div class="card-sub">تتطلب إجراء فوري</div>
+                    </div>
+                    <div class="summary-card card-yellow">
+                        <div class="card-icon">🟡</div>
+                        <div class="card-label">متوسطة الخطورة</div>
+                        <div class="card-value" x-text="countByRisk('medium')"></div>
+                        <div class="card-sub">مراقبة مطلوبة</div>
+                    </div>
+                    <div class="summary-card card-green">
+                        <div class="card-icon">💰</div>
+                        <div class="card-label">القيمة الراكدة الإجمالية</div>
+                        <div class="card-value" x-text="formatCurrency(totalSlowMovingValue)"></div>
+                        <div class="card-sub">رأس مال مقيد في المخزون</div>
+                    </div>
+                </div>
+
+                <!-- Main Medicines Table -->
+                <div class="section-card">
+                    <div class="card-header">
+                        <h3>📋 قائمة الأدوية بطيئة الحركة</h3>
+                        <span class="subtitle" x-text="'مرتبة حسب الأقدمية'"></span>
+                    </div>
+                    <div class="card-body" style="overflow-x: auto;">
+                        <template x-if="medicines.length > 0">
+                            <table class="report-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>اسم الدواء</th>
+                                        <th>المخزون</th>
+                                        <th class="col-base-unit">الوحدة</th>
+                                        <th>آخر بيع</th>
+                                        <th>أيام منذ البيع</th>
+                                        <th>أقرب صلاحية</th>
+                                        <th>أيام للصلاحية</th>
+                                        <th class="col-stock-value">قيمة المخزون</th>
+                                        <th>مستوى الخطر</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template x-for="(med, index) in medicines" :key="med.medicine_id">
+                                        <tr>
+                                            <td class="num" x-text="index + 1"></td>
+                                            <td class="med-name" x-text="med.trade_name"></td>
+                                            <td class="num" x-text="med.total_stock"></td>
+                                            <td class="col-base-unit" x-text="med.base_unit"></td>
+                                            <td x-text="formatDate(med.last_sale_date)"></td>
+                                            <td>
+                                                <span x-text="med.days_since_last_sale" :class="med.days_since_last_sale >= 60 ? 'expiry-urgent' : (med.days_since_last_sale >= 30 ? 'expiry-warning' : '')"></span>
+                                                <span style="font-size:11px;color:#64748B;margin-right:2px;">يوم</span>
+                                            </td>
+                                            <td x-text="formatDate(med.nearest_expiry)"></td>
+                                            <td>
+                                                <span x-show="med.days_to_expiry !== null" :class="med.days_to_expiry < 90 ? 'expiry-urgent' : (med.days_to_expiry < 180 ? 'expiry-warning' : (med.days_to_expiry < 365 ? 'expiry-ok' : 'expiry-far'))" x-text="med.days_to_expiry + ' يوم'"></span>
+                                                <span x-show="med.days_to_expiry === null" class="expiry-none">غير متاح</span>
+                                            </td>
+                                            <td class="col-stock-value stock-val" x-text="formatCurrency(med.stock_value)"></td>
+                                            <td>
+                                                <span class="risk-badge"
+                                                      :class="'risk-' + med.risk_level"
+                                                      x-text="riskLabel(med.risk_level)"></span>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </template>
+                        <template x-if="medicines.length === 0">
+                            <div class="no-data">
+                                <div class="no-data-icon">✅</div>
+                                <div>لا توجد أدوية بطيئة الحركة في هذه الفترة</div>
+                                <div class="no-data-sub">جميع الأدوية تم بيعها خلال آخر <span x-text="selectedDays"></span> يوم</div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Recommendations Section -->
+                <div class="section-card" x-show="medicines.length > 0">
+                    <div class="card-header">
+                        <h3>💡 التوصيات والحلول المقترحة</h3>
+                        <span class="subtitle">إجراءات لتحسين دوران المخزون</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="recommendations-grid">
+                            <!-- Critical recommendations -->
+                            <div class="rec-card rec-critical" x-show="countByRisk('critical') > 0">
+                                <div class="rec-header">
+                                    <span class="rec-icon">🔴🔴</span>
+                                    <span class="rec-title" style="color:#FCA5A5;">حرجة — خطر فقدان المخزون</span>
+                                </div>
+                                <div class="rec-desc">
+                                    <strong x-text="countByRisk('critical')"></strong> دواء (أدوية) في المرحلة الحرجة — مزيج من البطء وانتهاء الصلاحية الوشيك.
+                                </div>
+                                <div class="rec-desc" style="margin-top:8px;">
+                                    • خصم عاجل أو بيع بسعر التكلفة لتحريك المخزون قبل انتهاء الصلاحية<br>
+                                    • التواصل مع صيدليات أخرى لشراء الدفعة بسعر مخفض<br>
+                                    • إرجاع البضاعة للموزع إذا كانت سياسة الإرجاع متاحة
+                                </div>
+                            </div>
+
+                            <!-- High risk recommendations -->
+                            <div class="rec-card rec-high" x-show="countByRisk('high') > 0">
+                                <div class="rec-header">
+                                    <span class="rec-icon">🔴</span>
+                                    <span class="rec-title" style="color:#FCA5A5;">عالية — لم تُبَع لأكثر من 60 يوم</span>
+                                </div>
+                                <div class="rec-desc">
+                                    <strong x-text="countByRisk('high')"></strong> دواء (أدوية) لم تُبَع منذ أكثر من 60 يوماً.
+                                </div>
+                                <div class="rec-desc" style="margin-top:8px;">
+                                    • مراجعة سياسة التسعير — خفض السعر لتحفيز الطلب<br>
+                                    • عرض ترويجي (اشترِ 2 واحصل على 1 مجاناً)<br>
+                                    • تقييم الحاجة للصنف — هل هو موسمي؟
+                                </div>
+                            </div>
+
+                            <!-- Medium risk recommendations -->
+                            <div class="rec-card rec-medium" x-show="countByRisk('medium') > 0">
+                                <div class="rec-header">
+                                    <span class="rec-icon">🟡</span>
+                                    <span class="rec-title" style="color:#FDE68A;">متوسطة — مراقبة مطلوبة</span>
+                                </div>
+                                <div class="rec-desc">
+                                    <strong x-text="countByRisk('medium')"></strong> دواء (أدوية) بطيئة الحركة — يمكن اتخاذ إجراءات وقائية.
+                                </div>
+                                <div class="rec-desc" style="margin-top:8px;">
+                                    • خفض كميات الطلب المستقبلي لهذه الأصناف<br>
+                                    • وضعها في مكان بارز لزيادة فرص البيع<br>
+                                    • إعادة ترتيب المخزون — وضع الأصناف بطيئة الحركة أمام الأصناف سريعة الحركة
+                                </div>
+                            </div>
+
+                            <!-- General inventory recommendations -->
+                            <div class="rec-card" style="border-color:rgba(59,130,246,0.25);">
+                                <div class="rec-header">
+                                    <span class="rec-icon">📊</span>
+                                    <span class="rec-title" style="color:#93C5FD;">إدارة المخزون العامة</span>
+                                </div>
+                                <div class="rec-desc">
+                                    القيمة الراكدة الإجمالية: <strong style="color:#F8FAFC;" x-text="formatCurrency(totalSlowMovingValue)"></strong> — هذا المبلغ مقيد ولا يحقق عائداً.
+                                </div>
+                                <div class="rec-desc" style="margin-top:8px;">
+                                    • إعادة تقييم سياسات الشراء لتجنب تكدس المخزون<br>
+                                    • تطبيق تحليل ABC لتصنيف الأدوية حسب قيمتها ودورانها<br>
+                                    • اعتماد نظام كمية الطلب الاقتصادية (EOQ) لتحديد أحجام الطلب المثلى
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </main>
+</div>
+
+<script>
+function slowMovingApp() {
+    return {
+        loading: true,
+        error: false,
+        errorMessage: '',
+        sidebarOpen: false,
+        currentDate: '',
+        userName: '',
+        pharmacyName: '',
+        selectedDays: 30,
+        medicines: [],
+        totalSlowMovingValue: 0,
+
+        init() {
+            this.formatDate();
+            this.loadUserInfo();
+            this.loadReport();
+        },
+
+        formatDate() {
+            const now = new Date();
+            const options = {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            };
+            this.currentDate = now.toLocaleDateString('ar-SA', options);
+        },
+
+        loadUserInfo() {
+            try {
+                const token = localStorage.getItem('token');
+                if (token) {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    this.userName = payload.username || payload.sub || 'مستخدم';
+                    this.pharmacyName = payload.pharmacy_name || 'صيدلية الزاريات';
+                } else {
+                    this.userName = 'مستخدم';
+                    this.pharmacyName = 'صيدلية الزاريات';
+                }
+            } catch (e) {
+                this.userName = 'مستخدم';
+                this.pharmacyName = 'صيدلية الزاريات';
+            }
+        },
+
+        async loadReport() {
+            this.loading = true;
+            this.error = false;
+            this.errorMessage = '';
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/reports/slow-moving?days=' + this.selectedDays, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + (token || ''),
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                });
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        window.location.href = '/login';
+                        return;
+                    }
+                    throw new Error('فشل تحميل التقرير (' + response.status + ')');
+                }
+                const result = await response.json();
+                this.medicines = result.medicines || [];
+                this.totalSlowMovingValue = result.total_slow_moving_value || 0;
+            } catch (e) {
+                this.error = true;
+                this.errorMessage = e.message || 'حدث خطأ غير متوقع';
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        countByRisk(level) {
+            return this.medicines.filter(m => m.risk_level === level).length;
+        },
+
+        riskLabel(level) {
+            const labels = {
+                'critical': '🔴🔴 حرج',
+                'high': '🔴 عالي',
+                'medium': '🟡 متوسط',
+                'low': '🟢 منخفض'
+            };
+            return labels[level] || level;
+        },
+
+        formatCurrency(value) {
+            if (value === null || value === undefined) return '0.00 ج.م';
+            const num = typeof value === 'number' ? value : parseFloat(value);
+            return num.toLocaleString('ar-EG', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }) + ' ج.م';
+        },
+
+        formatDate(dateStr) {
+            if (!dateStr) return '—';
+            try {
+                const d = new Date(dateStr);
+                if (isNaN(d.getTime())) return dateStr;
+                return d.toLocaleDateString('ar-SA', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+            } catch (e) {
+                return dateStr;
+            }
+        },
+
+        logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('refresh_token');
+            window.location.href = '/login';
+        }
+    };
+}
+</script>
+
+</body>
+</html>
