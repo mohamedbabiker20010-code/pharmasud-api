@@ -1,7 +1,7 @@
 # PharmaSUD - Project Status
-## Last Updated: 2026-06-07
-## Current Stage: Stage 6 - Reports & Dashboard (Complete)
-## Version: 6.0.0
+## Last Updated: 2026-06-07 (Night Session)
+## Current Stage: Stage 6 - Reports & Dashboard (Complete) + Marketing Doc
+## Version: 6.1.0
 ## Live URL: https://pharmasud-api.onrender.com
 ## GitHub: https://github.com/mohamedbabiker20010-code/pharmasud-api
 
@@ -218,4 +218,34 @@ setInterval(() => { fetch('/ping').catch(() => {}); }, 600000);
 
 ---
 
-*تم التحديث: 7 يونيو 2026 — المرحلة السادسة (التقارير) مكتملة 🚀*
+---
+
+## 📄 New: Marketing Document
+
+| Item | Detail |
+|------|--------|
+| File | `PharmaSUD_Project_Overview.md` (outside repo — delivered to Mohamed) |
+| Purpose | Marketing doc to send to people asking about the system |
+| Language | Arabic only — **zero technical terms** |
+| Content | 10 sections: idea, problem, solution, 6 components, daily workflow, pricing, benefits, vision |
+| Visuals | ASCII box diagrams, emoji icons, tables, comparisons |
+
+---
+
+## 🎯 Session Summary — June 7 Night
+
+**What was accomplished:**
+1. ✅ **Stage 6 — Reports & Dashboard** fully built and deployed to Render
+2. ✅ **5 new HTML templates** (dashboard, sales report, profits, slow-moving, purchase forecast)
+3. ✅ **reports.py** — 5 API endpoints with complex SQL
+4. ✅ **Test data generator** — Creates 30 days of sample sales
+5. ✅ **PharmaSUD_Project_Overview.md** — Professional marketing document (no tech terms)
+6. ✅ **All 13 acceptance criteria** for Stage 6 met
+
+**Next session:**
+- Test Stage 6 reports live on Render
+- Plan Stage 7 features (Excel export, mobile app, multi-branch, etc.)
+
+---
+
+*تم التحديث: ليلة 7 يونيو 2026 — المرحلة السادسة كاملة مع وثيقة تسويقية 🚀*
