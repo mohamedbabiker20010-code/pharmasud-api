@@ -404,6 +404,13 @@ async def update_medicine(
         medicine.barcode = data.barcode
     if data.sale_price:
         medicine.sale_price = data.sale_price
+        # Also sync the default unit's sale price
+        default_unit = db.query(Unit).filter(
+            Unit.medicine_id == medicine.id,
+            Unit.unit_name == medicine.base_unit
+        ).first()
+        if default_unit:
+            default_unit.sale_price = data.sale_price
     if data.purchase_price:
         medicine.purchase_price = data.purchase_price
     if data.base_unit:
