@@ -1138,19 +1138,3 @@ def generate_test_sales(current_user: dict = Depends(require_admin), db: Session
     
     db.commit()
     return {"success": True, "sales_created": sales_created, "message": f"✅ تم إنشاء {sales_created} مبيعة تجريبية! راجع الداشبورد."}
-
-
-@app.get("/api/fix/unit-prices")
-def fix_unit_prices(current_user: dict = Depends(require_admin), db: Session = Depends(get_db)):
-    """Fix: Sync unit prices with medicine prices."""
-    from sqlalchemy import text
-    mismatches = db.execute(text("""
-        SELECT m.id, m.trade_name, m.sale_price, u.id as unit_id, u.sale_price, u.unit_name
-        FROM medicines m JOIN units u ON u.medicine_id = m.id AND u.unit_name = m.base_unit
-        WHERE m.sale_price != u.sale_price
-    """)).fetchall()
-    for r in mismatches:
-        db.execute(text("UPDATE units SET sale_price = :p WHERE id = :id"),
-                   {"p": float(r[2]), "id": str(r[3])})
-    db.commit()
-    return {"fixed": len(mismatches), "message": f"Fixed {len(mismatches)} units"}

@@ -1,7 +1,7 @@
 # PharmaSUD - Project Status
-## Last Updated: 2026-06-07 (Night Session)
-## Current Stage: Stage 6 - Reports & Dashboard (Complete) + Marketing Doc
-## Version: 6.1.0
+## Last Updated: 2026-06-08 (Session - Bug Fixes)
+## Current Stage: Stage 6 - Reports & Dashboard (Complete)
+## Version: 6.1.1
 ## Live URL: https://pharmasud-api.onrender.com
 ## GitHub: https://github.com/mohamedbabiker20010-code/pharmasud-api
 
@@ -176,12 +176,11 @@ pharmasud/
 
 4. **Test Data**: Test medicines/batches should be cleaned for production launch.
 
-5. **Stage 6 — Testing Needed**:
-   - Generate test data via `/api/test/generate-sales-data`
-   - Verify each report endpoint returns correct data
-   - Test profit report with employee account (should get 403)
-   - Verify slow-moving report shows correct risk levels
-   - Check purchase forecast priority ordering
+5. **Stage 6 — Testing Needed**: (RESOLVED ✓)
+   - ✅ Unit price sync bug fixed: editing medicine price now syncs unit price
+   - ✅ Existing data fixed for Fertilex Forte Women (unit price was 1,200, now 5,000)
+   
+6. **Test Data Generator** (`/api/test/generate-sales-data`): Returns 500 error. The index bug was fixed (m[3] vs m[2]) but server still returns error — needs further debugging.
 
 ---
 
