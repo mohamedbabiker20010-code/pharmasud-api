@@ -1,7 +1,7 @@
 # PharmaSUD - Project Status
-## Last Updated: 2026-06-08 (Session - Bug Fixes)
+## Last Updated: 2026-06-08 (Session - Critical Bug Fixes + Handover)
 ## Current Stage: Stage 6 - Reports & Dashboard (Complete)
-## Version: 6.1.1
+## Version: 6.1.2
 ## Live URL: https://pharmasud-api.onrender.com
 ## GitHub: https://github.com/mohamedbabiker20010-code/pharmasud-api
 
@@ -71,6 +71,24 @@
 
 ---
 
+## 🔴 Critical Fixes — June 8, 2026
+
+### Bug #1: Sidebar Navigation Error ("Not Found")
+- **Problem**: Clicking "الأدوية" in sidebar returned `{"detail":"Not Found"}`
+- **Root Cause**: Sidebar link pointed to `/medicines-list` but actual route is `/medicines`
+- **Fix**: Updated 3 templates (dashboard.html, reports_sales.html, reports_profits.html) — changed link from `/medicines-list` to `/medicines`
+- **Status**: ✅ Fixed & Deployed
+
+### Bug #2: Price Mismatch (Medicine vs Unit)
+- **Problem**: Fertilex Forte Women showed price 1,200 in POS but 5,000 in medicines list
+- **Root Cause**: Editing medicine price didn't sync to base unit price
+- **Fix**: 
+  1. Added auto-sync logic in `medicines.py` — updating medicine price now updates unit price automatically
+  2. Ran DB fix to correct existing data (Fertilex unit price: 1,200 → 5,000)
+- **Status**: ✅ Fixed & Deployed
+
+---
+
 ## 📊 Current Database State
 
 | Table | Count | Status |
@@ -102,7 +120,7 @@ pharmasud/
 ├── database.py                (DB connection, engine)
 ├── models.py                  (SQLAlchemy models + Pydantic schemas + Stage 6 report models)
 ├── auth.py                    (JWT, password hashing, auth middleware)
-├── medicines.py               (Medicine CRUD, image upload, barcode)
+├── medicines.py               (Medicine CRUD, image upload, barcode, PRICE SYNC FIX)
 ├── batches.py                 (Batch receive, FEFO engine)
 ├── inventory.py               (Inventory display, expiry reports)
 ├── settings.py                (Employee management, pharmacy settings)
@@ -117,7 +135,7 @@ pharmasud/
 │   ├── activate.html          (Product key activation page)
 │   ├── setup.html             (Admin setup page)
 │   ├── login.html             (Login page)
-│   ├── dashboard.html         (NEW Stage 6 — Main dashboard with live stats and chart)
+│   ├── dashboard.html         (NEW Stage 6 — Main dashboard, FIXED sidebar link)
 │   ├── medicines_list.html    (Medicine grid)
 │   ├── medicine_form.html     (Add/edit medicine form)
 │   ├── batch_receive.html     (Batch receiving page)
@@ -126,8 +144,8 @@ pharmasud/
 │   ├── pos.html               (POS interface with Alpine.js)
 │   ├── invoice_view.html      (Public invoice view)
 │   ├── sales_history.html     (Sales history with filters)
-│   ├── reports_sales.html     (NEW Stage 6 — Sales report with filters)
-│   ├── reports_profits.html   (NEW Stage 6 — Profit report, admin only)
+│   ├── reports_sales.html     (NEW Stage 6 — Sales report, FIXED sidebar link)
+│   ├── reports_profits.html   (NEW Stage 6 — Profit report, FIXED sidebar link)
 │   ├── reports_slow_moving.html (NEW Stage 6 — Slow moving medicines)
 │   └── purchase_forecast.html (NEW Stage 6 — Purchase forecast)
 ├── static/
@@ -172,15 +190,16 @@ pharmasud/
 2. **CORS Open**: Currently set to `*` for development.
    - **TODO**: Restrict to specific domains in production.
 
-3. **No Reports Yet**: (RESOLVED ✓) Stage 6 now has full reports.
+3. **Test Data**: Test medicines/batches should be cleaned for production launch.
 
-4. **Test Data**: Test medicines/batches should be cleaned for production launch.
-
-5. **Stage 6 — Testing Needed**: (RESOLVED ✓)
-   - ✅ Unit price sync bug fixed: editing medicine price now syncs unit price
-   - ✅ Existing data fixed for Fertilex Forte Women (unit price was 1,200, now 5,000)
+4. **Stage 6 — Testing Needed**: 
+   - ✅ Unit price sync bug fixed
+   - ✅ Existing data fixed for Fertilex Forte Women
+   - ✅ Sidebar navigation fixed
    
-6. **Test Data Generator** (`/api/test/generate-sales-data`): Returns 500 error. The index bug was fixed (m[3] vs m[2]) but server still returns error — needs further debugging.
+5. **Test Data Generator** (`/api/test/generate-sales-data`): Returns 500 error on Render (works locally). Needs batch processing to avoid memory limits.
+
+6. **System Under Real-World Testing**: Handed to friend (pharmacy owner) for 5-day trial starting June 8, 2026.
 
 ---
 
@@ -217,8 +236,6 @@ setInterval(() => { fetch('/ping').catch(() => {}); }, 600000);
 
 ---
 
----
-
 ## 📄 New: Marketing Document
 
 | Item | Detail |
@@ -231,20 +248,25 @@ setInterval(() => { fetch('/ping').catch(() => {}); }, 600000);
 
 ---
 
-## 🎯 Session Summary — June 7 Night
+## 🎯 Session Summary — June 8, 2026
 
 **What was accomplished:**
-1. ✅ **Stage 6 — Reports & Dashboard** fully built and deployed to Render
-2. ✅ **5 new HTML templates** (dashboard, sales report, profits, slow-moving, purchase forecast)
-3. ✅ **reports.py** — 5 API endpoints with complex SQL
-4. ✅ **Test data generator** — Creates 30 days of sample sales
-5. ✅ **PharmaSUD_Project_Overview.md** — Professional marketing document (no tech terms)
-6. ✅ **All 13 acceptance criteria** for Stage 6 met
+1. 🐛 **CRITICAL FIX**: Fixed sidebar navigation ("الأدوية" button was broken)
+2. 🐛 **CRITICAL FIX**: Fixed price sync bug (medicine price now auto-syncs to unit price)
+3. 🗄️ **DB Fix**: Corrected Fertilex Forte Women unit price (1,200 → 5,000)
+4. 🚀 **Deployed**: All fixes pushed to GitHub & Render
+5. 🧪 **Handover**: System delivered to friend for 5-day real-world testing
 
-**Next session:**
-- Test Stage 6 reports live on Render
-- Plan Stage 7 features (Excel export, mobile app, multi-branch, etc.)
+**Current Status:**
+- ✅ All critical bugs fixed
+- ✅ System stable and functional
+- 🔄 Under real-world testing (5 days)
+
+**Next Steps (After Testing):**
+- Collect feedback from friend
+- Plan Stage 7: Excel export, mobile app, multi-branch, or offline mode
+- Fix test data generator (500 error on Render)
 
 ---
 
-*تم التحديث: ليلة 7 يونيو 2026 — المرحلة السادسة كاملة مع وثيقة تسويقية 🚀*
+*تم التحديث: 8 يونيو 2026 — إصلاحات جوهرية وتسليم للتجربة الفعلية 🚀*
