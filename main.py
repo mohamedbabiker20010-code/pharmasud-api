@@ -35,8 +35,8 @@ from reports import router as reports_router  # المرحلة 6: التقاري
 # Initialize FastAPI app
 app = FastAPI(
     title="PharmaSUD API",
-    description="Pharmacy Point of Sale System - Stage 5 (POS & Sales)",
-    version="5.0.0"
+    description="Pharmacy Point of Sale System - Stage 6 (Reports & Dashboard)",
+    version="6.1.0"
 )
 
 # Create tables on startup (if they don't exist)
@@ -112,8 +112,8 @@ def root():
     """Root endpoint - API status."""
     return {
         "status": "PharmaSUD API Running",
-        "version": "5.0.0",
-        "stage": "Stage 5 - POS & Sales"
+        "version": "6.1.0",
+        "stage": "Stage 6 - Reports & Dashboard"
     }
 
 
