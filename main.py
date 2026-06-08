@@ -1083,7 +1083,7 @@ def generate_test_sales(current_user: dict = Depends(require_admin), db: Session
     
     med_map = {}
     for m in meds:
-        med_map[str(m[0])] = {"name": m[1], "sale_price": float(m[3] or m[2] or 0) if m[3] else float(m[2] or 0), "base_unit": m[4] or "شريط"}
+        med_map[str(m[0])] = {"name": m[1], "sale_price": float(m[2] or 0), "base_unit": m[3] or "شريط"}
     
     today = date.today()
     sales_created = 0
