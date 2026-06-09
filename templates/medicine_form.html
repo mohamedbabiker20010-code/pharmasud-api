@@ -119,7 +119,7 @@
                             class="w-full bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
                         >
                     </div>
-                    <div x-show="isAdmin">
+                    <div>
                         <label class="block text-sm font-medium mb-2">سعر الشراء *</label>
                         <input 
                             type="number" 
@@ -426,32 +426,42 @@
                 },
 
                 async startScanner() {
+                    // تأكد من تحميل المكتبة
+                    if (typeof Html5Qrcode === 'undefined') {
+                        alert('جاري تحميل مكتبة الباركود... أعد قليلاً ثم حاول مرة أخرى');
+                        return;
+                    }
+
                     this.html5QrCode = new Html5Qrcode("reader");
+                    
                     try {
+                        // إعدادات بسيطة للباركود (EAN-13 مدعوم بشكل افتراضي)
                         await this.html5QrCode.start(
                             { facingMode: "environment" },
                             { 
                                 fps: 10, 
-                                qrbox: { width: 300, height: 150 },
-                                aspectRatio: 2.0,
-                                formatsToSupport: [
-                                    Html5QrcodeSupportedFormats.EAN_13,
-                                    Html5QrcodeSupportedFormats.EAN_8,
-                                    Html5QrcodeSupportedFormats.UPC_A,
-                                    Html5QrcodeSupportedFormats.UPC_E,
-                                    Html5QrcodeSupportedFormats.CODE_128,
-                                    Html5QrcodeSupportedFormats.CODE_39,
-                                    Html5QrcodeSupportedFormats.CODABAR
-                                ]
+                                qrbox: { width: 300, height: 200 }
                             },
                             (decodedText) => {
+                                console.log('Barcode detected:', decodedText);
                                 this.form.barcode = decodedText;
                                 this.closeScanner();
+                                alert('تم قراءة الباركود: ' + decodedText);
                             },
-                            (error) => {}
+                            (error) => {
+                                // تجاهل أخطاء المساح المؤقت
+                            }
                         );
                     } catch (err) {
-                        alert('لا يمكن الوصول للكاميرا. تأكد من إعطاء صلاحية الكاميرا.');
+                        console.error('Scanner error:', err);
+                        let errorMsg = 'لا يمكن الوصول للكاميرا. \n\n';
+                        errorMsg += 'الأسباب المحتملة:\n';
+                        errorMsg += '1. لم تم إعطاء صلاحية الكاميرا للموقع\n';
+                        errorMsg += '2. المتصفح لا يدعم الكاميرا (Chrome أو Safari مباشرة)\n';
+                        errorMsg += '3. الكاميرا مشغولة في تطبيق آخر\n\n';
+                        errorMsg += 'الحل: أدخل الباركود يدوياً أو افتح الصفحة في متصفح آخر';
+                        alert(errorMsg);
+                        this.showScanner = false;
                     }
                 }
             }
