@@ -123,7 +123,7 @@
                         <label class="block text-sm font-medium mb-2">سعر الشراء *</label>
                         <input 
                             type="number" 
-                            x-model="form.purchase_price"
+                            x-model.number="form.purchase_price"
                             required
                             min="0"
                             step="0.01"
@@ -358,6 +358,36 @@
                     const url = medicineId ? `/api/medicines/${medicineId}` : '/api/medicines/';
                     const method = medicineId ? 'PUT' : 'POST';
 
+                    // تحويل الأسعار لأرقام لتجنب أخطاء الـ API
+                    const formData = {
+                        ...this.form,
+                        sale_price: parseFloat(this.form.sale_price) || 0,
+                        purchase_price: parseFloat(this.form.purchase_price) || 0,
+                        min_stock: parseInt(this.form.min_stock) || 10
+                    };
+
+                    // التحقق من البيانات قبل الإرسال
+                    if (!formData.trade_name || formData.trade_name.trim() === '') {
+                        alert('الاسم التجاري مطلوب');
+                        this.saving = false;
+                        return;
+                    }
+                    if (!formData.category) {
+                        alert('التصنيف مطلوب');
+                        this.saving = false;
+                        return;
+                    }
+                    if (formData.sale_price <= 0) {
+                        alert('سعر البيع يجب أن يكون أكبر من صفر');
+                        this.saving = false;
+                        return;
+                    }
+                    if (formData.purchase_price <= 0) {
+                        alert('سعر الشراء يجب أن يكون أكبر من صفر');
+                        this.saving = false;
+                        return;
+                    }
+
                     try {
                         const response = await fetch(url, {
                             method: method,
@@ -365,7 +395,7 @@
                                 'Content-Type': 'application/json',
                                 'Authorization': 'Bearer ' + localStorage.getItem('token')
                             },
-                            body: JSON.stringify(this.form)
+                            body: JSON.stringify(formData)
                         });
 
                         const data = await response.json();
@@ -374,10 +404,10 @@
                             alert(medicineId ? 'تم تحديث الدواء بنجاح' : 'تم إضافة الدواء بنجاح');
                             window.location.href = '/medicines';
                         } else {
-                            alert(data.message || 'حدث خطأ');
+                            alert(data.detail || data.message || 'حدث خطأ في حفظ الدواء');
                         }
                     } catch (error) {
-                        alert('فشل في الاتصال بالسيرفر');
+                        alert('فشل في الاتصال بالسيرفر: ' + error.message);
                     } finally {
                         this.saving = false;
                     }
@@ -400,7 +430,20 @@
                     try {
                         await this.html5QrCode.start(
                             { facingMode: "environment" },
-                            { fps: 10, qrbox: { width: 250, height: 250 } },
+                            { 
+                                fps: 10, 
+                                qrbox: { width: 300, height: 150 },
+                                aspectRatio: 2.0,
+                                formatsToSupport: [
+                                    Html5QrcodeSupportedFormats.EAN_13,
+                                    Html5QrcodeSupportedFormats.EAN_8,
+                                    Html5QrcodeSupportedFormats.UPC_A,
+                                    Html5QrcodeSupportedFormats.UPC_E,
+                                    Html5QrcodeSupportedFormats.CODE_128,
+                                    Html5QrcodeSupportedFormats.CODE_39,
+                                    Html5QrcodeSupportedFormats.CODABAR
+                                ]
+                            },
                             (decodedText) => {
                                 this.form.barcode = decodedText;
                                 this.closeScanner();
@@ -408,7 +451,7 @@
                             (error) => {}
                         );
                     } catch (err) {
-                        alert('لا يمكن الوصول للكاميرا');
+                        alert('لا يمكن الوصول للكاميرا. تأكد من إعطاء صلاحية الكاميرا.');
                     }
                 }
             }

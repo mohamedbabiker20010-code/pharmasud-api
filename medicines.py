@@ -67,7 +67,9 @@ def get_stock_status(total_stock: int, min_stock: int) -> str:
 
 
 def process_image(image_file: UploadFile, medicine_id: str) -> str:
-    """Process and save uploaded image."""
+    """Process and save uploaded image with better error handling."""
+    import tempfile
+    
     # Validate extension
     ext = os.path.splitext(image_file.filename)[1].lower()
     if ext not in ALLOWED_EXTENSIONS:
@@ -76,18 +78,22 @@ def process_image(image_file: UploadFile, medicine_id: str) -> str:
             detail="يجب أن تكون الصورة بصيغة: JPG, PNG, أو WEBP"
         )
     
+    # Ensure upload directory exists (with full path)
+    upload_dir = os.path.abspath(UPLOAD_DIR)
+    os.makedirs(upload_dir, exist_ok=True)
+    
     # Create unique filename
     timestamp = int(datetime.now().timestamp())
     filename = f"{medicine_id}_{timestamp}.jpg"
-    filepath = os.path.join(UPLOAD_DIR, filename)
+    filepath = os.path.join(upload_dir, filename)
     
-    # Save uploaded file temporarily
-    temp_path = f"/tmp/{filename}"
-    with open(temp_path, "wb") as buffer:
-        shutil.copyfileobj(image_file.file, buffer)
-    
-    # Process image with Pillow
+    # Save uploaded file temporarily using system's temp directory
+    temp_fd, temp_path = tempfile.mkstemp(suffix='.tmp')
     try:
+        with os.fdopen(temp_fd, 'wb') as tmp_file:
+            shutil.copyfileobj(image_file.file, tmp_file)
+        
+        # Process image with Pillow
         with Image.open(temp_path) as img:
             # Convert to RGB if necessary
             if img.mode in ('RGBA', 'P'):
@@ -98,13 +104,14 @@ def process_image(image_file: UploadFile, medicine_id: str) -> str:
             
             # Save as JPEG with quality 85
             img.save(filepath, 'JPEG', quality=85, optimize=True)
+            
     except Exception as e:
-        os.remove(temp_path)
         raise HTTPException(
             status_code=400,
             detail=f"فشل في معالجة الصورة: {str(e)}"
         )
     finally:
+        # Clean up temp file
         if os.path.exists(temp_path):
             os.remove(temp_path)
     
