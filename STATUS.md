@@ -1,7 +1,7 @@
 # PharmaSUD - Project Status
-## Last Updated: 2026-06-10 (Session - Friend Testing Fixes)
-## Current Stage: Stage 6.5 - UX & Security Fixes
-## Version: 6.2.0
+## Last Updated: 2026-06-10 (Session 3 - Permission System + Base64 Images)
+## Current Stage: Stage 6.5 - Permissions & Storage
+## Version: 6.3.0
 ## Live URL: https://pharmasud-api.onrender.com
 ## GitHub: https://github.com/mohamedbabiker20010-code/pharmasud-api
 
@@ -281,11 +281,40 @@ setInterval(() => { fetch('/ping').catch(() => {}); }, 600000);
 
 ---
 
-**Next Steps (After Testing):**
-- Collect feedback from friend
-- Plan Stage 7: Excel export, mobile app, multi-branch, or offline mode
-- Fix test data generator (500 error on Render)
+## 🎯 Session Summary — June 10, 2026 (Session 3)
+
+**Changes based on friend's feedback:**
+
+1. ✅ **Fixed Admin check bug** — was using `localStorage.getItem('user')` which doesn't exist (login stores role in `localStorage.getItem('role')`). Fixed in 4 templates.
+2. ✅ **Fixed template corruption** — line number prefixes (`1| 2| 3|...`) were rendering on the page due to corrupted file. Full cleanup.
+3. ✅ **Permission System (Admin vs Employee)** — defined clear permission model:
+
+| Feature | Employee | Admin | 
+|---------|----------|-------|
+| POS (بيع) | ✅ | ✅ |
+| Medicines list | ✅ (no purchase price) | ✅ |
+| Inventory | ✅ | ✅ |
+| Sales history | ✅ | ✅ |
+| Sales report | ✅ | ✅ |
+| Dashboard (today revenue/profit) | ✅ | ✅ |
+| Slow moving report | ✅ | ✅ |
+| Add/Edit medicine | 🔒 | ✅ |
+| Batch receive (استلام دفعة) | 🔒 | ✅ |
+| Settings (الموظفين) | 🔒 | ✅ |
+| Profit report | 🔒 | ✅ |
+| Purchase forecast | 🔒 | ✅ |
+
+4. ✅ **Base64 Image Storage** — images now stored in database as Base64 (persists across deploys). `image_path` column changed from VARCHAR(255) to TEXT.
+5. ✅ **Sidebar updated** — batch-receive, reports-profits, purchase-forecast hidden from employees
+6. ✅ **Page redirects** — batch-receive, purchase-forecast, settings redirect non-admin to dashboard
+
+**Deployed:** All changes pushed to GitHub & Render (v6.3.0)
 
 ---
 
-*تم التحديث: 8 يونيو 2026 — إصلاحات جوهرية وتسليم للتجربة الفعلية 🚀*
+**Next Steps:**
+- Wait for friend's testing feedback  
+- Plan Stage 7: Excel export, mobile app, multi-branch, or offline mode
+- Security hardening for production
+
+*تم التحديث: 10 يونيو 2026 — نظام الصلاحيات + تخزين الصور 🚀*

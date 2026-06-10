@@ -520,7 +520,7 @@
         <a href="/inventory" class="nav-item">
             <span class="icon">📦</span> المخزون
         </a>
-        <a href="/batch-receive" class="nav-item">
+        <a x-show="isAdmin" href="/batch-receive" class="nav-item">
             <span class="icon">🚚</span> استلام دفعة
         </a>
         <a href="/pos" class="nav-item">
@@ -741,7 +741,7 @@
                             <div class="r-title">تقرير المبيعات</div>
                             <div class="r-desc">تحليل المبيعات اليومية والشهرية</div>
                         </a>
-                        <a href="/reports-profits" class="report-card r-green">
+                        <a x-show="isAdmin" href="/reports-profits" class="report-card r-green">
                             <div class="r-icon">📈</div>
                             <div class="r-title">تقرير الأرباح</div>
                             <div class="r-desc">تحليل الأرباح والهوامش</div>
@@ -751,7 +751,7 @@
                             <div class="r-title">الأدوية بطيئة الحركة</div>
                             <div class="r-desc">الأدوية الأقل مبيعاً</div>
                         </a>
-                        <a href="/reports-purchase-forecast" class="report-card r-purple">
+                        <a x-show="isAdmin" href="/reports-purchase-forecast" class="report-card r-purple">
                             <div class="r-icon">🔮</div>
                             <div class="r-title">توقعات الشراء</div>
                             <div class="r-desc">التنبؤ باحتياجات المخزون</div>

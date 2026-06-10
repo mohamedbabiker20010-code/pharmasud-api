@@ -571,7 +571,7 @@ class Medicine(Base):
     purchase_price = Column(Numeric(10, 2))
     base_unit = Column(String(20), default="strip")
     min_stock = Column(Integer, default=10)
-    image_path = Column(String(255))  # New: Image path for medicine
+    image_path = Column(Text)  # Base64 image data (persists across deploys)
     created_at = Column(DateTime, server_default=text("NOW()"))
 
     # Relationships

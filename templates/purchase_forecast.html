@@ -690,6 +690,12 @@ function purchaseForecastApp() {
         },
 
         init() {
+            // Admin only
+            if (localStorage.getItem('role') !== 'admin') {
+                alert('هذه الصفحة للمدير فقط');
+                window.location.href = '/dashboard';
+                return;
+            }
             this.formatCurrentDate();
             this.loadUserInfo();
             this.loadReport();

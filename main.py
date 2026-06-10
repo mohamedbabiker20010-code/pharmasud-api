@@ -63,6 +63,15 @@ async def create_tables():
                 print("✅ Added unit_name column to sale_items table")
         except Exception as e:
             print(f"⚠️ Could not add unit_name column: {e}")
+        
+        # Change image_path from VARCHAR(255) to TEXT for Base64 storage
+        try:
+            with engine.connect() as conn:
+                conn.execute(text("ALTER TABLE medicines ALTER COLUMN image_path TYPE TEXT"))
+                conn.commit()
+                print("✅ Changed image_path column to TEXT for Base64 storage")
+        except Exception as e:
+            print(f"⚠️ Could not change image_path column: {e}")
     except Exception as e:
         print(f"⚠️ Could not create tables: {e}")
 

@@ -66,8 +66,11 @@ def get_stock_status(total_stock: int, min_stock: int) -> str:
         return "available"  # 🟢 متوفر
 
 
+import base64
+import io
+
 def process_image(image_file: UploadFile, medicine_id: str) -> str:
-    """Process and save uploaded image with better error handling."""
+    """Process image and return Base64 data URL (persists across deploys)."""
     import tempfile
     
     # Validate extension
@@ -78,23 +81,10 @@ def process_image(image_file: UploadFile, medicine_id: str) -> str:
             detail="يجب أن تكون الصورة بصيغة: JPG, PNG, أو WEBP"
         )
     
-    # Ensure upload directory exists (with full path)
-    upload_dir = os.path.abspath(UPLOAD_DIR)
-    os.makedirs(upload_dir, exist_ok=True)
+    # Process directly from upload file to Base64
     
-    # Create unique filename
-    timestamp = int(datetime.now().timestamp())
-    filename = f"{medicine_id}_{timestamp}.jpg"
-    filepath = os.path.join(upload_dir, filename)
-    
-    # Save uploaded file temporarily using system's temp directory
-    temp_fd, temp_path = tempfile.mkstemp(suffix='.tmp')
     try:
-        with os.fdopen(temp_fd, 'wb') as tmp_file:
-            shutil.copyfileobj(image_file.file, tmp_file)
-        
-        # Process image with Pillow
-        with Image.open(temp_path) as img:
+        with Image.open(image_file.file) as img:
             # Convert to RGB if necessary
             if img.mode in ('RGBA', 'P'):
                 img = img.convert('RGB')
@@ -102,29 +92,22 @@ def process_image(image_file: UploadFile, medicine_id: str) -> str:
             # Resize to 300x300
             img = img.resize(DEFAULT_IMAGE_SIZE, Image.Resampling.LANCZOS)
             
-            # Save as JPEG with quality 85
-            img.save(filepath, 'JPEG', quality=85, optimize=True)
+            # Save to bytes buffer and encode as Base64
+            buffer = io.BytesIO()
+            img.save(buffer, 'JPEG', quality=85, optimize=True)
+            img_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
             
+            return f"data:image/jpeg;base64,{img_base64}"
     except Exception as e:
         raise HTTPException(
             status_code=400,
             detail=f"فشل في معالجة الصورة: {str(e)}"
         )
-    finally:
-        # Clean up temp file
-        if os.path.exists(temp_path):
-            os.remove(temp_path)
-    
-    return f"/static/medicines/images/{filename}"
 
 
 def delete_image(image_path: str):
-    """Delete medicine image file."""
-    if image_path and os.path.exists(image_path.lstrip('/')):
-        try:
-            os.remove(image_path.lstrip('/'))
-        except:
-            pass
+    """No-op: Base64 images stored in DB, no file to delete."""
+    pass
 
 
 def format_medicine_response(medicine: Medicine, db: Session, is_admin: bool = False) -> dict:
@@ -155,6 +138,7 @@ def format_medicine_response(medicine: Medicine, db: Session, is_admin: bool = F
         "total_stock": total_stock,
         "stock_status": stock_status,
         "image_url": medicine.image_path or "/static/images/default-medicine.svg",
+            "image_is_base64": bool(medicine.image_path and medicine.image_path.startswith("data:")),
         "units": units
     }
     
