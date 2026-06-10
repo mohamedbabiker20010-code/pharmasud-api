@@ -67,14 +67,14 @@
                 <!-- Trade Name -->
                 <div>
                     <label class="block text-sm font-medium mb-2">الاسم التجاري *</label>
-<input 
-                            type="text" 
-                            x-model="form.trade_name"
-                            placeholder="مثال: بانادول أزرق"
-                            class="w-full bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
-                            :class="{'border-red-500': errors.trade_name}"
-                        >
-                        <p x-show="errors.trade_name" class="text-red-400 text-xs mt-1" x-text="errors.trade_name"></p>
+                    <input 
+                        type="text" 
+                        x-model="form.trade_name"
+                        placeholder="مثال: بانادول أزرق"
+                        class="w-full bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                        :class="{'border-red-500': errors.trade_name}"
+                    >
+                    <p x-show="errors.trade_name" class="text-red-400 text-xs mt-1" x-text="errors.trade_name"></p>
                 </div>
                 <!-- Scientific Name -->
                 <div>
@@ -82,7 +82,7 @@
                     <input 
                         type="text" 
                         x-model="form.scientific_name"
-                        placeholder="مثال: Paracetamol 500mg"
+                        placeholder="مثال: Paracetamol"
                         class="w-full bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
                     >
                 </div>
@@ -94,71 +94,68 @@
                         class="w-full bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
                     >
                         <option value="">اختر التصنيف</option>
-                        <template x-for="category in categories" :key="category">
-                            <option :value="category" x-text="category"></option>
+                        <template x-for="cat in categories" :key="cat">
+                            <option :value="cat" x-text="cat"></option>
                         </template>
                     </select>
                 </div>
-                <!-- Prices - واضحة للجوال -->
-                <div class="space-y-4">
+                <!-- Prices & Unit -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                        <label class="block text-sm font-medium mb-2">💰 سعر البيع *(للجمهور)</label>
-                        <p x-show="errors.sale_price" class="text-red-400 text-xs mt-1" x-text="errors.sale_price"></p>
+                        <label class="block text-sm font-medium mb-2">سعر البيع *</label>
                         <input 
                             type="number" 
                             x-model="form.sale_price"
-                            min="0"
                             step="0.01"
-                            placeholder="مثال: 350.00"
+                            min="0"
+                            placeholder="سعر البيع للجمهور"
                             class="w-full bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
                         >
-                        <p class="text-gray-500 text-xs mt-1">السعر النهائي للعميل</p>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-2">📦 سعر الشراء *</label>
-                        <p x-show="errors.purchase_price" class="text-red-400 text-xs mt-1" x-text="errors.purchase_price"></p>
+                        <label class="block text-sm font-medium mb-2">سعر الشراء</label>
                         <input 
                             type="number" 
-                            x-model.number="form.purchase_price"
-                            min="0"
+                            x-model="form.purchase_price"
                             step="0.01"
-                            placeholder="مثال: 280.00"
+                            min="0"
+                            placeholder="سعر الشراء"
                             class="w-full bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
                         >
-                        <p class="text-gray-500 text-xs mt-1">كم اشتريته من الموزع (لحساب الربح)</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">الحد الأدنى</label>
+                        <input 
+                            type="number" 
+                            x-model="form.min_stock"
+                            min="1"
+                            placeholder="الحد الأدنى للمخزون"
+                            class="w-full bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                        >
                     </div>
                 </div>
                 <!-- Base Unit -->
                 <div>
-                    <label class="block text-sm font-medium mb-2">الوحدة الأساسية *</label>
+                    <label class="block text-sm font-medium mb-2">الوحدة الأساسية</label>
                     <select 
                         x-model="form.base_unit"
                         class="w-full bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
                     >
                         <option value="strip">شريط</option>
-                        <option value="box">علبة</option>
-                        <option value="tablet">قرص</option>
                         <option value="bottle">زجاجة</option>
-                        <option value="ampoule">امبول</option>
-                        <option value="tube">أنبوبة</option>
-                        <option value="pack">عبوة</option>
+                        <option value="box">علبة</option>
+                        <option value="vial">أمبولة</option>
+                        <option value="tube">أنبوب</option>
+                        <option value="sachet">ظرف</option>
+                        <option value="spray">بخاخ</option>
+                        <option value="piece">قطعة</option>
+                        <option value="ml">مل</option>
+                        <option value="g">جم</option>
+                        <option value="other">أخرى</option>
                     </select>
                 </div>
-                <!-- Min Stock -->
-                <div>
-                    <label class="block text-sm font-medium mb-2">الحد الأدنى للتنبيه</label>
-                    <input 
-                        type="number" 
-                        x-model="form.min_stock"
-                        min="0"
-                        placeholder="10"
-                        class="w-full bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
-                    >
-                </div>
-                <!-- وحدة أساسية (تلقائي - مخفية) -->
-                <input type="hidden" x-model="form.base_unit">
                 <!-- Submit -->
-                <div class="pt-6 border-t border-gray-700">
+                <div>
                     <button 
                         type="submit"
                         :disabled="saving"
@@ -182,6 +179,7 @@
                     </button>
                 </div>
                 <div id="reader" class="w-full h-64 bg-black rounded-lg"></div>
+                <p class="text-center text-gray-400 text-sm mt-3">وجّهي الكاميرا نحو الباركود ليتم قراءته تلقائياً</p>
             </div>
         </div>
     </div>
@@ -211,7 +209,7 @@
                 async init() {
                     const urlParams = new URLSearchParams(window.location.search);
                     const medicineId = urlParams.get('id');
-// Check if admin from stored role
+                    // Check if admin from stored role
                     this.isAdmin = localStorage.getItem('role') === 'admin';
                     
                     // Redirect non-admin
@@ -291,7 +289,7 @@
                         alert('فشل في رفع الصورة');
                     }
                 },
-async saveMedicine() {
+                async saveMedicine() {
                     this.saving = true;
                     const urlParams = new URLSearchParams(window.location.search);
                     const medicineId = urlParams.get('id');
@@ -349,7 +347,8 @@ async saveMedicine() {
                 },
                 openBarcodeScanner() {
                     this.showScanner = true;
-                    this.startScanner();
+                    // ننتظر حتى يتحدّث DOM من Alpine.js قبل بدء الكاميرا
+                    setTimeout(() => this.startScanner(), 300);
                 },
                 closeScanner() {
                     this.showScanner = false;
@@ -365,12 +364,26 @@ async saveMedicine() {
                     }
                     this.html5QrCode = new Html5Qrcode("reader");
                     try {
-                        // إعدادات بسيطة للباركود (EAN-13 مدعوم بشكل افتراضي)
+                        // دعم كل صيغ الباركود الشائعة في الصيدليات
+                        const formats = [
+                            Html5QrcodeSupportedFormats.EAN_13,
+                            Html5QrcodeSupportedFormats.EAN_8,
+                            Html5QrcodeSupportedFormats.UPC_A,
+                            Html5QrcodeSupportedFormats.UPC_E,
+                            Html5QrcodeSupportedFormats.CODE_128,
+                            Html5QrcodeSupportedFormats.CODE_39,
+                            Html5QrcodeSupportedFormats.CODE_93,
+                            Html5QrcodeSupportedFormats.ITF,
+                            Html5QrcodeSupportedFormats.CODABAR,
+                            Html5QrcodeSupportedFormats.RSS_14,
+                            Html5QrcodeSupportedFormats.RSS_EXPANDED,
+                        ];
                         await this.html5QrCode.start(
                             { facingMode: "environment" },
                             { 
                                 fps: 10, 
-                                qrbox: { width: 300, height: 200 }
+                                qrbox: { width: 300, height: 150 },
+                                formatsToSupport: formats
                             },
                             (decodedText) => {
                                 console.log('Barcode detected:', decodedText);
@@ -384,12 +397,13 @@ async saveMedicine() {
                         );
                     } catch (err) {
                         console.error('Scanner error:', err);
-                        let errorMsg = 'لا يمكن الوصول للكاميرا. \n\n';
+                        let errorMsg = 'لا يمكن قراءة الباركود.\n\n';
                         errorMsg += 'الأسباب المحتملة:\n';
-                        errorMsg += '1. لم تم إعطاء صلاحية الكاميرا للموقع\n';
-                        errorMsg += '2. المتصفح لا يدعم الكاميرا (Chrome أو Safari مباشرة)\n';
-                        errorMsg += '3. الكاميرا مشغولة في تطبيق آخر\n\n';
-                        errorMsg += 'الحل: أدخل الباركود يدوياً أو افتح الصفحة في متصفح آخر';
+                        errorMsg += '1. تأكدي من أن الباركود واضح ونظيف\n';
+                        errorMsg += '2. iPhone: استخدمي Safari (Chrome لا يدعم الكاميرا في iOS)\n';
+                        errorMsg += '3. Android: استخدمي Chrome أو أي متصفح\n';
+                        errorMsg += '4. امنحي الموقع صلاحية الكاميرا\n\n';
+                        errorMsg += 'الحل البديل: أدخلي رقم الباركود يدوياً في الحقل';
                         alert(errorMsg);
                         this.showScanner = false;
                     }
