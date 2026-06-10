@@ -1,434 +1,439 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نموذج الدواء - صيدلية الزاريات</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
-        body { font-family: 'Cairo', sans-serif; }
-    </style>
-</head>
-<body class="bg-[#0F172A] text-white min-h-screen">
-    <div x-data="medicineFormApp()" x-init="init()">
-        <!-- Header -->
-        <header class="bg-[#1E293B] border-b border-gray-700">
-            <div class="max-w-3xl mx-auto px-4 py-4">
-                <div class="flex justify-between items-center">
-                    <h1 class="text-xl font-bold" x-text="isEdit ? 'تعديل دواء' : 'إضافة دواء جديد'">إضافة دواء جديد</h1>
-                    <a href="/medicines" class="text-gray-400 hover:text-white flex items-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                        </svg>
-                        الرجوع
-                    </a>
-                </div>
-            </div>
-        </header>
-
-        <!-- Form -->
-        <div class="max-w-3xl mx-auto px-4 py-8">
-            <form @submit.prevent="saveMedicine()" class="bg-[#1E293B] rounded-lg p-6 space-y-6">
-                <!-- Image Upload -->
-                <div class="flex flex-col items-center">
-                    <div class="relative w-48 h-48 bg-[#0F172A] rounded-lg overflow-hidden border-2 border-dashed border-gray-600">
-                        <img :src="previewImage || '/static/images/default-medicine.svg'" class="w-full h-full object-contain p-4" alt="">
-                        <input 
-                            type="file" 
-                            @change="handleImageUpload($event)"
-                            accept="image/*"
-                            class="absolute inset-0 opacity-0 cursor-pointer"
-                        >
-                    </div>
-                    <p class="text-gray-400 text-sm mt-2">اضغط لرفع صورة (اختياري)</p>
-                </div>
-
-                <!-- Barcode -->
-                <div>
-                    <label class="block text-sm font-medium mb-2">الباركود</label>
-                    <div class="flex gap-2">
-                        <input 
-                            type="text" 
-                            x-model="form.barcode"
-                            placeholder="امسح أو أدخل الباركود"
-                            class="flex-1 bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
-                        >
-                        <button 
-                            type="button"
-                            @click="openBarcodeScanner()"
-                            class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg"
-                        >
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Trade Name -->
-                <div>
-                    <label class="block text-sm font-medium mb-2">الاسم التجاري *</label>
-                    <input 
-                        type="text" 
-                        x-model="form.trade_name"
-                        required
-                        placeholder="مثال: بانادول أزرق"
-                        class="w-full bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
-                    >
-                </div>
-
-                <!-- Scientific Name -->
-                <div>
-                    <label class="block text-sm font-medium mb-2">الاسم العلمي</label>
-                    <input 
-                        type="text" 
-                        x-model="form.scientific_name"
-                        placeholder="مثال: Paracetamol 500mg"
-                        class="w-full bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
-                    >
-                </div>
-
-                <!-- Category -->
-                <div>
-                    <label class="block text-sm font-medium mb-2">التصنيف *</label>
-                    <select 
-                        x-model="form.category"
-                        required
-                        class="w-full bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
-                    >
-                        <option value="">اختر التصنيف</option>
-                        <template x-for="category in categories" :key="category">
-                            <option :value="category" x-text="category"></option>
-                        </template>
-                    </select>
-                </div>
-
-                <!-- Prices - واضحة للجوال -->
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-2">💰 سعر البيع *(للجمهور)</label>
-                        <input 
-                            type="number" 
-                            x-model="form.sale_price"
-                            required
-                            min="0"
-                            step="0.01"
-                            placeholder="مثال: 350.00"
-                            class="w-full bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
-                        >
-                        <p class="text-gray-500 text-xs mt-1">السعر النهائي للعميل</p>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">📦 سعر الشراء *</label>
-                        <input 
-                            type="number" 
-                            x-model.number="form.purchase_price"
-                            required
-                            min="0"
-                            step="0.01"
-                            placeholder="مثال: 280.00"
-                            class="w-full bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
-                        >
-                        <p class="text-gray-500 text-xs mt-1">كم اشتريته من الموزع (لحساب الربح)</p>
-                    </div>
-                </div>
-
-                <!-- Base Unit -->
-                <div>
-                    <label class="block text-sm font-medium mb-2">الوحدة الأساسية *</label>
-                    <select 
-                        x-model="form.base_unit"
-                        required
-                        class="w-full bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
-                    >
-                        <option value="strip">شريط</option>
-                        <option value="box">علبة</option>
-                        <option value="tablet">قرص</option>
-                        <option value="bottle">زجاجة</option>
-                        <option value="ampoule">امبول</option>
-                        <option value="tube">أنبوبة</option>
-                        <option value="pack">عبوة</option>
-                    </select>
-                </div>
-
-                <!-- Min Stock -->
-                <div>
-                    <label class="block text-sm font-medium mb-2">الحد الأدنى للتنبيه</label>
-                    <input 
-                        type="number" 
-                        x-model="form.min_stock"
-                        min="0"
-                        placeholder="10"
-                        class="w-full bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
-                    >
-                </div>
-
-                <!-- وحدة أساسية (تلقائي - مخفية) -->
-                <input type="hidden" x-model="form.base_unit">
-
-                <!-- Submit -->
-                <div class="pt-6 border-t border-gray-700">
-                    <button 
-                        type="submit"
-                        :disabled="saving"
-                        class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 py-3 rounded-lg font-bold text-lg"
-                    >
-                        <span x-show="!saving" x-text="isEdit ? 'حفظ التعديلات' : 'إضافة الدواء'"></span>
-                        <span x-show="saving">جاري الحفظ...</span>
-                    </button>
-                </div>
-            </form>
-        </div>
-
-        <!-- Barcode Scanner Modal -->
-        <div x-show="showScanner" class="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4">
-            <div class="bg-[#1E293B] rounded-lg w-full max-w-lg p-4">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-bold">مسح الباركود</h3>
-                    <button @click="closeScanner()" class="text-gray-400 hover:text-white">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
-                    </button>
-                </div>
-                <div id="reader" class="w-full h-64 bg-black rounded-lg"></div>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-    <script>
-        function medicineFormApp() {
-            return {
-                isEdit: false,
-                isAdmin: false,
-                saving: false,
-                showScanner: false,
-                categories: [],
-                previewImage: null,
-                html5QrCode: null,
-                form: {
-                    trade_name: '',
-                    scientific_name: '',
-                    category: '',
-                    barcode: '',
-                    sale_price: '',
-                    purchase_price: '',
-                    base_unit: 'strip',
-                    min_stock: 10,
-                    image_path: '',
-                },
-
-                async init() {
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const medicineId = urlParams.get('id');
-                    const barcode = urlParams.get('barcode');
-                    
-                    // Check if admin
-                    const user = JSON.parse(localStorage.getItem('user') || '{}');
-                    this.isAdmin = user.role === 'admin';
-                    
-                    // Redirect non-admin
-                    if (!this.isAdmin) {
-                        alert('هذه الصفحة للمدير فقط');
-                        window.location.href = '/dashboard';
-                        return;
-                    }
-                    
-                    await this.loadCategories();
-                    
-                    if (medicineId) {
-                        this.isEdit = true;
-                        await this.loadMedicine(medicineId);
-                    } else if (barcode) {
-                        this.form.barcode = barcode;
-                    }
-                },
-
-                async loadCategories() {
-                    try {
-                        const response = await fetch('/api/medicines/categories/list', {
-                            headers: {
-                                'Authorization': 'Bearer ' + localStorage.getItem('token')
-                            }
-                        });
-                        const data = await response.json();
-                        this.categories = data.categories;
-                    } catch (error) {
-                        console.error('Error loading categories:', error);
-                    }
-                },
-
-                async loadMedicine(id) {
-                    try {
-                        const response = await fetch(`/api/medicines/${id}`, {
-                            headers: {
-                                'Authorization': 'Bearer ' + localStorage.getItem('token')
-                            }
-                        });
-                        const data = await response.json();
-                        this.form = {
-                            trade_name: data.trade_name,
-                            scientific_name: data.scientific_name || '',
-                            category: data.category,
-                            barcode: data.barcode || '',
-                            sale_price: data.sale_price,
-                            purchase_price: data.purchase_price || '',
-                            base_unit: data.base_unit,
-                            min_stock: data.min_stock,
-                            image_path: data.image_url || '',
-                        };
-                        if (data.image_url && !data.image_url.includes('default')) {
-                            this.previewImage = data.image_url;
-                        }
-                    } catch (error) {
-                        console.error('Error loading medicine:', error);
-                    }
-                },
-
-                async handleImageUpload(event) {
-                    const file = event.target.files[0];
-                    if (!file) return;
-
-                    const formData = new FormData();
-                    formData.append('file', file);
-
-                    try {
-                        const response = await fetch('/api/medicines/upload-image', {
-                            method: 'POST',
-                            headers: {
-                                'Authorization': 'Bearer ' + localStorage.getItem('token')
-                            },
-                            body: formData
-                        });
-                        const data = await response.json();
-                        if (data.success) {
-                            this.form.image_path = data.image_url;
-                            this.previewImage = data.image_url;
-                        }
-                    } catch (error) {
-                        alert('فشل في رفع الصورة');
-                    }
-                },
-
-async saveMedicine() {
-
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const medicineId = urlParams.get('id');
-                    
-                    const url = medicineId ? `/api/medicines/${medicineId}` : '/api/medicines/';
-                    const method = medicineId ? 'PUT' : 'POST';
-
-                    // تحويل الأسعار لأرقام لتجنب أخطاء الـ API
-                    const formData = {
-                        ...this.form,
-                        sale_price: parseFloat(this.form.sale_price) || 0,
-                        purchase_price: parseFloat(this.form.purchase_price) || 0,
-                        min_stock: parseInt(this.form.min_stock) || 10
-                    };
-
-                    // التحقق من البيانات قبل الإرسال
-                    if (!formData.trade_name || formData.trade_name.trim() === '') {
-                        alert('الاسم التجاري مطلوب');
-                        this.saving = false;
-                        return;
-                    }
-                    if (!formData.category) {
-                        alert('التصنيف مطلوب');
-                        this.saving = false;
-                        return;
-                    }
-                    if (formData.sale_price <= 0) {
-                        alert('سعر البيع يجب أن يكون أكبر من صفر');
-                        this.saving = false;
-                        return;
-                    }
-                    if (formData.purchase_price <= 0) {
-                        alert('سعر الشراء يجب أن يكون أكبر من صفر');
-                        this.saving = false;
-                        return;
-                    }
-
-                    try {
-                        const response = await fetch(url, {
-                            method: method,
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': 'Bearer ' + localStorage.getItem('token')
-                            },
-                            body: JSON.stringify(formData)
-                        });
-
-                        const data = await response.json();
-                        
-                        if (data.success) {
-                            alert(medicineId ? 'تم تحديث الدواء بنجاح' : 'تم إضافة الدواء بنجاح');
-                            window.location.href = '/medicines';
-                        } else {
-                            alert(data.detail || data.message || 'حدث خطأ في حفظ الدواء');
-                        }
-                    } catch (error) {
-                        alert('فشل في الاتصال بالسيرفر: ' + error.message);
-                    } finally {
-                        this.saving = false;
-                    }
-                },
-
-                openBarcodeScanner() {
-                    this.showScanner = true;
-                    this.startScanner();
-                },
-
-                closeScanner() {
-                    this.showScanner = false;
-                    if (this.html5QrCode) {
-                        this.html5QrCode.stop();
-                    }
-                },
-
-                async startScanner() {
-                    // تأكد من تحميل المكتبة
-                    if (typeof Html5Qrcode === 'undefined') {
-                        alert('جاري تحميل مكتبة الباركود... أعد قليلاً ثم حاول مرة أخرى');
-                        return;
-                    }
-
-                    this.html5QrCode = new Html5Qrcode("reader");
-                    
-                    try {
-                        // إعدادات بسيطة للباركود (EAN-13 مدعوم بشكل افتراضي)
-                        await this.html5QrCode.start(
-                            { facingMode: "environment" },
-                            { 
-                                fps: 10, 
-                                qrbox: { width: 300, height: 200 }
-                            },
-                            (decodedText) => {
-                                console.log('Barcode detected:', decodedText);
-                                this.form.barcode = decodedText;
-                                this.closeScanner();
-                                alert('تم قراءة الباركود: ' + decodedText);
-                            },
-                            (error) => {
-                                // تجاهل أخطاء المساح المؤقت
-                            }
-                        );
-                    } catch (err) {
-                        console.error('Scanner error:', err);
-                        let errorMsg = 'لا يمكن الوصول للكاميرا. \n\n';
-                        errorMsg += 'الأسباب المحتملة:\n';
-                        errorMsg += '1. لم تم إعطاء صلاحية الكاميرا للموقع\n';
-                        errorMsg += '2. المتصفح لا يدعم الكاميرا (Chrome أو Safari مباشرة)\n';
-                        errorMsg += '3. الكاميرا مشغولة في تطبيق آخر\n\n';
-                        errorMsg += 'الحل: أدخل الباركود يدوياً أو افتح الصفحة في متصفح آخر';
-                        alert(errorMsg);
-                        this.showScanner = false;
-                    }
-                }
-            }
-        }
-    </script>
-</body>
-</html>
+     1|<!DOCTYPE html>
+     2|<html lang="ar" dir="rtl">
+     3|<head>
+     4|    <meta charset="UTF-8">
+     5|    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     6|    <title>نموذج الدواء - صيدلية الزاريات</title>
+     7|    <script src="https://cdn.tailwindcss.com"></script>
+     8|    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+     9|    <style>
+    10|        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+    11|        body { font-family: 'Cairo', sans-serif; }
+    12|    </style>
+    13|</head>
+    14|<body class="bg-[#0F172A] text-white min-h-screen">
+    15|    <div x-data="medicineFormApp()" x-init="init()">
+    16|        <!-- Header -->
+    17|        <header class="bg-[#1E293B] border-b border-gray-700">
+    18|            <div class="max-w-3xl mx-auto px-4 py-4">
+    19|                <div class="flex justify-between items-center">
+    20|                    <h1 class="text-xl font-bold" x-text="isEdit ? 'تعديل دواء' : 'إضافة دواء جديد'">إضافة دواء جديد</h1>
+    21|                    <a href="/medicines" class="text-gray-400 hover:text-white flex items-center gap-2">
+    22|                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    23|                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+    24|                        </svg>
+    25|                        الرجوع
+    26|                    </a>
+    27|                </div>
+    28|            </div>
+    29|        </header>
+    30|
+    31|        <!-- Form -->
+    32|        <div class="max-w-3xl mx-auto px-4 py-8">
+    33|            <form @submit.prevent="saveMedicine()" class="bg-[#1E293B] rounded-lg p-6 space-y-6">
+    34|                <!-- Image Upload -->
+    35|                <div class="flex flex-col items-center">
+    36|                    <div class="relative w-48 h-48 bg-[#0F172A] rounded-lg overflow-hidden border-2 border-dashed border-gray-600">
+    37|                        <img :src="previewImage || '/static/images/default-medicine.svg'" class="w-full h-full object-contain p-4" alt="">
+    38|                        <input 
+    39|                            type="file" 
+    40|                            @change="handleImageUpload($event)"
+    41|                            accept="image/*"
+    42|                            class="absolute inset-0 opacity-0 cursor-pointer"
+    43|                        >
+    44|                    </div>
+    45|                    <p class="text-gray-400 text-sm mt-2">اضغط لرفع صورة (اختياري)</p>
+    46|                </div>
+    47|
+    48|                <!-- Barcode -->
+    49|                <div>
+    50|                    <label class="block text-sm font-medium mb-2">الباركود</label>
+    51|                    <div class="flex gap-2">
+    52|                        <input 
+    53|                            type="text" 
+    54|                            x-model="form.barcode"
+    55|                            placeholder="امسح أو أدخل الباركود"
+    56|                            class="flex-1 bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+    57|                        >
+    58|                        <button 
+    59|                            type="button"
+    60|                            @click="openBarcodeScanner()"
+    61|                            class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg"
+    62|                        >
+    63|                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    64|                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+    65|                            </svg>
+    66|                        </button>
+    67|                    </div>
+    68|                </div>
+    69|
+    70|                <!-- Trade Name -->
+    71|                <div>
+    72|                    <label class="block text-sm font-medium mb-2">الاسم التجاري *</label>
+    73|<input 
+    74|                            type="text" 
+    75|                            x-model="form.trade_name"
+    76|                            placeholder="مثال: بانادول أزرق"
+    77|                            class="w-full bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+    78|                            :class="{'border-red-500': errors.trade_name}"
+    79|                        >
+    80|                        <p x-show="errors.trade_name" class="text-red-400 text-xs mt-1" x-text="errors.trade_name"></p>
+    81|                </div>
+    82|
+    83|                <!-- Scientific Name -->
+    84|                <div>
+    85|                    <label class="block text-sm font-medium mb-2">الاسم العلمي</label>
+    86|                    <input 
+    87|                        type="text" 
+    88|                        x-model="form.scientific_name"
+    89|                        placeholder="مثال: Paracetamol 500mg"
+    90|                        class="w-full bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+    91|                    >
+    92|                </div>
+    93|
+    94|                <!-- Category -->
+    95|                <div>
+    96|                    <label class="block text-sm font-medium mb-2">التصنيف *</label>
+    97|                    <select 
+    98|                        x-model="form.category"
+    99|
+   100|                        class="w-full bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+   101|                    >
+   102|                        <option value="">اختر التصنيف</option>
+   103|                        <template x-for="category in categories" :key="category">
+   104|                            <option :value="category" x-text="category"></option>
+   105|                        </template>
+   106|                    </select>
+   107|                </div>
+   108|
+   109|                <!-- Prices - واضحة للجوال -->
+   110|                <div class="space-y-4">
+   111|                    <div>
+   112|                        <label class="block text-sm font-medium mb-2">💰 سعر البيع *(للجمهور)</label>
+                        <p x-show="errors.sale_price" class="text-red-400 text-xs mt-1" x-text="errors.sale_price"></p>
+   113|                        <input 
+   114|                            type="number" 
+   115|                            x-model="form.sale_price"
+   116|
+   117|                            min="0"
+   118|                            step="0.01"
+   119|                            placeholder="مثال: 350.00"
+   120|                            class="w-full bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+   121|                        >
+   122|                        <p class="text-gray-500 text-xs mt-1">السعر النهائي للعميل</p>
+   123|                    </div>
+   124|                    <div>
+   125|                        <label class="block text-sm font-medium mb-2">📦 سعر الشراء *</label>
+                        <p x-show="errors.purchase_price" class="text-red-400 text-xs mt-1" x-text="errors.purchase_price"></p>
+   126|                        <input 
+   127|                            type="number" 
+   128|                            x-model.number="form.purchase_price"
+   129|
+   130|                            min="0"
+   131|                            step="0.01"
+   132|                            placeholder="مثال: 280.00"
+   133|                            class="w-full bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+   134|                        >
+   135|                        <p class="text-gray-500 text-xs mt-1">كم اشتريته من الموزع (لحساب الربح)</p>
+   136|                    </div>
+   137|                </div>
+   138|
+   139|                <!-- Base Unit -->
+   140|                <div>
+   141|                    <label class="block text-sm font-medium mb-2">الوحدة الأساسية *</label>
+   142|                    <select 
+   143|                        x-model="form.base_unit"
+   144|
+   145|                        class="w-full bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+   146|                    >
+   147|                        <option value="strip">شريط</option>
+   148|                        <option value="box">علبة</option>
+   149|                        <option value="tablet">قرص</option>
+   150|                        <option value="bottle">زجاجة</option>
+   151|                        <option value="ampoule">امبول</option>
+   152|                        <option value="tube">أنبوبة</option>
+   153|                        <option value="pack">عبوة</option>
+   154|                    </select>
+   155|                </div>
+   156|
+   157|                <!-- Min Stock -->
+   158|                <div>
+   159|                    <label class="block text-sm font-medium mb-2">الحد الأدنى للتنبيه</label>
+   160|                    <input 
+   161|                        type="number" 
+   162|                        x-model="form.min_stock"
+   163|                        min="0"
+   164|                        placeholder="10"
+   165|                        class="w-full bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+   166|                    >
+   167|                </div>
+   168|
+   169|                <!-- وحدة أساسية (تلقائي - مخفية) -->
+   170|                <input type="hidden" x-model="form.base_unit">
+   171|
+   172|                <!-- Submit -->
+   173|                <div class="pt-6 border-t border-gray-700">
+   174|                    <button 
+   175|                        type="submit"
+   176|                        :disabled="saving"
+   177|                        class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 py-3 rounded-lg font-bold text-lg"
+   178|                    >
+   179|                        <span x-show="!saving" x-text="isEdit ? 'حفظ التعديلات' : 'إضافة الدواء'"></span>
+   180|                        <span x-show="saving">جاري الحفظ...</span>
+   181|                    </button>
+   182|                </div>
+   183|            </form>
+   184|        </div>
+   185|
+   186|        <!-- Barcode Scanner Modal -->
+   187|        <div x-show="showScanner" class="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4">
+   188|            <div class="bg-[#1E293B] rounded-lg w-full max-w-lg p-4">
+   189|                <div class="flex justify-between items-center mb-4">
+   190|                    <h3 class="text-lg font-bold">مسح الباركود</h3>
+   191|                    <button @click="closeScanner()" class="text-gray-400 hover:text-white">
+   192|                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+   193|                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+   194|                        </svg>
+   195|                    </button>
+   196|                </div>
+   197|                <div id="reader" class="w-full h-64 bg-black rounded-lg"></div>
+   198|            </div>
+   199|        </div>
+   200|    </div>
+   201|
+   202|    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+   203|    <script>
+   204|        function medicineFormApp() {
+   205|            return {
+   206|                isEdit: false,
+   207|                isAdmin: false,
+   208|                saving: false,
+   209|                showScanner: false,
+   210|                categories: [],
+   211|                previewImage: null,
+   212|                html5QrCode: null,
+   213|                form: {
+   214|                    trade_name: '',
+   215|                    scientific_name: '',
+   216|                    category: '',
+   217|                    barcode: '',
+   218|                    sale_price: '',
+   219|                    purchase_price: '',
+   220|                    base_unit: 'strip',
+   221|                    min_stock: 10,
+   222|                    image_path: '',
+   223|                },
+   224|
+   225|                async init() {
+   226|                    const urlParams = new URLSearchParams(window.location.search);
+   227|                    const medicineId = urlParams.get('id');
+   228|                    const barcode = urlParams.get('barcode');
+   229|                    
+   230|                    // Check if admin
+   231|                    const user = JSON.parse(localStorage.getItem('user') || '{}');
+   232|                    this.isAdmin = user.role === 'admin';
+   233|                    
+   234|                    // Redirect non-admin
+   235|                    if (!this.isAdmin) {
+   236|                        alert('هذه الصفحة للمدير فقط');
+   237|                        window.location.href = '/dashboard';
+   238|                        return;
+   239|                    }
+   240|                    
+   241|                    await this.loadCategories();
+   242|                    
+   243|                    if (medicineId) {
+   244|                        this.isEdit = true;
+   245|                        await this.loadMedicine(medicineId);
+   246|                    } else if (barcode) {
+   247|                        this.form.barcode = barcode;
+   248|                    }
+   249|                },
+   250|
+   251|                async loadCategories() {
+   252|                    try {
+   253|                        const response = await fetch('/api/medicines/categories/list', {
+   254|                            headers: {
+   255|                                'Authorization': 'Bearer ' + localStorage.getItem('token')
+   256|                            }
+   257|                        });
+   258|                        const data = await response.json();
+   259|                        this.categories = data.categories;
+   260|                    } catch (error) {
+   261|                        console.error('Error loading categories:', error);
+   262|                    }
+   263|                },
+   264|
+   265|                async loadMedicine(id) {
+   266|                    try {
+   267|                        const response = await fetch(`/api/medicines/${id}`, {
+   268|                            headers: {
+   269|                                'Authorization': 'Bearer ' + localStorage.getItem('token')
+   270|                            }
+   271|                        });
+   272|                        const data = await response.json();
+   273|                        this.form = {
+   274|                            trade_name: data.trade_name,
+   275|                            scientific_name: data.scientific_name || '',
+   276|                            category: data.category,
+   277|                            barcode: data.barcode || '',
+   278|                            sale_price: data.sale_price,
+   279|                            purchase_price: data.purchase_price || '',
+   280|                            base_unit: data.base_unit,
+   281|                            min_stock: data.min_stock,
+   282|                            image_path: data.image_url || '',
+   283|                        };
+   284|                        if (data.image_url && !data.image_url.includes('default')) {
+   285|                            this.previewImage = data.image_url;
+   286|                        }
+   287|                    } catch (error) {
+   288|                        console.error('Error loading medicine:', error);
+   289|                    }
+   290|                },
+   291|
+   292|                async handleImageUpload(event) {
+   293|                    const file = event.target.files[0];
+   294|                    if (!file) return;
+   295|
+   296|                    const formData = new FormData();
+   297|                    formData.append('file', file);
+   298|
+   299|                    try {
+   300|                        const response = await fetch('/api/medicines/upload-image', {
+   301|                            method: 'POST',
+   302|                            headers: {
+   303|                                'Authorization': 'Bearer ' + localStorage.getItem('token')
+   304|                            },
+   305|                            body: formData
+   306|                        });
+   307|                        const data = await response.json();
+   308|                        if (data.success) {
+   309|                            this.form.image_path = data.image_url;
+   310|                            this.previewImage = data.image_url;
+   311|                        }
+   312|                    } catch (error) {
+   313|                        alert('فشل في رفع الصورة');
+   314|                    }
+   315|                },
+   316|
+   317|async saveMedicine() {
+   318|                    this.saving = true;
+   319|                    
+   320|                    const urlParams = new URLSearchParams(window.location.search);
+   321|                    const medicineId = urlParams.get('id');
+   322|                    
+   323|                    const url = medicineId ? `/api/medicines/${medicineId}` : '/api/medicines/';
+   324|                    const method = medicineId ? 'PUT' : 'POST';
+   325|
+   326|                    // تحويل الأسعار لأرقام لتجنب أخطاء الـ API
+   327|                    const formData = {
+   328|                        ...this.form,
+   329|                        sale_price: parseFloat(this.form.sale_price) || 0,
+   330|                        purchase_price: parseFloat(this.form.purchase_price) || 0,
+   331|                        min_stock: parseInt(this.form.min_stock) || 10
+   332|                    };
+   333|
+   334|                    // التحقق من البيانات قبل الإرسال
+   335|                    if (!formData.trade_name || formData.trade_name.trim() === '') {
+   336|                        alert('الاسم التجاري مطلوب');
+   337|                        this.saving = false;
+   338|                        return;
+   339|                    }
+   340|                    if (!formData.category) {
+   341|                        alert('التصنيف مطلوب');
+   342|                        this.saving = false;
+   343|                        return;
+   344|                    }
+   345|                    if (formData.sale_price <= 0) {
+   346|                        alert('سعر البيع يجب أن يكون أكبر من صفر');
+   347|                        this.saving = false;
+   348|                        return;
+   349|                    }
+   350|                    if (formData.purchase_price <= 0) {
+   351|                        alert('سعر الشراء يجب أن يكون أكبر من صفر');
+   352|                        this.saving = false;
+   353|                        return;
+   354|                    }
+   355|
+   356|                    try {
+   357|                        const response = await fetch(url, {
+   358|                            method: method,
+   359|                            headers: {
+   360|                                'Content-Type': 'application/json',
+   361|                                'Authorization': 'Bearer ' + localStorage.getItem('token')
+   362|                            },
+   363|                            body: JSON.stringify(formData)
+   364|                        });
+   365|
+   366|                        const data = await response.json();
+   367|                        
+   368|                        if (data.success) {
+   369|                            alert(medicineId ? 'تم تحديث الدواء بنجاح' : 'تم إضافة الدواء بنجاح');
+   370|                            window.location.href = '/medicines';
+   371|                        } else {
+   372|                            alert(data.detail || data.message || 'حدث خطأ في حفظ الدواء');
+   373|                        }
+   374|                    } catch (error) {
+   375|                        alert('فشل في الاتصال بالسيرفر: ' + error.message);
+   376|                    } finally {
+   377|                        this.saving = false;
+   378|                    }
+   379|                },
+   380|
+   381|                openBarcodeScanner() {
+   382|                    this.showScanner = true;
+   383|                    this.startScanner();
+   384|                },
+   385|
+   386|                closeScanner() {
+   387|                    this.showScanner = false;
+   388|                    if (this.html5QrCode) {
+   389|                        this.html5QrCode.stop();
+   390|                    }
+   391|                },
+   392|
+   393|                async startScanner() {
+   394|                    // تأكد من تحميل المكتبة
+   395|                    if (typeof Html5Qrcode === 'undefined') {
+   396|                        alert('جاري تحميل مكتبة الباركود... أعد قليلاً ثم حاول مرة أخرى');
+   397|                        return;
+   398|                    }
+   399|
+   400|                    this.html5QrCode = new Html5Qrcode("reader");
+   401|                    
+   402|                    try {
+   403|                        // إعدادات بسيطة للباركود (EAN-13 مدعوم بشكل افتراضي)
+   404|                        await this.html5QrCode.start(
+   405|                            { facingMode: "environment" },
+   406|                            { 
+   407|                                fps: 10, 
+   408|                                qrbox: { width: 300, height: 200 }
+   409|                            },
+   410|                            (decodedText) => {
+   411|                                console.log('Barcode detected:', decodedText);
+   412|                                this.form.barcode = decodedText;
+   413|                                this.closeScanner();
+   414|                                alert('تم قراءة الباركود: ' + decodedText);
+   415|                            },
+   416|                            (error) => {
+   417|                                // تجاهل أخطاء المساح المؤقت
+   418|                            }
+   419|                        );
+   420|                    } catch (err) {
+   421|                        console.error('Scanner error:', err);
+   422|                        let errorMsg = 'لا يمكن الوصول للكاميرا. \n\n';
+   423|                        errorMsg += 'الأسباب المحتملة:\n';
+   424|                        errorMsg += '1. لم تم إعطاء صلاحية الكاميرا للموقع\n';
+   425|                        errorMsg += '2. المتصفح لا يدعم الكاميرا (Chrome أو Safari مباشرة)\n';
+   426|                        errorMsg += '3. الكاميرا مشغولة في تطبيق آخر\n\n';
+   427|                        errorMsg += 'الحل: أدخل الباركود يدوياً أو افتح الصفحة في متصفح آخر';
+   428|                        alert(errorMsg);
+   429|                        this.showScanner = false;
+   430|                    }
+   431|                }
+   432|            }
+   433|        }
+   434|    </script>
+   435|</body>
+   436|</html>
+   437|
