@@ -353,14 +353,12 @@
                     const token = localStorage.getItem('token');
                     if (!token) { window.location.href = '/login'; return; }
                     // Check admin role
-                    try {
-                        const user = JSON.parse(localStorage.getItem('user') || '{}');
-                        if (user.role !== 'admin') {
+                    const userRole = localStorage.getItem('role');
+if (userRole !== 'admin') {
                             this.showMessage('هذه الصفحة للمدير فقط', 'error');
                             setTimeout(() => { window.location.href = '/dashboard'; }, 2000);
                             return;
-                        }
-                    } catch(e) {}
+                    }
                     this.currentUserId = localStorage.getItem('user_id') || '';
                     await this.loadEmployees();
                 },

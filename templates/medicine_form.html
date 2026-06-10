@@ -211,16 +211,17 @@
                 async init() {
                     const urlParams = new URLSearchParams(window.location.search);
                     const medicineId = urlParams.get('id');
-                    const barcode = urlParams.get('barcode');
-                    // Check if admin
-                    const user = JSON.parse(localStorage.getItem('user') || '{}');
-                    this.isAdmin = user.role === 'admin';
+// Check if admin from stored role
+                    this.isAdmin = localStorage.getItem('role') === 'admin';
+                    
                     // Redirect non-admin
                     if (!this.isAdmin) {
                         alert('هذه الصفحة للمدير فقط');
                         window.location.href = '/dashboard';
                         return;
                     }
+                    
+                    const barcode = urlParams.get('barcode');
                     await this.loadCategories();
                     if (medicineId) {
                         this.isEdit = true;

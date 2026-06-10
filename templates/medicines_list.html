@@ -149,9 +149,8 @@
                 isAdmin: false,
 
                 async init() {
-                    // Check if admin
-                    const user = JSON.parse(localStorage.getItem('user') || '{}');
-                    this.isAdmin = user.role === 'admin';
+                    // Check if admin from stored role
+                    this.isAdmin = localStorage.getItem('role') === 'admin';
                     
                     await this.loadCategories();
                     await this.loadMedicines();
