@@ -6,11 +6,10 @@ services:
     autoDeploy: true
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /ping
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11.0
-      - key: SECRET_KEY
-        generateValue: true
+        value: 3.11.9
       - key: ENVIRONMENT
         value: production
       - key: DEBUG
