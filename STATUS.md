@@ -1,7 +1,7 @@
 # PharmaSUD - Project Status
-## Last Updated: 2026-06-10 (Session 3 - Permission System + Base64 Images)
+## Last Updated: 2026-06-10 (Session 4 - Barcode Scanner Fix)
 ## Current Stage: Stage 6.5 - Permissions & Storage
-## Version: 6.3.0
+## Version: 6.3.1
 ## Live URL: https://pharmasud-api.onrender.com
 ## GitHub: https://github.com/mohamedbabiker20010-code/pharmasud-api
 
@@ -281,7 +281,20 @@ setInterval(() => { fetch('/ping').catch(() => {}); }, 600000);
 
 ---
 
-## 🎯 Session Summary — June 10, 2026 (Session 3)
+## 🎯 Session Summary — June 10, 2026 (Session 4 — Barcode Fix)
+
+**Barcode Scanner Real-World Fix:**
+
+1. 🐛 **CRITICAL: Library didn't scan barcodes at all** — `html5-qrcode@2.3.8` defaults to QR codes only. Added `formatsToSupport` with 11 barcode formats: EAN-13, EAN-8, UPC-A, UPC-E, CODE-128, CODE-39, CODE-93, ITF, CODABAR, RSS-14, RSS-EXPANDED.
+2. 🐛 **CRITICAL: Alpine.js x-show hiding the scanner** — `x-show="showScanner"` sets `display: none` on the modal. When `startScanner()` ran immediately, the `#reader` div had zero dimensions. Fixed with `setTimeout(300ms)` to let Alpine render first.
+3. ✅ **Better error messages** — Clear instructions for iPhone (Safari only, Chrome doesn't support camera on iOS) vs Android (Chrome works).
+4. ✅ **Added hint text** — "وجّهي الكاميرا نحو الباركود ليتم قراءته تلقائياً" under the scanner.
+
+**Deployed:** All changes pushed to GitHub & Render (v6.3.1)
+
+---
+
+## 🎯 Next Steps
 
 **Changes based on friend's feedback:**
 
