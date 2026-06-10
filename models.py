@@ -7,7 +7,7 @@ Includes Pydantic models for authentication and validation.
 """
 
 import uuid
-from sqlalchemy import Column, String, Integer, Boolean, DateTime, Date, Numeric, ForeignKey, CheckConstraint, text
+from sqlalchemy import Column, String, Integer, Boolean, DateTime, Date, Numeric, Text, ForeignKey, CheckConstraint, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from pydantic import BaseModel, Field, validator
