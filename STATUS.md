@@ -2,6 +2,7 @@
 ## Last Updated: 2026-06-10 (Session 4 - Barcode Scanner Fix)
 ## Current Stage: Stage 6.5 - Permissions & Storage
 ## Version: 6.3.2
+## Branch: master (Render watches this branch, NOT main!)
 ## Live URL: https://pharmasud-api.onrender.com
 ## GitHub: https://github.com/mohamedbabiker20010-code/pharmasud-api
 
