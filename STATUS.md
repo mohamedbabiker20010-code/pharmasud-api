@@ -1,7 +1,7 @@
 # PharmaSUD - Project Status
 ## Last Updated: 2026-06-10 (Session 4 - Barcode Scanner Fix)
 ## Current Stage: Stage 6.5 - Permissions & Storage
-## Version: 6.3.1
+## Version: 6.3.2
 ## Live URL: https://pharmasud-api.onrender.com
 ## GitHub: https://github.com/mohamedbabiker20010-code/pharmasud-api
 
@@ -281,7 +281,28 @@ setInterval(() => { fetch('/ping').catch(() => {}); }, 600000);
 
 ---
 
-## 🎯 Session Summary — June 10, 2026 (Session 4 — Barcode Fix)
+## 🎯 Session Summary — June 10, 2026 (Session 4 — Barcode Scanner Complete Rewrite)
+
+**Barcode Scanner — Changed from continuous scan to snapshot-based (v6.3.2):**
+
+1. 🐛 **Root Cause**: `html5-qrcode@2.3.8` continuous video scanning doesn't work reliably on mobile browsers. The library's `start()` method relies on native `BarcodeDetector` API which has inconsistent support.
+2. 🔄 **New Approach: Snapshot (تصوير لحظي)**:
+   - Camera opens in a `<video>` element (raw `getUserMedia()`)
+   - User sees live preview with a green alignment frame
+   - User taps **"📷 تصوير الباركود"** button to capture
+   - Frame drawn to `<canvas>`, then decoded using:
+     - **Primary**: Native `BarcodeDetector` API (Chrome, Safari 16.4+) — supports 13 formats
+     - **Fallback**: `Html5Qrcode.decodeFromImage()` as backup
+     - **2nd attempt**: Inverted colors (white bars on dark background)
+   - Also: **Manual entry field** at the bottom of the scanner modal
+3. ✅ **Better UX**: White flash effect on capture, clear error messages, manual barcode input always available
+4. ✅ **Works on**: iPhone Safari, Android Chrome, all modern browsers
+
+**Deployed:** GitHub + Render (v6.3.2)
+
+---
+
+## 🎯 Next Steps
 
 **Barcode Scanner Real-World Fix:**
 
