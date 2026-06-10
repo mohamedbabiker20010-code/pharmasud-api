@@ -105,31 +105,33 @@
                     </select>
                 </div>
 
-                <!-- Prices -->
-                <div class="grid grid-cols-2 gap-4">
+                <!-- Prices - واضحة للجوال -->
+                <div class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium mb-2">سعر البيع *</label>
+                        <label class="block text-sm font-medium mb-2">💰 سعر البيع *(للجمهور)</label>
                         <input 
                             type="number" 
                             x-model="form.sale_price"
                             required
                             min="0"
                             step="0.01"
-                            placeholder="350.00"
+                            placeholder="مثال: 350.00"
                             class="w-full bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
                         >
+                        <p class="text-gray-500 text-xs mt-1">السعر النهائي للعميل</p>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-2">سعر الشراء *</label>
+                        <label class="block text-sm font-medium mb-2">📦 سعر الشراء *</label>
                         <input 
                             type="number" 
                             x-model.number="form.purchase_price"
                             required
                             min="0"
                             step="0.01"
-                            placeholder="280.00"
+                            placeholder="مثال: 280.00"
                             class="w-full bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
                         >
+                        <p class="text-gray-500 text-xs mt-1">كم اشتريته من الموزع (لحساب الربح)</p>
                     </div>
                 </div>
 
@@ -141,8 +143,8 @@
                         required
                         class="w-full bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
                     >
-                        <option value="box">علبة</option>
                         <option value="strip">شريط</option>
+                        <option value="box">علبة</option>
                         <option value="tablet">قرص</option>
                         <option value="bottle">زجاجة</option>
                         <option value="ampoule">امبول</option>
@@ -163,41 +165,8 @@
                     >
                 </div>
 
-                <!-- Units Configuration -->
-                <div x-show="!isEdit" class="border-t border-gray-700 pt-6">
-                    <h3 class="font-bold mb-4">الوحدات والتحويلات</h3>
-                    <div class="space-y-3">
-                        <template x-for="(unit, index) in form.units" :key="index">
-                            <div class="flex gap-3">
-                                <input 
-                                    type="text" 
-                                    x-model="unit.unit_name"
-                                    placeholder="اسم الوحدة"
-                                    class="flex-1 bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400"
-                                >
-                                <input 
-                                    type="number" 
-                                    x-model="unit.conversion_factor"
-                                    placeholder="معامل التحويل"
-                                    step="0.001"
-                                    class="w-32 bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400"
-                                >
-                                <button 
-                                    type="button"
-                                    @click="removeUnit(index)"
-                                    class="text-red-500 hover:text-red-400 px-2"
-                                >حذف</button>
-                            </div>
-                        </template>
-                        <button 
-                            type="button"
-                            @click="addUnit()"
-                            class="text-blue-400 hover:text-blue-300 text-sm"
-                        >
-                            + إضافة وحدة
-                        </button>
-                    </div>
-                </div>
+                <!-- وحدة أساسية (تلقائي - مخفية) -->
+                <input type="hidden" x-model="form.base_unit">
 
                 <!-- Submit -->
                 <div class="pt-6 border-t border-gray-700">
@@ -250,9 +219,6 @@
                     base_unit: 'strip',
                     min_stock: 10,
                     image_path: '',
-                    units: [
-                        { unit_name: '', conversion_factor: 1 }
-                    ]
                 },
 
                 async init() {
@@ -263,6 +229,13 @@
                     // Check if admin
                     const user = JSON.parse(localStorage.getItem('user') || '{}');
                     this.isAdmin = user.role === 'admin';
+                    
+                    // Redirect non-admin
+                    if (!this.isAdmin) {
+                        alert('هذه الصفحة للمدير فقط');
+                        window.location.href = '/dashboard';
+                        return;
+                    }
                     
                     await this.loadCategories();
                     
@@ -306,7 +279,6 @@
                             base_unit: data.base_unit,
                             min_stock: data.min_stock,
                             image_path: data.image_url || '',
-                            units: data.units || []
                         };
                         if (data.image_url && !data.image_url.includes('default')) {
                             this.previewImage = data.image_url;
@@ -341,16 +313,7 @@
                     }
                 },
 
-                addUnit() {
-                    this.form.units.push({ unit_name: '', conversion_factor: 1 });
-                },
-
-                removeUnit(index) {
-                    this.form.units.splice(index, 1);
-                },
-
-                async saveMedicine() {
-                    this.saving = true;
+async saveMedicine() {
 
                     const urlParams = new URLSearchParams(window.location.search);
                     const medicineId = urlParams.get('id');

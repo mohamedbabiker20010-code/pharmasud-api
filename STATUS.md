@@ -1,7 +1,7 @@
 # PharmaSUD - Project Status
-## Last Updated: 2026-06-08 (Session - Critical Bug Fixes + Handover)
-## Current Stage: Stage 6 - Reports & Dashboard (Complete)
-## Version: 6.1.2
+## Last Updated: 2026-06-10 (Session - Friend Testing Fixes)
+## Current Stage: Stage 6.5 - UX & Security Fixes
+## Version: 6.2.0
 ## Live URL: https://pharmasud-api.onrender.com
 ## GitHub: https://github.com/mohamedbabiker20010-code/pharmasud-api
 
@@ -260,7 +260,26 @@ setInterval(() => { fetch('/ping').catch(() => {}); }, 600000);
 **Current Status:**
 - ✅ All critical bugs fixed
 - ✅ System stable and functional
-- 🔄 Under real-world testing (5 days)
+- 🔄 Under real-world testing (5 days, ongoing)
+
+---
+
+## 🎯 Session Summary — June 10, 2026
+
+**Changes based on friend's feedback:**
+
+1. ✅ **Removed Units section** from Add Medicine form — simplified to just Base Unit selection
+2. ✅ **Added visibility control** — "إضافة دواء جديد" button now only shows for Admins (`x-show="isAdmin"`)
+3. ✅ **Fixed Settings sidebar** — الإعدادات link now hidden from employees in dashboard
+4. ✅ **Protected Settings page** — non-admin users redirected to dashboard
+5. ✅ **Protected Medicine Form** — non-admin users redirected to dashboard
+6. ✅ **Improved price fields** — سعر البيع and سعر الشراء now stacked (not side-by-side) with clear labels and helper text
+7. ✅ **Dashboard isAdmin** — added isAdmin tracking to dashboard Alpine.js app
+8. ✅ **Delete button** — already had `x-show="isAdmin"` (confirmed working)
+
+**Deployed:** All changes pushed to GitHub & Render
+
+---
 
 **Next Steps (After Testing):**
 - Collect feedback from friend

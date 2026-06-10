@@ -64,8 +64,9 @@
                     </template>
                 </div>
 
-                <!-- Add Button -->
+                <!-- Add Button - Admin only -->
                 <a 
+                    x-show="isAdmin"
                     href="/medicine-form"
                     class="block w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg font-bold text-center"
                 >

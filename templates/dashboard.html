@@ -529,7 +529,7 @@
         <a href="/sales-history" class="nav-item">
             <span class="icon">📋</span> سجل المبيعات
         </a>
-        <a href="/settings" class="nav-item">
+        <a x-show="isAdmin" href="/settings" class="nav-item">
             <span class="icon">⚙️</span> الإعدادات
         </a>
 
@@ -773,6 +773,7 @@ function dashboardApp() {
         currentDate: '',
         userName: '',
         pharmacyName: '',
+        isAdmin: false,
         data: {
             today: {
                 revenue: '0.00',
@@ -814,6 +815,7 @@ function dashboardApp() {
                     const payload = JSON.parse(atob(token.split('.')[1]));
                     this.userName = payload.username || payload.sub || 'مستخدم';
                     this.pharmacyName = payload.pharmacy_name || 'صيدلية الزاريات';
+                    this.isAdmin = payload.role === 'admin';
                 } else {
                     this.userName = 'مستخدم';
                     this.pharmacyName = 'صيدلية الزاريات';
