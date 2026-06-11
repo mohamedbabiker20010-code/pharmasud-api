@@ -1761,13 +1761,11 @@
                 .then(codes => {
                     if (codes && codes.length > 0) {
                         const code = codes[0].rawValue;
-                        // اهتزاز Android
                         if (navigator.vibrate) navigator.vibrate(200);
                         
                         status.textContent = '✅ تم قراءة: ' + code;
                         status.className = 'success';
                         
-                        // إغلاق الماسح والبحث
                         setTimeout(() => {
                             if (app && app.__x && app.__x.$data) {
                                 app.__x.$data.stopScannerInternal();
@@ -1775,16 +1773,90 @@
                             }
                         }, 400);
                     } else {
-                        status.textContent = '❌ لم يتم التعرف على باركود، حاول مجدداً';
-                        status.className = 'error';
-                        captureBtn.disabled = false;
+                        // المتصفح لم يقرأ الباركود → نرسل الصورة للسيرفر
+                        status.textContent = '🔄 جرب السيرفر...';
+                        status.className = '';
+                        
+                        const imageData = canvas.toDataURL('image/jpeg', 0.9);
+                        
+                        fetch('/api/barcode/decode', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ image: imageData })
+                        })
+                        .then(r => r.json())
+                        .then(serverResult => {
+                            if (serverResult.success && serverResult.barcode) {
+                                const code = serverResult.barcode;
+                                if (navigator.vibrate) navigator.vibrate(200);
+                                
+                                status.textContent = '✅ تم قراءة: ' + code;
+                                status.className = 'success';
+                                
+                                setTimeout(() => {
+                                    if (app && app.__x && app.__x.$data) {
+                                        app.__x.$data.stopScannerInternal();
+                                        app.__x.$data.searchByBarcode(code);
+                                    }
+                                }, 400);
+                            } else {
+                                // السيرفر أيضاً فشل
+                                status.textContent = '❌ لم يتم التعرف على الباركود.\\nأدخل الرقم يدوياً في الحقل أسفل';
+                                status.className = 'error';
+                                captureBtn.disabled = false;
+                                setTimeout(() => {
+                                    document.getElementById('manual-barcode').focus();
+                                }, 500);
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Server decode error:', err);
+                            status.textContent = '❌ لم يتم التعرف على الباركود.\\nأدخل الرقم يدوياً في الحقل أسفل';
+                            status.className = 'error';
+                            captureBtn.disabled = false;
+                            setTimeout(() => {
+                                document.getElementById('manual-barcode').focus();
+                            }, 500);
+                        });
                     }
                 })
                 .catch(err => {
                     console.error('BarcodeDetector error:', err);
-                    status.textContent = '❌ فشل القراءة: ' + err.message;
-                    status.className = 'error';
-                    captureBtn.disabled = false;
+                    // إذا فشل BarcodeDetector، جرب السيرفر
+                    status.textContent = '🔄 جرب السيرفر...';
+                    const imageData = canvas.toDataURL('image/jpeg', 0.9);
+                    
+                    fetch('/api/barcode/decode', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ image: imageData })
+                    })
+                    .then(r => r.json())
+                    .then(serverResult => {
+                        if (serverResult.success && serverResult.barcode) {
+                            const code = serverResult.barcode;
+                            if (navigator.vibrate) navigator.vibrate(200);
+                            status.textContent = '✅ تم قراءة: ' + code;
+                            status.className = 'success';
+                            setTimeout(() => {
+                                if (app && app.__x && app.__x.$data) {
+                                    app.__x.$data.stopScannerInternal();
+                                    app.__x.$data.searchByBarcode(code);
+                                }
+                            }, 400);
+                        } else {
+                            status.textContent = '❌ لم يتم التعرف على الباركود.\nأدخل الرقم يدوياً في الحقل أسفل';
+                            status.className = 'error';
+                            captureBtn.disabled = false;
+                            setTimeout(() => { document.getElementById('manual-barcode').focus(); }, 500);
+                        }
+                    })
+                    .catch(() => {
+                        status.textContent = '❌ لم يتم التعرف على الباركود.\nأدخل الرقم يدوياً في الحقل أسفل';
+                        status.className = 'error';
+                        captureBtn.disabled = false;
+                        setTimeout(() => { document.getElementById('manual-barcode').focus(); }, 500);
+                    });
                 });
             } else {
                 // ❌ الطريقة الثانية: المتصفح لا يدعم BarcodeDetector
