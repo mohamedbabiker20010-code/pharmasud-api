@@ -131,6 +131,15 @@ async def ping():
     return {"pong": True, "time": datetime.now().isoformat()}
 
 # ================================================================
+# AUTH PAGES
+# ================================================================
+
+@app.get("/login", response_class=HTMLResponse)
+async def login_page(request: Request):
+    """Login page."""
+    return templates.TemplateResponse("login.html", {"request": request})
+
+# ================================================================
 # DASHBOARD PAGES (Stage 6)
 # ================================================================
 
@@ -215,7 +224,7 @@ def api_setup(data: AdminCreate, db: Session = Depends(get_db)):
 @app.post("/api/auth/login", response_model=TokenResponse)
 def api_login(data: UserLogin, db: Session = Depends(get_db)):
     """User login (Stage 2)."""
-    return authenticate_user(db, data)
+    return authenticate_user(data.username, data.password, db)
 
 @app.get("/api/auth/me", response_model=dict)
 def api_me(current_user: UserResponse = Depends(get_current_user)):
