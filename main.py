@@ -131,25 +131,6 @@ async def ping():
     return {"pong": True, "time": datetime.now().isoformat()}
 
 # ================================================================
-# AUTH PAGES
-# ================================================================
-
-@app.get("/activate", response_class=HTMLResponse)
-async def activate_page(request: Request):
-    """Product key activation page."""
-    return templates.TemplateResponse("activate.html", {"request": request})
-
-@app.get("/setup", response_class=HTMLResponse)
-async def setup_page(request: Request):
-    """Admin setup page."""
-    return templates.TemplateResponse("setup.html", {"request": request})
-
-@app.get("/login", response_class=HTMLResponse)
-async def login_page(request: Request):
-    """Login page."""
-    return templates.TemplateResponse("login.html", {"request": request})
-
-# ================================================================
 # DASHBOARD PAGES (Stage 6)
 # ================================================================
 
