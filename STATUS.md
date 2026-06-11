@@ -1,7 +1,7 @@
 # PharmaSUD - Project Status
 ## Last Updated: 2026-06-10 (Session 5 - Deploy Fix)
 ## Current Stage: Stage 6.5 - Permissions & Storage
-## Version: 6.3.3
+## Version: 6.4.0
 ## Branch: master (Render watches this branch, NOT main!)
 ## Live URL: https://pharmasud-api.onrender.com
 ## GitHub: https://github.com/mohamedbabiker20010-code/pharmasud-api
@@ -364,3 +364,32 @@ setInterval(() => { fetch('/ping').catch(() => {}); }, 600000);
 - Security hardening for production
 
 *تم التحديث: 10 يونيو 2026 — نظام الصلاحيات + تخزين الصور 🚀*
+
+---
+
+## 🎯 Session Summary — June 11, 2026 — REAL Barcode Scanner (v6.4.0)
+
+**🔴 Critical Discovery:**
+The barcode scanner was previously **NOT implemented** — the `startScanner()` function only showed a browser `prompt()` dialog for manual barcode entry. There was NO camera scanning at all. The STATUS.md documented a "rewrite" that was never coded into `pos.html`.
+
+**✅ Complete Rewrite — QuaggaJS Live Barcode Scanner:**
+
+1. ✅ **Replaced `prompt()` with real QuaggaJS** — a specialized library for EAN-13 barcodes (medicine barcodes)
+2. ✅ **Live video scanning** — camera opens, processes frames in real-time, auto-detects barcodes
+3. ✅ **6 barcode formats supported**: EAN-13, EAN-8, CODE-128, CODE-39, UPC-A, UPC-E
+4. ✅ **Visual feedback**: Green scan frame on detection + animated scan line + coordinate brackets
+5. ✅ **Vibration feedback**: Phone vibrates on barcode detection (Android only)
+6. ✅ **Manual entry always available**: Text input field inside the scanner overlay + search button
+7. ✅ **Overlay canvas**: Quagga draws detection boxes on the video in real-time
+8. ✅ **Error handling**: If camera fails, focuses manual input automatically
+
+**📁 Files Changed:**
+- `templates/pos.html` — Complete rewrite of scanner section (+ QuaggaJS CDN in head)
+
+**📊 Version:** v6.4.0
+
+**Note:** QuaggaJS is a pure frontend library — **no external subscription or API key needed.** Works 100% in the browser, processes barcodes locally. If camera doesn't work (Safari restrictions, old Android), the manual input is always available as fallback.
+
+**Next:**
+- Test on real mobile devices (Android Chrome, iPhone Safari)
+- Consider server-side fallback with pyzbar if needed for edge cases

@@ -7,6 +7,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/quagga/dist/quagga.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -637,38 +638,155 @@
             .pos-products { height: 50vh; }
         }
         
-        /* Barcode Scanner Placeholder */
+        /* ============= BARCODE SCANNER (QuaggaJS) ============= */
         #scanner-overlay {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.9);
+            background: rgba(0,0,0,0.92);
             z-index: 400;
             display: none;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             flex-direction: column;
+            padding-top: 60px;
+            direction: ltr;
         }
         #scanner-overlay.active { display: flex; }
-        #scanner-overlay video {
-            max-width: 100%;
-            max-height: 70vh;
-            border-radius: 12px;
+        
+        /* Scan frame container */
+        #scanner-container {
+            position: relative;
+            width: 320px;
+            height: 250px;
+            border: 3px solid #3B82F6;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 0 40px rgba(59,130,246,0.2);
+            background: #000;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
+        #scanner-container video,
+        #scanner-container canvas {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover;
+        }
+        /* Scanning line animation */
+        #scanner-container::after {
+            content: '';
+            position: absolute;
+            left: 10%;
+            right: 10%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #3B82F6, transparent);
+            animation: scanline 2s ease-in-out infinite;
+            z-index: 10;
+        }
+        @keyframes scanline {
+            0%, 100% { top: 5%; }
+            50% { top: 90%; }
+        }
+        
+        /* Corner brackets */
+        .scan-corners { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
+        .scan-corners::before,
+        .scan-corners::after { content: ''; position: absolute; width: 30px; height: 30px; border-color: #22D3EE; border-style: solid; }
+        .scan-corners::before { top: 8px; left: 8px; border-width: 3px 0 0 3px; border-radius: 8px 0 0 0; }
+        .scan-corners::after { bottom: 8px; right: 8px; border-width: 0 3px 3px 0; border-radius: 0 0 8px 0; }
+        .scan-corners span:nth-child(1) { position: absolute; top: 8px; right: 8px; width: 30px; height: 30px; border-width: 3px 3px 0 0; border-color: #22D3EE; border-style: solid; border-radius: 0 8px 0 0; }
+        .scan-corners span:nth-child(2) { position: absolute; bottom: 8px; left: 8px; width: 30px; height: 30px; border-width: 0 0 3px 3px; border-color: #22D3EE; border-style: solid; border-radius: 0 0 0 8px; }
+        
+        /* Scanner status text */
+        #scanner-status {
+            color: #94A3B8;
+            font-size: 14px;
+            margin-top: 16px;
+            text-align: center;
+            direction: rtl;
+            min-height: 24px;
+        }
+        #scanner-status.success { color: #22C55E; }
+        #scanner-status.error { color: #EF4444; }
+        
+        /* Manual input area in scanner */
+        .scanner-manual {
+            width: 100%;
+            max-width: 340px;
+            margin-top: 20px;
+            padding: 0 20px;
+            direction: rtl;
+        }
+        .scanner-manual input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 1px solid #475569;
+            background: #1E293B;
+            color: #F8FAFC;
+            text-align: center;
+            font-size: 18px;
+            letter-spacing: 2px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .scanner-manual input:focus {
+            border-color: #3B82F6;
+            box-shadow: 0 0 12px rgba(59,130,246,0.15);
+        }
+        .scanner-manual input::placeholder {
+            color: #64748B;
+            font-size: 14px;
+            letter-spacing: normal;
+        }
+        .scanner-manual .btn-search-barcode {
+            width: 100%;
+            margin-top: 10px;
+            padding: 12px;
+            background: #3B82F6;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .scanner-manual .btn-search-barcode:hover { background: #2563EB; }
+        .scanner-manual .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 16px 0;
+            color: #64748B;
+            font-size: 13px;
+        }
+        .scanner-manual .divider::before,
+        .scanner-manual .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #334155;
+        }
+        
+        /* Scanner close button */
         #scanner-close {
             position: absolute;
-            top: 20px;
-            left: 20px;
+            top: 16px;
+            left: 16px;
             background: #DC2626;
             color: white;
             border: none;
             padding: 10px 20px;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
             font-size: 14px;
+            font-weight: 600;
+            z-index: 410;
+            direction: rtl;
         }
+        #scanner-close:hover { background: #B91C1C; }
     </style>
 </head>
 <body>
@@ -681,11 +799,19 @@
         <p>جاري معالجة البيع...</p>
     </div>
     
-    <!-- Barcode Scanner -->
+    <!-- Barcode Scanner (QuaggaJS) -->
     <div id="scanner-overlay">
         <button id="scanner-close" onclick="stopScanner()">✕ إغلاق</button>
-        <video id="scanner-video" playsinline></video>
-        <p style="color:#94A3B8; margin-top: 12px; font-size:14px;">وجّه الكاميرا نحو الباركود</p>
+        <div id="scanner-container">
+            <div class="scan-corners"><span></span><span></span></div>
+        </div>
+        <p id="scanner-status">🔍 وجّه الكاميرا نحو الباركود</p>
+        <div class="scanner-manual">
+            <div class="divider">أو أدخل الباركود يدوياً</div>
+            <input type="text" id="manual-barcode" placeholder="أدخل رقم الباركود..." 
+                   onkeydown="if(event.key==='Enter') searchManualBarcode()">
+            <button class="btn-search-barcode" onclick="searchManualBarcode()">🔍 بحث</button>
+        </div>
     </div>
     
     <!-- Main App -->
@@ -1014,19 +1140,141 @@
                 },
                 
                 // ============================================================
-                // BARCODE SCANNER
+                // BARCODE SCANNER (QuaggaJS — مسح حي)
                 // ============================================================
                 startScanner() {
                     const overlay = document.getElementById('scanner-overlay');
+                    const status = document.getElementById('scanner-status');
                     overlay.classList.add('active');
+                    status.textContent = '🔍 جاري تشغيل الكاميرا...';
+                    status.className = '';
                     
-                    // Try to use ZXing or simple camera input
-                    // For now, show a manual barcode input prompt
-                    const barcode = prompt('أدخل الباركود يدوياً:');
-                    if (barcode && barcode.trim()) {
-                        this.searchByBarcode(barcode.trim());
+                    const self = this;
+                    
+                    // Start QuaggaJS live barcode decoder
+                    if (typeof Quagga !== 'undefined') {
+                        Quagga.init({
+                            inputStream: {
+                                name: "Live",
+                                type: "LiveStream",
+                                target: document.querySelector('#scanner-container'),
+                                constraints: {
+                                    width: { min: 640, ideal: 640 },
+                                    height: { min: 480, ideal: 480 },
+                                    facingMode: "environment",  // الكاميرا الخلفية
+                                    aspectRatio: { min: 1, max: 2 }
+                                },
+                            },
+                            locator: {
+                                patchSize: "medium",
+                                halfSample: true,
+                            },
+                            numOfWorkers: 2,
+                            decoder: {
+                                readers: [
+                                    { format: "ean_reader", config: {} },        // EAN-13 ← باركود الأدوية
+                                    { format: "ean_8_reader", config: {} },       // EAN-8
+                                    { format: "code_128_reader", config: {} },    // CODE-128
+                                    { format: "code_39_reader", config: {} },     // CODE-39
+                                    { format: "upc_reader", config: {} },         // UPC-A
+                                    { format: "upc_e_reader", config: {} },       // UPC-E
+                                ]
+                            },
+                            locate: true,
+                        }, function(err) {
+                            if (err) {
+                                console.error("Quagga init error:", err);
+                                status.textContent = '❌ تعذر تشغيل الكاميرا';
+                                status.className = 'error';
+                                // If Quagga fails, focus manual input
+                                setTimeout(() => {
+                                    document.getElementById('manual-barcode').focus();
+                                }, 300);
+                                return;
+                            }
+                            Quagga.start();
+                            status.textContent = '🔍 وجّه الباركود داخل الإطار';
+                            status.className = '';
+                            
+                            // Focus manual input as backup
+                            setTimeout(() => {
+                                document.getElementById('manual-barcode').focus();
+                            }, 500);
+                        });
+                        
+                        // ✅ BARCODE DETECTED — بند読 الباركود
+                        Quagga.onDetected(function(result) {
+                            const code = result.codeResult.code;
+                            if (!code || code.length < 3) return;
+                            
+                            // 🔊 رد فعل فوري: اهتزاز + وميض أخضر
+                            if (navigator.vibrate) navigator.vibrate([100, 50, 100]); // ثلاث نبضات
+                            
+                            // وميض أخضر على الإطار
+                            const container = document.getElementById('scanner-container');
+                            container.style.borderColor = '#22C55E';
+                            container.style.boxShadow = '0 0 50px rgba(34,197,94,0.6)';
+                            
+                            status.textContent = '✅ تم قراءة الباركود: ' + code;
+                            status.className = 'success';
+                            
+                            // إيقاف المسح بعد 400ms والبحث عن الدواء
+                            setTimeout(() => {
+                                self.stopScannerInternal();
+                                self.searchByBarcode(code);
+                            }, 500);
+                        });
+                        
+                        // رسم إطار التحديد على الفيديو
+                        Quagga.onProcessed(function(result) {
+                            const drawingCtx = Quagga.canvas.ctx.overlay;
+                            const drawingCanvas = Quagga.canvas.dom.overlay;
+                            if (drawingCanvas && drawingCtx) {
+                                drawingCanvas.style.position = 'absolute';
+                                drawingCanvas.style.top = '0';
+                                drawingCanvas.style.left = '0';
+                                drawingCanvas.style.width = '100%';
+                                drawingCanvas.style.height = '100%';
+                            }
+                            if (result && result.boxes) {
+                                drawingCtx.clearRect(0, 0, 
+                                    parseInt(drawingCanvas.getAttribute('width')),
+                                    parseInt(drawingCanvas.getAttribute('height')));
+                                result.boxes.filter(function(box) {
+                                    return box !== result.box;
+                                }).forEach(function(box) {
+                                    Quagga.ImageDebug.drawPath(box, { x: 0, y: 1 }, drawingCtx, { color: "#22D3EE", lineWidth: 2 });
+                                });
+                            }
+                            if (result && result.box) {
+                                Quagga.ImageDebug.drawPath(result.box, { x: 0, y: 1 }, drawingCtx, { color: "#3B82F6", lineWidth: 3 });
+                            }
+                        });
+                    } else {
+                        // Fallback: Quagga غير متاح
+                        status.textContent = '📱 المسح غير متاح، استخدم الإدخال اليدوي';
+                        status.className = 'error';
+                        setTimeout(() => {
+                            document.getElementById('manual-barcode').focus();
+                        }, 300);
                     }
-                    overlay.classList.remove('active');
+                },
+                
+                stopScannerInternal() {
+                    document.getElementById('scanner-overlay').classList.remove('active');
+                    // Reset scanner styles
+                    const container = document.getElementById('scanner-container');
+                    if (container) {
+                        container.style.borderColor = '#3B82F6';
+                        container.style.boxShadow = '0 0 40px rgba(59,130,246,0.2)';
+                    }
+                    // Stop Quagga
+                    if (typeof Quagga !== 'undefined') {
+                        try { 
+                            Quagga.offDetected();
+                            Quagga.stop(); 
+                        } catch(e) {}
+                    }
                 },
                 
                 searchByBarcode(barcode) {
@@ -1492,13 +1740,28 @@
             };
         }
         
-        // Scanner functions (called from Alpine)
+        // Scanner functions (called from HTML onclick)
         function stopScanner() {
-            document.getElementById('scanner-overlay').classList.remove('active');
-            const video = document.getElementById('scanner-video');
-            if (video.srcObject) {
-                video.srcObject.getTracks().forEach(t => t.stop());
-                video.srcObject = null;
+            const app = document.querySelector('[x-data]');
+            if (app && app.__x && app.__x.$data) {
+                app.__x.$data.stopScannerInternal();
+            }
+        }
+        
+        // Search from manual barcode input (called from HTML onclick)
+        function searchManualBarcode() {
+            const input = document.getElementById('manual-barcode');
+            const code = input.value.trim();
+            if (code) {
+                const app = document.querySelector('[x-data]');
+                if (app && app.__x && app.__x.$data) {
+                    app.__x.$data.searchByBarcode(code);
+                    app.__x.$data.stopScannerInternal();
+                }
+            } else {
+                input.focus();
+                input.style.borderColor = '#EF4444';
+                setTimeout(() => { input.style.borderColor = '#475569'; }, 1000);
             }
         }
     </script>
