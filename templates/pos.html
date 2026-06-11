@@ -7,7 +7,6 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/quagga/dist/quagga.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -638,66 +637,72 @@
             .pos-products { height: 50vh; }
         }
         
-        /* ============= BARCODE SCANNER (QuaggaJS) ============= */
+        /* ============= BARCODE SCANNER (Snapshot + Native API) ============= */
         #scanner-overlay {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.92);
+            background: rgba(0,0,0,0.95);
             z-index: 400;
             display: none;
             align-items: center;
             justify-content: flex-start;
             flex-direction: column;
             padding-top: 60px;
-            direction: ltr;
         }
         #scanner-overlay.active { display: flex; }
         
-        /* Scan frame container */
-        #scanner-container {
+        /* Camera preview wrapper */
+        #scanner-preview-wrapper {
             position: relative;
             width: 320px;
-            height: 250px;
-            border: 3px solid #3B82F6;
+            height: 240px;
             border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 0 40px rgba(59,130,246,0.2);
             background: #000;
-            transition: border-color 0.2s, box-shadow 0.2s;
+            box-shadow: 0 0 40px rgba(59,130,246,0.2);
         }
-        #scanner-container video,
-        #scanner-container canvas {
-            width: 100% !important;
-            height: 100% !important;
+        #scanner-preview-wrapper video {
+            width: 100%;
+            height: 100%;
             object-fit: cover;
         }
-        /* Scanning line animation */
-        #scanner-container::after {
-            content: '';
+        
+        /* Scan frame overlay with corner brackets */
+        .scan-frame {
             position: absolute;
+            top: 10%;
             left: 10%;
             right: 10%;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, #3B82F6, transparent);
-            animation: scanline 2s ease-in-out infinite;
-            z-index: 10;
+            bottom: 10%;
+            z-index: 5;
+            pointer-events: none;
         }
-        @keyframes scanline {
-            0%, 100% { top: 5%; }
-            50% { top: 90%; }
+        .scan-frame-corner {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            border-color: #22D3EE;
+            border-style: solid;
         }
+        .scan-frame-corner.tl { top: 0; left: 0; border-width: 3px 0 0 3px; border-radius: 6px 0 0 0; }
+        .scan-frame-corner.tr { top: 0; right: 0; border-width: 3px 3px 0 0; border-radius: 0 6px 0 0; }
+        .scan-frame-corner.bl { bottom: 0; left: 0; border-width: 0 0 3px 3px; border-radius: 0 0 0 6px; }
+        .scan-frame-corner.br { bottom: 0; right: 0; border-width: 0 3px 3px 0; border-radius: 0 0 6px 0; }
         
-        /* Corner brackets */
-        .scan-corners { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
-        .scan-corners::before,
-        .scan-corners::after { content: ''; position: absolute; width: 30px; height: 30px; border-color: #22D3EE; border-style: solid; }
-        .scan-corners::before { top: 8px; left: 8px; border-width: 3px 0 0 3px; border-radius: 8px 0 0 0; }
-        .scan-corners::after { bottom: 8px; right: 8px; border-width: 0 3px 3px 0; border-radius: 0 0 8px 0; }
-        .scan-corners span:nth-child(1) { position: absolute; top: 8px; right: 8px; width: 30px; height: 30px; border-width: 3px 3px 0 0; border-color: #22D3EE; border-style: solid; border-radius: 0 8px 0 0; }
-        .scan-corners span:nth-child(2) { position: absolute; bottom: 8px; left: 8px; width: 30px; height: 30px; border-width: 0 0 3px 3px; border-color: #22D3EE; border-style: solid; border-radius: 0 0 0 8px; }
+        /* Flash effect on capture */
+        .scan-flash {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: white;
+            opacity: 0;
+            z-index: 10;
+            pointer-events: none;
+            transition: opacity 0.1s;
+        }
+        .scan-flash.active { opacity: 0.8; }
         
         /* Scanner status text */
         #scanner-status {
@@ -705,11 +710,38 @@
             font-size: 14px;
             margin-top: 16px;
             text-align: center;
-            direction: rtl;
             min-height: 24px;
+            padding: 0 20px;
         }
         #scanner-status.success { color: #22C55E; }
         #scanner-status.error { color: #EF4444; }
+        
+        /* Capture button */
+        #scanner-controls {
+            margin-top: 16px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        #scanner-capture {
+            background: #3B82F6;
+            color: white;
+            border: none;
+            padding: 14px 36px;
+            border-radius: 50px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 20px rgba(59,130,246,0.3);
+        }
+        #scanner-capture:hover { background: #2563EB; transform: scale(1.05); }
+        #scanner-capture:active { transform: scale(0.95); }
+        #scanner-capture:disabled {
+            background: #475569;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
         
         /* Manual input area in scanner */
         .scanner-manual {
@@ -717,7 +749,6 @@
             max-width: 340px;
             margin-top: 20px;
             padding: 0 20px;
-            direction: rtl;
         }
         .scanner-manual input {
             width: 100%;
@@ -784,7 +815,6 @@
             font-size: 14px;
             font-weight: 600;
             z-index: 410;
-            direction: rtl;
         }
         #scanner-close:hover { background: #B91C1C; }
     </style>
@@ -799,13 +829,28 @@
         <p>جاري معالجة البيع...</p>
     </div>
     
-    <!-- Barcode Scanner (QuaggaJS) -->
+    <!-- Barcode Scanner (Snapshot + Native API) -->
     <div id="scanner-overlay">
         <button id="scanner-close" onclick="stopScanner()">✕ إغلاق</button>
-        <div id="scanner-container">
-            <div class="scan-corners"><span></span><span></span></div>
+        
+        <div id="scanner-preview-wrapper">
+            <video id="scanner-video" playsinline autoplay muted></video>
+            <canvas id="scanner-canvas" style="display:none;"></canvas>
+            <div class="scan-frame">
+                <div class="scan-frame-corner tl"></div>
+                <div class="scan-frame-corner tr"></div>
+                <div class="scan-frame-corner bl"></div>
+                <div class="scan-frame-corner br"></div>
+            </div>
+            <div class="scan-flash" id="scan-flash"></div>
         </div>
-        <p id="scanner-status">🔍 وجّه الكاميرا نحو الباركود</p>
+        
+        <p id="scanner-status">📷 وجّه الكاميرا نحو الباركود</p>
+        
+        <div id="scanner-controls">
+            <button id="scanner-capture" onclick="captureBarcode()">📸 تصوير</button>
+        </div>
+        
         <div class="scanner-manual">
             <div class="divider">أو أدخل الباركود يدوياً</div>
             <input type="text" id="manual-barcode" placeholder="أدخل رقم الباركود..." 
@@ -1140,143 +1185,66 @@
                 },
                 
                 // ============================================================
-                // BARCODE SCANNER (QuaggaJS — مسح حي)
+                // BARCODE SCANNER (Snapshot + Native BarcodeDetector API)
                 // ============================================================
                 startScanner() {
                     const overlay = document.getElementById('scanner-overlay');
                     const status = document.getElementById('scanner-status');
+                    const captureBtn = document.getElementById('scanner-capture');
                     overlay.classList.add('active');
-                    status.textContent = '🔍 جاري تشغيل الكاميرا...';
+                    status.textContent = '📷 جاري تشغيل الكاميرا...';
                     status.className = '';
+                    captureBtn.disabled = true;
                     
-                    const self = this;
+                    const video = document.getElementById('scanner-video');
                     
-                    // Start QuaggaJS live barcode decoder
-                    if (typeof Quagga !== 'undefined') {
-                        Quagga.init({
-                            inputStream: {
-                                name: "Live",
-                                type: "LiveStream",
-                                target: document.querySelector('#scanner-container'),
-                                constraints: {
-                                    width: { min: 640, ideal: 640 },
-                                    height: { min: 480, ideal: 480 },
-                                    facingMode: "environment",  // الكاميرا الخلفية
-                                    aspectRatio: { min: 1, max: 2 }
-                                },
-                            },
-                            locator: {
-                                patchSize: "medium",
-                                halfSample: true,
-                            },
-                            numOfWorkers: 2,
-                            decoder: {
-                                readers: [
-                                    { format: "ean_reader", config: {} },        // EAN-13 ← باركود الأدوية
-                                    { format: "ean_8_reader", config: {} },       // EAN-8
-                                    { format: "code_128_reader", config: {} },    // CODE-128
-                                    { format: "code_39_reader", config: {} },     // CODE-39
-                                    { format: "upc_reader", config: {} },         // UPC-A
-                                    { format: "upc_e_reader", config: {} },       // UPC-E
-                                ]
-                            },
-                            locate: true,
-                        }, function(err) {
-                            if (err) {
-                                console.error("Quagga init error:", err);
-                                status.textContent = '❌ تعذر تشغيل الكاميرا';
-                                status.className = 'error';
-                                // If Quagga fails, focus manual input
-                                setTimeout(() => {
-                                    document.getElementById('manual-barcode').focus();
-                                }, 300);
-                                return;
-                            }
-                            Quagga.start();
-                            status.textContent = '🔍 وجّه الباركود داخل الإطار';
-                            status.className = '';
-                            
-                            // Focus manual input as backup
-                            setTimeout(() => {
-                                document.getElementById('manual-barcode').focus();
-                            }, 500);
-                        });
-                        
-                        // ✅ BARCODE DETECTED — بند読 الباركود
-                        Quagga.onDetected(function(result) {
-                            const code = result.codeResult.code;
-                            if (!code || code.length < 3) return;
-                            
-                            // 🔊 رد فعل فوري: اهتزاز + وميض أخضر
-                            if (navigator.vibrate) navigator.vibrate([100, 50, 100]); // ثلاث نبضات
-                            
-                            // وميض أخضر على الإطار
-                            const container = document.getElementById('scanner-container');
-                            container.style.borderColor = '#22C55E';
-                            container.style.boxShadow = '0 0 50px rgba(34,197,94,0.6)';
-                            
-                            status.textContent = '✅ تم قراءة الباركود: ' + code;
-                            status.className = 'success';
-                            
-                            // إيقاف المسح بعد 400ms والبحث عن الدواء
-                            setTimeout(() => {
-                                self.stopScannerInternal();
-                                self.searchByBarcode(code);
-                            }, 500);
-                        });
-                        
-                        // رسم إطار التحديد على الفيديو
-                        Quagga.onProcessed(function(result) {
-                            const drawingCtx = Quagga.canvas.ctx.overlay;
-                            const drawingCanvas = Quagga.canvas.dom.overlay;
-                            if (drawingCanvas && drawingCtx) {
-                                drawingCanvas.style.position = 'absolute';
-                                drawingCanvas.style.top = '0';
-                                drawingCanvas.style.left = '0';
-                                drawingCanvas.style.width = '100%';
-                                drawingCanvas.style.height = '100%';
-                            }
-                            if (result && result.boxes) {
-                                drawingCtx.clearRect(0, 0, 
-                                    parseInt(drawingCanvas.getAttribute('width')),
-                                    parseInt(drawingCanvas.getAttribute('height')));
-                                result.boxes.filter(function(box) {
-                                    return box !== result.box;
-                                }).forEach(function(box) {
-                                    Quagga.ImageDebug.drawPath(box, { x: 0, y: 1 }, drawingCtx, { color: "#22D3EE", lineWidth: 2 });
-                                });
-                            }
-                            if (result && result.box) {
-                                Quagga.ImageDebug.drawPath(result.box, { x: 0, y: 1 }, drawingCtx, { color: "#3B82F6", lineWidth: 3 });
-                            }
-                        });
-                    } else {
-                        // Fallback: Quagga غير متاح
-                        status.textContent = '📱 المسح غير متاح، استخدم الإدخال اليدوي';
+                    // تشغيل الكاميرا الخلفية
+                    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                        status.textContent = '❌ الكاميرا غير مدعومة في هذا المتصفح';
                         status.className = 'error';
-                        setTimeout(() => {
-                            document.getElementById('manual-barcode').focus();
-                        }, 300);
+                        captureBtn.disabled = false;
+                        document.getElementById('manual-barcode').focus();
+                        return;
                     }
+                    
+                    navigator.mediaDevices.getUserMedia({
+                        video: { 
+                            facingMode: "environment",  // الكاميرا الخلفية
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 }
+                        },
+                        audio: false
+                    })
+                    .then(function(stream) {
+                        video.srcObject = stream;
+                        video.setAttribute('playsinline', true);
+                        video.play();
+                        status.textContent = '📸 اضغط "تصوير" لقراءة الباركود';
+                        captureBtn.disabled = false;
+                    })
+                    .catch(function(err) {
+                        console.error("Camera error:", err);
+                        let msg = '❌ ' + err.message;
+                        if (err.name === 'NotAllowedError') msg = '❌ سماح بالكاميرا مرفوض';
+                        else if (err.name === 'NotFoundError') msg = '❌ لا توجد كاميرا';
+                        else if (err.name === 'NotReadableError') msg = '❌ الكاميرا مشغولة';
+                        status.textContent = msg;
+                        status.className = 'error';
+                        captureBtn.disabled = false;
+                        setTimeout(() => { document.getElementById('manual-barcode').focus(); }, 300);
+                    });
                 },
                 
                 stopScannerInternal() {
                     document.getElementById('scanner-overlay').classList.remove('active');
-                    // Reset scanner styles
-                    const container = document.getElementById('scanner-container');
-                    if (container) {
-                        container.style.borderColor = '#3B82F6';
-                        container.style.boxShadow = '0 0 40px rgba(59,130,246,0.2)';
-                    }
-                    // Stop Quagga
-                    if (typeof Quagga !== 'undefined') {
-                        try { 
-                            Quagga.offDetected();
-                            Quagga.stop(); 
-                        } catch(e) {}
+                    // إيقاف الكاميرا
+                    const video = document.getElementById('scanner-video');
+                    if (video && video.srcObject) {
+                        video.srcObject.getTracks().forEach(t => t.stop());
+                        video.srcObject = null;
                     }
                 },
-                
+
                 searchByBarcode(barcode) {
                     fetch('/api/sales/pos/barcode/' + encodeURIComponent(barcode), {
                         headers: { 'Authorization': 'Bearer ' + this.token }
@@ -1745,6 +1713,85 @@
             const app = document.querySelector('[x-data]');
             if (app && app.__x && app.__x.$data) {
                 app.__x.$data.stopScannerInternal();
+            }
+        }
+        
+        // Capture barcode from camera snapshot + decode with native API
+        function captureBarcode() {
+            const video = document.getElementById('scanner-video');
+            const canvas = document.getElementById('scanner-canvas');
+            const status = document.getElementById('scanner-status');
+            const captureBtn = document.getElementById('scanner-capture');
+            const flash = document.getElementById('scan-flash');
+            const app = document.querySelector('[x-data]');
+            
+            if (!video || !video.videoWidth) {
+                status.textContent = '❌ الكاميرا لم تشتغل بعد';
+                status.className = 'error';
+                return;
+            }
+            
+            // ⚡ فلاش أبيض عند التصوير
+            flash.classList.add('active');
+            setTimeout(() => flash.classList.remove('active'), 150);
+            
+            // التقاط الصورة من الفيديو
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            
+            status.textContent = '🔍 جاري فك الباركود...';
+            status.className = '';
+            captureBtn.disabled = true;
+            
+            // ✅ الطريقة الأولى: Native BarcodeDetector API (Chrome, Edge, Safari 16.4+)
+            if ('BarcodeDetector' in window) {
+                const formats = [
+                    'ean_13', 'ean_8', 'code_128', 'code_39', 
+                    'upc_a', 'upc_e', 'code_93', 'codabar'
+                ];
+                
+                BarcodeDetector.getSupportedFormats().then(supported => {
+                    // استخدام الصيغ المدعومة فعلياً
+                    const useFormats = formats.filter(f => supported.includes(f));
+                    
+                    const detector = new BarcodeDetector({ formats: useFormats.length > 0 ? useFormats : undefined });
+                    return detector.detect(canvas);
+                })
+                .then(codes => {
+                    if (codes && codes.length > 0) {
+                        const code = codes[0].rawValue;
+                        // اهتزاز Android
+                        if (navigator.vibrate) navigator.vibrate(200);
+                        
+                        status.textContent = '✅ تم قراءة: ' + code;
+                        status.className = 'success';
+                        
+                        // إغلاق الماسح والبحث
+                        setTimeout(() => {
+                            if (app && app.__x && app.__x.$data) {
+                                app.__x.$data.stopScannerInternal();
+                                app.__x.$data.searchByBarcode(code);
+                            }
+                        }, 400);
+                    } else {
+                        status.textContent = '❌ لم يتم التعرف على باركود، حاول مجدداً';
+                        status.className = 'error';
+                        captureBtn.disabled = false;
+                    }
+                })
+                .catch(err => {
+                    console.error('BarcodeDetector error:', err);
+                    status.textContent = '❌ فشل القراءة: ' + err.message;
+                    status.className = 'error';
+                    captureBtn.disabled = false;
+                });
+            } else {
+                // ❌ الطريقة الثانية: المتصفح لا يدعم BarcodeDetector
+                status.textContent = '❌ هذا المتصفح لا يدعم قراءة الباركود.\nاستخدم Chrome أو أدخل الرقم يدوياً';
+                status.className = 'error';
+                captureBtn.disabled = false;
+                setTimeout(() => { document.getElementById('manual-barcode').focus(); }, 500);
             }
         }
         
