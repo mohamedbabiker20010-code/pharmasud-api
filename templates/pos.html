@@ -1600,162 +1600,122 @@
             };
         }
         
-        // ── ZXing + Native BarcodeDetector ──
+        // ── Scanner: ZXing + Native BarcodeDetector ──
         // ============================================================
 
         window.currentPosApp = null;
-        let zxingReader = null;
-        let scannerActive = false;
-        let currentStream = null;
+        let activeReader = null;
 
-        // ── فتح الماسح ──
         async function startBarcodeScanner() {
             const container = document.getElementById('scanner-container');
-            const status = document.getElementById('scanner-status');
             container.classList.add('active');
+            const status = document.getElementById('scanner-status');
             status.textContent = '📷 جاري تشغيل الكاميرا...';
             status.className = '';
-            scannerActive = true;
 
-            if ('BarcodeDetector' in window) {
-                startNativeScanner();
-            } else {
-                startZXingScanner();
+            try {
+                // الطريقة 1: Native BarcodeDetector (أسرع)
+                if ('BarcodeDetector' in window) {
+                    await tryNativeBarcodeDetector();
+                    return; // نجح → خلص
+                }
+                // الطريقة 2: ZXing (إذا native مش متوفر)
+                await tryZXingScanner();
+            } catch (err) {
+                console.error('Scanner failed:', err);
+                status.textContent = '⌨️ الكاميرا غير متاحة، استخدم الإدخال اليدوي';
+                status.className = 'error';
+                fallbackToManual();
             }
         }
 
-        // ── الطريقة 1: Native BarcodeDetector (Chrome/Android/Safari) ──
-        async function startNativeScanner() {
-            const status = document.getElementById('scanner-status');
+        async function tryNativeBarcodeDetector() {
             const video = document.getElementById('scanner-video');
+            const status = document.getElementById('scanner-status');
 
-            try {
-                const formats = ['ean_13', 'ean_8', 'code_128', 'code_39', 'upc_a'];
-                const supported = await BarcodeDetector.getSupportedFormats();
-                const useFormats = formats.filter(f => supported.includes(f));
-                const detector = new BarcodeDetector({ formats: useFormats });
+            const supported = await BarcodeDetector.getSupportedFormats();
+            const ourFormats = ['ean_13','ean_8','code_128','code_39','upc_a','upc_e'];
+            const useFormats = ourFormats.filter(f => supported.includes(f));
+            const detector = new BarcodeDetector({ formats: useFormats });
 
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }
-                });
-                currentStream = stream;
-                video.srcObject = stream;
-                await video.play();
-                status.textContent = '🔍 وجّه الباركود داخل الإطار...';
-                status.className = '';
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }
+            });
+            window._scannerStream = stream;
+            video.srcObject = stream;
+            await video.play();
+            status.textContent = '🔍 وجّه الباركود داخل الإطار...';
 
-                // مسح كل 300ms
-                const detectLoop = setInterval(async () => {
-                    if (!scannerActive) { clearInterval(detectLoop); return; }
+            await new Promise((resolve, reject) => {
+                const timer = setTimeout(() => reject(new Error('timeout')), 30000);
+                const interval = setInterval(async () => {
                     try {
-                        const barcodes = await detector.detect(video);
-                        if (barcodes.length > 0) {
-                            const code = barcodes[0].rawValue;
-                            clearInterval(detectLoop);
-                            onBarcodeFound(code);
+                        const codes = await detector.detect(video);
+                        if (codes.length > 0) {
+                            clearInterval(interval);
+                            clearTimeout(timer);
+                            onBarcodeFound(codes[0].rawValue);
+                            resolve();
                         }
-                    } catch(e) {}
-                }, 300);
-
-            } catch(err) {
-                console.error('Native scanner failed:', err);
-                // Fallback to ZXing
-                if (scannerActive) startZXingScanner();
-            }
+                    } catch (e) { /* ignore frame errors */ }
+                }, 200);
+            });
         }
 
-        // ── الطريقة 2: ZXing Library (Firefox، Safari قديم) ──
-        async function startZXingScanner() {
-            const status = document.getElementById('scanner-status');
+        async function tryZXingScanner() {
+            if (typeof ZXing === 'undefined') throw new Error('ZXing not loaded');
+
             const video = document.getElementById('scanner-video');
+            const status = document.getElementById('scanner-status');
+            status.textContent = '🔍 جاري المسح...';
 
-            if (typeof ZXing === 'undefined') {
-                status.textContent = '⌨️ استخدم الإدخال اليدوي';
-                status.className = 'error';
-                document.getElementById('manual-barcode-input').focus();
-                return;
-            }
+            const hints = new Map();
+            hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
+                ZXing.BarcodeFormat.EAN_13, ZXing.BarcodeFormat.EAN_8,
+                ZXing.BarcodeFormat.CODE_128, ZXing.BarcodeFormat.CODE_39
+            ]);
+            hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
 
-            try {
-                const hints = new Map();
-                hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
-                    ZXing.BarcodeFormat.EAN_13,
-                    ZXing.BarcodeFormat.EAN_8,
-                    ZXing.BarcodeFormat.CODE_128,
-                    ZXing.BarcodeFormat.CODE_39
-                ]);
-                hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+            activeReader = new ZXing.BrowserMultiFormatReader(hints);
 
-                zxingReader = new ZXing.BrowserMultiFormatReader(hints);
-                status.textContent = '🔍 جاري المسح باستخدام ZXing...';
-
-                await zxingReader.decodeFromVideoDevice(
-                    null,
-                    video,
-                    (result, err) => {
-                        if (result && scannerActive) {
-                            const code = result.getText();
-                            if (code && code.length >= 3) {
-                                zxingReader.reset();
-                                onBarcodeFound(code);
-                            }
-                        }
+            await new Promise((resolve, reject) => {
+                const timer = setTimeout(() => reject(new Error('timeout')), 30000);
+                activeReader.decodeFromVideoDevice(null, video, (result, err) => {
+                    if (result) {
+                        clearTimeout(timer);
+                        activeReader.reset();
+                        activeReader = null;
+                        onBarcodeFound(result.getText());
+                        resolve();
                     }
-                );
-
-            } catch(err) {
-                console.error('ZXing failed:', err);
-                status.textContent = '⌨️ استخدم الإدخال اليدوي';
-                status.className = 'error';
-                document.getElementById('manual-barcode-input').focus();
-            }
+                });
+            });
         }
 
-        // ── نجح قراءة الباركود ──
         function onBarcodeFound(code) {
-            scannerActive = false;
             stopScanner();
-
-            // اهتزاز
             if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-
-            const status = document.getElementById('scanner-status');
-            status.textContent = '✅ ' + code;
-            status.className = 'success';
-
-            // بحث في قاعدة البيانات
             const app = window.currentPosApp;
             if (app && app.searchByBarcode) {
-                setTimeout(() => app.searchByBarcode(code), 300);
+                setTimeout(() => app.searchByBarcode(code), 200);
             }
         }
 
-        // ── إيقاف الماسح ──
         function stopScanner() {
-            scannerActive = false;
-            if (zxingReader) {
-                try { zxingReader.reset(); } catch(e) {}
-                zxingReader = null;
+            if (activeReader) { try { activeReader.reset(); } catch(e) {} activeReader = null; }
+            if (window._scannerStream) {
+                window._scannerStream.getTracks().forEach(t => t.stop());
+                window._scannerStream = null;
             }
-            if (currentStream) {
-                currentStream.getTracks().forEach(t => t.stop());
-                currentStream = null;
-            }
-            const video = document.getElementById('scanner-video');
-            if (video && video.srcObject) {
-                video.srcObject.getTracks().forEach(t => t.stop());
-                video.srcObject = null;
-            }
+            const v = document.getElementById('scanner-video');
+            if (v && v.srcObject) { v.srcObject.getTracks().forEach(t => t.stop()); v.srcObject = null; }
             document.getElementById('scanner-container').classList.remove('active');
-            // reset scanner status
-            const status = document.getElementById('scanner-status');
-            if (status) {
-                status.textContent = '📷 وجّه الكاميرا نحو الباركود ليقرأ تلقائياً';
-                status.className = '';
-            }
         }
 
-        // ── البحث اليدوي عن الباركود ──
+        function fallbackToManual() {
+            document.getElementById('manual-barcode-input').focus();
+        }
+
         function searchManualBarcode() {
             const input = document.getElementById('manual-barcode-input');
             const code = input.value.trim();
@@ -1764,23 +1724,14 @@
                 if (app && app.searchByBarcode) {
                     app.searchByBarcode(code);
                     stopScanner();
-                } else {
-                    // Fallback if Alpine not ready
-                    fetch('/api/sales/pos/barcode/' + encodeURIComponent(code), {
-                        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
-                    }).then(r => r.json()).then(data => {
-                        if (data.found) window.location.reload();
-                    });
                 }
                 input.value = '';
             } else {
                 input.style.borderColor = '#EF4444';
-                setTimeout(() => { input.style.borderColor = '#475569'; }, 1000);
                 input.focus();
             }
         }
 
-        // ربط startBarcodeScanner مع window عشان Alpine يقدر يناديها
         window.startBarcodeScanner = startBarcodeScanner;
     </script>
 </body>
