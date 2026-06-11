@@ -17,9 +17,6 @@ python-multipart==0.0.6
 # Image Processing
 Pillow==10.4.0
 
-# Barcode Decoding (Server-side)
-pyzbar==0.1.9
-
 # Templates & Frontend
 jinja2==3.1.3
 

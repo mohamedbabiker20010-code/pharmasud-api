@@ -1,6 +1,6 @@
 """
 PharmaSUD - Main FastAPI Application
-Stage 6.5 - Barcode Server-Side Decoder
+Stage 3 - Version 6.5.0
 """
 from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -31,28 +31,6 @@ from settings import router as settings_router
 from sales import router as sales_router
 from sales import public_router as sales_public_router
 from reports import router as reports_router
-
-# Try to import barcode decoder
-BARCODE_DECODER_AVAILABLE = False
-
-# Method 1: pyzbar (Python library)
-try:
-    from pyzbar.pyzbar import decode as pyzbar_decode
-    from PIL import Image
-    BARCODE_DECODER_AVAILABLE = True
-    BARCODE_DECODER_METHOD = "pyzbar"
-    print("✅ Barcode decoder: pyzbar")
-except ImportError:
-    # Method 2: zbarimg (command-line tool)
-    import subprocess
-    import tempfile
-    import shutil
-    if shutil.which("zbarimg"):
-        BARCODE_DECODER_AVAILABLE = True
-        BARCODE_DECODER_METHOD = "zbarimg"
-        print("✅ Barcode decoder: zbarimg")
-    else:
-        print("⚠️ No barcode decoder available (try pyzbar or zbarimg)")
 
 app = FastAPI(
     title="PharmaSUD API",
@@ -120,95 +98,6 @@ logger = logging.getLogger(__name__)
 # ================================================================
 # BARCODE DECODE ENDPOINT (Server-side with ZBar)
 # ================================================================
-@app.post("/api/barcode/decode")
-async def decode_barcode(data: dict, request: Request):
-    """
-    Decode a barcode from a base64 image.
-    {"image": "data:image/jpeg;base64,..."}
-    """
-    global BARCODE_DECODER_METHOD
-    
-    if not BARCODE_DECODER_AVAILABLE:
-        return {"success": False, "error": "Barcode decoder not available on server"}
-    
-    try:
-        # Get base64 image data
-        image_b64 = data.get("image", "")
-        if not image_b64:
-            return {"success": False, "error": "No image data provided"}
-        
-        # Remove data URL prefix if present
-        if "," in image_b64:
-            image_b64 = image_b64.split(",")[1]
-        
-        # Decode base64 to bytes
-        image_bytes = base64.b64decode(image_b64)
-        
-        barcode_data = None
-        barcode_type = None
-        
-        # Method 1: pyzbar (Python library)
-        if BARCODE_DECODER_METHOD == "pyzbar":
-            img = Image.open(io.BytesIO(image_bytes))
-            results = pyzbar_decode(img)
-            
-            if results:
-                barcode_data = results[0].data.decode('utf-8')
-                barcode_type = results[0].type
-            else:
-                # Try inverted
-                try:
-                    from PIL import ImageOps
-                    inverted = ImageOps.invert(img.convert('RGB'))
-                    results = pyzbar_decode(inverted)
-                    if results:
-                        barcode_data = results[0].data.decode('utf-8')
-                        barcode_type = results[0].type
-                except Exception:
-                    pass
-        
-        # Method 2: zbarimg (command-line tool)
-        elif BARCODE_DECODER_METHOD == "zbarimg":
-            import subprocess
-            import tempfile
-            import os
-            
-            # Save to temp file
-            tmp = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
-            try:
-                tmp.write(image_bytes)
-                tmp.close()
-                
-                result = subprocess.run(
-                    ['zbarimg', '-q', '--raw', tmp.name],
-                    capture_output=True,
-                    text=True,
-                    timeout=10
-                )
-                
-                if result.returncode == 0 and result.stdout.strip():
-                    barcode_data = result.stdout.strip()
-                    logger.info(f"✅ zbarimg decoded: {barcode_data}")
-                else:
-                    logger.info(f"zbarimg failed: {result.stderr.strip()}")
-            finally:
-                os.unlink(tmp.name)
-        
-        if barcode_data and len(barcode_data) >= 3:
-            logger.info(f"✅ Barcode decoded: {barcode_data} (type: {barcode_type or 'unknown'})")
-            return {
-                "success": True,
-                "barcode": barcode_data,
-                "type": barcode_type or "EAN-13"
-            }
-        
-        return {"success": False, "error": "No barcode detected in image"}
-    
-    except Exception as e:
-        logger.error(f"Barcode decode error: {e}")
-        return {"success": False, "error": str(e)}
-
-# ================================================================
 # PUBLIC ENDPOINTS
 # ================================================================
 
@@ -218,8 +107,7 @@ async def root():
     return {
         "status": "PharmaSUD API Running",
         "version": "6.5.0",
-        "stage": "Stage 6.5 - Server Barcode Decoder",
-        "barcode_decoder": "available" if BARCODE_DECODER_AVAILABLE else "not available"
+        "stage": "Stage 6.5 - Permissions & Storage"
     }
 
 @app.get("/health")
@@ -232,7 +120,6 @@ async def health():
             "status": "healthy",
             "database": "connected" if db_ok else "disconnected",
             "tables": tables,
-            "barcode_decoder": "available" if BARCODE_DECODER_AVAILABLE else "not available",
             "timestamp": datetime.now().isoformat()
         }
     except Exception as e:
