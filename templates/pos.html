@@ -1716,7 +1716,7 @@
                             maxNumberOfSymbols: 1
                         };
                         decoderFn = async (imageData) => {
-                            const results = await zxingMod.readBarcodes(imageData, readerOpts);
+                            const results = await zxingMod.readBarcodesFromImageData(imageData, readerOpts);
                             return (results && results.length > 0) ? results[0].text : null;
                         };
                         engineName = 'zxing-wasm@2';
@@ -1785,8 +1785,12 @@
                         _scanState.running = false;
                         cancelAnimationFrame(_scanState.rAFid);
                         onBarcodeFound(code);
+                    } else {
+                        debug('decode: no barcode in frame', '');
                     }
-                }).catch(() => {});
+                }).catch(err => {
+                    debug('decode error: ' + (err.message || err), 'error');
+                });
             }
 
             frame();
