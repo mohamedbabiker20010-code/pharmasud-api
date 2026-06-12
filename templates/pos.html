@@ -1614,298 +1614,172 @@
             };
         }
         
-        // ── Scanner: Layered (BarcodeDetector → zxing-wasm) + ROI + rAF ──
+        // ── scanner: tested dual-engine (BarcodeDetector → zxing-wasm) ──
         // ============================================================
-        // المحرّك: طبقتين — Native BarcodeDetector (Android Chrome) ← zxing-wasm fallback (iOS Safari)
-        // الإصلاح الأساسي: ROI crop — نقرأ الشريط الأوسط فقط (40% ارتفاع)، مش الفريم كامل
-        // zxing-wasm يُحمّل ديناميكياً (dynamic import) فقط لو الجهاز ما عنده BarcodeDetector
-        // ملاحظة: HTTPS إجباري + متصفح مباشر (Safari/Chrome) — الكاميرا ما تشتغل داخل متصفح التطبيقات
+        // Production: Android Chrome = native BarcodeDetector
+        // Fallback:   iOS Safari   = zxing-wasm@2 (dynamic import)
         // ============================================================
 
-        window.currentPosApp = null;
+        let scannerStream = null;
+        let scannerRunning = false;
+        let scannerEngine = null;
+        let scannerEngineType = '';
 
-        // متغيرات المسح
-        let _scanState = {
-            stream: null,
-            track: null,
-            running: false,
-            rAFid: null,
-            engine: 'none',
-            torchOn: false,
-            lastDecodeMs: 0
-        };
+        async function startScanner() {
+            document.getElementById('scanner-container').style.display = 'block';
+            scannerRunning = true;
 
-        function debug(msg, type = '') {
-            const el = document.getElementById('scanner-debug');
-            if (!el) return;
-            el.textContent = msg;
-            el.className = type;
-        }
-
-        function updateStatus(msg, cls = '') {
-            const el = document.getElementById('scanner-status');
-            if (el) { el.textContent = msg; el.className = cls; }
-        }
-
-        // ── تشغيل المسح ──
-        async function startBarcodeScanner() {
-            const container = document.getElementById('scanner-container');
-            container.classList.add('active');
-            updateStatus('📷 جاري فتح الكاميرا...');
-            debug('requesting camera...');
-
+            let stream;
             try {
-                // 1. فتح الكاميرا (بيئة خارجية)
-                const stream = await navigator.mediaDevices.getUserMedia({
+                stream = await navigator.mediaDevices.getUserMedia({
                     video: {
                         facingMode: { ideal: 'environment' },
                         width: { ideal: 1920 },
                         height: { ideal: 1080 }
-                    },
-                    audio: false
-                });
-                _scanState.stream = stream;
-                _scanState.track = stream.getVideoTracks()[0];
-                const settings = _scanState.track.getSettings ? _scanState.track.getSettings() : {};
-                debug(`camera: ${settings.width||'?'}×${settings.height||'?'}`, 'active');
-
-                // الربط بالـ video
-                const video = document.getElementById('scanner-video');
-                video.srcObject = stream;
-                await video.play();
-
-                // تركيز مستمر
-                try { await _scanState.track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }); } catch (_) {}
-
-                // الفلاش — يظهر فقط لو مدعوم
-                const caps = _scanState.track.getCapabilities ? _scanState.track.getCapabilities() : {};
-                const torchBtn = document.getElementById('scan-torch-btn');
-                if (caps && caps.torch) {
-                    torchBtn.style.display = '';
-                    torchBtn.className = 'btn-scan-torch';
-                } else {
-                    torchBtn.style.display = 'none';
-                }
-
-                // 2. اختيار المحرّك
-                let decoderFn = null;
-                let engineName = '';
-
-                // المحاولة الأولى: Native BarcodeDetector
-                if ('BarcodeDetector' in window) {
-                    const supported = await BarcodeDetector.getSupportedFormats();
-                    const needed = ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39'];
-                    const available = needed.filter(f => supported.includes(f));
-                    if (available.length >= 1) {
-                        const detector = new BarcodeDetector({ formats: available });
-                        decoderFn = async (imageData) => {
-                            const codes = await detector.detect(imageData);
-                            return codes.length > 0 ? codes[0].rawValue : null;
-                        };
-                        engineName = 'BarcodeDetector (' + available.join(',') + ')';
                     }
+                });
+                scannerStream = stream;
+            } catch (e) {
+                showScannerError('لا يمكن الوصول للكاميرا: ' + e.message);
+                return;
+            }
+
+            const video = document.getElementById('scanner-video');
+            video.srcObject = stream;
+
+            await new Promise(function(resolve) {
+                if (video.readyState >= 2) return resolve();
+                video.onloadedmetadata = function() { resolve(); };
+            });
+            await video.play();
+
+            if (video.videoWidth === 0) {
+                showScannerError('الكاميرا لم تبدأ بشكل صحيح');
+                return;
+            }
+
+            if ('BarcodeDetector' in window) {
+                try {
+                    var wanted = ['ean_13','ean_8','upc_a','upc_e','code_128','code_39'];
+                    var supported = await BarcodeDetector.getSupportedFormats();
+                    var usable = wanted.filter(function(f) { return supported.includes(f); });
+                    if (usable.length > 0) {
+                        scannerEngine = new BarcodeDetector({ formats: usable });
+                        scannerEngineType = 'native';
+                    }
+                } catch (e) {
+                    scannerEngine = null;
+                }
+            }
+
+            if (!scannerEngine) {
+                try {
+                    var mod = await import('https://esm.sh/zxing-wasm@2/reader');
+                    scannerEngine = mod.readBarcodesFromImageData;
+                    scannerEngineType = 'wasm';
+                } catch (e) {
+                    showScannerError('تعذر تحميل محرك المسح - استخدم الإدخال اليدوي');
+                    return;
+                }
+            }
+
+            updateScannerStatus(
+                scannerEngineType === 'native'
+                    ? '🟢 جاري المسح...'
+                    : '🟡 جاري المسح (متوافقية)...'
+            );
+
+            var canvas = document.createElement('canvas');
+            var ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+            async function scanLoop() {
+                if (!scannerRunning) return;
+
+                if (video.readyState < 2 || video.videoWidth === 0) {
+                    requestAnimationFrame(scanLoop);
+                    return;
                 }
 
-                // المحاولة الثانية: zxing-wasm (fallback)
-                if (!decoderFn) {
-                    try {
-                        const zxingMod = await import('https://esm.sh/zxing-wasm@2/reader');
-                        const readerOpts = {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                try {
+                    var results = [];
+
+                    if (scannerEngineType === 'native') {
+                        results = await scannerEngine.detect(canvas);
+                    } else {
+                        var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                        var zx = await scannerEngine(imageData, {
                             tryHarder: true,
-                            formats: ['EAN-13', 'EAN-8', 'UPC-A', 'UPC-E', 'Code-128', 'Code-39'],
+                            formats: ['EAN-13','EAN-8','UPC-A','UPC-E','Code-128','Code-39'],
                             maxNumberOfSymbols: 1
-                        };
-                        decoderFn = async (imageData) => {
-                            const results = await zxingMod.readBarcodesFromImageData(imageData, readerOpts);
-                            return (results && results.length > 0) ? results[0].text : null;
-                        };
-                        engineName = 'zxing-wasm@2';
-                    } catch (wasmErr) {
-                        updateStatus('⌨️ فشل تحميل محرك المسح — استخدم الإدخال اليدوي', 'error');
-                        debug('WASM load failed: ' + wasmErr.message, 'error');
-                        document.getElementById('manual-barcode-input').focus();
+                        });
+                        results = zx.map(function(r) {
+                            return { rawValue: r.text, format: r.format };
+                        });
+                    }
+
+                    if (results.length > 0) {
+                        var barcode = results[0].rawValue;
+
+                        if (navigator.vibrate) {
+                            navigator.vibrate(120);
+                        }
+
+                        stopScannerInternal();
+
+                        // Call existing Alpine.js function — no new endpoint
+                        const app = window.currentPosApp;
+                        if (app && app.searchByBarcode) {
+                            await app.searchByBarcode(barcode);
+                        }
                         return;
                     }
+                } catch (e) {
+                    updateScannerStatus('⚠️ ' + e.name);
                 }
 
-                _scanState.engine = engineName;
-                debug('🟢 ' + engineName, 'active');
-                updateStatus('🔍 وجّه الباركود داخل الإطار...');
+                setTimeout(function() { requestAnimationFrame(scanLoop); }, 120);
+            }
 
-                // 3. حلقة المسح مع ROI
-                _scanState.running = true;
-                await scanLoop(decoderFn);
+            scanLoop();
+        }
 
-            } catch (err) {
-                console.error('Scanner failed:', err);
-                let msg = '⌨️ الكاميرا غير متاحة';
-                if (err.name === 'NotAllowedError') msg = '🔒 الإذن مرفوض — افتح في Safari/Chrome مباشرة';
-                else if (err.name === 'NotFoundError') msg = '📷 ما في كاميرا متاحة';
-                else if (err.name === 'NotReadableError') msg = '🔒 الكاميرا مشغولة بتطبيق آخر';
-                updateStatus(msg, 'error');
-                debug(err.name + ': ' + err.message, 'error');
-                fallbackToManual();
+        function stopScannerInternal() {
+            scannerRunning = false;
+            if (scannerStream) {
+                scannerStream.getTracks().forEach(function(t) { t.stop(); });
+                scannerStream = null;
+            }
+            var video = document.getElementById('scanner-video');
+            if (video && video.srcObject) {
+                video.srcObject.getTracks().forEach(function(t) { t.stop(); });
+                video.srcObject = null;
             }
         }
 
-        // ── حلقة المسح مع ROI ──
-        // نقرأ الشريط الأوسط فقط (~40% ارتفاع) بدلاً من الفريم الكامل
-        // هذا يرفع نسبة القراءة بشكل كبير للباركود الرفيع
-        async function scanLoop(decoderFn) {
-            const video = document.getElementById('scanner-video');
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d', { willReadFrequently: true });
-            let lastDecode = 0;
-            const MIN_INTERVAL = 120; // ~8 محاولات/ثانية
-
-            function frame() {
-                if (!_scanState.running) return;
-                _scanState.rAFid = requestAnimationFrame(frame);
-
-                const now = performance.now();
-                if (now - lastDecode < MIN_INTERVAL) return;
-                lastDecode = now;
-
-                if (video.readyState < video.HAVE_CURRENT_DATA || !video.videoWidth) return;
-
-                const w = video.videoWidth;
-                const h = video.videoHeight;
-
-                // ROI: الشريط الأوسط — عرض كامل × ~40% ارتفاع
-                const roiH = Math.round(h * 0.40);
-                const roiY = Math.round((h - roiH) / 2);
-
-                canvas.width = w;
-                canvas.height = roiH;
-                ctx.drawImage(video, 0, roiY, w, roiH, 0, 0, w, roiH);
-                const imageData = ctx.getImageData(0, 0, w, roiH);
-
-                decoderFn(imageData).then(code => {
-                    if (code && code.length >= 3) {
-                        _scanState.running = false;
-                        cancelAnimationFrame(_scanState.rAFid);
-                        onBarcodeFound(code);
-                    } else {
-                        debug('decode: no barcode in frame', '');
-                    }
-                }).catch(err => {
-                    debug('decode error: ' + (err.message || err), 'error');
-                });
-            }
-
-            frame();
-        }
-
-        // ── تشغيل/إطفاء الفلاش ──
-        async function toggleTorch() {
-            if (!_scanState.track) return;
-            _scanState.torchOn = !_scanState.torchOn;
-            try {
-                await _scanState.track.applyConstraints({ advanced: [{ torch: _scanState.torchOn }] });
-                const btn = document.getElementById('scan-torch-btn');
-                if (btn) btn.className = 'btn-scan-torch' + (_scanState.torchOn ? ' on' : '');
-            } catch (err) {
-                debug('torch error: ' + err.message, 'error');
-            }
-        }
-
-        // ── تم العثور على باركود ──
-        let _scanFoundDebounce = false;
-        function onBarcodeFound(code) {
-            // Debounce: نفذ مرة واحدة فقط
-            if (_scanFoundDebounce) return;
-            _scanFoundDebounce = true;
-
-            // إيقاف الكاميرا وحلقة المسح
-            _scanState.running = false;
-            if (_scanState.rAFid) { cancelAnimationFrame(_scanState.rAFid); _scanState.rAFid = null; }
-            if (_scanState.track) {
-                try { _scanState.track.applyConstraints({ advanced: [{ torch: false }] }); } catch (_) {}
-                _scanState.track.stop();
-            }
-            if (_scanState.stream) {
-                _scanState.stream.getTracks().forEach(t => t.stop());
-            }
-            const videoEl = document.getElementById('scanner-video');
-            if (videoEl) videoEl.srcObject = null;
-
-            // اهتزاز
-            if (navigator.vibrate) navigator.vibrate(120);
-
-            // عرض النتيجة
-            document.getElementById('scan-result-code').textContent = code;
-            document.getElementById('scan-result').style.display = '';
-            document.getElementById('scanner-status').textContent = '✅ تم المسح بنجاح';
-            document.getElementById('scanner-status').className = 'success';
-            debug('✅ ' + code, 'active');
-
-            // إظهار زر "مسح مرة أخرى" وإخفاء الباقي
-            document.getElementById('scan-torch-btn').style.display = 'none';
-            document.getElementById('scan-again-btn').style.display = '';
-            document.getElementById('manual-barcode-input').value = code;
-            document.getElementById('manual-barcode-input').focus();
-
-            // إرسال للـ Alpine.js
-            const app = window.currentPosApp;
-            if (app && app.searchByBarcode) {
-                app.searchByBarcode(code);
-            }
-        }
-
-        // ── مسح مرة أخرى ──
-        async function restartScanner() {
-            // إعادة ضبط الـ UI
-            document.getElementById('scan-result').style.display = 'none';
-            document.getElementById('scan-result-code').textContent = '';
-            document.getElementById('scan-again-btn').style.display = 'none';
-            document.getElementById('manual-barcode-input').value = '';
-            _scanFoundDebounce = false;
-            _scanState.running = false;
-            _scanState.stream = null;
-            _scanState.track = null;
-            _scanState.rAFid = null;
-            _scanState.torchOn = false;
-            _scanState.engine = 'none';
-
-            // إعادة تشغيل المسح
-            await startBarcodeScanner();
-        }
-
-        // ── إيقاف المسح ──
         function stopScanner() {
-            _scanState.running = false;
-            _scanFoundDebounce = false;
-            if (_scanState.rAFid) { cancelAnimationFrame(_scanState.rAFid); _scanState.rAFid = null; }
-            if (_scanState.track) {
-                try { _scanState.track.applyConstraints({ advanced: [{ torch: false }] }); } catch (_) {}
-                _scanState.track.stop();
-            }
-            if (_scanState.stream) {
-                _scanState.stream.getTracks().forEach(t => t.stop());
-            }
-            _scanState.stream = null;
-            _scanState.track = null;
-            _scanState.torchOn = false;
-            _scanState.engine = 'none';
-            const v = document.getElementById('scanner-video');
-            if (v) v.srcObject = null;
-            document.getElementById('scanner-container').classList.remove('active');
-            // إعادة ضبط buttons
-            document.getElementById('scan-result').style.display = 'none';
-            document.getElementById('scan-again-btn').style.display = 'none';
+            stopScannerInternal();
+            document.getElementById('scanner-container').style.display = 'none';
         }
 
-        // ── الرجوع للإدخال اليدوي ──
-        function fallbackToManual() {
-            document.getElementById('manual-barcode-input').focus();
+        function showScannerError(msg) {
+            updateScannerStatus('❌ ' + msg);
         }
 
-        // ── البحث اليدوي بالباركود ──
+        function updateScannerStatus(text) {
+            var el = document.getElementById('scanner-status');
+            if (el) el.textContent = text;
+        }
+
+        // ── manual barcode input (unchanged fallback) ──
         function searchManualBarcode() {
-            const input = document.getElementById('manual-barcode-input');
-            const code = input.value.trim();
+            var input = document.getElementById('manual-barcode-input');
+            var code = input.value.trim();
             if (code && code.length >= 3) {
-                const app = window.currentPosApp;
+                var app = window.currentPosApp;
                 if (app && app.searchByBarcode) {
                     app.searchByBarcode(code);
                     stopScanner();
@@ -1913,12 +1787,12 @@
                 input.value = '';
             } else {
                 input.style.borderColor = '#EF4444';
-                setTimeout(() => input.style.borderColor = '', 1500);
+                setTimeout(function() { input.style.borderColor = ''; }, 1500);
                 input.focus();
             }
         }
 
-        window.startBarcodeScanner = startBarcodeScanner;
+        window.startBarcodeScanner = startScanner;
     </script>
 </body>
 </html>
