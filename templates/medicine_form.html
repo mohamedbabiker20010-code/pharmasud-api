@@ -186,7 +186,7 @@
                         <div class="border-2 border-green-400 rounded-lg w-3/4 h-2/5 opacity-70"></div>
                     </div>
                 </div>
-                <p class="text-center text-gray-400 text-sm mt-2">وجّهي الكاميرا نحو الباركود ثم اضغطي الزر</p>
+                <p class="text-center text-gray-400 text-sm mt-2">وجّه الكاميرا نحو الباركود ثم اضغط الزر</p>
                 <!-- زر التصوير -->
                 <button @click="captureBarcode()" :disabled="scanning" class="w-full mt-3 bg-green-600 hover:bg-green-700 disabled:bg-green-800 py-3 rounded-lg font-bold text-lg flex items-center justify-center gap-2">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -198,7 +198,7 @@
                 <canvas id="scanner-canvas" class="hidden"></canvas>
                 <!-- حقل إدخال يدوي (احتياطي) -->
                 <div class="mt-4 pt-3 border-t border-gray-600">
-                    <p class="text-xs text-gray-400 mb-2">أو أدخلي الرقم يدوياً:</p>
+                    <p class="text-xs text-gray-400 mb-2">أو أدخل الرقم يدوياً:</p>
                     <div class="flex gap-2">
                         <input type="text" x-model="manualBarcode" placeholder="رقم الباركود"
                             class="flex-1 bg-[#0F172A] border border-gray-600 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-400 focus:outline-none focus:border-blue-500"
@@ -390,10 +390,10 @@
                     } catch (err) {
                         console.error('Camera error:', err);
                         alert('لا يمكن الوصول للكاميرا.\n\n' +
-                            'iPhone: استخدمي Safari (Chrome ما يدعم الكاميرا في iOS)\n' +
+                            'iPhone: استخدم Safari (Chrome ما يدعم الكاميرا في iOS)\n' +
                             'Android: Chrome أو أي متصفح\n' +
-                            'تأكدي من إعطاء صلاحية الكاميرا للموقع\n\n' +
-                            'أو أدخلي رقم الباركود يدوياً');
+                            'تأكد من إعطاء صلاحية الكاميرا للموقع\n\n' +
+                            'أو أدخل رقم الباركود يدوياً');
                         this.showScanner = false;
                     }
                 },
@@ -449,11 +449,11 @@
                             } else {
                                 this.scanning = false;
                                 alert('❌ لم يتم التعرف على الباركود.\n\n' +
-                                    'تأكدي من:\n' +
+                                    'تأكد من:\n' +
                                     '1. الباركود واضح ومضاء جيداً\n' +
                                     '2. الكاميرا مركزة على الباركود\n' +
                                     '3. الباركود غير تالف أو مشوه\n\n' +
-                                    'أو أدخلي الرقم يدوياً في الحقل أسفل');
+                                    'أو أدخل الرقم يدوياً في الحقل أسفل');
                             }
                         }
                     } catch (err) {
