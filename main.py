@@ -178,6 +178,19 @@ async def pos_page(request: Request):
     """POS page."""
     return templates.TemplateResponse("pos.html", {"request": request})
 
+# ═══════════════════════════════════════════════════════════════
+# BARCODE DIAGNOSTIC (no JWT — temporary test page)
+# ═══════════════════════════════════════════════════════════════
+
+@app.get("/scanner-debug", response_class=HTMLResponse)
+async def scanner_debug_page(request: Request):
+    """Barcode scanner diagnostic page (no auth required)."""
+    return templates.TemplateResponse("scanner_debug.html", {"request": request})
+
+# ═══════════════════════════════════════════════════════════════
+# REPORTS PAGES (Stage 6)
+# ═══════════════════════════════════════════════════════════════
+
 @app.get("/sales-history", response_class=HTMLResponse)
 async def sales_history_page(request: Request):
     """Sales history page."""

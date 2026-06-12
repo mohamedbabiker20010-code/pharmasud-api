@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>تشخيص الباركود - PharmaSUD</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#0F172A; color:#F8FAFC; font-family:sans-serif; padding:10px; }
+  h2 { text-align:center; margin-bottom:8px; font-size:18px; }
+  .btn-row { display:flex; gap:8px; }
+  button {
+    flex:1; padding:14px; border:none; border-radius:8px; font-size:16px;
+    cursor:pointer; font-weight:600;
+  }
+  #start-btn { background:#22C55E; color:#052E16; }
+  #stop-btn { background:#EF4444; color:#fff; }
+  #video-container { position:relative; width:100%; max-width:500px; margin:8px auto; }
+  video { width:100%; border-radius:8px; background:#000; display:block; }
+  #debug-panel {
+    background:#1E293B; padding:10px; margin-top:8px; border-radius:8px;
+    font-family:'Cascadia Code','Fira Code',monospace; font-size:12px;
+    direction:ltr; text-align:left; white-space:pre-wrap;
+    max-height:50vh; overflow-y:auto; line-height:1.6;
+  }
+  .row { margin-bottom:2px; word-break:break-all; }
+  .ok { color:#22C55E; }
+  .err { color:#EF4444; font-weight:bold; }
+  .warn { color:#F59E0B; }
+  .info { color:#60A5FA; }
+  .success { color:#22C55E; font-weight:bold; font-size:15px; }
+  .sep { color:#334155; text-align:center; margin:6px 0; }
+</style>
+</head>
+<body>
+  <h2>🔬 تشخيص محرك الباركود</h2>
+  <p style="text-align:center;font-size:12px;color:#64748B;margin-bottom:8px;">
+    Android Chrome → BarcodeDetector (native) ← iOS Safari → zxing-wasm (fallback)
+  </p>
+
+  <div class="btn-row">
+    <button id="start-btn" onclick="startTest()">▶️ ابدأ الاختبار</button>
+    <button id="stop-btn" onclick="stopTest()">⏹️ إيقاف</button>
+  </div>
+
+  <div id="video-container">
+    <video id="video" playsinline muted></video>
+  </div>
+
+  <div id="debug-panel">
+    <div class="row info">▲ اضغط "ابدأ الاختبار" ووجّه الكاميرا لباركود دواء حقيقي</div>
+  </div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// صفحة تشخيص الباركود — كل شيء يظهر على الشاشة
+// ═══════════════════════════════════════════════════════════════
+// لا يوجد .catch(() => {}) — كل خطأ يُسجّل على الشاشة
+// ═══════════════════════════════════════════════════════════════
+
+const debugPanel = document.getElementById('debug-panel');
+const videoEl = document.getElementById('video');
+let running = false;
+let currentStream = null;
+let attemptCount = 0;
+let lastLoggedSecond = 0;
+
+function log(msg, type) {
+  const time = new Date().toLocaleTimeString('en-GB');
+  const cls = type ? (' ' + type) : '';
+  const line = document.createElement('div');
+  line.className = 'row' + cls;
+  line.textContent = '[' + time + '] ' + msg;
+  debugPanel.appendChild(line);
+  if (debugPanel.children.length > 80) {
+    debugPanel.removeChild(debugPanel.firstChild);
+  }
+  debugPanel.scrollTop = debugPanel.scrollHeight;
+}
+
+function logSep() {
+  const line = document.createElement('div');
+  line.className = 'row sep';
+  line.textContent = '─────────────────────';
+  debugPanel.appendChild(line);
+  debugPanel.scrollTop = debugPanel.scrollHeight;
+}
+
+function clearLog() {
+  debugPanel.innerHTML = '';
+}
+
+async function stopTest() {
+  running = false;
+  if (currentStream) {
+    try {
+      currentStream.getTracks().forEach(function(t) { t.stop(); });
+    } catch(e) {
+      log('خطأ في إيقاف الكاميرا: ' + e.message, 'err');
+    }
+    currentStream = null;
+  }
+  log('⏹️ تم الإيقاف', 'warn');
+}
+
+async function startTest() {
+  clearLog();
+  running = true;
+  attemptCount = 0;
+  lastLoggedSecond = 0;
+
+  logSep();
+  log('🚀 بدء تشخيص الباركود', 'info');
+  log('الجهاز: ' + navigator.userAgent, 'info');
+  log('HTTPS (secure context): ' + window.isSecureContext, window.isSecureContext ? 'ok' : 'err');
+  log('BarcodeDetector API: ' + ('BarcodeDetector' in window), ('BarcodeDetector' in window) ? 'ok' : 'warn');
+  logSep();
+
+  // ──── 1. الكاميرا ────
+  log('📷 الخطوة 1: فتح الكاميرا...', 'info');
+
+  var stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: { ideal: 'environment' },
+        width: { ideal: 1920 },
+        height: { ideal: 1080 }
+      },
+      audio: false
+    });
+    currentStream = stream;
+    log('✅ getUserMedia نجح', 'ok');
+  } catch (e) {
+    log('❌ getUserMedia فشل', 'err');
+    log('   الاسم: ' + e.name, 'err');
+    log('   الرسالة: ' + e.message, 'err');
+    if (e.name === 'NotAllowedError') {
+      log('🔒 السبب: الإذن مرفوض. افتح في Safari/Chrome مباشرة (ليس Telegram)', 'err');
+    } else if (e.name === 'NotFoundError') {
+      log('📷 السبب: ما في كاميرا متاحة على هذا الجهاز', 'err');
+    } else if (e.name === 'NotReadableError') {
+      log('🔒 السبب: الكاميرا مشغولة بتطبيق آخر', 'err');
+    } else if (e.name === 'TypeError') {
+      log('⚠️ السبب: navigator.mediaDevices غير موجود (متصفح تطبيقات)', 'err');
+    }
+    running = false;
+    return;
+  }
+
+  // ──── 2. الفيديو ────
+  log('📹 الخطوة 2: ربط الفيديو...', 'info');
+
+  videoEl.srcObject = stream;
+
+  // ننتظر تحميل metadata
+  try {
+    await new Promise(function(resolve, reject) {
+      if (videoEl.readyState >= 2) { resolve(); return; }
+      videoEl.onloadedmetadata = function() { resolve(); };
+      videoEl.onerror = function() {
+        reject(new Error('فيديو error: ' + (videoEl.error ? videoEl.error.message : 'unknown')));
+      };
+      // Timeout 5 ثوان
+      setTimeout(function() { reject(new Error('Timeout - الفيديو ما جهز خلال 5 ثوان')); }, 5000);
+    });
+  } catch (e) {
+    log('❌ الفيديو فشل: ' + e.message, 'err');
+    running = false;
+    return;
+  }
+
+  try {
+    await videoEl.play();
+    log('✅ video.play() نجح', 'ok');
+  } catch (e) {
+    log('❌ video.play() فشل: ' + e.message, 'err');
+    running = false;
+    return;
+  }
+
+  var vw = videoEl.videoWidth;
+  var vh = videoEl.videoHeight;
+  var track = stream.getVideoTracks()[0];
+  var settings = {};
+  try { settings = track.getSettings(); } catch (_) {}
+
+  log('Video readyState: ' + videoEl.readyState, 'info');
+  log('Video أبعاد: ' + vw + 'x' + vh, (vw > 0 && vh > 0) ? 'ok' : 'err');
+  log('Camera label: ' + (track.label || 'غير معروف'), 'info');
+  log('Camera resolution: ' + (settings.width || '?') + 'x' + (settings.height || '?'), 'info');
+
+  if (vw === 0 || vh === 0) {
+    log('🛑 توقف: الفيديو بأبعاد صفرية — هذا قد يكون السبب الجذري', 'err');
+    running = false;
+    return;
+  }
+
+  // ──── 3. تركيز مستمر ────
+  try {
+    await track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] });
+    log('✅ focusMode: continuous تم تفعيله', 'ok');
+  } catch (e) {
+    log('ℹ️ focusMode غير مدعوم: ' + e.message, 'warn');
+  }
+
+  // ──── 4. الفلاش ────
+  var caps = {};
+  try { caps = track.getCapabilities(); } catch (_) {}
+  if (caps && caps.torch) {
+    log('✅ الفلاش (Torch) مدعوم', 'ok');
+  } else {
+    log('ℹ️ الفلاش غير مدعوم على هذا الجهاز', 'warn');
+  }
+
+  logSep();
+  log('🔧 الخطوة 3: تهيئة المحرك...', 'info');
+
+  // ──── 5. المحرك ────
+  var detector = null;
+  var zxingMod = null;
+  var engineName = '';
+
+  // المحاولة الأولى: BarcodeDetector (أندرويد Chrome)
+  if ('BarcodeDetector' in window) {
+    try {
+      var wanted = ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39'];
+      var supported = await BarcodeDetector.getSupportedFormats();
+      log('📋 Supported formats: ' + supported.join(', '), 'info');
+
+      var usable = wanted.filter(function(f) { return supported.indexOf(f) >= 0; });
+      log('📋 usable (من الـ 6 المطلوبة): ' + usable.join(', '), 'info');
+
+      if (usable.length === 0) {
+        log('⚠️ الصيغ المطلوبة غير مدعومة — سينتقل إلى zxing-wasm', 'warn');
+      } else {
+        detector = new BarcodeDetector({ formats: usable });
+        engineName = 'BarcodeDetector (native)';
+        log('✅ ✅ المحرك: BarcodeDetector — الصيغ: ' + usable.join(', '), 'success');
+      }
+    } catch (e) {
+      log('❌ BarcodeDetector فشل: ' + e.name + ' — ' + e.message, 'err');
+    }
+  }
+
+  // المحاولة الثانية: zxing-wasm (iOS Safari)
+  if (!detector) {
+    log('⏳ تحميل zxing-wasm@2 من esm.sh...', 'info');
+    try {
+      var startTime = Date.now();
+      zxingMod = await import('https://esm.sh/zxing-wasm@2/reader');
+      var loadTime = Date.now() - startTime;
+      log('✅ zxing-wasm@2 تحمّل في ' + loadTime + 'ms', 'ok');
+      log('📦 الوظائف المتاحة: readBarcodesFromImageData', 'info');
+      engineName = 'zxing-wasm@2 (fallback)';
+      log('✅ ✅ المحرك: zxing-wasm@2', 'success');
+    } catch (e) {
+      log('❌ zxing-wasm@2 فشل التحميل', 'err');
+      log('   الاسم: ' + e.name, 'err');
+      log('   الرسالة: ' + e.message, 'err');
+      log('🛑 توقف: لا يوجد محرك يعمل — استخدم الإدخال اليدوي', 'err');
+      running = false;
+      return;
+    }
+  }
+
+  logSep();
+  log('🔄 الخطوة 4: بدء حلقة المسح...', 'info');
+  log('المحرك النهائي: ' + engineName, 'success');
+  log('سنحاول ~8 مرات/ثانية. وجه الباركود داخل الكاميرا.', 'info');
+  logSep();
+
+  // ──── 6. حلقة المسح ────
+  var canvas = document.createElement('canvas');
+  var ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+  async function scanLoop() {
+    if (!running) return;
+
+    if (videoEl.readyState < 2 || videoEl.videoWidth === 0) {
+      requestAnimationFrame(scanLoop);
+      return;
+    }
+
+    // نحاول بالـ ROI أولاً (40% وسط)
+    var w = videoEl.videoWidth;
+    var h = videoEl.videoHeight;
+    var roiH = Math.round(h * 0.40);
+    var roiY = Math.round((h - roiH) / 2);
+
+    canvas.width = w;
+    canvas.height = roiH;
+
+    try {
+      ctx.drawImage(videoEl, 0, roiY, w, roiH, 0, 0, w, roiH);
+    } catch (e) {
+      log('❌ drawImage فشل: ' + e.message, 'err');
+      setTimeout(function() { requestAnimationFrame(scanLoop); }, 120);
+      return;
+    }
+
+    attemptCount++;
+    var nowSec = Math.floor(Date.now() / 1000);
+    if (nowSec !== lastLoggedSecond) {
+      lastLoggedSecond = nowSec;
+      log('📡 محاولة #' + attemptCount + ' | canvas: ' + w + 'x' + roiH + ' | ' + engineName, 'info');
+    }
+
+    try {
+      var results = [];
+
+      if (detector) {
+        // BarcodeDetector يقبل canvas مباشرة
+        var codes = await detector.detect(canvas);
+        for (var i = 0; i < codes.length; i++) {
+          results.push({ text: codes[i].rawValue, format: codes[i].format });
+        }
+      } else if (zxingMod) {
+        // zxing-wasm يحتاج ImageData
+        var imageData = ctx.getImageData(0, 0, w, roiH);
+        var zxResults = await zxingMod.readBarcodesFromImageData(imageData, {
+          tryHarder: true,
+          formats: ['EAN-13', 'EAN-8', 'UPC-A', 'UPC-E', 'Code-128', 'Code-39'],
+          maxNumberOfSymbols: 1
+        });
+        if (zxResults && zxResults.length > 0) {
+          for (var j = 0; j < zxResults.length; j++) {
+            results.push({ text: zxResults[j].text, format: zxResults[j].format });
+          }
+        }
+      }
+
+      if (results.length > 0) {
+        var code = results[0].text;
+        var fmt = results[0].format;
+        log('🎉🎉🎉 نجح المسح!', 'success');
+        log('الكود: ' + code, 'success');
+        log('النوع: ' + fmt, 'success');
+        log('المحاولة #' + attemptCount, 'success');
+
+        if (navigator.vibrate) {
+          navigator.vibrate(120);
+          log('📳 اهتزاز', 'ok');
+        }
+
+        // تجربة البحث في قاعدة البيانات
+        logSep();
+        log('🔍 الخطوة 5: البحث في قاعدة البيانات...', 'info');
+        try {
+          var resp = await fetch('/api/sales/pos/barcode/' + encodeURIComponent(code));
+          var data = await resp.json();
+          if (data.found && data.medicine) {
+            log('✅ الدواء موجود: ' + (data.medicine.trade_name || 'غير معروف'), 'success');
+            log('   السعر: ' + (data.medicine.sale_price || '?'), 'ok');
+          } else {
+            log('⚠️ الباركود غير موجود في قاعدة البيانات', 'warn');
+          }
+        } catch (e) {
+          log('❌ فشل البحث في قاعدة البيانات: ' + e.message, 'err');
+        }
+      }
+    } catch (e) {
+      // لا يوجد .catch صامت — كل خطأ يُسجّل
+      log('❌ decode error: ' + e.name + ' — ' + e.message, 'err');
+      if (e.stack) {
+        log('   stack: ' + e.stack.split('\n')[1].trim(), 'err');
+      }
+    }
+
+    setTimeout(function() { requestAnimationFrame(scanLoop); }, 120);
+  }
+
+  scanLoop();
+}
+</script>
+</body>
+</html>
+<!-- ✅ scanner_debug.html - تشخيص الباركود - بدون .catch(() => {}) -->
