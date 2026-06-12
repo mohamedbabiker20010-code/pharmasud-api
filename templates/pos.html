@@ -669,8 +669,8 @@
             pointer-events: none;
         }
         .scan-frame {
-            width: 75%;
-            height: 120px;
+            width: 100%;
+            height: 40%;
             border: 3px solid #22C55E;
             border-radius: 12px;
             box-shadow: 0 0 0 9999px rgba(0,0,0,0.55);
@@ -686,7 +686,7 @@
         }
         @keyframes scanmove {
             0%   { transform: translateY(0); }
-            50%  { transform: translateY(117px); }
+            50%  { transform: translateY(calc(100% - 3px)); }
             100% { transform: translateY(0); }
         }
         .scanner-controls {
@@ -795,6 +795,9 @@
         <p id="scanner-status">📷 وجّه الكاميرا نحو الباركود ليقرأ تلقائياً</p>
         
         <div class="scanner-controls">
+            <div id="scan-result" style="display:none;text-align:center;padding:8px;background:#065F46;border-radius:8px;margin-bottom:10px;font-size:14px;font-weight:600;color:#22C55E;">
+                ✅ <span id="scan-result-code"></span>
+            </div>
             <div class="divider-text">أو أدخل الباركود يدوياً</div>
             <input type="text" id="manual-barcode-input" 
                    placeholder="أدخل رقم الباركود..."
@@ -803,6 +806,7 @@
                 <button class="btn-scan-torch" id="scan-torch-btn" onclick="toggleTorch()" style="display:none;">💡</button>
                 <button class="btn-scan-search" onclick="searchManualBarcode()">🔍 بحث</button>
                 <button class="btn-scan-close" onclick="stopScanner()">✕ إغلاق</button>
+                <button class="btn-scan-search" id="scan-again-btn" onclick="restartScanner()" style="display:none;">📷 مسح مرة أخرى</button>
             </div>
         </div>
         
@@ -1802,18 +1806,71 @@
         }
 
         // ── تم العثور على باركود ──
+        let _scanFoundDebounce = false;
         function onBarcodeFound(code) {
-            stopScanner();
-            if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+            // Debounce: نفذ مرة واحدة فقط
+            if (_scanFoundDebounce) return;
+            _scanFoundDebounce = true;
+
+            // إيقاف الكاميرا وحلقة المسح
+            _scanState.running = false;
+            if (_scanState.rAFid) { cancelAnimationFrame(_scanState.rAFid); _scanState.rAFid = null; }
+            if (_scanState.track) {
+                try { _scanState.track.applyConstraints({ advanced: [{ torch: false }] }); } catch (_) {}
+                _scanState.track.stop();
+            }
+            if (_scanState.stream) {
+                _scanState.stream.getTracks().forEach(t => t.stop());
+            }
+            const videoEl = document.getElementById('scanner-video');
+            if (videoEl) videoEl.srcObject = null;
+
+            // اهتزاز
+            if (navigator.vibrate) navigator.vibrate(120);
+
+            // عرض النتيجة
+            document.getElementById('scan-result-code').textContent = code;
+            document.getElementById('scan-result').style.display = '';
+            document.getElementById('scanner-status').textContent = '✅ تم المسح بنجاح';
+            document.getElementById('scanner-status').className = 'success';
+            debug('✅ ' + code, 'active');
+
+            // إظهار زر "مسح مرة أخرى" وإخفاء الباقي
+            document.getElementById('scan-torch-btn').style.display = 'none';
+            document.getElementById('scan-again-btn').style.display = '';
+            document.getElementById('manual-barcode-input').value = code;
+            document.getElementById('manual-barcode-input').focus();
+
+            // إرسال للـ Alpine.js
             const app = window.currentPosApp;
             if (app && app.searchByBarcode) {
-                setTimeout(() => app.searchByBarcode(code), 200);
+                app.searchByBarcode(code);
             }
+        }
+
+        // ── مسح مرة أخرى ──
+        async function restartScanner() {
+            // إعادة ضبط الـ UI
+            document.getElementById('scan-result').style.display = 'none';
+            document.getElementById('scan-result-code').textContent = '';
+            document.getElementById('scan-again-btn').style.display = 'none';
+            document.getElementById('manual-barcode-input').value = '';
+            _scanFoundDebounce = false;
+            _scanState.running = false;
+            _scanState.stream = null;
+            _scanState.track = null;
+            _scanState.rAFid = null;
+            _scanState.torchOn = false;
+            _scanState.engine = 'none';
+
+            // إعادة تشغيل المسح
+            await startBarcodeScanner();
         }
 
         // ── إيقاف المسح ──
         function stopScanner() {
             _scanState.running = false;
+            _scanFoundDebounce = false;
             if (_scanState.rAFid) { cancelAnimationFrame(_scanState.rAFid); _scanState.rAFid = null; }
             if (_scanState.track) {
                 try { _scanState.track.applyConstraints({ advanced: [{ torch: false }] }); } catch (_) {}
@@ -1829,6 +1886,9 @@
             const v = document.getElementById('scanner-video');
             if (v) v.srcObject = null;
             document.getElementById('scanner-container').classList.remove('active');
+            // إعادة ضبط buttons
+            document.getElementById('scan-result').style.display = 'none';
+            document.getElementById('scan-again-btn').style.display = 'none';
         }
 
         // ── الرجوع للإدخال اليدوي ──
