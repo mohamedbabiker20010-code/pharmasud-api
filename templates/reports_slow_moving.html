@@ -908,7 +908,7 @@ function slowMovingApp() {
 
         logout() {
             localStorage.removeItem('token');
-            localStorage.removeItem('refresh_token');
+            localStorage.removeItem('role');
             window.location.href = '/login';
         }
     };
