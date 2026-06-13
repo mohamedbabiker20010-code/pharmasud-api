@@ -183,8 +183,8 @@ async def pos_page(request: Request):
 # ═══════════════════════════════════════════════════════════════
 
 @app.get("/scanner-debug", response_class=HTMLResponse)
-async def scanner_debug_page(request: Request):
-    """Barcode scanner diagnostic page (no auth required)."""
+async def scanner_debug_page(request: Request, current_user: dict = Depends(get_current_user)):
+    """Barcode scanner diagnostic page."""
     return templates.TemplateResponse("scanner_debug.html", {"request": request})
 
 # ═══════════════════════════════════════════════════════════════

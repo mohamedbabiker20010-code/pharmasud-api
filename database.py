@@ -17,11 +17,10 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# Database connection URL
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://postgres:postgres@localhost:5432/pharmasud"
-)
+# Database connection URL (يجب ضبطها في Render Environment Variables)
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise RuntimeError("⚠️ DATABASE_URL غير موجود! حدد رابط قاعدة البيانات في Environment Variables على Render")
 
 # Fix Railway URL format if needed
 if DATABASE_URL.startswith("postgres://"):
