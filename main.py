@@ -243,13 +243,13 @@ def api_login(data: UserLogin, db: Session = Depends(get_db)):
 def api_me(current_user: UserResponse = Depends(get_current_user)):
     """Get current user info."""
     return {
-        "id": current_user.id,
-        "username": current_user.username,
-        "role": current_user.role,
-        "full_name": current_user.full_name,
-        "pharmacy_id": current_user.pharmacy_id,
-        "pharmacy_name": current_user.pharmacy_name,
-        "owner_name": current_user.owner_name
+        "id": current_user["user_id"],
+        "username": current_user["username"],
+        "role": current_user["role"],
+        "full_name": current_user.get("full_name", ""),
+        "pharmacy_id": current_user["pharmacy_id"],
+        "pharmacy_name": current_user.get("pharmacy_name", ""),
+        "owner_name": current_user.get("owner_name", "")
     }
 
 @app.get("/api/system/status", response_model=SystemStatus)
