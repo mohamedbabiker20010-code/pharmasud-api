@@ -31,11 +31,14 @@ from settings import router as settings_router
 from sales import router as sales_router
 from sales import public_router as sales_public_router
 from reports import router as reports_router
+from alerts import router as alerts_router
+from employees import router as employees_router
+from audit import router as audit_router
 
 app = FastAPI(
     title="PharmaSUD API",
-    description="Pharmacy Point of Sale System - Stage 6.5 (Server Barcode Decoder)",
-    version="6.5.0"
+    description="Pharmacy Point of Sale System - Stage 7 (Alerts + Employees + Audit + Stocktake)",
+    version="7.0.0"
 )
 
 # Create tables on startup (if they don't exist)
@@ -45,31 +48,90 @@ async def create_tables():
     try:
         Base.metadata.create_all(bind=engine)
         print("✅ Database tables created successfully")
-        try:
-            with engine.connect() as conn:
-                conn.execute(text("ALTER TABLE batches ADD COLUMN IF NOT EXISTS supplier_name VARCHAR(100)"))
-                conn.commit()
-                print("✅ Added supplier_name column to batches table")
-        except Exception as e:
-            print(f"⚠️ Could not add supplier_name column: {e}")
-        
-        try:
-            with engine.connect() as conn:
-                conn.execute(text("ALTER TABLE sale_items ADD COLUMN IF NOT EXISTS unit_name VARCHAR(20)"))
-                conn.commit()
-                print("✅ Added unit_name column to sale_items table")
-        except Exception as e:
-            print(f"⚠️ Could not add unit_name column: {e}")
-        
-        try:
-            with engine.connect() as conn:
-                conn.execute(text("ALTER TABLE medicines ALTER COLUMN image_path TYPE TEXT"))
-                conn.commit()
-                print("✅ Changed image_path column to TEXT for Base64 storage")
-        except Exception as e:
-            print(f"⚠️ Could not change image_path column: {e}")
     except Exception as e:
         print(f"⚠️ Could not create tables: {e}")
+
+    # Migration: add columns if needed
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("ALTER TABLE batches ADD COLUMN IF NOT EXISTS supplier_name VARCHAR(100)"))
+            conn.commit()
+            print("✅ Added supplier_name column to batches table")
+    except Exception as e:
+        print(f"⚠️ Could not add supplier_name column: {e}")
+
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("ALTER TABLE sale_items ADD COLUMN IF NOT EXISTS unit_name VARCHAR(20)"))
+            conn.commit()
+            print("✅ Added unit_name column to sale_items table")
+    except Exception as e:
+        print(f"⚠️ Could not add unit_name column: {e}")
+
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("ALTER TABLE medicines ALTER COLUMN image_path TYPE TEXT"))
+            conn.commit()
+            print("✅ Changed image_path column to TEXT for Base64 storage")
+    except Exception as e:
+        print(f"⚠️ Could not change image_path column: {e}")
+
+    # Stage 7: Create new tables
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS audit_log (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    pharmacy_id UUID REFERENCES pharmacies(id),
+                    user_id UUID REFERENCES users(id),
+                    user_name VARCHAR(100),
+                    action_type VARCHAR(50),
+                    description TEXT NOT NULL,
+                    old_value TEXT,
+                    new_value TEXT,
+                    created_at TIMESTAMP DEFAULT NOW()
+                )
+            """))
+            conn.commit()
+            print("✅ Created audit_log table")
+    except Exception as e:
+        print(f"⚠️ Could not create audit_log table: {e}")
+
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS stocktake_sessions (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    pharmacy_id UUID REFERENCES pharmacies(id),
+                    user_id UUID REFERENCES users(id),
+                    notes TEXT,
+                    items_adjusted INTEGER DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT NOW()
+                )
+            """))
+            conn.commit()
+            print("✅ Created stocktake_sessions table")
+    except Exception as e:
+        print(f"⚠️ Could not create stocktake_sessions table: {e}")
+
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS stocktake_items (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    session_id UUID REFERENCES stocktake_sessions(id),
+                    medicine_id UUID REFERENCES medicines(id),
+                    medicine_name VARCHAR(100),
+                    system_quantity INTEGER,
+                    actual_quantity INTEGER,
+                    difference INTEGER,
+                    created_at TIMESTAMP DEFAULT NOW()
+                )
+            """))
+            conn.commit()
+            print("✅ Created stocktake_items table")
+    except Exception as e:
+        print(f"⚠️ Could not create stocktake_items table: {e}")
 
 # CORS
 app.add_middleware(
@@ -92,6 +154,9 @@ app.include_router(settings_router)
 app.include_router(sales_router)
 app.include_router(sales_public_router)
 app.include_router(reports_router)
+app.include_router(alerts_router)
+app.include_router(employees_router)
+app.include_router(audit_router)
 
 logger = logging.getLogger(__name__)
 
@@ -186,6 +251,30 @@ async def pos_page(request: Request):
 async def scanner_debug_page(request: Request, current_user: dict = Depends(get_current_user)):
     """Barcode scanner diagnostic page."""
     return templates.TemplateResponse("scanner_debug.html", {"request": request})
+
+# ═══════════════════════════════════════════════════════════════
+# STAGE 7 PAGES
+# ═══════════════════════════════════════════════════════════════
+
+@app.get("/alerts", response_class=HTMLResponse)
+async def alerts_page(request: Request):
+    """Alerts page."""
+    return templates.TemplateResponse("alerts.html", {"request": request})
+
+@app.get("/employees", response_class=HTMLResponse)
+async def employees_page(request: Request):
+    """Employees management page."""
+    return templates.TemplateResponse("employees.html", {"request": request})
+
+@app.get("/audit-log", response_class=HTMLResponse)
+async def audit_log_page(request: Request):
+    """Audit log page."""
+    return templates.TemplateResponse("audit_log.html", {"request": request})
+
+@app.get("/stocktake", response_class=HTMLResponse)
+async def stocktake_page(request: Request):
+    """Stocktake / inventory count page."""
+    return templates.TemplateResponse("stocktake.html", {"request": request})
 
 # ═══════════════════════════════════════════════════════════════
 # REPORTS PAGES (Stage 6)

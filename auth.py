@@ -299,7 +299,7 @@ def authenticate_user(username: str, password: str, db: Session) -> Dict[str, An
     if not user.is_active:
         return {
             "success": False,
-            "message": "الحساب غير نشط"
+            "message": "هذا الحساب معطّل - تواصل مع المدير"
         }
     
     # Verify password

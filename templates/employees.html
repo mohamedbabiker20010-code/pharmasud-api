@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>👥 إدارة الموظفين - PharmaSUD</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: { bg: '#0F172A', card: '#1E293B', border: '#334155', text: '#E2E8F0', muted: '#94A3B8' }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-dark-bg text-dark-text font-sans min-h-screen">
+    <div class="max-w-3xl mx-auto p-4">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-2xl font-bold">👥 إدارة الموظفين</h1>
+            <a href="/dashboard" class="text-blue-400 hover:text-blue-300 text-sm">← العودة للرئيسية</a>
+        </div>
+
+        <!-- Error / Success messages -->
+        <div id="error" class="hidden bg-red-900/50 border border-red-700 rounded-lg p-4 mb-4 text-center"></div>
+        <div id="success" class="hidden bg-green-900/50 border border-green-700 rounded-lg p-4 mb-4 text-center"></div>
+
+        <!-- Add Employee Button -->
+        <button onclick="showAddModal()" class="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-3 mb-6 font-bold transition">
+            + إضافة موظف جديد
+        </button>
+
+        <!-- Employees List -->
+        <div id="loading" class="text-center py-12 text-dark-muted">جاري تحميل الموظفين...</div>
+        <div id="employees-list" class="space-y-3 hidden"></div>
+    </div>
+
+    <!-- Add Employee Modal -->
+    <div id="addModal" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50 p-4" onclick="closeModal(event)">
+        <div class="bg-dark-card rounded-2xl p-6 w-full max-w-md border border-dark-border" onclick="event.stopPropagation()">
+            <h2 class="text-xl font-bold mb-4">➕ إضافة موظف جديد</h2>
+            <div class="space-y-4">
+                <input id="new-full-name" type="text" placeholder="الاسم الكامل" class="w-full bg-dark-bg border border-dark-border rounded-xl p-3 text-right">
+                <input id="new-username" type="text" placeholder="اسم المستخدم" class="w-full bg-dark-bg border border-dark-border rounded-xl p-3 text-right">
+                <input id="new-password" type="password" placeholder="كلمة المرور (6 أحرف على الأقل)" class="w-full bg-dark-bg border border-dark-border rounded-xl p-3 text-right">
+                <input id="new-phone" type="text" placeholder="رقم الهاتف (اختياري)" class="w-full bg-dark-bg border border-dark-border rounded-xl p-3 text-right">
+                <button onclick="addEmployee()" class="w-full bg-green-600 hover:bg-green-700 text-white rounded-xl py-3 font-bold transition">
+                    💾 حفظ
+                </button>
+                <button onclick="hideAddModal()" class="w-full bg-dark-border text-dark-muted rounded-xl py-2 transition">
+                    إلغاء
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reset Password Modal -->
+    <div id="resetModal" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50 p-4" onclick="closeModal(event)">
+        <div class="bg-dark-card rounded-2xl p-6 w-full max-w-md border border-dark-border" onclick="event.stopPropagation()">
+            <h2 class="text-xl font-bold mb-4">🔑 إعادة تعيين كلمة المرور</h2>
+            <p id="reset-user-name" class="text-dark-muted mb-4"></p>
+            <input id="reset-password" type="password" placeholder="كلمة المرور الجديدة" class="w-full bg-dark-bg border border-dark-border rounded-xl p-3 text-right mb-4">
+            <button onclick="resetPassword()" class="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-3 font-bold transition">
+                🔄 تأكيد
+            </button>
+            <button onclick="hideResetModal()" class="w-full bg-dark-border text-dark-muted rounded-xl py-2 mt-2 transition">
+                إلغاء
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) { window.location.href = '/login'; }
+
+        let employees = [];
+        let resetTargetId = null;
+
+        async function loadEmployees() {
+            const loading = document.getElementById('loading');
+            const list = document.getElementById('employees-list');
+            const error = document.getElementById('error');
+
+            try {
+                const res = await fetch('/api/employees/', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (!res.ok) { throw new Error('HTTP ' + res.status); }
+                const data = await res.json();
+                employees = data.employees || [];
+
+                loading.classList.add('hidden');
+                list.classList.remove('hidden');
+
+                if (employees.length === 0) {
+                    list.innerHTML = '<div class="text-center text-dark-muted py-8">لا يوجد موظفون بعد</div>';
+                    return;
+                }
+
+                list.innerHTML = employees.map(emp => `
+                    <div class="bg-dark-card rounded-xl p-4 border border-dark-border">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <span class="font-bold text-lg">${emp.full_name || emp.username}</span>
+                                <span class="${emp.is_active ? 'text-green-400' : 'text-red-400'} text-sm mr-2">${emp.is_active ? '✅ نشط' : '🔴 معطّل'}</span>
+                            </div>
+                        </div>
+                        <div class="text-dark-muted text-sm mt-1 flex gap-4">
+                            <span>👤 ${emp.username}</span>
+                            <span>📞 ${emp.phone || '—'}</span>
+                            <span>🕐 ${emp.created_at ? emp.created_at.slice(0, 10) : ''}</span>
+                        </div>
+                        <div class="flex gap-2 mt-3">
+                            <button onclick="toggleEmployee('${emp.id}')" class="px-4 py-1.5 rounded-lg text-sm font-medium transition ${emp.is_active ? 'bg-red-900/50 text-red-400 hover:bg-red-800' : 'bg-green-900/50 text-green-400 hover:bg-green-800'}">
+                                ${emp.is_active ? 'تعطيل' : 'تفعيل'}
+                            </button>
+                            <button onclick="showResetModal('${emp.id}', '${emp.full_name || emp.username}')" class="px-4 py-1.5 rounded-lg text-sm font-medium bg-yellow-900/50 text-yellow-400 hover:bg-yellow-800 transition">
+                                🔑 إعادة كلمة المرور
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                loading.classList.add('hidden');
+                error.classList.remove('hidden');
+                error.textContent = '❌ فشل تحميل الموظفين: ' + e.message;
+            }
+        }
+
+        function showAddModal() {
+            document.getElementById('addModal').classList.remove('hidden');
+            document.getElementById('addModal').classList.add('flex');
+        }
+
+        function hideAddModal() {
+            document.getElementById('addModal').classList.add('hidden');
+            document.getElementById('addModal').classList.remove('flex');
+        }
+
+        async function addEmployee() {
+            const fullName = document.getElementById('new-full-name').value.trim();
+            const username = document.getElementById('new-username').value.trim();
+            const password = document.getElementById('new-password').value;
+            const phone = document.getElementById('new-phone').value.trim();
+
+            if (!fullName || !username || !password) {
+                document.getElementById('error').textContent = '❌ الاسم واسم المستخدم وكلمة المرور مطلوبة';
+                document.getElementById('error').classList.remove('hidden');
+                return;
+            }
+            if (password.length < 6) {
+                document.getElementById('error').textContent = '❌ كلمة المرور يجب أن تكون 6 أحرف على الأقل';
+                document.getElementById('error').classList.remove('hidden');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/employees/', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ full_name: fullName, username, password, phone })
+                });
+                const data = await res.json();
+                if (!res.ok) { throw new Error(data.detail || 'فشل الإضافة'); }
+
+                hideAddModal();
+                document.getElementById('success').textContent = '✅ ' + data.message;
+                document.getElementById('success').classList.remove('hidden');
+                setTimeout(() => document.getElementById('success').classList.add('hidden'), 3000);
+                loadEmployees();
+            } catch (e) {
+                document.getElementById('error').textContent = '❌ ' + e.message;
+                document.getElementById('error').classList.remove('hidden');
+            }
+        }
+
+        function closeModal(e) {
+            if (e.target === e.currentTarget) {
+                hideAddModal();
+                hideResetModal();
+            }
+        }
+
+        async function toggleEmployee(id) {
+            try {
+                const res = await fetch('/api/employees/' + id + '/toggle', {
+                    method: 'PUT',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await res.json();
+                if (!res.ok) { throw new Error(data.detail || 'فشل التبديل'); }
+
+                document.getElementById('success').textContent = '✅ ' + data.message;
+                document.getElementById('success').classList.remove('hidden');
+                setTimeout(() => document.getElementById('success').classList.add('hidden'), 3000);
+                loadEmployees();
+            } catch (e) {
+                document.getElementById('error').textContent = '❌ ' + e.message;
+                document.getElementById('error').classList.remove('hidden');
+            }
+        }
+
+        function showResetModal(id, name) {
+            resetTargetId = id;
+            document.getElementById('reset-user-name').textContent = 'الموظف: ' + name;
+            document.getElementById('resetModal').classList.remove('hidden');
+            document.getElementById('resetModal').classList.add('flex');
+        }
+
+        function hideResetModal() {
+            resetTargetId = null;
+            document.getElementById('resetModal').classList.add('hidden');
+            document.getElementById('resetModal').classList.remove('flex');
+        }
+
+        async function resetPassword() {
+            const newPass = document.getElementById('reset-password').value;
+            if (!newPass || newPass.length < 6) {
+                document.getElementById('error').textContent = '❌ كلمة المرور الجديدة يجب أن تكون 6 أحرف';
+                document.getElementById('error').classList.remove('hidden');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/employees/' + resetTargetId + '/reset-password', {
+                    method: 'PUT',
+                    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ new_password: newPass })
+                });
+                const data = await res.json();
+                if (!res.ok) { throw new Error(data.detail || 'فشل إعادة التعيين'); }
+
+                hideResetModal();
+                document.getElementById('success').textContent = '✅ ' + data.message;
+                document.getElementById('success').classList.remove('hidden');
+                setTimeout(() => document.getElementById('success').classList.add('hidden'), 3000);
+                document.getElementById('reset-password').value = '';
+            } catch (e) {
+                document.getElementById('error').textContent = '❌ ' + e.message;
+                document.getElementById('error').classList.remove('hidden');
+            }
+        }
+
+        loadEmployees();
+    </script>
+</body>
+</html>
+<!-- ✅ انتهى - employees.html - المرحلة 7 -->

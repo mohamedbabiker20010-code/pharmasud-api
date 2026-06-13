@@ -532,6 +532,18 @@
         <a x-show="isAdmin" href="/settings" class="nav-item">
             <span class="icon">⚙️</span> الإعدادات
         </a>
+        <a x-show="isAdmin" href="/employees" class="nav-item">
+            <span class="icon">👥</span> الموظفين
+        </a>
+        <a href="/stocktake" class="nav-item">
+            <span class="icon">📊</span> الجرد السريع
+        </a>
+        <a href="/alerts" class="nav-item">
+            <span class="icon">🔔</span> التنبيهات
+        </a>
+        <a x-show="isAdmin" href="/audit-log" class="nav-item">
+            <span class="icon">📋</span> سجل التدقيق
+        </a>
 
         <div class="sidebar-footer">
             <a href="#" @click.prevent="logout()" class="nav-item">
@@ -560,13 +572,13 @@
                     <div class="name" x-text="userName || 'مستخدم'"></div>
                     <div class="pharmacy" x-text="pharmacyName || 'الصيدلية'"></div>
                 </div>
-                <button class="notification-bell" @click="sidebarOpen = false" title="الإشعارات">
+                <a href="/alerts" class="notification-bell" title="التنبيهات">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                         <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
                     </svg>
-                    <span class="count" x-text="alerts.length" x-show="alerts.length > 0"></span>
-                </button>
+                    <span class="count" x-text="alertCount" x-show="alertCount > 0"></span>
+                </a>
             </div>
         </div>
 
@@ -788,6 +800,7 @@ function dashboardApp() {
             }
         },
         alerts: [],
+        alertCount: 0,
         weeklyData: [],
         maxWeeklyRevenue: 0,
 
@@ -795,6 +808,20 @@ function dashboardApp() {
             this.formatDate();
             this.loadUserInfo();
             this.loadDashboard();
+            this.fetchAlertCount();
+        },
+
+        async fetchAlertCount() {
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch('/api/alerts/count', {
+                    headers: { 'Authorization': 'Bearer ' + (token || '') }
+                });
+                const data = await res.json();
+                this.alertCount = data.count || 0;
+            } catch (e) {
+                this.alertCount = 0;
+            }
         },
 
         formatDate() {
