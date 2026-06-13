@@ -268,8 +268,8 @@ def generate_test_sales(current_user: UserResponse = Depends(require_admin), db:
     import random
     
     today = datetime.now().date()
-    pharmacy_id = str(current_user.pharmacy_id)
-    user_id = str(current_user.id)
+    pharmacy_id = str(current_user["pharmacy_id"])
+    user_id = str(current_user["user_id"])
     
     # Get all medicines with their batches
     meds = db.execute(text("""
