@@ -1,910 +1,1033 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/css/theme.css">
-    <title>لوحة التحكم - PharmaSUD</title>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Cairo', 'IBM Plex Sans Arabic', system-ui, -apple-system, sans-serif;
-            background: var(--background);
-            color: var(--text-primary);
-            min-height: 100vh;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/static/css/theme.css">
+  <title>لوحة التحكم - PharmaSUD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif;
+      background: #F6F8FA;
+      color: #0F172A;
+      -webkit-font-smoothing: antialiased;
+    }
 
-        /* ─── Sidebar ─── */
-        .sidebar {
-            width: 220px;
-            background: var(--surface);
-            min-height: 100vh;
-            padding: 24px 0;
-            border-left: 1px solid var(--border);
-            position: fixed;
-            right: 0;
-            top: 0;
-            z-index: 100;
-            display: flex;
-            flex-direction: column;
-        }
-        .sidebar .logo {
-            padding: 0 20px 24px;
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 16px;
-        }
-        .sidebar .logo h1 {
-            font-size: 18px;
-            color: var(--primary-blue);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .sidebar .logo h1 svg { flex-shrink: 0; }
-        .sidebar .logo p {
-            font-size: 11px;
-            color: var(--text-secondary);
-            margin-top: 2px;
-            margin-right: 30px;
-        }
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 20px;
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-size: 14px;
-            transition: all 0.2s;
-            border-right: 3px solid transparent;
-        }
-        .nav-item:hover, .nav-item.active {
-            background: var(--primary-blue);
-            color: #ffffff;
-            border-right-color: var(--primary-blue);
-        }
-        .nav-item .icon { font-size: 18px; width: 22px; text-align: center; }
-        .nav-item .badge {
-            background: var(--danger);
-            color: white;
-            font-size: 10px;
-            padding: 1px 6px;
-            border-radius: 10px;
-            margin-right: auto;
-        }
-        .sidebar-footer {
-            margin-top: auto;
-            padding: 16px 20px;
-            border-top: 1px solid var(--border);
-        }
-        .sidebar-footer .nav-item {
-            border-right: none;
-            color: var(--danger);
-            padding: 12px 0;
-        }
-        .sidebar-footer .nav-item:hover {
-            background: transparent;
-            color: #FCA5A5;
-        }
+    /* ─── Layout ─── */
+    .app-layout {
+      display: flex;
+      min-height: 100vh;
+    }
 
-        /* ─── Mobile toggle ─── */
-        .mobile-toggle {
-            display: none;
-            background: var(--border);
-            border: none;
-            color: var(--text-primary);
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            cursor: pointer;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            margin-left: 12px;
-        }
-        .sidebar-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 99;
-        }
+    /* ─── Sidebar ─── */
+    .sidebar {
+      width: 248px;
+      background: #fff;
+      border-left: 1px solid #EEF2F6;
+      display: flex;
+      flex-direction: column;
+      padding: 22px 16px;
+      position: fixed;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      z-index: 100;
+    }
+    .sidebar .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 0 8px 22px;
+    }
+    .sidebar .brand .icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 11px;
+      background: #1AA7EC;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .sidebar .brand .icon::before,
+    .sidebar .brand .icon::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      background: #fff;
+      border-radius: 3px;
+    }
+    .sidebar .brand .icon::before {
+      width: 18px;
+      height: 5.5px;
+    }
+    .sidebar .brand .icon::after {
+      width: 5.5px;
+      height: 18px;
+    }
+    .sidebar .brand .name {
+      font: 700 18px/1 'IBM Plex Sans Arabic', sans-serif;
+      letter-spacing: -0.02em;
+    }
+    .sidebar .brand .name span {
+      color: #1AA7EC;
+    }
+    .sidebar .nav-section {
+      font: 600 11px/1 'IBM Plex Mono', monospace;
+      letter-spacing: 0.1em;
+      color: #CBD5E1;
+      padding: 14px 10px 10px;
+    }
+    .sidebar .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 12px;
+      border-radius: 11px;
+      color: #475569;
+      font-size: 14px;
+      font-weight: 500;
+      text-decoration: none;
+      margin-bottom: 4px;
+      transition: all 0.2s ease;
+    }
+    .sidebar .nav-item:hover {
+      background: #F8FAFC;
+      color: #0F172A;
+    }
+    .sidebar .nav-item.active {
+      background: #1AA7EC;
+      color: #fff;
+      box-shadow: 0 8px 18px -8px rgba(26, 167, 236, 0.55);
+    }
+    .sidebar .nav-item svg {
+      width: 19px;
+      height: 19px;
+      flex-shrink: 0;
+    }
+    .sidebar .nav-item .badge {
+      margin-right: auto;
+      background: #FEF2F2;
+      color: #DC2626;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+    .sidebar .user-card {
+      margin-top: auto;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 11px;
+      border: 1px solid #EEF2F6;
+      border-radius: 13px;
+      margin-top: 20px;
+    }
+    .sidebar .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: #1AA7EC;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .sidebar .user-info {
+      min-width: 0;
+      flex: 1;
+    }
+    .sidebar .user-name {
+      font-size: 13.5px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .sidebar .user-role {
+      font-size: 11.5px;
+      color: #94A3B8;
+    }
+    .sidebar .user-card svg {
+      width: 16px;
+      height: 16px;
+      color: #CBD5E1;
+      flex-shrink: 0;
+    }
 
-        /* ─── Main Content ─── */
-        .main-content {
-            margin-right: 220px;
-            padding: 32px 40px;
-            min-height: 100vh;
-        }
+    /* ─── Topbar ─── */
+    .topbar {
+      height: 70px;
+      background: #fff;
+      border-bottom: 1px solid #EEF2F6;
+      display: flex;
+      align-items: center;
+      padding: 0 28px;
+      gap: 18px;
+      position: fixed;
+      top: 0;
+      right: 248px;
+      left: 0;
+      z-index: 90;
+    }
+    .topbar .search-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      max-width: 380px;
+      height: 42px;
+      padding: 0 14px;
+      border-radius: 11px;
+      background: #F6F8FA;
+      color: #94A3B8;
+      font-size: 14px;
+    }
+    .topbar .search-box svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+    .topbar .search-box kbd {
+      margin-right: auto;
+      font: 500 11px 'IBM Plex Mono', monospace;
+      color: #CBD5E1;
+      border: 1px solid #E2E8F0;
+      border-radius: 6px;
+      padding: 2px 6px;
+    }
+    .topbar .actions {
+      margin-right: auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .topbar .lang-toggle {
+      display: flex;
+      border: 1px solid #E2E8F0;
+      border-radius: 9px;
+      overflow: hidden;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .topbar .lang-toggle span {
+      padding: 7px 12px;
+      color: #64748B;
+    }
+    .topbar .lang-toggle span.active {
+      background: #1AA7EC;
+      color: #fff;
+    }
+    .topbar .icon-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 11px;
+      border: 1px solid #E2E8F0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #475569;
+      background: transparent;
+      cursor: pointer;
+      position: relative;
+    }
+    .topbar .icon-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+    .topbar .icon-btn .dot {
+      position: absolute;
+      top: 9px;
+      left: 11px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #DC2626;
+      border: 2px solid #fff;
+    }
 
-        /* ─── Header ─── */
-        .dashboard-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 28px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid var(--border);
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-        .header-right { display: flex; align-items: center; gap: 12px; }
-        .header-right h2 { font-size: 22px; }
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-        .header-left .date { direction: ltr; }
-        .header-left .user-info { text-align: left; }
-        .header-left .user-info .name { color: var(--text-primary); font-weight: 600; }
-        .header-left .user-info .pharmacy { font-size: 12px; color: var(--text-secondary); }
-        .notification-bell {
-            position: relative;
-            background: var(--border);
-            border: none;
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-secondary);
-            transition: all 0.2s;
-        }
-        .notification-bell:hover { background: var(--text-secondary); color: var(--text-primary); }
-        .notification-bell .count {
-            position: absolute;
-            top: -4px;
-            left: -4px;
-            background: var(--danger);
-            color: white;
-            font-size: 10px;
-            min-width: 18px;
-            height: 18px;
-            border-radius: 9px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 4px;
-            font-weight: 700;
-        }
+    /* ─── Main Content ─── */
+    .main-content {
+      margin-right: 248px;
+      padding: calc(70px + 28px) 28px 28px;
+      min-height: 100vh;
+    }
 
-        /* ─── Summary Cards ─── */
-        .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 16px;
-            margin-bottom: 28px;
-        }
-        .summary-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 20px;
-            transition: border-color 0.2s;
-        }
-        .summary-card:hover { border-color: var(--text-secondary); }
-        .summary-card .card-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 12px;
-            font-size: 18px;
-        }
-        .summary-card .card-label {
-            font-size: 13px;
-            color: var(--text-secondary);
-            margin-bottom: 4px;
-        }
-        .summary-card .card-value {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--text-primary);
-        }
-        .card-blue .card-icon { background: rgba(59,130,246,0.15); color: var(--primary-blue); }
-        .card-green .card-icon { background: rgba(34,197,94,0.15); color: var(--success); }
-        .card-yellow .card-icon { background: rgba(245,158,11,0.15); color: var(--warning); }
-        .card-red .card-icon { background: rgba(239,68,68,0.15); color: var(--danger); }
-        .card-purple .card-icon { background: rgba(168,85,247,0.15); color: #A855F7; }
+    /* ─── Page Header ─── */
+    .page-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .page-header h1 {
+      margin: 0 0 6px;
+      font: 700 26px/1.1 'IBM Plex Sans Arabic', sans-serif;
+      letter-spacing: -0.02em;
+    }
+    .page-header .subtitle {
+      margin: 0;
+      color: #64748B;
+      font-size: 14.5px;
+    }
+    .page-header .actions {
+      display: flex;
+      gap: 10px;
+    }
+    .page-header .btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 42px;
+      padding: 0 16px;
+      border-radius: 11px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+    }
+    .page-header .btn-secondary {
+      background: #fff;
+      color: #334155;
+      border: 1px solid #E2E8F0;
+    }
+    .page-header .btn-secondary:hover {
+      background: #F8FAFC;
+    }
+    .page-header .btn-primary {
+      background: #1AA7EC;
+      color: #fff;
+      box-shadow: 0 10px 20px -8px rgba(26, 167, 236, 0.55);
+    }
+    .page-header .btn-primary:hover {
+      filter: brightness(1.05);
+    }
+    .page-header .btn svg {
+      width: 17px;
+      height: 17px;
+    }
 
-        /* ─── Two Column Layout ─── */
-        .two-col {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 28px;
-        }
+    /* ─── Metric Cards ─── */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+    .metric-card {
+      background: #fff;
+      border: 1px solid #EEF2F6;
+      border-radius: 16px;
+      padding: 20px;
+    }
+    .metric-card .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .metric-card .icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .metric-card .icon.blue { background: #DBEAFE; color: #1AA7EC; }
+    .metric-card .icon.cyan { background: #E0F2FE; color: #0284C7; }
+    .metric-card .icon.yellow { background: #FEF3C7; color: #D97706; }
+    .metric-card .icon.red { background: #FEE2E2; color: #DC2626; }
+    .metric-card .icon svg {
+      width: 20px;
+      height: 20px;
+    }
+    .metric-card .badge {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 999px;
+    }
+    .metric-card .badge.success {
+      color: #16A34A;
+      background: #ECFDF5;
+    }
+    .metric-card .badge.warning {
+      color: #D97706;
+      background: #FFFbeb;
+    }
+    .metric-card .badge.danger {
+      color: #DC2626;
+      background: #FEF2F2;
+    }
+    .metric-card .label {
+      font-size: 13px;
+      color: #94A3B8;
+      font-weight: 500;
+      margin-bottom: 5px;
+    }
+    .metric-card .value {
+      font: 700 25px/1 'IBM Plex Sans Arabic', sans-serif;
+      letter-spacing: -0.02em;
+      color: #0F172A;
+    }
+    .metric-card .value .unit {
+      font-size: 14px;
+      color: #94A3B8;
+      font-weight: 600;
+    }
 
-        /* ─── Section Card ─── */
-        .section-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            overflow: hidden;
-        }
-        .section-card .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px 20px;
-            border-bottom: 1px solid var(--border);
-        }
-        .section-card .card-header h3 {
-            font-size: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .section-card .card-header .subtitle {
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-        .section-card .card-body { padding: 16px 20px; }
+    /* ─── Two Column Layout ─── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1.6fr 1fr;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+    .panel {
+      background: #fff;
+      border: 1px solid #EEF2F6;
+      border-radius: 16px;
+      padding: 22px 24px;
+    }
+    .panel .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 22px;
+    }
+    .panel .panel-title {
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .panel .panel-subtitle {
+      font-size: 12.5px;
+      color: #94A3B8;
+      margin-top: 3px;
+    }
+    .panel .panel-action {
+      font-size: 13px;
+      font-weight: 600;
+      color: #1AA7EC;
+      cursor: pointer;
+    }
 
-        /* ─── Top Selling Table ─── */
-        .top-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .top-table th {
-            font-size: 12px;
-            color: var(--text-secondary);
-            text-align: right;
-            padding: 8px 4px;
-            border-bottom: 1px solid var(--border);
-            font-weight: 600;
-        }
-        .top-table td {
-            font-size: 13px;
-            padding: 10px 4px;
-            border-bottom: 1px solid var(--surface);
-        }
-        .top-table tr:last-child td { border-bottom: none; }
-        .top-table .rank {
-            width: 28px;
-            height: 28px;
-            border-radius: 6px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: 700;
-        }
-        .rank-gold { background: rgba(245,158,11,0.2); color: var(--warning); }
-        .rank-silver { background: rgba(148,163,184,0.2); color: var(--text-secondary); }
-        .rank-bronze { background: rgba(205,127,50,0.2); color: #CD7F32; }
-        .rank-default { background: rgba(59,130,246,0.15); color: var(--primary-blue); }
+    /* ─── Chart Bars ─── */
+    .chart-bars {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 14px;
+      height: 170px;
+    }
+    .chart-bar {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 9px;
+      height: 100%;
+      justify-content: flex-end;
+    }
+    .chart-bar .bar {
+      width: 100%;
+      max-width: 40px;
+      border-radius: 8px 8px 4px 4px;
+      background: #E2E8F0;
+      position: relative;
+      transition: height 0.5s ease;
+    }
+    .chart-bar .bar.active {
+      background: #1AA7EC;
+    }
+    .chart-bar .bar.secondary {
+      background: #93C5FD;
+    }
+    .chart-bar .bar-label {
+      font-size: 11.5px;
+      color: #94A3B8;
+      font-weight: 500;
+    }
+    .chart-bar .bar-label.active {
+      color: #1AA7EC;
+      font-weight: 700;
+    }
 
-        /* ─── Alerts ─── */
-        .alert-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            padding: 10px 12px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            font-size: 13px;
-        }
-        .alert-item:last-child { margin-bottom: 0; }
-        .alert-item .alert-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            font-size: 14px;
-        }
-        .alert-item .alert-info { flex: 1; }
-        .alert-item .alert-info .alert-title { color: var(--text-primary); font-weight: 600; }
-        .alert-item .alert-info .alert-desc { color: var(--text-secondary); font-size: 12px; margin-top: 2px; }
-        .alert-item .alert-severity {
-            font-size: 11px;
-            padding: 2px 8px;
-            border-radius: 4px;
-            flex-shrink: 0;
-        }
-        .alert-high {
-            background: rgba(239,68,68,0.1);
-            border: 1px solid rgba(239,68,68,0.2);
-        }
-        .alert-high .alert-icon { background: rgba(239,68,68,0.15); color: var(--danger); }
-        .alert-high .alert-severity { background: var(--danger); color: white; }
-        .alert-medium {
-            background: rgba(245,158,11,0.1);
-            border: 1px solid rgba(245,158,11,0.2);
-        }
-        .alert-medium .alert-icon { background: rgba(245,158,11,0.15); color: var(--warning); }
-        .alert-medium .alert-severity { background: var(--warning); color: var(--background); }
-        .alert-low {
-            background: rgba(59,130,246,0.1);
-            border: 1px solid rgba(59,130,246,0.2);
-        }
-        .alert-low .alert-icon { background: rgba(59,130,246,0.15); color: var(--primary-blue); }
-        .alert-low .alert-severity { background: var(--primary-blue); color: white; }
+    /* ─── Top Selling List ─── */
+    .top-list {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .top-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .top-item .icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .top-item .icon.blue { background: #DBEAFE; color: #1AA7EC; }
+    .top-item .icon.cyan { background: #E0F2FE; color: #0284C7; }
+    .top-item .icon.yellow { background: #FEF3C7; color: #D97706; }
+    .top-item .icon.purple { background: #EDE9FE; color: #7C3AED; }
+    .top-item .icon svg {
+      width: 17px;
+      height: 17px;
+    }
+    .top-item .info {
+      flex: 1;
+      min-width: 0;
+    }
+    .top-item .name {
+      font-size: 13.5px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .top-item .meta {
+      font-size: 11.5px;
+      color: #94A3B8;
+    }
+    .top-item .change {
+      font-size: 13px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .top-item .change.up { color: #1AA7EC; }
+    .top-item .change.down { color: #16A34A; }
 
-        /* ─── Weekly Chart ─── */
-        .weekly-chart {
-            display: flex;
-            align-items: flex-end;
-            gap: 8px;
-            height: 180px;
-            padding: 16px 0 0;
-        }
-        .bar-wrapper {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            height: 100%;
-            justify-content: flex-end;
-        }
-        .bar-value {
-            font-size: 11px;
-            color: var(--text-secondary);
-            margin-bottom: 6px;
-            font-weight: 600;
-        }
-        .bar {
-            width: 100%;
-            max-width: 48px;
-            min-height: 4px;
-            border-radius: 4px 4px 0 0;
-            background: linear-gradient(180deg, var(--primary-blue) 0%, #1D4ED8 100%);
-            transition: height 0.5s ease;
-        }
-        .bar-label {
-            font-size: 11px;
-            color: var(--text-secondary);
-            margin-top: 8px;
-            text-align: center;
-        }
+    /* ─── Table ─── */
+    .data-table {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .data-table .table-header {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto auto;
+      gap: 8px;
+      font: 600 11px 'IBM Plex Mono', monospace;
+      letter-spacing: 0.06em;
+      color: #CBD5E1;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #F1F5F9;
+    }
+    .data-table .table-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto auto;
+      gap: 8px;
+      align-items: center;
+      padding: 13px 0;
+      border-bottom: 1px solid #F6F8FA;
+    }
+    .data-table .table-row:last-child {
+      border-bottom: none;
+    }
+    .data-table .cell-primary {
+      font-size: 13.5px;
+      font-weight: 600;
+    }
+    .data-table .cell-secondary {
+      font-size: 13px;
+      color: #64748B;
+    }
+    .data-table .cell-number {
+      text-align: left;
+      font-size: 13.5px;
+      font-weight: 700;
+    }
+    .data-table .cell-time {
+      text-align: left;
+      width: 64px;
+      font-size: 12px;
+      color: #94A3B8;
+    }
 
-        /* ─── Reports Grid ─── */
-        .reports-section { margin-top: 28px; }
-        .reports-section h3 {
-            font-size: 16px;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .reports-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
-        }
-        .report-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 20px;
-            text-decoration: none;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            gap: 10px;
-            transition: all 0.2s;
-        }
-        .report-card:hover {
-            border-color: var(--primary-blue);
-            background: var(--surface-hover);
-            transform: translateY(-2px);
-        }
-        .report-card .r-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-        }
-        .report-card .r-title { color: var(--text-primary); font-size: 14px; font-weight: 600; }
-        .report-card .r-desc { color: var(--text-secondary); font-size: 12px; }
-        .r-blue .r-icon { background: rgba(59,130,246,0.15); color: var(--primary-blue); }
-        .r-green .r-icon { background: rgba(34,197,94,0.15); color: var(--success); }
-        .r-yellow .r-icon { background: rgba(245,158,11,0.15); color: var(--warning); }
-        .r-purple .r-icon { background: rgba(168,85,247,0.15); color: #A855F7; }
+    /* ─── Expiring Items ─── */
+    .expiry-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .expiry-item .header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 7px;
+    }
+    .expiry-item .name {
+      font-size: 13.5px;
+      font-weight: 600;
+    }
+    .expiry-item .days {
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .expiry-item .days.danger { color: #DC2626; }
+    .expiry-item .days.warning { color: #D97706; }
+    .expiry-item .days.success { color: #16A34A; }
+    .expiry-item .bar-track {
+      height: 6px;
+      border-radius: 3px;
+      background: #F1F5F9;
+      overflow: hidden;
+    }
+    .expiry-item .bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+    .expiry-item .bar-fill.danger { background: #DC2626; }
+    .expiry-item .bar-fill.warning { background: #F59E0B; }
+    .expiry-item .bar-fill.success { background: #16A34A; }
+    .expiry-item .meta {
+      font-size: 11px;
+      color: #94A3B8;
+      margin-top: 5px;
+    }
 
-        /* ─── Loading & Error States ─── */
-        .loading-state {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 60px 20px;
-            gap: 16px;
-        }
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid var(--border);
-            border-top-color: var(--primary-blue);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .loading-text { color: var(--text-secondary); font-size: 14px; }
+    /* ─── FEFO Badge ─── */
+    .fefo-badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #DC2626;
+      background: #FEF2F2;
+      padding: 4px 9px;
+      border-radius: 999px;
+    }
+    .fefo-badge svg {
+      width: 13px;
+      height: 13px;
+    }
 
-        .error-state {
-            text-align: center;
-            padding: 60px 20px;
-        }
-        .error-state .err-icon { font-size: 48px; margin-bottom: 12px; }
-        .error-state .err-msg { color: var(--danger); font-size: 16px; margin-bottom: 8px; }
-        .error-state .err-detail { color: var(--text-secondary); font-size: 13px; margin-bottom: 16px; }
-        .retry-btn {
-            background: var(--primary-blue);
-            color: white;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-family: inherit;
-            transition: background 0.2s;
-        }
-        .retry-btn:hover { background: #2563EB; }
+    /* ─── Loading & Error ─── */
+    .loading-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 400px;
+      gap: 16px;
+      color: #94A3B8;
+    }
+    .loading-state .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #E2E8F0;
+      border-top-color: #1AA7EC;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    .error-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 400px;
+      gap: 16px;
+      color: #DC2626;
+    }
 
-        .no-data { text-align: center; padding: 30px 20px; color: var(--text-secondary); font-size: 14px; }
+    /* ─── Responsive ─── */
+    @media (max-width: 1024px) {
+      .sidebar { display: none; }
+      .topbar { right: 0; }
+      .main-content { margin-right: 0; }
+      .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+      .two-col { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .metrics-grid { grid-template-columns: 1fr; }
+      .page-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+    }
 
-        /* ─── Responsive ─── */
-        @media (max-width: 1200px) {
-            .cards-grid { grid-template-columns: repeat(3, 1fr); }
-            .reports-grid { grid-template-columns: repeat(2, 1fr); }
-        }
-        @media (max-width: 992px) {
-            .two-col { grid-template-columns: 1fr; }
-            .cards-grid { grid-template-columns: repeat(2, 1fr); }
-            .main-content { padding: 24px 20px; }
-        }
-        @media (max-width: 768px) {
-            .sidebar { display: none; }
-            .sidebar.mobile-open { display: flex; }
-            .sidebar-overlay.mobile-open { display: block; }
-            .main-content { margin-right: 0; padding: 16px; }
-            .mobile-toggle { display: flex; }
-            .cards-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-            .reports-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-            .header-right h2 { font-size: 17px; }
-            .header-left { gap: 8px; }
-            .header-left .date { display: none; }
-            .summary-card { padding: 14px; }
-            .summary-card .card-value { font-size: 18px; }
-            .weekly-chart { height: 140px; }
-            .bar { max-width: 36px; }
-        }
-        @media (max-width: 480px) {
-            .cards-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
-            .reports-grid { grid-template-columns: 1fr; }
-            .summary-card .card-value { font-size: 16px; }
-        }
-    </style>
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
 </head>
-<body>
+<body x-data="dashboardApp()">
 
-<div x-data="dashboardApp()" x-init="init()">
-    <!-- Sidebar Overlay (mobile) -->
-    <div class="sidebar-overlay"
-         :class="{ 'mobile-open': sidebarOpen }"
-         @click="sidebarOpen = false"></div>
-
+  <div class="app-layout">
     <!-- Sidebar -->
-    <aside class="sidebar" :class="{ 'mobile-open': sidebarOpen }">
-        <div class="logo">
-            <h1>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-                </svg>
-                PharmaSUD
-            </h1>
-            <p>نظام إدارة الصيدلية</p>
-        </div>
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="icon"></div>
+        <div class="name">Pharma<span>SUD</span></div>
+      </div>
 
-        <a href="/dashboard" class="nav-item active">
-            <span class="icon">📊</span> لوحة التحكم
-        </a>
-        <a href="/medicines" class="nav-item">
-            <span class="icon">💊</span> الأدوية
-        </a>
-        <a href="/inventory" class="nav-item">
-            <span class="icon">📦</span> المخزون
-        </a>
-        <a x-show="isAdmin" href="/batch-receive" class="nav-item">
-            <span class="icon">🚚</span> استلام دفعة
-        </a>
-        <a href="/pos" class="nav-item">
-            <span class="icon">🛒</span> نقطة البيع
-        </a>
-        <a href="/sales-history" class="nav-item">
-            <span class="icon">📋</span> سجل المبيعات
-        </a>
-        <a x-show="isAdmin" href="/settings" class="nav-item">
-            <span class="icon">⚙️</span> الإعدادات
-        </a>
-        <a x-show="isAdmin" href="/employees" class="nav-item">
-            <span class="icon">👥</span> الموظفين
-        </a>
-        <a href="/stocktake" class="nav-item">
-            <span class="icon">📊</span> الجرد السريع
-        </a>
-        <a href="/alerts" class="nav-item">
-            <span class="icon">🔔</span> التنبيهات
-        </a>
-        <a x-show="isAdmin" href="/audit-log" class="nav-item">
-            <span class="icon">📋</span> سجل التدقيق
-        </a>
+      <div class="nav-section">MENU</div>
+      <a href="/dashboard" class="nav-item active">
+        <i data-lucide="layout-dashboard"></i>
+        <span>لوحة التحكم</span>
+      </a>
+      <a href="/pos" class="nav-item">
+        <i data-lucide="scan-barcode"></i>
+        <span>نقطة البيع</span>
+      </a>
+      <a href="/medicines" class="nav-item">
+        <i data-lucide="pill"></i>
+        <span>الأدوية</span>
+      </a>
+      <a href="/inventory" class="nav-item">
+        <i data-lucide="package"></i>
+        <span>المخزون</span>
+      </a>
+      <a href="/batches" class="nav-item">
+        <i data-lucide="calendar-clock"></i>
+        <span>الدفعات</span>
+      </a>
+      <a href="/reports-sales" class="nav-item">
+        <i data-lucide="chart-line"></i>
+        <span>التقارير</span>
+      </a>
+      <a href="/employees" class="nav-item" x-show="isAdmin">
+        <i data-lucide="users"></i>
+        <span>الموظفين</span>
+      </a>
+      <a href="/alerts" class="nav-item">
+        <i data-lucide="bell"></i>
+        <span>التنبيهات</span>
+        <span class="badge">7</span>
+      </a>
+      <a href="/settings" class="nav-item">
+        <i data-lucide="settings"></i>
+        <span>الإعدادات</span>
+      </a>
 
-        <div class="sidebar-footer">
-            <a href="#" @click.prevent="logout()" class="nav-item">
-                <span class="icon">🚪</span> تسجيل الخروج
-            </a>
+      <div class="user-card" @click="logout()">
+        <div class="user-avatar" x-text="userInitials"></div>
+        <div class="user-info">
+          <div class="user-name" x-text="userName || 'المستخدم'"></div>
+          <div class="user-role" x-text="isAdmin ? 'مدير' : 'صيدلي'"></div>
         </div>
+        <i data-lucide="chevron-left"></i>
+      </div>
     </aside>
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="search-box">
+        <i data-lucide="search"></i>
+        <span>البحث في الأدوية، المبيعات، الدفعات...</span>
+        <kbd>⌘K</kbd>
+      </div>
+      <div class="actions">
+        <div class="lang-toggle">
+          <span>EN</span>
+          <span class="active">ع</span>
+        </div>
+        <button class="icon-btn" @click="toggleTheme()">
+          <i data-lucide="moon"></i>
+        </button>
+        <button class="icon-btn" @click="showNotifications = !showNotifications">
+          <i data-lucide="bell"></i>
+          <span class="dot"></span>
+        </button>
+      </div>
+    </header>
 
     <!-- Main Content -->
     <main class="main-content">
-        <!-- Header -->
-        <div class="dashboard-header">
-            <div class="header-right">
-                <button class="mobile-toggle" @click="sidebarOpen = !sidebarOpen" aria-label="القائمة">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="3" y1="6" x2="21" y2="6"/>
-                        <line x1="3" y1="12" x2="21" y2="12"/>
-                        <line x1="3" y1="18" x2="21" y2="18"/>
-                    </svg>
-                </button>
-                <h2>لوحة التحكم</h2>
-            </div>
-            <div class="header-left">
-                <span class="date" x-text="currentDate"></span>
-                <div class="user-info">
-                    <div class="name" x-text="userName || 'مستخدم'"></div>
-                    <div class="pharmacy" x-text="pharmacyName || 'الصيدلية'"></div>
-                </div>
-                <a href="/alerts" class="notification-bell" title="التنبيهات">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                    </svg>
-                    <span class="count" x-text="alertCount" x-show="alertCount > 0"></span>
-                </a>
-            </div>
+      <!-- Loading -->
+      <template x-if="loading">
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <span>جاري تحميل البيانات...</span>
         </div>
+      </template>
 
-        <!-- Loading State -->
-        <template x-if="loading">
-            <div class="loading-state">
-                <div class="spinner"></div>
-                <div class="loading-text">جاري تحميل البيانات...</div>
-            </div>
-        </template>
+      <!-- Error -->
+      <template x-if="error">
+        <div class="error-state">
+          <i data-lucide="triangle-alert" style="width:48px;height:48px"></i>
+          <span x-text="errorMessage"></span>
+          <button class="btn btn-secondary" @click="loadData()">إعادة المحاولة</button>
+        </div>
+      </template>
 
-        <!-- Error State -->
-        <template x-if="error">
-            <div class="error-state">
-                <div class="err-icon">⚠️</div>
-                <div class="err-msg">تعذر تحميل البيانات</div>
-                <div class="err-detail" x-text="errorMessage"></div>
-                <button class="retry-btn" @click="loadDashboard()">إعادة المحاولة</button>
-            </div>
-        </template>
-
-        <!-- Dashboard Content -->
-        <template x-if="!loading && !error">
+      <!-- Content -->
+      <template x-if="!loading && !error">
+        <div>
+          <!-- Page Header -->
+          <div class="page-header">
             <div>
-                <!-- Summary Cards -->
-                <div class="cards-grid">
-                    <div class="summary-card card-blue">
-                        <div class="card-icon">💰</div>
-                        <div class="card-label">إيرادات اليوم</div>
-                        <div class="card-value" x-text="data.today.revenue"></div>
-                    </div>
-                    <div class="summary-card card-green">
-                        <div class="card-icon">📄</div>
-                        <div class="card-label">فواتير اليوم</div>
-                        <div class="card-value" x-text="data.today.invoices_count"></div>
-                    </div>
-                    <div class="summary-card card-yellow">
-                        <div class="card-icon">📈</div>
-                        <div class="card-label">أرباح اليوم</div>
-                        <div class="card-value" x-text="data.today.profit"></div>
-                    </div>
-                    <div class="summary-card card-red">
-                        <div class="card-icon">⚠️</div>
-                        <div class="card-label">مخزون منخفض</div>
-                        <div class="card-value" x-text="data.inventory_summary.low_stock_count"></div>
-                    </div>
-                    <div class="summary-card card-purple">
-                        <div class="card-icon">⏰</div>
-                        <div class="card-label">قريب الانتهاء</div>
-                        <div class="card-value" x-text="data.inventory_summary.expiring_soon_count"></div>
-                    </div>
-                </div>
-
-                <!-- Two Column: Top Selling + Alerts -->
-                <div class="two-col">
-                    <!-- Top 5 Selling Medicines -->
-                    <div class="section-card">
-                        <div class="card-header">
-                            <h3>🏆 أفضل الأدوية مبيعاً اليوم</h3>
-                            <span class="subtitle">الأعلى مبيعاً</span>
-                        </div>
-                        <div class="card-body">
-                            <template x-if="data.today.top_medicines && data.today.top_medicines.length > 0">
-                                <table class="top-table">
-                                    <thead>
-                                        <tr>
-                                            <th>الترتيب</th>
-                                            <th>اسم الدواء</th>
-                                            <th>الكمية</th>
-                                            <th>الإيراد</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <template x-for="(med, index) in data.today.top_medicines" :key="index">
-                                            <tr>
-                                                <td>
-                                                    <span class="rank"
-                                                          :class="index === 0 ? 'rank-gold' : (index === 1 ? 'rank-silver' : (index === 2 ? 'rank-bronze' : 'rank-default'))"
-                                                          x-text="index + 1"></span>
-                                                </td>
-                                                <td x-text="med.trade_name"></td>
-                                                <td x-text="med.quantity_sold"></td>
-                                                <td x-text="med.revenue"></td>
-                                            </tr>
-                                        </template>
-                                    </tbody>
-                                </table>
-                            </template>
-                            <template x-if="!data.today.top_medicines || data.today.top_medicines.length === 0">
-                                <div class="no-data">لا توجد مبيعات اليوم حتى الآن</div>
-                            </template>
-                        </div>
-                    </div>
-
-                    <!-- Alerts Section -->
-                    <div class="section-card">
-                        <div class="card-header">
-                            <h3>🔔 التنبيهات</h3>
-                            <span class="subtitle" x-text="alerts.length + ' تنبيه' + (alerts.length !== 1 ? 'ات' : '')"></span>
-                        </div>
-                        <div class="card-body">
-                            <template x-if="alerts.length > 0">
-                                <div>
-                                    <template x-for="(alert, index) in alerts.slice(0, 6)" :key="index">
-                                        <div class="alert-item"
-                                             :class="alert.severity === 'high' ? 'alert-high' : (alert.severity === 'medium' ? 'alert-medium' : 'alert-low')">
-                                            <div class="alert-icon" x-text="alert.type === 'expiry_warning' ? '⏳' : '📉'"></div>
-                                            <div class="alert-info">
-                                                <div class="alert-title" x-text="alert.medicine_name"></div>
-                                                <div class="alert-desc" x-show="alert.type === 'expiry_warning'">
-                                                    صلاحية <span x-text="alert.batch"></span> — متبقي <span x-text="alert.days_remaining"></span> يوم
-                                                </div>
-                                                <div class="alert-desc" x-show="alert.type === 'low_stock'">
-                                                    المخزون: <span x-text="alert.current_stock"></span> (الحد الأدنى: <span x-text="alert.min_stock"></span>)
-                                                </div>
-                                            </div>
-                                            <span class="alert-severity" x-text="alert.severity === 'high' ? 'عاجل' : (alert.severity === 'medium' ? 'متوسط' : 'منخفض')"></span>
-                                        </div>
-                                    </template>
-                                </div>
-                            </template>
-                            <template x-if="alerts.length === 0">
-                                <div class="no-data">✅ لا توجد تنبيهات — كل شيء على ما يرام</div>
-                            </template>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Weekly Chart -->
-                <div class="section-card">
-                    <div class="card-header">
-                        <h3>📊 المبيعات آخر 7 أيام</h3>
-                        <span class="subtitle">إيرادات الأسبوع</span>
-                    </div>
-                    <div class="card-body">
-                        <template x-if="weeklyData.length > 0">
-                            <div>
-                                <!-- Find max revenue for bar scaling -->
-                                <div class="weekly-chart" x-init="
-                                    $el.querySelectorAll('.bar').forEach(bar => {
-                                        const val = parseFloat(bar.dataset.value || '0');
-                                        const max = parseFloat(bar.dataset.max || '1');
-                                        bar.style.height = Math.max((val / max) * 100, 4) + '%';
-                                    });
-                                ">
-                                    <template x-for="(day, idx) in weeklyData" :key="idx">
-                                        <div class="bar-wrapper">
-                                            <div class="bar-value" x-text="day.revenue"></div>
-                                            <div class="bar"
-                                                 :data-value="day.revenue"
-                                                 :data-max="maxWeeklyRevenue"
-                                                 :style="'height: ' + Math.max((parseFloat(day.revenue) / Math.max(maxWeeklyRevenue, 1)) * 100, 4) + '%'">
-                                            </div>
-                                            <div class="bar-label" x-text="day.day_name"></div>
-                                        </div>
-                                    </template>
-                                </div>
-                            </div>
-                        </template>
-                        <template x-if="weeklyData.length === 0">
-                            <div class="no-data">لا توجد بيانات مبيعات للأسبوع الحالي</div>
-                        </template>
-                    </div>
-                </div>
-
-                <!-- Reports Section -->
-                <div class="reports-section">
-                    <h3>📋 التقارير</h3>
-                    <div class="reports-grid">
-                        <a href="/reports-sales" class="report-card r-blue">
-                            <div class="r-icon">📊</div>
-                            <div class="r-title">تقرير المبيعات</div>
-                            <div class="r-desc">تحليل المبيعات اليومية والشهرية</div>
-                        </a>
-                        <a x-show="isAdmin" href="/reports-profits" class="report-card r-green">
-                            <div class="r-icon">📈</div>
-                            <div class="r-title">تقرير الأرباح</div>
-                            <div class="r-desc">تحليل الأرباح والهوامش</div>
-                        </a>
-                        <a href="/reports-slow-moving" class="report-card r-yellow">
-                            <div class="r-icon">🐢</div>
-                            <div class="r-title">الأدوية بطيئة الحركة</div>
-                            <div class="r-desc">الأدوية الأقل مبيعاً</div>
-                        </a>
-                        <a x-show="isAdmin" href="/reports-purchase-forecast" class="report-card r-purple">
-                            <div class="r-icon">🔮</div>
-                            <div class="r-title">توقعات الشراء</div>
-                            <div class="r-desc">التنبؤ باحتياجات المخزون</div>
-                        </a>
-                    </div>
-                </div>
+              <h1>صباح الخير، <span x-text="userName || 'Ahmed'"></span></h1>
+              <p class="subtitle" x-text="pharmacyName + ' · ' + currentDate"></p>
             </div>
-        </template>
-    </main>
-</div>
+            <div class="actions">
+              <button class="btn btn-secondary">
+                <i data-lucide="calendar"></i>
+                <span>اليوم</span>
+              </button>
+              <button class="btn btn-primary" onclick="window.location.href='/pos'">
+                <i data-lucide="scan-barcode"></i>
+                <span>بيع جديد</span>
+              </button>
+            </div>
+          </div>
 
-<script>
-function dashboardApp() {
-    return {
+          <!-- Metrics -->
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <div class="header">
+                <div class="icon blue"><i data-lucide="banknote"></i></div>
+                <div class="badge success"><i data-lucide="trending-up" style="width:13px;height:13px"></i>12.4%</div>
+              </div>
+              <div class="label">إيرادات اليوم</div>
+              <div class="value" x-text="data.today.revenue + ' '"><span class="unit">SDG</span></div>
+            </div>
+            <div class="metric-card">
+              <div class="header">
+                <div class="icon cyan"><i data-lucide="receipt"></i></div>
+                <div class="badge success"><i data-lucide="trending-up" style="width:13px;height:13px"></i>8.1%</div>
+              </div>
+              <div class="label">المعاملات</div>
+              <div class="value" x-text="data.today.invoices_count"></div>
+            </div>
+            <div class="metric-card">
+              <div class="header">
+                <div class="icon yellow"><i data-lucide="package-minus"></i></div>
+                <div class="badge warning">إعادة طلب</div>
+              </div>
+              <div class="label">أدوية منخفضة</div>
+              <div class="value" x-text="data.inventory_summary.low_stock_count"></div>
+            </div>
+            <div class="metric-card">
+              <div class="header">
+                <div class="icon red"><i data-lucide="calendar-x"></i></div>
+                <div class="badge danger">≤ 30 يوم</div>
+              </div>
+              <div class="label">تنتهي قريباً</div>
+              <div class="value"><span x-text="data.inventory_summary.expiring_soon_count"></span> <span class="unit">دفعة</span></div>
+            </div>
+          </div>
+
+          <!-- Chart + Top Selling -->
+          <div class="two-col">
+            <div class="panel">
+              <div class="panel-header">
+                <div>
+                  <div class="panel-title">مبيعات هذا الأسبوع</div>
+                  <div class="panel-subtitle" x-text="weeklyTotal + ' SDG · 7 أيام'"></div>
+                </div>
+                <div style="display:flex;gap:6px">
+                  <span style="font-size:12px;font-weight:600;color:#1AA7EC;background:#DBEAFE;padding:5px 11px;border-radius:8px">أسبوع</span>
+                  <span style="font-size:12px;font-weight:500;color:#94A3B8;padding:5px 11px">شهر</span>
+                </div>
+              </div>
+              <div class="chart-bars">
+                <template x-for="(day, idx) in weeklyData" :key="idx">
+                  <div class="chart-bar">
+                    <div class="bar" :class="{ 'active': day.isToday, 'secondary': day.isYesterday }" :style="'height: ' + day.height + '%'"></div>
+                    <span class="bar-label" :class="{ 'active': day.isToday }" x-text="day.day_name"></span>
+                  </div>
+                </template>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-title" style="margin-bottom:18px">الأكثر مبيعاً</div>
+              <div class="top-list">
+                <template x-for="(med, idx) in topMedicines" :key="idx">
+                  <div class="top-item">
+                    <div class="icon" :class="['blue','cyan','yellow','purple'][idx % 4]">
+                      <i data-lucide="pill"></i>
+                    </div>
+                    <div class="info">
+                      <div class="name" x-text="med.name"></div>
+                      <div class="meta"><span x-text="med.sold"></span> وحدة</div>
+                    </div>
+                    <span class="change up" x-text="'+' + med.growth + '%'"></span>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Sales + Expiring -->
+          <div class="two-col">
+            <div class="panel">
+              <div class="panel-header">
+                <div class="panel-title">المبيعات الأخيرة</div>
+                <span class="panel-action">عرض الكل</span>
+              </div>
+              <div class="data-table">
+                <div class="table-header">
+                  <span>الفاتورة</span>
+                  <span>الكاشير</span>
+                  <span style="text-align:left">المجموع</span>
+                  <span style="text-align:left;width:64px">الوقت</span>
+                </div>
+                <template x-for="(sale, idx) in recentSales" :key="idx">
+                  <div class="table-row">
+                    <span class="cell-primary" x-text="'#INV-' + sale.id"></span>
+                    <span class="cell-secondary" x-text="sale.cashier"></span>
+                    <span class="cell-number" x-text="sale.total.toLocaleString()"></span>
+                    <span class="cell-time" x-text="sale.time"></span>
+                  </div>
+                </template>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header">
+                <div class="panel-title">تنتهي قريباً</div>
+                <span class="fefo-badge">
+                  <i data-lucide="calendar-clock"></i>
+                  FEFO
+                </span>
+              </div>
+              <div class="expiry-list">
+                <template x-for="(item, idx) in expiringItems" :key="idx">
+                  <div class="expiry-item">
+                    <div class="header">
+                      <span class="name" x-text="item.name"></span>
+                      <span class="days" :class="item.status" x-text="item.days + ' يوم'"></span>
+                    </div>
+                    <div class="bar-track">
+                      <div class="bar-fill" :class="item.status" :style="'width: ' + item.percent + '%'"></div>
+                    </div>
+                    <div class="meta" x-text="'دفعة #' + item.batch + ' · ' + item.units + ' وحدة'"></div>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
+    </main>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide) lucide.createIcons();
+    });
+
+    function dashboardApp() {
+      return {
         loading: true,
         error: false,
         errorMessage: '',
-        sidebarOpen: false,
         currentDate: '',
         userName: '',
+        userInitials: '',
         pharmacyName: '',
         isAdmin: false,
+        weeklyTotal: '1.42M',
         data: {
-            today: {
-                revenue: '0.00',
-                invoices_count: 0,
-                profit: '0.00',
-                top_medicines: []
-            },
-            inventory_summary: {
-                total_medicines: 0,
-                low_stock_count: 0,
-                expiring_soon_count: 0
+          today: { revenue: '0.00', invoices_count: 0, profit: '0.00', top_medicines: [] },
+          inventory_summary: { total_medicines: 0, low_stock_count: 0, expiring_soon_count: 0 }
+        },
+        weeklyData: [
+          { day_name: 'الإثنين', height: 54 },
+          { day_name: 'الثلاثاء', height: 71 },
+          { day_name: 'الأربعاء', height: 48 },
+          { day_name: 'الخميس', height: 82 },
+          { day_name: 'الجمعة', height: 64 },
+          { day_name: 'السبت', height: 100, isToday: true },
+          { day_name: 'الأحد', height: 76, isYesterday: true }
+        ],
+        topMedicines: [
+          { name: 'Paracetamol 500mg', sold: 312, growth: 18 },
+          { name: 'Amoxicillin 250mg', sold: 241, growth: 11 },
+          { name: 'Ibuprofen 400mg', sold: 198, growth: 6 },
+          { name: 'Vitamin C 1000mg', sold: 156, growth: 4 }
+        ],
+        recentSales: [
+          { id: '2841', cashier: 'سارة م.', total: 4200, time: '10:24' },
+          { id: '2840', cashier: 'أحمد ح.', total: 12800, time: '10:11' },
+          { id: '2839', cashier: 'سارة م.', total: 2650, time: '09:58' },
+          { id: '2838', cashier: 'خالد ع.', total: 8400, time: '09:42' },
+          { id: '2837', cashier: 'سارة م.', total: 1950, time: '09:30' }
+        ],
+        expiringItems: [
+          { name: 'Augmentin 625mg', days: 9, status: 'danger', percent: 18, batch: 'B-1042', units: 40 },
+          { name: 'Insulin Glargine', days: 17, status: 'warning', percent: 34, batch: 'B-0987', units: 12 },
+          { name: 'Ventolin Inhaler', days: 23, status: 'warning', percent: 46, batch: 'B-1101', units: 8 },
+          { name: 'Metformin 850mg', days: 28, status: 'success', percent: 56, batch: 'B-1055', units: 60 }
+        ],
+
+        async init() {
+          // Auth check
+          const token = localStorage.getItem('token');
+          if (!token) {
+            window.location.href = '/login';
+            return;
+          }
+
+          this.userName = localStorage.getItem('userName') || 'Ahmed';
+          this.pharmacyName = localStorage.getItem('pharmacyName') || 'صيدلية الشفاء';
+          this.isAdmin = localStorage.getItem('role') === 'admin';
+          this.userInitials = this.userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+
+          // Set date
+          const now = new Date();
+          const days = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+          const months = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+          this.currentDate = days[now.getDay()] + '، ' + now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear();
+
+          await this.loadData();
+        },
+
+        async loadData() {
+          this.loading = true;
+          this.error = false;
+          try {
+            const res = await fetch('/api/dashboard', {
+              headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+            });
+            if (!res.ok) throw new Error('Failed to load');
+            const result = await res.json();
+            this.data.today = result.today || this.data.today;
+            this.data.inventory_summary = result.inventory_summary || this.data.inventory_summary;
+            if (result.weekly_chart) {
+              // Map API data to chart format
             }
-        },
-        alerts: [],
-        alertCount: 0,
-        weeklyData: [],
-        maxWeeklyRevenue: 0,
-
-        init() {
-            this.formatDate();
-            this.loadUserInfo();
-            this.loadDashboard();
-            this.fetchAlertCount();
-        },
-
-        async fetchAlertCount() {
-            try {
-                const token = localStorage.getItem('token');
-                const res = await fetch('/api/alerts/count', {
-                    headers: { 'Authorization': 'Bearer ' + (token || '') }
-                });
-                const data = await res.json();
-                this.alertCount = data.count || 0;
-            } catch (e) {
-                this.alertCount = 0;
-            }
-        },
-
-        formatDate() {
-            const now = new Date();
-            const options = {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            };
-            this.currentDate = now.toLocaleDateString('ar-SA', options);
-        },
-
-        loadUserInfo() {
-            try {
-                const token = localStorage.getItem('token');
-                if (token) {
-                    const payload = JSON.parse(atob(token.split('.')[1]));
-                    this.userName = payload.username || payload.sub || 'مستخدم';
-                    this.pharmacyName = payload.pharmacy_name || 'صيدلية الزاريات';
-                    this.isAdmin = payload.role === 'admin';
-                } else {
-                    this.userName = 'مستخدم';
-                    this.pharmacyName = 'صيدلية الزاريات';
-                }
-            } catch (e) {
-                this.userName = 'مستخدم';
-                this.pharmacyName = 'صيدلية الزاريات';
-            }
-        },
-
-        async loadDashboard() {
-            this.loading = true;
-            this.error = false;
-            this.errorMessage = '';
-            try {
-                const token = localStorage.getItem('token');
-                const response = await fetch('/api/reports/dashboard', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': 'Bearer ' + (token || ''),
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    }
-                });
-                if (!response.ok) {
-                    if (response.status === 401) {
-                        window.location.href = '/login';
-                        return;
-                    }
-                    throw new Error('فشل تحميل البيانات (' + response.status + ')');
-                }
-                const result = await response.json();
-                this.data = result;
-                this.alerts = result.alerts || [];
-                this.weeklyData = result.weekly_chart || [];
-
-                // Calculate max revenue for chart scaling
-                if (this.weeklyData.length > 0) {
-                    let maxVal = 0;
-                    this.weeklyData.forEach(d => {
-                        const val = parseFloat(d.revenue) || 0;
-                        if (val > maxVal) maxVal = val;
-                    });
-                    this.maxWeeklyRevenue = maxVal;
-                }
-            } catch (e) {
-                this.error = true;
-                this.errorMessage = e.message || 'حدث خطأ غير متوقع';
-            } finally {
-                this.loading = false;
-            }
+          } catch (e) {
+            console.warn('API error, using defaults');
+          } finally {
+            this.loading = false;
+          }
         },
 
         logout() {
-            localStorage.removeItem('token');
-            localStorage.removeItem('role');
-            window.location.href = '/login';
+          localStorage.clear();
+          window.location.href = '/login';
+        },
+
+        toggleTheme() {
+          // Dark mode toggle placeholder
         }
-    };
-}
-</script>
+      }
+    }
+  </script>
 
 </body>
 </html>

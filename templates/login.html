@@ -5,520 +5,489 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>تسجيل الدخول - PharmaSUD</title>
   <link rel="stylesheet" href="/static/css/theme.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap');
-
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
     html, body {
-      font-family: 'Cairo', 'IBM Plex Sans Arabic', Tahoma, sans-serif;
-      color: var(--text-primary);
-      background: var(--background);
-      overflow-x: hidden;
-      width: 100%;
+      margin: 0;
+      padding: 0;
       min-height: 100vh;
+      font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif;
+      background: #F6F8FA;
+      color: #0F172A;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* ============ SPLASH SCREEN ============ */
-    .splash {
-      position: fixed;
-      inset: 0;
-      z-index: 999;
-      background: var(--splash-gradient);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      transition: opacity 0.8s ease, visibility 0.8s ease;
-    }
-    .splash.hide {
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-    }
-
-    .particle {
-      position: absolute;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.10);
-      filter: blur(2px);
-      animation: floatSlow 22s ease-in-out infinite alternate;
-    }
-    .particle.p1 { width: 260px; height: 260px; top: -80px; right: -60px; animation-delay: 0s; }
-    .particle.p2 { width: 180px; height: 180px; bottom: -40px; left: -50px; animation-delay: -6s; }
-    .particle.p3 { width: 120px; height: 120px; top: 20%; left: 10%; background: rgba(255,255,255,0.08); animation-delay: -3s; }
-    .particle.p4 { width: 90px; height: 90px; bottom: 18%; right: 12%; background: rgba(255,255,255,0.07); animation-delay: -10s; }
-    .particle.p5 { width: 340px; height: 340px; bottom: -160px; right: 20%; background: rgba(255,255,255,0.05); animation-delay: -14s; }
-
-    @keyframes floatSlow {
-      0%   { transform: translate(0, 0) scale(1); }
-      50%  { transform: translate(20px, -25px) scale(1.06); }
-      100% { transform: translate(-15px, 15px) scale(0.97); }
-    }
-
-    .splash-icon-box {
-      width: 96px;
-      height: 96px;
-      border-radius: 26px;
-      background: rgba(255,255,255,0.16);
-      border: 1px solid rgba(255,255,255,0.25);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      overflow: hidden;
-      opacity: 0;
-      transform: scale(0.8);
-      z-index: 2;
-      animation: logoEnter 0.8s var(--ease-smooth) forwards, pulseGlow 2.4s ease-in-out 0.9s infinite;
-    }
-
-    @keyframes logoEnter {
-      from { opacity: 0; transform: scale(0.8); }
-      to   { opacity: 1; transform: scale(1); }
-    }
-    @keyframes pulseGlow {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); }
-      50%      { box-shadow: 0 0 35px 12px rgba(255,255,255,0.18); }
-    }
-
-    .splash-icon-box::after {
-      content: '';
-      position: absolute;
-      top: 0; left: -150%;
-      width: 60%; height: 100%;
-      background: linear-gradient(115deg, transparent, rgba(255,255,255,0.45), transparent);
-      transform: skewX(-20deg);
-      animation: shimmer 1.4s ease-in-out 1.1s 1 forwards;
-    }
-
-    @keyframes shimmer {
-      to { left: 150%; }
-    }
-
-    .splash-icon-box svg {
-      width: 48px;
-      height: 48px;
-      stroke: #ffffff;
-      stroke-width: 2.2;
-      position: relative;
-      z-index: 2;
-    }
-
-    .splash-brand {
-      margin-top: 26px;
-      font-size: 36px;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-      direction: ltr;
-      opacity: 0;
-      transform: translateY(20px);
-      animation: fadeUp 0.7s var(--ease-smooth) 0.5s forwards;
-    }
-    .splash-brand .brand-pharma { color: #ffffff; }
-    .splash-brand .brand-sud    { color: #BAE6FD; }
-
-    .splash-subtitle {
-      margin-top: 10px;
-      font-size: 14px;
-      font-weight: 500;
-      color: rgba(255,255,255,0.8);
-      opacity: 0;
-      transform: translateY(20px);
-      animation: fadeUp 0.7s var(--ease-smooth) 0.7s forwards;
-    }
-
-    @keyframes fadeUp {
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .splash-dots {
-      position: absolute;
-      bottom: 56px;
-      display: flex;
-      gap: 8px;
-    }
-    .splash-dots span {
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-      background: var(--accent-sky);
-      opacity: 0.4;
-      animation: dotPulse 1.2s ease-in-out infinite;
-    }
-    .splash-dots span:nth-child(1) { animation-delay: 0s; }
-    .splash-dots span:nth-child(2) { animation-delay: 0.2s; background: #fff; }
-    .splash-dots span:nth-child(3) { animation-delay: 0.4s; }
-
-    @keyframes dotPulse {
-      0%, 100% { transform: scale(0.7); opacity: 0.35; }
-      50%      { transform: scale(1.15); opacity: 1; }
-    }
-
-    /* ============ LOGIN PAGE ============ */
+    /* ─── Login Page ─── */
     .login-page {
       min-height: 100vh;
       display: flex;
       width: 100%;
     }
 
+    /* ─── Left Panel (Brand) ─── */
     .login-left {
-      flex: 1;
-      background: var(--main-gradient);
+      width: 46%;
+      background: linear-gradient(160deg, #1E2F97 0%, #1AA7EC 55%, #4ADEDE 100%);
       position: relative;
       overflow: hidden;
+      padding: 48px;
       display: flex;
       flex-direction: column;
+      justify-content: space-between;
+    }
+    .login-left .ring-1 {
+      position: absolute;
+      width: 340px;
+      height: 340px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.14);
+      right: -120px;
+      top: -110px;
+    }
+    .login-left .ring-2 {
+      position: absolute;
+      width: 230px;
+      height: 230px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.12);
+      right: -40px;
+      top: -40px;
+    }
+    .login-left .ring-3 {
+      position: absolute;
+      width: 120px;
+      height: 120px;
+      border-radius: 34px;
+      background: rgba(255,255,255,0.06);
+      left: -30px;
+      bottom: 60px;
+      transform: rotate(18deg);
+    }
+    .login-left .brand {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .login-left .brand .icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.16);
+      position: relative;
+    }
+    .login-left .brand .icon::before,
+    .login-left .brand .icon::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      background: #fff;
+      border-radius: 3px;
+    }
+    .login-left .brand .icon::before {
+      width: 20px;
+      height: 6px;
+    }
+    .login-left .brand .icon::after {
+      width: 6px;
+      height: 20px;
+    }
+    .login-left .brand .name {
+      color: #fff;
+      font: 700 21px/1 'IBM Plex Sans Arabic', sans-serif;
+      letter-spacing: -0.02em;
+    }
+    .login-left .hero {
+      position: relative;
+    }
+    .login-left .hero h2 {
+      margin: 0 0 14px;
+      color: #fff;
+      font: 700 30px/1.25 'IBM Plex Sans Arabic', sans-serif;
+      letter-spacing: -0.02em;
+    }
+    .login-left .hero p {
+      margin: 0;
+      color: rgba(255,255,255,0.82);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+    .login-left .features {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
+    }
+    .login-left .feature {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      color: rgba(255,255,255,0.92);
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .login-left .feature .icon-box {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.16);
+      display: flex;
       align-items: center;
       justify-content: center;
-      padding: 60px;
+      flex-shrink: 0;
+    }
+    .login-left .feature .icon-box svg {
+      width: 14px;
+      height: 14px;
       color: #fff;
-      text-align: center;
     }
 
-    .login-left .lcircle {
-      position: absolute;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.08);
-      animation: floatSlow 26s ease-in-out infinite alternate;
-    }
-    .login-left .lc1 { width: 300px; height: 300px; top: -100px; left: -90px; }
-    .login-left .lc2 { width: 220px; height: 220px; bottom: -90px; right: -60px; animation-delay: -8s; background: rgba(255,255,255,0.06); }
-    .login-left .lc3 { width: 140px; height: 140px; top: 30%; right: 8%; animation-delay: -15s; background: rgba(255,255,255,0.05); }
-
-    .login-left-content {
-      position: relative;
-      z-index: 2;
-      max-width: 420px;
-      opacity: 0;
-      transform: translateY(24px);
-    }
-    .show .login-left-content {
-      animation: fadeUp 0.7s var(--ease-smooth) 0.15s forwards;
-    }
-
-    .left-brand {
-      justify-content: center;
-      margin-bottom: 26px;
-    }
-    .left-brand .brand-icon { width: 36px; height: 36px; }
-    .left-brand .brand-text { font-size: 30px; }
-
-    .login-left h1 {
-      font-size: 26px;
-      font-weight: 800;
-      margin-bottom: 12px;
-    }
-    .login-left p.desc {
-      font-size: 14.5px;
-      line-height: 1.9;
-      color: rgba(255,255,255,0.85);
-      margin-bottom: 32px;
-    }
-
-    .stat-cards {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    .stat-card {
-      flex: 1;
-      min-width: 110px;
-      background: rgba(255,255,255,0.10);
-      border: 1px solid rgba(255,255,255,0.18);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border-radius: 14px;
-      padding: 16px 10px;
-      font-size: 13px;
-      font-weight: 600;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-    }
-    .stat-card .icon { font-size: 22px; margin-bottom: 8px; display: block; }
-
+    /* ─── Right Panel (Form) ─── */
     .login-right {
       flex: 1;
-      background: var(--background);
+      padding: 48px 56px;
       display: flex;
-      align-items: center;
+      flex-direction: column;
       justify-content: center;
-      padding: 40px 24px;
-    }
-
-    .login-form-wrap {
-      width: 100%;
-      max-width: 380px;
-      opacity: 0;
-      transform: translateY(28px);
-    }
-    .show .login-form-wrap {
-      animation: fadeUp 0.6s var(--ease-smooth) 0.35s forwards;
-    }
-
-    .mobile-logo {
-      display: none;
-      margin-bottom: 36px;
-    }
-    .mobile-logo .brand-icon { width: 26px; height: 26px; }
-    .mobile-logo .brand-text { font-size: 20px; }
-
-    .login-form-wrap h2 {
-      font-size: 26px;
-      font-weight: 800;
-      margin-bottom: 8px;
-      color: var(--text-primary);
-    }
-    .login-form-wrap h2 .brand-pharma,
-    .login-form-wrap h2 .brand-sud {
-      font-weight: 800;
-    }
-    .login-form-wrap p.sub {
-      font-size: 14px;
-      color: var(--text-secondary);
-      margin-bottom: 32px;
-    }
-
-    .input-group {
-      margin-bottom: 20px;
       position: relative;
+      background: #fff;
     }
-    .input-group label {
+    .login-right .lang-toggle {
+      position: absolute;
+      top: 24px;
+      left: 28px;
+      display: flex;
+      border: 1px solid #E2E8F0;
+      border-radius: 9px;
+      overflow: hidden;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .login-right .lang-toggle span {
+      padding: 7px 13px;
+      color: #64748B;
+      cursor: pointer;
+    }
+    .login-right .lang-toggle span.active {
+      background: #1AA7EC;
+      color: #fff;
+    }
+    .login-right .form-wrap {
+      max-width: 340px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .login-right .form-wrap h2 {
+      margin: 0 0 8px;
+      font: 700 27px/1.2 'IBM Plex Sans Arabic', sans-serif;
+      letter-spacing: -0.02em;
+      color: #0F172A;
+    }
+    .login-right .form-wrap .subtitle {
+      margin: 0 0 30px;
+      color: #64748B;
+      font-size: 14.5px;
+    }
+    .login-right .input-group {
+      margin-bottom: 18px;
+    }
+    .login-right .input-group label {
       display: block;
       font-size: 13px;
       font-weight: 600;
-      color: var(--text-primary);
+      color: #334155;
       margin-bottom: 8px;
     }
-    .input-wrap {
-      position: relative;
-      border-radius: 12px;
-      overflow: hidden;
+    .login-right .input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      height: 46px;
+      padding: 0 14px;
+      border: 1.5px solid #E2E8F0;
+      border-radius: 11px;
+      background: #fff;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
-    .input-wrap input {
-      width: 100%;
-      padding: 13px 44px 13px 44px;
-      border: 1.5px solid var(--border);
-      border-radius: 12px;
+    .login-right .input-wrap:focus-within {
+      border-color: #1AA7EC;
+      box-shadow: 0 0 0 3px rgba(26, 167, 236, 0.12);
+    }
+    .login-right .input-wrap svg {
+      width: 18px;
+      height: 18px;
+      color: #94A3B8;
+      flex-shrink: 0;
+    }
+    .login-right .input-wrap input {
+      flex: 1;
+      border: none;
+      background: transparent;
       font-family: inherit;
       font-size: 14.5px;
-      color: var(--text-primary);
-      background: var(--surface);
+      color: #334155;
       outline: none;
-      transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+      padding: 0;
     }
-    .input-wrap input:focus {
-      border-color: var(--primary-blue);
-      background: #fff;
-      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.10);
+    .login-right .input-wrap input::placeholder {
+      color: #94A3B8;
     }
-    .input-wrap .field-icon {
-      position: absolute;
-      right: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 18px; height: 18px;
-      stroke: var(--text-secondary);
-      transition: stroke 0.25s ease;
-      pointer-events: none;
-    }
-    .input-wrap input:focus ~ .field-icon {
-      stroke: var(--primary-blue);
-    }
-    .input-wrap .toggle-eye {
-      position: absolute;
-      left: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 18px; height: 18px;
-      stroke: var(--text-secondary);
-      cursor: pointer;
+    .login-right .input-wrap .toggle-pwd {
       background: none;
       border: none;
       padding: 0;
-      display: flex;
-      transition: stroke 0.2s ease;
-    }
-    .input-wrap .toggle-eye:hover { stroke: var(--primary-blue); }
-
-    .input-wrap::after {
-      content: '';
-      position: absolute;
-      bottom: 0; left: 50%;
-      transform: translateX(-50%) scaleX(0);
-      width: 100%;
-      height: 2px;
-      background: var(--accent-sky);
-      border-radius: 2px;
-      transition: transform 0.35s var(--ease-smooth);
-      transform-origin: center;
-    }
-    .input-wrap:focus-within::after {
-      transform: translateX(-50%) scaleX(1);
-    }
-
-    .login-btn {
-      width: 100%;
-      padding: 14px;
-      border: none;
-      border-radius: 12px;
-      background: var(--main-gradient);
-      color: #fff;
-      font-family: inherit;
-      font-size: 15.5px;
-      font-weight: 700;
       cursor: pointer;
-      margin-top: 8px;
-      transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
-      box-shadow: 0 8px 20px rgba(37, 99, 235, 0.18);
-    }
-    .login-btn:hover {
-      transform: translateY(-2px);
-      filter: brightness(1.05);
-      box-shadow: 0 12px 26px rgba(37, 99, 235, 0.28);
-    }
-    .login-btn:active {
-      transform: translateY(0);
-    }
-
-    .form-links {
-      margin-top: 26px;
-      text-align: center;
-      font-size: 13.5px;
-      color: var(--text-secondary);
+      color: #94A3B8;
       display: flex;
-      flex-direction: column;
-      gap: 10px;
+      align-items: center;
     }
-    .form-links a {
-      color: var(--primary-blue);
-      font-weight: 700;
+    .login-right .input-wrap .toggle-pwd:hover {
+      color: #1AA7EC;
+    }
+    .login-right .form-options {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .login-right .remember {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #475569;
+      cursor: pointer;
+    }
+    .login-right .remember .check {
+      width: 18px;
+      height: 18px;
+      border-radius: 5px;
+      background: #1AA7EC;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .login-right .remember .check svg {
+      width: 12px;
+      height: 12px;
+      color: #fff;
+    }
+    .login-right .forgot {
+      font-size: 13px;
+      font-weight: 600;
+      color: #1AA7EC;
       text-decoration: none;
     }
-    .form-links a:hover { text-decoration: underline; }
-    .form-links .secondary-link {
-      color: var(--text-secondary);
-      font-weight: 600;
+    .login-right .forgot:hover {
+      text-decoration: underline;
     }
-    .form-links .secondary-link:hover {
-      color: var(--primary-blue);
+    .login-right .btn-signin {
+      width: 100%;
+      height: 48px;
+      border-radius: 11px;
+      background: #1AA7EC;
+      color: #fff;
+      border: none;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      box-shadow: 0 10px 22px -8px rgba(26, 167, 236, 0.6);
+      transition: filter 0.2s ease, transform 0.2s ease;
+    }
+    .login-right .btn-signin:hover {
+      filter: brightness(1.05);
+    }
+    .login-right .btn-signin:active {
+      transform: translateY(0);
+    }
+    .login-right .btn-signin svg {
+      width: 18px;
+      height: 18px;
+    }
+    .login-right .form-footer {
+      margin-top: 22px;
+      padding-top: 20px;
+      border-top: 1px solid #F1F5F9;
+      text-align: center;
+      font-size: 13.5px;
+      color: #64748B;
+    }
+    .login-right .form-footer a {
+      font-weight: 600;
+      color: #1AA7EC;
+      text-decoration: none;
+    }
+    .login-right .form-footer a:hover {
+      text-decoration: underline;
+    }
+    .login-right .error-msg {
+      background: #FEF2F2;
+      color: #DC2626;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .login-right .error-msg.show {
+      display: block;
     }
 
-    @media (max-width: 768px) {
+    /* ─── Responsive ─── */
+    @media (max-width: 900px) {
       .login-left { display: none; }
-      .login-right { width: 100%; flex: 1; }
-      .mobile-logo { display: flex; }
+      .login-right {
+        width: 100%;
+        padding: 40px 24px;
+      }
     }
   </style>
 </head>
-<body class="show">
-  <div class="login-page" x-data="loginApp()">
-    <!-- Left Panel -->
-    <div class="login-left">
-      <div class="lcircle lc1"></div>
-      <div class="lcircle lc2"></div>
-      <div class="lcircle lc3"></div>
+<body>
 
-      <div class="login-left-content">
-        <div class="brand-logo on-dark left-brand">
-          <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
-          </svg>
-          <span class="brand-text"><span class="brand-pharma">Pharma</span><span class="brand-sud">SUD</span></span>
-        </div>
+<div class="login-page" x-data="loginApp()">
+  <!-- Left Panel -->
+  <div class="login-left">
+    <div class="ring-1"></div>
+    <div class="ring-2"></div>
+    <div class="ring-3"></div>
 
-        <h1>نظام إدارة الصيدليات</h1>
-        <p class="desc">
-          نظام متكامل لإدارة المخزون والمبيعات والتقارير،
-          مصمم خصيصاً للصيدليات العربية.
-        </p>
-
-        <div class="stat-cards">
-          <div class="stat-card"><span class="icon">🔒</span>آمن 100%</div>
-          <div class="stat-card"><span class="icon">⏰</span>متاح 24/7</div>
-          <div class="stat-card"><span class="icon">🌐</span>عربي بالكامل</div>
-        </div>
-      </div>
+    <div class="brand">
+      <div class="icon"></div>
+      <span class="name">PharmaSUD</span>
     </div>
 
-    <!-- Right Panel (Form) -->
-    <div class="login-right">
-      <div class="login-form-wrap">
-        <div class="mobile-logo">
-          <div class="brand-logo">
-            <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
-            </svg>
-            <span class="brand-text"><span class="brand-pharma">Pharma</span><span class="brand-sud">SUD</span></span>
-          </div>
-        </div>
+    <div class="hero">
+      <h2>نظّم صيدليتك بثقة</h2>
+      <p>مخزون FEFO، تنبيهات انتهاء الصلاحية، ونقطة بيع سريعة — يعمل حتى بدون إنترنت.</p>
+    </div>
 
-        <h2><span class="brand-pharma">Pharma</span><span class="brand-sud">SUD</span> يرحب بكم</h2>
-        <p class="sub">أدخل بياناتك للوصول إلى النظام</p>
-
-        <form @submit.prevent="login">
-          <div class="input-group">
-            <label>اسم المستخدم</label>
-            <div class="input-wrap">
-              <input type="text" x-model="username" placeholder="ادخل اسم المستخدم" required>
-              <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle>
-              </svg>
-            </div>
-          </div>
-
-          <div class="input-group">
-            <label>كلمة المرور</label>
-            <div class="input-wrap">
-              <input type="password" id="pwdInput" x-model="password" placeholder="••••••••" required>
-              <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="4" y="11" width="16" height="9" rx="2"></rect>
-                <path d="M8 11V7a4 4 0 018 0v4"></path>
-              </svg>
-              <button type="button" class="toggle-eye" onclick="togglePwd()" aria-label="إظهار كلمة المرور">
-                <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path>
-                  <circle cx="12" cy="12" r="3"></circle>
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <div class="error-msg" :class="{ 'show': errorMsg }" x-text="errorMsg"></div>
-
-          <button type="submit" class="login-btn" :disabled="loading">
-            <span x-show="!loading">تسجيل الدخول</span>
-            <span x-show="loading">جاري تسجيل الدخول <span class="loading-spinner"></span></span>
-          </button>
-        </form>
-
-        <div class="form-links">
-          <div>ليس لديك حساب؟ <a href="#">إنشاء حساب جديد</a></div>
-          <a href="#" class="secondary-link">دليل استخدام النظام</a>
-        </div>
+    <div class="features">
+      <div class="feature">
+        <div class="icon-box"><i data-lucide="wifi-off"></i></div>
+        <span>يعمل بدون إنترنت ويتزامن تلقائياً</span>
+      </div>
+      <div class="feature">
+        <div class="icon-box"><i data-lucide="calendar-clock"></i></div>
+        <span>لا يبيع أدوية منتهية الصلاحية</span>
       </div>
     </div>
   </div>
 
-  <script>
-    // Content is visible by default (show class added to body)
+  <!-- Right Panel -->
+  <div class="login-right">
+    <div class="lang-toggle">
+      <span class="active">EN</span>
+      <span>ع</span>
+    </div>
 
-    function togglePwd() {
-      const input = document.getElementById('pwdInput');
-      const eye = document.getElementById('eyeIcon');
-      if (input.type === 'password') {
-        input.type = 'text';
-        eye.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 014.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
-      } else {
-        input.type = 'password';
-        eye.innerHTML = '<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path><circle cx="12" cy="12" r="3"></circle>';
+    <div class="form-wrap">
+      <h2>مرحباً بعودتك</h2>
+      <p class="subtitle">سجل الدخول إلى حساب صيدليتك</p>
+
+      <div class="error-msg" :class="{ 'show': errorMsg }" x-text="errorMsg"></div>
+
+      <div class="input-group">
+        <label>اسم المستخدم</label>
+        <div class="input-wrap">
+          <i data-lucide="mail"></i>
+          <input type="text" x-model="username" placeholder="ادخل اسم المستخدم" required>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label>كلمة المرور</label>
+        <div class="input-wrap">
+          <i data-lucide="lock"></i>
+          <input :type="showPassword ? 'text' : 'password'" x-model="password" placeholder="••••••••" required>
+          <button type="button" class="toggle-pwd" @click="showPassword = !showPassword">
+            <i :data-lucide="showPassword ? 'eye-off' : 'eye'"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="form-options">
+        <label class="remember">
+          <span class="check"><i data-lucide="check"></i></span>
+          <span>تذكرني</span>
+        </label>
+        <a href="#" class="forgot">نسيت كلمة المرور؟</a>
+      </div>
+
+      <button type="button" class="btn-signin" @click="login()" :disabled="loading">
+        <span x-show="!loading">تسجيل الدخول</span>
+        <span x-show="loading">جاري تسجيل الدخول...</span>
+        <i data-lucide="arrow-left" x-show="!loading"></i>
+      </button>
+
+      <div class="form-footer">
+        صيدلية جديدة؟ <a href="#">تفعيل بمفتاح المنتج</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Initialize Lucide icons
+  document.addEventListener('DOMContentLoaded', () => {
+    if (window.lucide) lucide.createIcons();
+  });
+
+  function loginApp() {
+    return {
+      username: '',
+      password: '',
+      showPassword: false,
+      loading: false,
+      errorMsg: '',
+
+      async login() {
+        this.errorMsg = '';
+        if (!this.username || !this.password) {
+          this.errorMsg = 'يرجى إدخال اسم المستخدم وكلمة المرور';
+          return;
+        }
+        this.loading = true;
+        try {
+          const res = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              username: this.username,
+              password: this.password
+            })
+          });
+          const data = await res.json();
+          if (res.ok && data.success) {
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('role', data.role);
+            localStorage.setItem('userName', data.name || this.username);
+            localStorage.setItem('pharmacyName', data.pharmacy_name || '');
+            window.location.href = '/dashboard';
+          } else {
+            this.errorMsg = data.detail || 'اسم المستخدم أو كلمة المرور غير صحيحة';
+          }
+        } catch (e) {
+          this.errorMsg = 'خطأ في الاتصال بالخادم';
+        } finally {
+          this.loading = false;
+        }
       }
     }
-  </script>
+  }
+</script>
+
 </body>
 </html>
