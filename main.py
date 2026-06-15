@@ -168,8 +168,8 @@ logger = logging.getLogger(__name__)
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
-    """Serve dashboard directly (v7.2.0 Light + Blue theme)."""
-    return templates.TemplateResponse("dashboard.html", {"request": request})
+    """Serve login page directly (v7.2.0 Light + Blue theme)."""
+    return templates.TemplateResponse("login.html", {"request": request})
 
 @app.get("/api")
 async def api_info():
