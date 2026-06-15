@@ -22,12 +22,12 @@
         <!-- Header -->
         <div class="flex items-center justify-between mb-4">
             <h1 class="text-2xl font-bold">📊 الجرد السريع</h1>
-            <a href="/dashboard" class="text-blue-400 hover:text-blue-300 text-sm">← العودة للرئيسية</a>
+            <a href="/dashboard" class="text-[#1AA7EC] hover:text-blue-300 text-sm">← العودة للرئيسية</a>
         </div>
 
         <!-- Scanner & Search bar -->
         <div class="flex gap-2 mb-4">
-            <button onclick="startScanner()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-medium transition">📷 مسح باركود</button>
+            <button onclick="startScanner()" class="bg-[#1AA7EC] hover:bg-blue-700 text-[#0F172A] px-4 py-2 rounded-xl font-medium transition">📷 مسح باركود</button>
             <input id="manual-barcode-input" type="text" placeholder="أو أدخل الباركود يدوياً..." class="flex-1 bg-dark-card border border-dark-border rounded-xl px-4 py-2 text-dark-text" onkeydown="if(event.key==='Enter')searchManualBarcode()">
         </div>
 
@@ -35,11 +35,11 @@
         <div id="scanner-container" class="hidden mb-4">
             <div class="bg-black rounded-xl overflow-hidden relative">
                 <video id="scanner-video" class="w-full h-64 object-cover" playsinline></video>
-                <div id="scanner-status" class="absolute bottom-0 left-0 right-0 bg-black/70 text-white text-center py-1 text-sm"></div>
+                <div id="scanner-status" class="absolute bottom-0 left-0 right-0 bg-black/70 text-[#0F172A] text-center py-1 text-sm"></div>
             </div>
             <div class="flex gap-2 mt-2">
-                <button onclick="stopScanner()" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-xl font-medium transition">إيقاف المسح</button>
-                <button onclick="searchManualBarcode()" class="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white py-2 rounded-xl font-medium transition">بحث يدوي</button>
+                <button onclick="stopScanner()" class="flex-1 bg-red-600 hover:bg-red-700 text-[#0F172A] py-2 rounded-xl font-medium transition">إيقاف المسح</button>
+                <button onclick="searchManualBarcode()" class="flex-1 bg-yellow-600 hover:bg-yellow-700 text-[#0F172A] py-2 rounded-xl font-medium transition">بحث يدوي</button>
             </div>
         </div>
 
@@ -60,7 +60,7 @@
 
         <!-- Submit -->
         <div id="submit-area" class="hidden">
-            <button onclick="submitStocktake()" class="w-full bg-green-600 hover:bg-green-700 text-white rounded-xl py-3 font-bold text-lg transition">
+            <button onclick="submitStocktake()" class="w-full bg-green-600 hover:bg-green-700 text-[#0F172A] rounded-xl py-3 font-bold text-lg transition">
                 💾 حفظ نتائج الجرد
             </button>
         </div>
@@ -119,7 +119,7 @@
                         <div class="flex-1">
                             <div class="font-bold">${med.trade_name}</div>
                             <div class="text-dark-muted text-xs">${med.barcode || 'بدون باركود'}</div>
-                            <div class="text-dark-muted text-sm mt-1">النظام: <span class="text-blue-400 font-bold">${med.system_quantity}</span> ${med.base_unit}</div>
+                            <div class="text-dark-muted text-sm mt-1">النظام: <span class="text-[#1AA7EC] font-bold">${med.system_quantity}</span> ${med.base_unit}</div>
                         </div>
                     </div>
                     <div class="mt-2">
