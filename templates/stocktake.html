@@ -4,20 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📊 الجرد السريع - PharmaSUD</title>
+    <link rel="stylesheet" href="/static/css/theme.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        dark: { bg: 'var(--text-primary)', card: 'var(--surface)', border: 'var(--border)', text: 'var(--border)', muted: 'var(--text-secondary)' }
+                        light: { bg: "#F6F8FA", card: "#FFFFFF", border: "#EEF2F6", text: "#0F172A", muted: "#64748B" }
                     }
                 }
             }
         }
     </script>
 </head>
-<body class="bg-dark-bg text-dark-text font-sans min-h-screen">
+<body class="bg-light-bg text-light-text font-sans min-h-screen">
     <div class="max-w-3xl mx-auto p-4">
         <!-- Header -->
         <div class="flex items-center justify-between mb-4">
@@ -28,7 +32,7 @@
         <!-- Scanner & Search bar -->
         <div class="flex gap-2 mb-4">
             <button onclick="startScanner()" class="bg-[#1AA7EC] hover:bg-blue-700 text-[#0F172A] px-4 py-2 rounded-xl font-medium transition">📷 مسح باركود</button>
-            <input id="manual-barcode-input" type="text" placeholder="أو أدخل الباركود يدوياً..." class="flex-1 bg-dark-card border border-dark-border rounded-xl px-4 py-2 text-dark-text" onkeydown="if(event.key==='Enter')searchManualBarcode()">
+            <input id="manual-barcode-input" type="text" placeholder="أو أدخل الباركود يدوياً..." class="flex-1 bg-dark-card border border-dark-border rounded-xl px-4 py-2 text-light-text" onkeydown="if(event.key==='Enter')searchManualBarcode()">
         </div>
 
         <!-- Scanner Container -->
@@ -45,11 +49,11 @@
 
         <!-- Notes -->
         <div class="mb-4">
-            <input id="stocktake-notes" type="text" placeholder="ملاحظات (مثال: جرد شهر يونيو)" class="w-full bg-dark-card border border-dark-border rounded-xl px-4 py-2 text-dark-text">
+            <input id="stocktake-notes" type="text" placeholder="ملاحظات (مثال: جرد شهر يونيو)" class="w-full bg-dark-card border border-dark-border rounded-xl px-4 py-2 text-light-text">
         </div>
 
         <!-- Loading -->
-        <div id="loading" class="text-center py-12 text-dark-muted">جاري تحميل قائمة الجرد...</div>
+        <div id="loading" class="text-center py-12 text-light-muted">جاري تحميل قائمة الجرد...</div>
 
         <!-- Error -->
         <div id="error" class="hidden bg-red-900/50 border border-red-700 rounded-lg p-4 mb-4 text-center"></div>
@@ -106,7 +110,7 @@
             const container = document.getElementById('medicines-container');
 
             if (list.length === 0) {
-                container.innerHTML = '<div class="text-center text-dark-muted py-8">لا توجد أدوية</div>';
+                container.innerHTML = '<div class="text-center text-light-muted py-8">لا توجد أدوية</div>';
                 return;
             }
 
@@ -118,13 +122,13 @@
                         </div>
                         <div class="flex-1">
                             <div class="font-bold">${med.trade_name}</div>
-                            <div class="text-dark-muted text-xs">${med.barcode || 'بدون باركود'}</div>
-                            <div class="text-dark-muted text-sm mt-1">النظام: <span class="text-[#1AA7EC] font-bold">${med.system_quantity}</span> ${med.base_unit}</div>
+                            <div class="text-light-muted text-xs">${med.barcode || 'بدون باركود'}</div>
+                            <div class="text-light-muted text-sm mt-1">النظام: <span class="text-[#1AA7EC] font-bold">${med.system_quantity}</span> ${med.base_unit}</div>
                         </div>
                     </div>
                     <div class="mt-2">
-                        <label class="text-dark-muted text-sm">الفعلي:</label>
-                        <input type="number" class="actual-qty w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-dark-text text-center text-lg font-bold" value="${med.system_quantity}" min="0" data-medicine-id="${med.medicine_id}" data-system="${med.system_quantity}">
+                        <label class="text-light-muted text-sm">الفعلي:</label>
+                        <input type="number" class="actual-qty w-full bg-light-bg border border-dark-border rounded-lg px-3 py-2 text-light-text text-center text-lg font-bold" value="${med.system_quantity}" min="0" data-medicine-id="${med.medicine_id}" data-system="${med.system_quantity}">
                     </div>
                 </div>
             `).join('');

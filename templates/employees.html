@@ -4,20 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>👥 إدارة الموظفين - PharmaSUD</title>
+    <link rel="stylesheet" href="/static/css/theme.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        dark: { bg: 'var(--text-primary)', card: 'var(--surface)', border: 'var(--border)', text: 'var(--border)', muted: 'var(--text-secondary)' }
+                        light: { bg: "#F6F8FA", card: "#FFFFFF", border: "#EEF2F6", text: "#0F172A", muted: "#64748B" }
                     }
                 }
             }
         }
     </script>
 </head>
-<body class="bg-dark-bg text-dark-text font-sans min-h-screen">
+<body class="bg-light-bg text-light-text font-sans min-h-screen">
     <div class="max-w-3xl mx-auto p-4">
         <!-- Header -->
         <div class="flex items-center justify-between mb-6">
@@ -35,7 +39,7 @@
         </button>
 
         <!-- Employees List -->
-        <div id="loading" class="text-center py-12 text-dark-muted">جاري تحميل الموظفين...</div>
+        <div id="loading" class="text-center py-12 text-light-muted">جاري تحميل الموظفين...</div>
         <div id="employees-list" class="space-y-3 hidden"></div>
     </div>
 
@@ -44,14 +48,14 @@
         <div class="bg-dark-card rounded-2xl p-6 w-full max-w-md border border-dark-border" onclick="event.stopPropagation()">
             <h2 class="text-xl font-bold mb-4">➕ إضافة موظف جديد</h2>
             <div class="space-y-4">
-                <input id="new-full-name" type="text" placeholder="الاسم الكامل" class="w-full bg-dark-bg border border-dark-border rounded-xl p-3 text-right">
-                <input id="new-username" type="text" placeholder="اسم المستخدم" class="w-full bg-dark-bg border border-dark-border rounded-xl p-3 text-right">
-                <input id="new-password" type="password" placeholder="كلمة المرور (6 أحرف على الأقل)" class="w-full bg-dark-bg border border-dark-border rounded-xl p-3 text-right">
-                <input id="new-phone" type="text" placeholder="رقم الهاتف (اختياري)" class="w-full bg-dark-bg border border-dark-border rounded-xl p-3 text-right">
+                <input id="new-full-name" type="text" placeholder="الاسم الكامل" class="w-full bg-light-bg border border-dark-border rounded-xl p-3 text-right">
+                <input id="new-username" type="text" placeholder="اسم المستخدم" class="w-full bg-light-bg border border-dark-border rounded-xl p-3 text-right">
+                <input id="new-password" type="password" placeholder="كلمة المرور (6 أحرف على الأقل)" class="w-full bg-light-bg border border-dark-border rounded-xl p-3 text-right">
+                <input id="new-phone" type="text" placeholder="رقم الهاتف (اختياري)" class="w-full bg-light-bg border border-dark-border rounded-xl p-3 text-right">
                 <button onclick="addEmployee()" class="w-full bg-green-600 hover:bg-green-700 text-[#0F172A] rounded-xl py-3 font-bold transition">
                     💾 حفظ
                 </button>
-                <button onclick="hideAddModal()" class="w-full bg-dark-border text-dark-muted rounded-xl py-2 transition">
+                <button onclick="hideAddModal()" class="w-full bg-dark-border text-light-muted rounded-xl py-2 transition">
                     إلغاء
                 </button>
             </div>
@@ -62,12 +66,12 @@
     <div id="resetModal" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50 p-4" onclick="closeModal(event)">
         <div class="bg-dark-card rounded-2xl p-6 w-full max-w-md border border-dark-border" onclick="event.stopPropagation()">
             <h2 class="text-xl font-bold mb-4">🔑 إعادة تعيين كلمة المرور</h2>
-            <p id="reset-user-name" class="text-dark-muted mb-4"></p>
-            <input id="reset-password" type="password" placeholder="كلمة المرور الجديدة" class="w-full bg-dark-bg border border-dark-border rounded-xl p-3 text-right mb-4">
+            <p id="reset-user-name" class="text-light-muted mb-4"></p>
+            <input id="reset-password" type="password" placeholder="كلمة المرور الجديدة" class="w-full bg-light-bg border border-dark-border rounded-xl p-3 text-right mb-4">
             <button onclick="resetPassword()" class="w-full bg-[#1AA7EC] hover:bg-blue-700 text-[#0F172A] rounded-xl py-3 font-bold transition">
                 🔄 تأكيد
             </button>
-            <button onclick="hideResetModal()" class="w-full bg-dark-border text-dark-muted rounded-xl py-2 mt-2 transition">
+            <button onclick="hideResetModal()" class="w-full bg-dark-border text-light-muted rounded-xl py-2 mt-2 transition">
                 إلغاء
             </button>
         </div>
@@ -97,7 +101,7 @@
                 list.classList.remove('hidden');
 
                 if (employees.length === 0) {
-                    list.innerHTML = '<div class="text-center text-dark-muted py-8">لا يوجد موظفون بعد</div>';
+                    list.innerHTML = '<div class="text-center text-light-muted py-8">لا يوجد موظفون بعد</div>';
                     return;
                 }
 
@@ -109,7 +113,7 @@
                                 <span class="${emp.is_active ? 'text-green-400' : 'text-red-400'} text-sm mr-2">${emp.is_active ? '✅ نشط' : '🔴 معطّل'}</span>
                             </div>
                         </div>
-                        <div class="text-dark-muted text-sm mt-1 flex gap-4">
+                        <div class="text-light-muted text-sm mt-1 flex gap-4">
                             <span>👤 ${emp.username}</span>
                             <span>📞 ${emp.phone || '—'}</span>
                             <span>🕐 ${emp.created_at ? emp.created_at.slice(0, 10) : ''}</span>
