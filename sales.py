@@ -357,7 +357,9 @@ async def get_sales(
     # ترتيب وتقسيم الصفحات
     query += " ORDER BY s.created_at DESC"
     offset = (page - 1) * per_page
-    query += f" LIMIT {per_page} OFFSET {offset}"
+    query += " LIMIT :limit_val OFFSET :offset_val"
+    params["limit_val"] = per_page
+    params["offset_val"] = offset
     
     result = db.execute(text(query), params)
     rows = result.fetchall()
@@ -770,8 +772,6 @@ async def get_public_invoice(
         "customer_name": sale.customer_name,
         "cashier_name": user.full_name if user else None,
         "pharmacy_name": pharmacy.name if pharmacy else None,
-        "pharmacy_phone": pharmacy.phone if pharmacy else None,
-        "pharmacy_address": pharmacy.address if pharmacy else None,
         "items": items,
         "created_at": sale.created_at.isoformat() if sale.created_at else None
     }

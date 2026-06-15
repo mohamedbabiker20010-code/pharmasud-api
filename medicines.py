@@ -29,6 +29,7 @@ from models import (
     MEDICINE_CATEGORIES
 )
 from auth import get_current_user, require_admin
+from audit import log_action
 
 # Create router
 router = APIRouter(prefix="/api/medicines", tags=["medicines"])
@@ -384,6 +385,13 @@ async def update_medicine(
                 detail="الباركود مستخدم مسبقاً لدواء آخر"
             )
     
+    # Track price changes for audit log
+    price_changed = False
+    old_sale_price = None
+    old_purchase_price = None
+    new_sale_price = None
+    new_purchase_price = None
+
     # Update fields
     if data.trade_name:
         medicine.trade_name = data.trade_name
@@ -394,7 +402,10 @@ async def update_medicine(
     if data.barcode is not None:
         medicine.barcode = data.barcode
     if data.sale_price:
+        old_sale_price = float(medicine.sale_price)
         medicine.sale_price = data.sale_price
+        new_sale_price = data.sale_price
+        price_changed = True
         # Also sync the default unit's sale price
         default_unit = db.query(Unit).filter(
             Unit.medicine_id == medicine.id,
@@ -403,7 +414,10 @@ async def update_medicine(
         if default_unit:
             default_unit.sale_price = data.sale_price
     if data.purchase_price:
+        old_purchase_price = float(medicine.purchase_price) if medicine.purchase_price else None
         medicine.purchase_price = data.purchase_price
+        new_purchase_price = data.purchase_price
+        price_changed = True
     if data.base_unit:
         medicine.base_unit = data.base_unit
     if data.min_stock is not None:
@@ -413,9 +427,30 @@ async def update_medicine(
         if medicine.image_path:
             delete_image(medicine.image_path)
         medicine.image_path = data.image_path
-    
+
     db.commit()
     db.refresh(medicine)
+
+    # Audit log if price changed
+    if price_changed:
+        old_val_parts = []
+        new_val_parts = []
+        if old_sale_price is not None:
+            old_val_parts.append(f"{old_sale_price} ج.س")
+            new_val_parts.append(f"{new_sale_price} ج.س")
+        if old_purchase_price is not None:
+            old_val_parts.append(f"(شراء: {old_purchase_price} ج.س)")
+            new_val_parts.append(f"(شراء: {new_purchase_price} ج.س)")
+        log_action(
+            db=db,
+            pharmacy_id=current_user["pharmacy_id"],
+            user_id=current_user["user_id"],
+            user_name=current_user.get("full_name", current_user["username"]),
+            action_type="price_update",
+            description=f"تعديل سعر {medicine.trade_name}",
+            old_value=", ".join(old_val_parts) if old_val_parts else None,
+            new_value=", ".join(new_val_parts) if new_val_parts else None
+        )
     
     return {
         "success": True,
@@ -460,11 +495,23 @@ async def delete_medicine(
     # Delete image if exists
     if medicine.image_path:
         delete_image(medicine.image_path)
-    
+
+    med_name = medicine.trade_name
+
     # Delete medicine (cascade will delete units and batches)
     db.delete(medicine)
     db.commit()
-    
+
+    # Audit log
+    log_action(
+        db=db,
+        pharmacy_id=current_user["pharmacy_id"],
+        user_id=current_user["user_id"],
+        user_name=current_user.get("full_name", current_user["username"]),
+        action_type="medicine_delete",
+        description=f"حذف الدواء: {med_name}"
+    )
+
     return {
         "success": True,
         "message": "تم حذف الدواء بنجاح"

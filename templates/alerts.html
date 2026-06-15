@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔔 التنبيهات - PharmaSUD</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: { bg: '#0F172A', card: '#1E293B', border: '#334155', text: '#E2E8F0', muted: '#94A3B8' }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-dark-bg text-dark-text font-sans min-h-screen">
+    <div class="max-w-2xl mx-auto p-4">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-2xl font-bold">🔔 التنبيهات</h1>
+            <a href="/dashboard" class="text-blue-400 hover:text-blue-300 text-sm">← العودة للرئيسية</a>
+        </div>
+
+        <!-- Loading -->
+        <div id="loading" class="text-center py-12 text-dark-muted">جاري تحميل التنبيهات...</div>
+
+        <!-- Error -->
+        <div id="error" class="hidden bg-red-900/50 border border-red-700 rounded-lg p-4 mb-4 text-center"></div>
+
+        <!-- Content -->
+        <div id="content" class="hidden space-y-6"></div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) { window.location.href = '/login'; }
+
+        async function loadAlerts() {
+            const loading = document.getElementById('loading');
+            const content = document.getElementById('content');
+            const error = document.getElementById('error');
+
+            try {
+                const res = await fetch('/api/alerts/', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (!res.ok) { throw new Error('HTTP ' + res.status); }
+                const data = await res.json();
+
+                loading.classList.add('hidden');
+                content.classList.remove('hidden');
+
+                let html = '';
+
+                // Expiry critical alerts
+                const critical = data.expiry_alerts.filter(a => a.severity === 'critical');
+                if (critical.length > 0) {
+                    html += `
+                        <div class="bg-dark-card border border-red-800 rounded-xl p-4">
+                            <h2 class="text-lg font-bold text-red-400 mb-3">🔴 صلاحية عاجلة (${critical.length})</h2>
+                            ${critical.map(a => `
+                                <div class="flex items-center justify-between py-2 border-b border-dark-border last:border-0">
+                                    <div>
+                                        <span class="font-medium">${a.trade_name}</span>
+                                        <span class="text-dark-muted text-sm mr-2">${a.batch_number}</span>
+                                    </div>
+                                    <span class="text-red-400 text-sm font-bold" dir="ltr">${a.days_remaining} يوم</span>
+                                </div>
+                            `).join('')}
+                        </div>`;
+                }
+
+                // Expiry warning alerts
+                const warning = data.expiry_alerts.filter(a => a.severity === 'warning');
+                if (warning.length > 0) {
+                    html += `
+                        <div class="bg-dark-card border border-yellow-800 rounded-xl p-4">
+                            <h2 class="text-lg font-bold text-yellow-400 mb-3">🟡 صلاحية تحذير (${warning.length})</h2>
+                            ${warning.map(a => `
+                                <div class="flex items-center justify-between py-2 border-b border-dark-border last:border-0">
+                                    <div>
+                                        <span class="font-medium">${a.trade_name}</span>
+                                        <span class="text-dark-muted text-sm mr-2">${a.batch_number}</span>
+                                    </div>
+                                    <span class="text-yellow-400 text-sm font-bold" dir="ltr">${a.days_remaining} يوم</span>
+                                </div>
+                            `).join('')}
+                        </div>`;
+                }
+
+                // Low stock alerts
+                if (data.low_stock_alerts.length > 0) {
+                    html += `
+                        <div class="bg-dark-card border border-orange-800 rounded-xl p-4">
+                            <h2 class="text-lg font-bold text-orange-400 mb-3">📉 مخزون منخفض (${data.low_stock_alerts.length})</h2>
+                            ${data.low_stock_alerts.map(a => `
+                                <div class="flex items-center justify-between py-2 border-b border-dark-border last:border-0">
+                                    <div>
+                                        <span class="font-medium">${a.trade_name}</span>
+                                        <span class="text-dark-muted text-sm mr-2">${a.base_unit}</span>
+                                    </div>
+                                    <span class="text-orange-400 text-sm">${a.current_stock} ${a.base_unit} (الحد: ${a.min_stock})</span>
+                                </div>
+                            `).join('')}
+                        </div>`;
+                }
+
+                // No alerts message
+                if (critical.length === 0 && warning.length === 0 && data.low_stock_alerts.length === 0) {
+                    html = `
+                        <div class="bg-dark-card rounded-xl p-8 text-center">
+                            <div class="text-4xl mb-4">✅</div>
+                            <h2 class="text-xl font-bold text-green-400">لا توجد تنبيهات</h2>
+                            <p class="text-dark-muted mt-2">كل الأدوية في حالتها الطبيعية</p>
+                        </div>`;
+                }
+
+                content.innerHTML = html;
+
+            } catch (e) {
+                loading.classList.add('hidden');
+                error.classList.remove('hidden');
+                error.textContent = '❌ فشل تحميل التنبيهات: ' + e.message;
+            }
+        }
+
+        loadAlerts();
+    </script>
+</body>
+</html>
+<!-- ✅ انتهى - alerts.html - المرحلة 7 -->

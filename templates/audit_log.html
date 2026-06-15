@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📋 سجل التدقيق - PharmaSUD</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: { bg: '#0F172A', card: '#1E293B', border: '#334155', text: '#E2E8F0', muted: '#94A3B8' }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-dark-bg text-dark-text font-sans min-h-screen">
+    <div class="max-w-3xl mx-auto p-4">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-2xl font-bold">📋 سجل التدقيق</h1>
+            <a href="/dashboard" class="text-blue-400 hover:text-blue-300 text-sm">← العودة للرئيسية</a>
+        </div>
+
+        <!-- Filter -->
+        <div class="flex gap-2 mb-4">
+            <select id="action-filter" onchange="loadAudit()" class="bg-dark-card border border-dark-border rounded-xl px-4 py-2 text-dark-text flex-1">
+                <option value="all">الكل</option>
+                <option value="price_update">تعديل سعر</option>
+                <option value="medicine_delete">حذف دواء</option>
+                <option value="employee_create">إضافة موظف</option>
+                <option value="employee_toggle">تعطيل/تفعيل موظف</option>
+                <option value="employee_reset_password">إعادة كلمة موظف</option>
+                <option value="stocktake_adjustment">جرد</option>
+            </select>
+        </div>
+
+        <!-- Loading -->
+        <div id="loading" class="text-center py-12 text-dark-muted">جاري تحميل سجل التدقيق...</div>
+
+        <!-- Error -->
+        <div id="error" class="hidden bg-red-900/50 border border-red-700 rounded-lg p-4 mb-4 text-center"></div>
+
+        <!-- Content -->
+        <div id="content" class="hidden space-y-2"></div>
+
+        <!-- Pagination -->
+        <div id="pagination" class="hidden flex justify-center gap-2 mt-4"></div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) { window.location.href = '/login'; }
+
+        let currentPage = 1;
+
+        async function loadAudit() {
+            const loading = document.getElementById('loading');
+            const content = document.getElementById('content');
+            const error = document.getElementById('error');
+            const pagination = document.getElementById('pagination');
+            const filter = document.getElementById('action-filter').value;
+
+            loading.classList.remove('hidden');
+            content.classList.add('hidden');
+
+            try {
+                const res = await fetch(`/api/audit-log/?action_type=${filter}&page=${currentPage}`, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (!res.ok) { throw new Error('HTTP ' + res.status); }
+                const data = await res.json();
+
+                loading.classList.add('hidden');
+                content.classList.remove('hidden');
+
+                if (data.logs.length === 0) {
+                    content.innerHTML = '<div class="text-center text-dark-muted py-8">لا توجد عمليات مسجلة</div>';
+                    return;
+                }
+
+                content.innerHTML = data.logs.map(log => {
+                    let typeIcon = '📝';
+                    if (log.action_type === 'price_update') typeIcon = '💰';
+                    else if (log.action_type === 'medicine_delete') typeIcon = '🗑️';
+                    else if (log.action_type === 'employee_create') typeIcon = '👤';
+                    else if (log.action_type === 'employee_toggle') typeIcon = '🔄';
+                    else if (log.action_type === 'employee_reset_password') typeIcon = '🔑';
+                    else if (log.action_type === 'stocktake_adjustment') typeIcon = '📊';
+
+                    const time = log.created_at ? log.created_at.slice(0, 16).replace('T', ' ') : '';
+                    const diff = (log.old_value && log.new_value) ? `
+                        <div class="text-dark-muted text-sm mt-1">
+                            <span class="text-red-400">${log.old_value}</span>
+                            <span class="mx-1">←</span>
+                            <span class="text-green-400">${log.new_value}</span>
+                        </div>` : '';
+
+                    return `
+                        <div class="bg-dark-card rounded-xl p-4 border border-dark-border">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span>${typeIcon}</span>
+                                    <span class="font-medium">${log.user_name}</span>
+                                    <span class="text-dark-muted text-xs">${time}</span>
+                                </div>
+                                <span class="text-xs text-dark-muted">${log.action_type}</span>
+                            </div>
+                            <div class="text-dark-text mt-1">${log.description}</div>
+                            ${diff}
+                        </div>`;
+                }).join('');
+
+                // Pagination
+                pagination.classList.remove('hidden');
+                const totalPages = Math.ceil(data.total / 50);
+                let pageHtml = '';
+                if (currentPage > 1) {
+                    pageHtml += `<button onclick="goPage(${currentPage - 1})" class="px-3 py-1 bg-dark-card rounded-lg">←</button>`;
+                }
+                pageHtml += `<span class="px-3 py-1 text-dark-muted">${currentPage} / ${Math.max(1, totalPages)}</span>`;
+                if (currentPage < totalPages) {
+                    pageHtml += `<button onclick="goPage(${currentPage + 1})" class="px-3 py-1 bg-dark-card rounded-lg">→</button>`;
+                }
+                pagination.innerHTML = pageHtml;
+
+            } catch (e) {
+                loading.classList.add('hidden');
+                error.classList.remove('hidden');
+                error.textContent = '❌ فشل تحميل سجل التدقيق: ' + e.message;
+            }
+        }
+
+        function goPage(page) {
+            currentPage = page;
+            loadAudit();
+        }
+
+        loadAudit();
+    </script>
+</body>
+</html>
+<!-- ✅ انتهى - audit_log.html - المرحلة 7 -->

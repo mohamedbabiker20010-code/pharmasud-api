@@ -1,18 +1,19 @@
 """
-PharmaSUD - Inventory Module (Stage 4)
-Version 4.0.0
+PharmaSUD - Inventory Module (Stage 4 + Stage 7)
+Version 7.0.0
 
 يتولى:
 - عرض المخزون الكامل مع إجمالي الشحنات
 - تفاصيل شحنات كل دواء
 - تقرير الأدوية المنتهية
-- حساب أقرب تاريخ انتهاء لكل دواء
+- الجرد السريع بالباركود (Stage 7)
 """
 
 import uuid
-from datetime import datetime, date
-from typing import Optional
+from datetime import datetime, date, timedelta
+from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from sqlalchemy import text, func
 
@@ -23,11 +24,26 @@ from models import (
     BatchDetailResponse, BatchResponse,
     ExpiredItem, ExpiredReportResponse,
 )
-from auth import get_current_user
-from batches import format_batch_response, calculate_days_remaining, get_expiry_status
+from auth import get_current_user, require_admin
+from batches import format_batch_response, calculate_days_remaining, get_expiry_status, get_fefo_batches
+from audit import log_action
 
 # Create router
 router = APIRouter(prefix="/api/inventory", tags=["inventory"])
+
+
+# ═══════════════════════════════════════════════════════════
+# Pydantic models for Stocktake
+# ═══════════════════════════════════════════════════════════
+
+class StocktakeItemInput(BaseModel):
+    medicine_id: str
+    actual_quantity: int
+
+
+class StocktakeSubmitRequest(BaseModel):
+    notes: str = ""
+    items: List[StocktakeItemInput]
 
 
 # ═══════════════════════════════════════════════════════════
@@ -58,10 +74,6 @@ def get_stock_status(total_stock: int, min_stock: int) -> str:
 # ═══════════════════════════════════════════════════════════
 
 def get_nearest_expiry(medicine_id, db: Session):
-    """
-    تجيب أقرب تاريخ انتهاء للشحنات النشطة غير المنتهية.
-    ترجع (التاريخ, حالة_الصلاحية) أو (None, None) إذا ما في شحنات.
-    """
     today = date.today()
     batch = db.query(Batch).filter(
         Batch.medicine_id == medicine_id,
@@ -78,8 +90,24 @@ def get_nearest_expiry(medicine_id, db: Session):
 
 
 # ═══════════════════════════════════════════════════════════
-# المهمة 3: عرض المخزون الكامل
-# GET /api/inventory/
+# دالة مساعدة: آخر سعر شراء معروف لدواء
+# ═══════════════════════════════════════════════════════════
+
+def get_last_purchase_price(medicine_id, db: Session) -> float:
+    """أحدث سعر شراء من أحدث شحنة."""
+    result = db.execute(
+        text("""
+            SELECT purchase_price FROM batches
+            WHERE medicine_id = :mid AND purchase_price IS NOT NULL
+            ORDER BY created_at DESC LIMIT 1
+        """),
+        {"mid": medicine_id}
+    ).scalar()
+    return float(result) if result else 0.0
+
+
+# ═══════════════════════════════════════════════════════════
+# عرض المخزون الكامل
 # ═══════════════════════════════════════════════════════════
 
 @router.get("/")
@@ -87,17 +115,9 @@ async def get_inventory(
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    عرض المخزون الكامل.
-    لكل دواء يعرض:
-    - إجمالي الكمية من كل الشحنات
-    - أقرب تاريخ انتهاء
-    - عدد الشحنات المتاحة
-    - حالة المخزون (متوفر/منخفض/نفد)
-    """
+    """عرض المخزون الكامل."""
     ph_id = uuid.UUID(current_user["pharmacy_id"])
 
-    # نجيب كل الأدوية النشطة في الصيدلية
     medicines = db.query(Medicine).filter(
         Medicine.pharmacy_id == ph_id
     ).order_by(Medicine.trade_name).all()
@@ -109,14 +129,12 @@ async def get_inventory(
         total_stock = get_medicine_total_stock(med_id, db)
         stock_status = get_stock_status(total_stock, med.min_stock)
 
-        # عدد الشحنات النشطة
         batches_count = db.query(func.count(Batch.id)).filter(
             Batch.medicine_id == med_id,
             Batch.quantity > 0,
             Batch.is_active == True
         ).scalar() or 0
 
-        # أقرب تاريخ انتهاء
         nearest_expiry, nearest_expiry_status = get_nearest_expiry(med_id, db)
 
         inventory_items.append({
@@ -141,7 +159,6 @@ async def get_inventory(
 
 # ═══════════════════════════════════════════════════════════
 # تفاصيل شحنات دواء معين
-# GET /api/inventory/{medicine_id}/batches
 # ═══════════════════════════════════════════════════════════
 
 @router.get("/{medicine_id}/batches")
@@ -150,11 +167,6 @@ async def get_medicine_batches(
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    عرض كل الشحنات لدواء معين.
-    تشمل الشحنات النشطة والمنتهية.
-    مرتبة حسب تاريخ الانتهاء (الأقرب أولاً).
-    """
     try:
         med_uuid = uuid.UUID(medicine_id)
     except ValueError:
@@ -168,7 +180,6 @@ async def get_medicine_batches(
     if not medicine:
         raise HTTPException(status_code=404, detail="الدواء غير موجود")
 
-    # نجيب كل الشحنات (حتى المنتهية) مرتبة حسب تاريخ الانتهاء
     batches = db.query(Batch).filter(
         Batch.medicine_id == med_uuid
     ).order_by(Batch.expiry_date.asc()).all()
@@ -187,8 +198,7 @@ async def get_medicine_batches(
 
 
 # ═══════════════════════════════════════════════════════════
-# المهمة 4: تقرير الأدوية المنتهية
-# GET /api/inventory/expired
+# تقرير الأدوية المنتهية
 # ═══════════════════════════════════════════════════════════
 
 @router.get("/expired")
@@ -196,14 +206,9 @@ async def get_expired_report(
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    تقرير بكل الشحنات المنتهية الصلاحية.
-    تُظهر فقط الشحنات التي انتهى تاريخها.
-    """
     ph_id = uuid.UUID(current_user["pharmacy_id"])
     today = date.today()
 
-    # نجيب كل الشحنات المنتهية مع اسم الدواء
     results = db.execute(text("""
         SELECT
             m.trade_name,
@@ -241,4 +246,202 @@ async def get_expired_report(
     }
 
 
-# ✅ انتهى - inventory.py - المرحلة 4
+# ═══════════════════════════════════════════════════════════
+# المهمة 4 (Stage 7): الجرد السريع - بدء الجرد
+# GET /api/inventory/stocktake/start
+# ═══════════════════════════════════════════════════════════
+
+@router.get("/stocktake/start")
+async def start_stocktake(
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """بدء الجرد: قائمة كل الأدوية مع كمية النظام الحالية."""
+    ph_id = uuid.UUID(current_user["pharmacy_id"])
+
+    medicines = db.query(Medicine).filter(
+        Medicine.pharmacy_id == ph_id
+    ).order_by(Medicine.trade_name).all()
+
+    result = []
+    for med in medicines:
+        total_stock = get_medicine_total_stock(str(med.id), db)
+        result.append({
+            "medicine_id": str(med.id),
+            "trade_name": med.trade_name,
+            "barcode": med.barcode or "",
+            "base_unit": med.base_unit or "شريط",
+            "system_quantity": total_stock,
+            "image_url": med.image_path or "/static/images/default-medicine.svg"
+        })
+
+    return {"medicines": result}
+
+
+# ═══════════════════════════════════════════════════════════
+# الجرد السريع - حفظ نتائج الجرد
+# POST /api/inventory/stocktake/submit
+# ═══════════════════════════════════════════════════════════
+
+@router.post("/stocktake/submit")
+async def submit_stocktake(
+    data: StocktakeSubmitRequest,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """حفظ نتائج الجرد مع تطبيق الفروقات."""
+    pharmacy_id = current_user["pharmacy_id"]
+    user_id = current_user["user_id"]
+    user_name = current_user.get("full_name", current_user["username"])
+
+    ph_uuid = uuid.UUID(pharmacy_id)
+    user_uuid = uuid.UUID(user_id)
+
+    # إنشاء جلسة الجرد
+    session_id = uuid.uuid4()
+    db.execute(
+        text("""
+            INSERT INTO stocktake_sessions (id, pharmacy_id, user_id, notes)
+            VALUES (:sid, :pid, :uid, :notes)
+        """),
+        {"sid": session_id, "pid": ph_uuid, "uid": user_uuid, "notes": data.notes}
+    )
+
+    adjustments = []
+    unchanged_count = 0
+    today = date.today()
+
+    for item in data.items:
+        med_id_str = item.medicine_id
+        try:
+            med_uuid = uuid.UUID(med_id_str)
+        except ValueError:
+            continue
+
+        # 1. أعد حساب system_quantity الحالي من قاعدة البيانات
+        system_qty = get_medicine_total_stock(str(med_uuid), db)
+
+        actual_qty = item.actual_quantity
+        difference = actual_qty - system_qty
+
+        # 2. لو الفرق = 0 → تجاهل
+        if difference == 0:
+            unchanged_count += 1
+            continue
+
+        # نجيب اسم الدواء
+        medicine = db.query(Medicine).filter(Medicine.id == med_uuid).first()
+        med_name = medicine.trade_name if medicine else "غير معروف"
+
+        # سجّل في stocktake_items
+        db.execute(
+            text("""
+                INSERT INTO stocktake_items
+                    (session_id, medicine_id, medicine_name,
+                     system_quantity, actual_quantity, difference)
+                VALUES
+                    (:sid, :mid, :mname, :sys, :act, :diff)
+            """),
+            {
+                "sid": session_id,
+                "mid": med_uuid,
+                "mname": med_name,
+                "sys": system_qty,
+                "act": actual_qty,
+                "diff": difference
+            }
+        )
+
+        action_desc = ""
+
+        if difference < 0:
+            # 3. الفرق سالب (نقصان): اخصم |الفرق| باستخدام FEFO
+            qty_to_remove = abs(difference)
+
+            # استخدم FEFO لتحديد الشحنات المطلوب خصمها
+            try:
+                # نجيب الشحنات المتاحة مرتبة FEFO
+                fefo_batches = db.query(Batch).filter(
+                    Batch.medicine_id == med_uuid,
+                    Batch.quantity > 0,
+                    Batch.is_active == True,
+                    Batch.expiry_date > today
+                ).order_by(Batch.expiry_date.asc()).all()
+
+                remaining = qty_to_remove
+                for batch in fefo_batches:
+                    if remaining <= 0:
+                        break
+                    take = min(batch.quantity, remaining)
+                    batch.quantity -= take
+                    remaining -= take
+                    if batch.quantity <= 0:
+                        batch.is_active = False
+
+                action_desc = f"تم خصم {qty_to_remove} من المخزون"
+            except Exception as e:
+                action_desc = f"فشل الخصم: {str(e)}"
+
+        elif difference > 0:
+            # 4. الفرق موجب (زيادة): أضف شحنة تسوية
+            last_price = get_last_purchase_price(str(med_uuid), db)
+            next_year = today + timedelta(days=365)
+
+            db.execute(
+                text("""
+                    INSERT INTO batches
+                        (id, medicine_id, batch_number, quantity,
+                         expiry_date, purchase_price, supplier_name, is_active)
+                    VALUES
+                        (:bid, :mid, :bnum, :qty, :exp, :price, :supplier, true)
+                """),
+                {
+                    "bid": uuid.uuid4(),
+                    "mid": med_uuid,
+                    "bnum": f"تسوية-جرد-{today.isoformat()}",
+                    "qty": difference,
+                    "exp": next_year,
+                    "price": last_price,
+                    "supplier": "تسوية جرد"
+                }
+            )
+
+            action_desc = f"تم إضافة {difference} كشحنة تسوية"
+
+        adjustments.append({
+            "medicine_name": med_name,
+            "system_quantity": system_qty,
+            "actual_quantity": actual_qty,
+            "difference": difference,
+            "action": action_desc
+        })
+
+        # 7. سجّل في audit_log
+        log_action(
+            db=db,
+            pharmacy_id=pharmacy_id,
+            user_id=user_id,
+            user_name=user_name,
+            action_type="stocktake_adjustment",
+            description=f"جرد: {med_name} - النظام: {system_qty} - الفعلي: {actual_qty} - الفرق: {difference}",
+            old_value=str(system_qty),
+            new_value=str(actual_qty)
+        )
+
+    # تحديث عدد العناصر المعدّلة في الجلسة
+    db.execute(
+        text("UPDATE stocktake_sessions SET items_adjusted = :adj WHERE id = :sid"),
+        {"adj": len(adjustments), "sid": session_id}
+    )
+
+    db.commit()
+
+    return {
+        "success": True,
+        "session_id": str(session_id),
+        "adjustments": adjustments,
+        "unchanged_count": unchanged_count
+    }
+
+
+# ✅ انتهى - inventory.py - المرحلة 7

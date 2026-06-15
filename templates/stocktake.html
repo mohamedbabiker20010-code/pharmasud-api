@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 الجرد السريع - PharmaSUD</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: { bg: '#0F172A', card: '#1E293B', border: '#334155', text: '#E2E8F0', muted: '#94A3B8' }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-dark-bg text-dark-text font-sans min-h-screen">
+    <div class="max-w-3xl mx-auto p-4">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-4">
+            <h1 class="text-2xl font-bold">📊 الجرد السريع</h1>
+            <a href="/dashboard" class="text-blue-400 hover:text-blue-300 text-sm">← العودة للرئيسية</a>
+        </div>
+
+        <!-- Scanner & Search bar -->
+        <div class="flex gap-2 mb-4">
+            <button onclick="startScanner()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-medium transition">📷 مسح باركود</button>
+            <input id="manual-barcode-input" type="text" placeholder="أو أدخل الباركود يدوياً..." class="flex-1 bg-dark-card border border-dark-border rounded-xl px-4 py-2 text-dark-text" onkeydown="if(event.key==='Enter')searchManualBarcode()">
+        </div>
+
+        <!-- Scanner Container -->
+        <div id="scanner-container" class="hidden mb-4">
+            <div class="bg-black rounded-xl overflow-hidden relative">
+                <video id="scanner-video" class="w-full h-64 object-cover" playsinline></video>
+                <div id="scanner-status" class="absolute bottom-0 left-0 right-0 bg-black/70 text-white text-center py-1 text-sm"></div>
+            </div>
+            <div class="flex gap-2 mt-2">
+                <button onclick="stopScanner()" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-xl font-medium transition">إيقاف المسح</button>
+                <button onclick="searchManualBarcode()" class="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white py-2 rounded-xl font-medium transition">بحث يدوي</button>
+            </div>
+        </div>
+
+        <!-- Notes -->
+        <div class="mb-4">
+            <input id="stocktake-notes" type="text" placeholder="ملاحظات (مثال: جرد شهر يونيو)" class="w-full bg-dark-card border border-dark-border rounded-xl px-4 py-2 text-dark-text">
+        </div>
+
+        <!-- Loading -->
+        <div id="loading" class="text-center py-12 text-dark-muted">جاري تحميل قائمة الجرد...</div>
+
+        <!-- Error -->
+        <div id="error" class="hidden bg-red-900/50 border border-red-700 rounded-lg p-4 mb-4 text-center"></div>
+        <div id="success" class="hidden bg-green-900/50 border border-green-700 rounded-lg p-4 mb-4 text-center"></div>
+
+        <!-- Medicine List -->
+        <div id="medicines-container" class="hidden space-y-3 mb-4"></div>
+
+        <!-- Submit -->
+        <div id="submit-area" class="hidden">
+            <button onclick="submitStocktake()" class="w-full bg-green-600 hover:bg-green-700 text-white rounded-xl py-3 font-bold text-lg transition">
+                💾 حفظ نتائج الجرد
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) { window.location.href = '/login'; }
+
+        let allMedicines = [];
+
+        // ═══════════════════════════════════════════════
+        // Load stocktake data
+        // ═══════════════════════════════════════════════
+        async function loadStocktake() {
+            const loading = document.getElementById('loading');
+            const container = document.getElementById('medicines-container');
+            const submitArea = document.getElementById('submit-area');
+            const error = document.getElementById('error');
+
+            try {
+                const res = await fetch('/api/inventory/stocktake/start', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (!res.ok) { throw new Error('HTTP ' + res.status); }
+                const data = await res.json();
+                allMedicines = data.medicines || [];
+
+                loading.classList.add('hidden');
+                container.classList.remove('hidden');
+                submitArea.classList.remove('hidden');
+
+                renderMedicines(allMedicines);
+
+            } catch (e) {
+                loading.classList.add('hidden');
+                error.classList.remove('hidden');
+                error.textContent = '❌ فشل تحميل الجرد: ' + e.message;
+            }
+        }
+
+        function renderMedicines(list) {
+            const container = document.getElementById('medicines-container');
+
+            if (list.length === 0) {
+                container.innerHTML = '<div class="text-center text-dark-muted py-8">لا توجد أدوية</div>';
+                return;
+            }
+
+            container.innerHTML = list.map(med => `
+                <div class="bg-dark-card rounded-xl p-4 border border-dark-border" data-medicine-id="${med.medicine_id}">
+                    <div class="flex items-start gap-3">
+                        <div class="w-12 h-12 rounded-lg bg-dark-border flex-shrink-0 overflow-hidden">
+                            <img src="${med.image_url}" alt="${med.trade_name}" class="w-full h-full object-cover" onerror="this.src='/static/images/default-medicine.svg'">
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-bold">${med.trade_name}</div>
+                            <div class="text-dark-muted text-xs">${med.barcode || 'بدون باركود'}</div>
+                            <div class="text-dark-muted text-sm mt-1">النظام: <span class="text-blue-400 font-bold">${med.system_quantity}</span> ${med.base_unit}</div>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <label class="text-dark-muted text-sm">الفعلي:</label>
+                        <input type="number" class="actual-qty w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-dark-text text-center text-lg font-bold" value="${med.system_quantity}" min="0" data-medicine-id="${med.medicine_id}" data-system="${med.system_quantity}">
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function scrollToMedicineAndFocus(barcode) {
+            // Search for medicine by barcode
+            const med = allMedicines.find(m => m.barcode === barcode);
+            if (!med) {
+                updateScannerStatus('❌ الباركود غير موجود في قاعدة البيانات');
+                return;
+            }
+
+            // Find the element and scroll to it
+            const card = document.querySelector(`[data-medicine-id="${med.medicine_id}"]`);
+            if (!card) return;
+
+            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            card.style.border = '2px solid #3B82F6';
+            setTimeout(() => { card.style.border = ''; }, 2000);
+
+            // Focus the input
+            const input = card.querySelector('.actual-qty');
+            if (input) {
+                input.focus();
+                input.select();
+            }
+        }
+
+        // ═══════════════════════════════════════════════
+        // BARCODE SCANNER (standalone copy from pos.html)
+        // ═══════════════════════════════════════════════
+        let scannerStream = null;
+        let scannerRunning = false;
+        let scannerEngine = null;
+        let scannerEngineType = '';
+
+        async function startScanner() {
+            document.getElementById('scanner-container').style.display = 'block';
+            scannerRunning = true;
+            let stream;
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: { ideal: 'environment' },
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 }
+                    }
+                });
+                scannerStream = stream;
+            } catch (e) {
+                showScannerError('لا يمكن الوصول للكاميرا: ' + e.message);
+                return;
+            }
+
+            const video = document.getElementById('scanner-video');
+            video.srcObject = stream;
+            await new Promise(function(resolve) {
+                if (video.readyState >= 2) return resolve();
+                video.onloadedmetadata = function() { resolve(); };
+            });
+            await video.play();
+
+            if (video.videoWidth === 0) {
+                showScannerError('الكاميرا لم تبدأ بشكل صحيح');
+                return;
+            }
+
+            // Try native BarcodeDetector
+            if ('BarcodeDetector' in window) {
+                try {
+                    var wanted = ['ean_13','ean_8','upc_a','upc_e','code_128','code_39'];
+                    var supported = await BarcodeDetector.getSupportedFormats();
+                    var usable = wanted.filter(function(f) { return supported.includes(f); });
+                    if (usable.length > 0) {
+                        scannerEngine = new BarcodeDetector({ formats: usable });
+                        scannerEngineType = 'native';
+                    }
+                } catch (e) { scannerEngine = null; }
+            }
+
+            // Fallback to ZXing WASM
+            if (!scannerEngine) {
+                try {
+                    var mod = await import('https://esm.sh/zxing-wasm@2/reader');
+                    scannerEngine = mod.readBarcodesFromImageData;
+                    scannerEngineType = 'wasm';
+                } catch (e) {
+                    showScannerError('تعذر تحميل محرك المسح - استخدم الإدخال اليدوي');
+                    return;
+                }
+            }
+
+            updateScannerStatus(scannerEngineType === 'native'
+                ? '🟢 جاري المسح...' : '🟡 جاري المسح (متوافقية)...');
+
+            var canvas = document.createElement('canvas');
+            var ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+            function scanLoop() {
+                if (!scannerRunning) return;
+                if (video.readyState < 2 || video.videoWidth === 0) {
+                    requestAnimationFrame(scanLoop);
+                    return;
+                }
+
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                try {
+                    var results = [];
+                    if (scannerEngineType === 'native') {
+                        results = await scannerEngine.detect(canvas);
+                    } else {
+                        var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                        var zx = await scannerEngine(imageData, {
+                            tryHarder: true,
+                            formats: ['EAN-13','EAN-8','UPC-A','UPC-E','Code-128','Code-39'],
+                            maxNumberOfSymbols: 1
+                        });
+                        results = zx.map(function(r) {
+                            return { rawValue: r.text, format: r.format };
+                        });
+                    }
+
+                    if (results.length > 0) {
+                        var barcode = results[0].rawValue;
+                        if (navigator.vibrate) navigator.vibrate(120);
+                        stopScannerInternal();
+                        scrollToMedicineAndFocus(barcode);
+                        return;
+                    }
+                } catch (e) {
+                    updateScannerStatus('⚠️ ' + e.name);
+                }
+
+                setTimeout(function() { requestAnimationFrame(scanLoop); }, 120);
+            }
+
+            scanLoop();
+        }
+
+        function stopScannerInternal() {
+            scannerRunning = false;
+            if (scannerStream) {
+                scannerStream.getTracks().forEach(function(t) { t.stop(); });
+                scannerStream = null;
+            }
+            var video = document.getElementById('scanner-video');
+            if (video && video.srcObject) {
+                video.srcObject.getTracks().forEach(function(t) { t.stop(); });
+                video.srcObject = null;
+            }
+        }
+
+        function stopScanner() {
+            stopScannerInternal();
+            document.getElementById('scanner-container').style.display = 'none';
+        }
+
+        function showScannerError(msg) {
+            updateScannerStatus('❌ ' + msg);
+        }
+
+        function updateScannerStatus(text) {
+            var el = document.getElementById('scanner-status');
+            if (el) el.textContent = text;
+        }
+
+        function searchManualBarcode() {
+            var input = document.getElementById('manual-barcode-input');
+            var barcode = input.value.trim();
+            if (!barcode) return;
+            scrollToMedicineAndFocus(barcode);
+            input.value = '';
+        }
+
+        // ═══════════════════════════════════════════════
+        // SUBMIT
+        // ═══════════════════════════════════════════════
+        async function submitStocktake() {
+            const inputs = document.querySelectorAll('.actual-qty');
+            const items = [];
+            let hasChanges = false;
+
+            inputs.forEach(function(input) {
+                const medId = input.getAttribute('data-medicine-id');
+                const systemQty = parseInt(input.getAttribute('data-system'));
+                const actualQty = parseInt(input.value) || 0;
+
+                if (actualQty !== systemQty) hasChanges = true;
+                items.push({
+                    medicine_id: medId,
+                    actual_quantity: actualQty
+                });
+            });
+
+            if (!hasChanges) {
+                document.getElementById('error').textContent = '⚠️ لم تقم بتغيير أي كمية';
+                document.getElementById('error').classList.remove('hidden');
+                setTimeout(() => document.getElementById('error').classList.add('hidden'), 3000);
+                return;
+            }
+
+            const notes = document.getElementById('stocktake-notes').value.trim();
+
+            try {
+                const res = await fetch('/api/inventory/stocktake/submit', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ notes: notes, items: items })
+                });
+                const data = await res.json();
+                if (!res.ok) { throw new Error(data.detail || 'فشل الحفظ'); }
+
+                // Show result
+                const success = document.getElementById('success');
+                let msg = '✅ تم حفظ الجرد بنجاح!\n';
+                if (data.adjustments && data.adjustments.length > 0) {
+                    msg += data.adjustments.map(a =>
+                        `• ${a.medicine_name}: ${a.action}`
+                    ).join('\n');
+                }
+                if (data.unchanged_count > 0) {
+                    msg += `\n• ${data.unchanged_count} دواء بدون تغيير`;
+                }
+                success.textContent = msg;
+                success.classList.remove('hidden');
+
+                // Reload after 3 seconds
+                setTimeout(function() {
+                    success.classList.add('hidden');
+                    loadStocktake();
+                }, 3000);
+
+            } catch (e) {
+                document.getElementById('error').textContent = '❌ ' + e.message;
+                document.getElementById('error').classList.remove('hidden');
+            }
+        }
+
+        // Start
+        loadStocktake();
+    </script>
+</body>
+</html>
+<!-- ✅ انتهى - stocktake.html - المرحلة 7 -->

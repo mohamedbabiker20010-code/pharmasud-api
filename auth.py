@@ -26,7 +26,9 @@ from models import Pharmacy, User
 load_dotenv()
 
 # Security Configuration
-SECRET_KEY = os.getenv("SECRET_KEY", "pharmasud-secret-key-change-in-production")
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise ValueError("⚠️ SECRET_KEY غير موجود! حدده في متغيرات البيئة (Environment Variables) على Render")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_HOURS = 24
 
@@ -297,7 +299,7 @@ def authenticate_user(username: str, password: str, db: Session) -> Dict[str, An
     if not user.is_active:
         return {
             "success": False,
-            "message": "الحساب غير نشط"
+            "message": "هذا الحساب معطّل - تواصل مع المدير"
         }
     
     # Verify password
