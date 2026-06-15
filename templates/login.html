@@ -461,7 +461,7 @@
         }
         this.loading = true;
         try {
-          const res = await fetch('/api/login', {
+          const res = await fetch('/api/auth/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -473,7 +473,7 @@
           if (res.ok && data.success) {
             localStorage.setItem('token', data.token);
             localStorage.setItem('role', data.role);
-            localStorage.setItem('userName', data.name || this.username);
+            localStorage.setItem('userName', data.full_name || this.username);
             localStorage.setItem('pharmacyName', data.pharmacy_name || '');
             window.location.href = '/dashboard';
           } else {
