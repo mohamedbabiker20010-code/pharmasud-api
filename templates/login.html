@@ -415,7 +415,7 @@
     }
   </style>
 </head>
-<body>
+<body class="show">
   <div class="login-page" x-data="loginApp()">
     <!-- Left Panel -->
     <div class="login-left">
@@ -506,11 +506,7 @@
   </div>
 
   <script>
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        document.body.classList.add('show');
-      }, 50);
-    });
+    // Content is visible by default (show class added to body)
 
     function togglePwd() {
       const input = document.getElementById('pwdInput');
