@@ -10,7 +10,7 @@
             theme: {
                 extend: {
                     colors: {
-                        dark: { bg: '#0F172A', card: '#1E293B', border: '#334155', text: '#E2E8F0', muted: '#94A3B8' }
+                        dark: { bg: 'var(--text-primary)', card: 'var(--surface)', border: 'var(--border)', text: 'var(--border)', muted: 'var(--text-secondary)' }
                     }
                 }
             }
@@ -143,7 +143,7 @@
             if (!card) return;
 
             card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            card.style.border = '2px solid #3B82F6';
+            card.style.border = '2px solid var(--primary-blue)';
             setTimeout(() => { card.style.border = ''; }, 2000);
 
             // Focus the input

@@ -1,24 +1,38 @@
-/* PharmaSUD Design System - Light Mode + Blue Theme v1 */
 :root {
   --primary-blue: #2563EB;
   --primary-blue-dark: #1E40AF;
   --primary-blue-light: #3B82F6;
   --accent-sky: #0EA5E9;
 
-  --background: #FFFFFF;
-  --surface: #F8FAFC;
-  --surface-blue-tint: #EFF6FF;
+  --background: #F1F5F9;
+  --surface: #FFFFFF;
+  --surface-hover: #F8FAFC;
   --border: #E2E8F0;
+  --border-light: #F1F5F9;
 
   --text-primary: #0F172A;
   --text-secondary: #64748B;
+  --text-tertiary: #94A3B8;
 
   --success: #10B981;
   --warning: #F59E0B;
   --danger: #EF4444;
 
-  --main-gradient: linear-gradient(135deg, #2563EB 0%, #1E40AF 50%, #0EA5E9 100%);
-  --splash-gradient: linear-gradient(135deg, #1E40AF 0%, #2563EB 50%, #0EA5E9 100%);
+  --sidebar-width: 260px;
+  --topbar-height: 64px;
 
-  --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+  --font-sans: 'Cairo', 'IBM Plex Sans Arabic', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.06), 0 2px 4px -2px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.06), 0 4px 6px -4px rgba(0,0,0,0.04);
+
+  --transition: 150ms cubic-bezier(0.4, 0, 0.2, 1);
 }
