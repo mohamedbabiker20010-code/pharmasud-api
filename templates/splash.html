@@ -116,13 +116,11 @@
 
   <script>
     window.addEventListener('load', () => {
-      if (!localStorage.getItem('splashShown')) {
-        localStorage.setItem('splashShown', '1');
-      }
       setTimeout(() => {
-        document.getElementById('splash').classList.add('hide');
+        const splash = document.getElementById('splash');
+        if (splash) splash.classList.add('hide');
         window.location.href = '/login';
-      }, 2500);
+      }, 1800);
     });
   </script>
 </body>
