@@ -3,24 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/theme.css">
     <title>توقعات الشراء - PharmaSUD</title>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #0F172A;
-            color: #F8FAFC;
+            background: var(--background);
+            color: var(--text-primary);
             min-height: 100vh;
         }
 
         /* ─── Sidebar ─── */
         .sidebar {
             width: 220px;
-            background: #1E293B;
+            background: var(--surface);
             min-height: 100vh;
             padding: 24px 0;
-            border-left: 1px solid #334155;
+            border-left: 1px solid var(--border);
             position: fixed;
             right: 0;
             top: 0;
@@ -30,12 +31,12 @@
         }
         .sidebar .logo {
             padding: 0 20px 24px;
-            border-bottom: 1px solid #334155;
+            border-bottom: 1px solid var(--border);
             margin-bottom: 16px;
         }
         .sidebar .logo h1 {
             font-size: 18px;
-            color: #3B82F6;
+            color: var(--primary-blue);
             display: flex;
             align-items: center;
             gap: 8px;
@@ -43,7 +44,7 @@
         .sidebar .logo h1 svg { flex-shrink: 0; }
         .sidebar .logo p {
             font-size: 11px;
-            color: #64748B;
+            color: var(--text-secondary);
             margin-top: 2px;
             margin-right: 30px;
         }
@@ -52,7 +53,7 @@
             align-items: center;
             gap: 12px;
             padding: 12px 20px;
-            color: #94A3B8;
+            color: var(--text-secondary);
             text-decoration: none;
             font-size: 14px;
             transition: all 0.2s;
@@ -67,13 +68,13 @@
             font-family: inherit;
         }
         .nav-item:hover, .nav-item.active {
-            background: #334155;
-            color: #F8FAFC;
-            border-right-color: #3B82F6;
+            background: var(--border);
+            color: var(--text-primary);
+            border-right-color: var(--primary-blue);
         }
         .nav-item .icon { font-size: 18px; width: 22px; text-align: center; }
         .nav-item .badge {
-            background: #EF4444;
+            background: var(--danger);
             color: white;
             font-size: 10px;
             padding: 1px 6px;
@@ -82,7 +83,7 @@
         }
         .nav-section-label {
             font-size: 11px;
-            color: #475569;
+            color: var(--text-secondary);
             padding: 8px 20px 4px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -91,11 +92,11 @@
         .sidebar-footer {
             margin-top: auto;
             padding: 16px 20px;
-            border-top: 1px solid #334155;
+            border-top: 1px solid var(--border);
         }
         .sidebar-footer .nav-item {
             border-right: none;
-            color: #EF4444;
+            color: var(--danger);
             padding: 12px 0;
         }
         .sidebar-footer .nav-item:hover {
@@ -106,9 +107,9 @@
         /* ─── Mobile toggle ─── */
         .mobile-toggle {
             display: none;
-            background: #334155;
+            background: var(--border);
             border: none;
-            color: #F8FAFC;
+            color: var(--text-primary);
             width: 40px;
             height: 40px;
             border-radius: 8px;
@@ -140,7 +141,7 @@
             align-items: center;
             margin-bottom: 28px;
             padding-bottom: 20px;
-            border-bottom: 1px solid #334155;
+            border-bottom: 1px solid var(--border);
             gap: 12px;
             flex-wrap: wrap;
         }
@@ -151,15 +152,15 @@
             align-items: center;
             gap: 16px;
             font-size: 13px;
-            color: #94A3B8;
+            color: var(--text-secondary);
         }
         .header-left .date { direction: ltr; }
         .header-left .user-info { text-align: left; }
-        .header-left .user-info .name { color: #F8FAFC; font-weight: 600; }
-        .header-left .user-info .pharmacy { font-size: 12px; color: #64748B; }
+        .header-left .user-info .name { color: var(--text-primary); font-weight: 600; }
+        .header-left .user-info .pharmacy { font-size: 12px; color: var(--text-secondary); }
         .notification-bell {
             position: relative;
-            background: #334155;
+            background: var(--border);
             border: none;
             width: 40px;
             height: 40px;
@@ -168,10 +169,10 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #94A3B8;
+            color: var(--text-secondary);
             transition: all 0.2s;
         }
-        .notification-bell:hover { background: #475569; color: #F8FAFC; }
+        .notification-bell:hover { background: var(--text-secondary); color: var(--text-primary); }
 
         /* ─── Summary Cards ─── */
         .cards-grid {
@@ -181,13 +182,13 @@
             margin-bottom: 28px;
         }
         .summary-card {
-            background: #1E293B;
-            border: 1px solid #334155;
+            background: var(--surface);
+            border: 1px solid var(--border);
             border-radius: 12px;
             padding: 20px;
             transition: border-color 0.2s;
         }
-        .summary-card:hover { border-color: #475569; }
+        .summary-card:hover { border-color: var(--text-secondary); }
         .summary-card .card-icon {
             width: 40px;
             height: 40px;
@@ -200,28 +201,28 @@
         }
         .summary-card .card-label {
             font-size: 13px;
-            color: #94A3B8;
+            color: var(--text-secondary);
             margin-bottom: 4px;
         }
         .summary-card .card-value {
             font-size: 26px;
             font-weight: 700;
-            color: #F8FAFC;
+            color: var(--text-primary);
         }
         .summary-card .card-sub {
             font-size: 12px;
-            color: #64748B;
+            color: var(--text-secondary);
             margin-top: 4px;
         }
-        .card-red .card-icon { background: rgba(239,68,68,0.15); color: #EF4444; }
-        .card-yellow .card-icon { background: rgba(245,158,11,0.15); color: #F59E0B; }
-        .card-green .card-icon { background: rgba(34,197,94,0.15); color: #22C55E; }
-        .card-gray .card-icon { background: rgba(148,163,184,0.15); color: #94A3B8; }
+        .card-red .card-icon { background: rgba(239,68,68,0.15); color: var(--danger); }
+        .card-yellow .card-icon { background: rgba(245,158,11,0.15); color: var(--warning); }
+        .card-green .card-icon { background: rgba(34,197,94,0.15); color: var(--success); }
+        .card-gray .card-icon { background: rgba(148,163,184,0.15); color: var(--text-secondary); }
 
         /* ─── Section Card ─── */
         .section-card {
-            background: #1E293B;
-            border: 1px solid #334155;
+            background: var(--surface);
+            border: 1px solid var(--border);
             border-radius: 12px;
             overflow: hidden;
             margin-bottom: 28px;
@@ -231,7 +232,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 16px 20px;
-            border-bottom: 1px solid #334155;
+            border-bottom: 1px solid var(--border);
         }
         .section-card .card-header h3 {
             font-size: 15px;
@@ -241,7 +242,7 @@
         }
         .section-card .card-header .subtitle {
             font-size: 12px;
-            color: #64748B;
+            color: var(--text-secondary);
         }
         .section-card .card-body { padding: 0; }
 
@@ -252,10 +253,10 @@
         }
         .forecast-table th {
             font-size: 12px;
-            color: #64748B;
+            color: var(--text-secondary);
             text-align: right;
             padding: 10px 8px;
-            border-bottom: 1px solid #334155;
+            border-bottom: 1px solid var(--border);
             font-weight: 600;
             white-space: nowrap;
             user-select: none;
@@ -263,7 +264,7 @@
         .forecast-table td {
             font-size: 13px;
             padding: 12px 8px;
-            border-bottom: 1px solid #1E293B;
+            border-bottom: 1px solid var(--surface);
         }
         .forecast-table tbody tr {
             transition: background 0.15s;
@@ -272,7 +273,7 @@
         .forecast-table tr:last-child td { border-bottom: none; }
         .forecast-table .med-name {
             font-weight: 600;
-            color: #F8FAFC;
+            color: var(--text-primary);
         }
         .forecast-table .num {
             direction: ltr;
@@ -284,7 +285,7 @@
         }
         .forecast-table .runout-date {
             font-size: 12px;
-            color: #94A3B8;
+            color: var(--text-secondary);
         }
 
         /* ─── Priority Badge ─── */
@@ -320,11 +321,11 @@
         }
 
         /* ─── Day Count Styling ─── */
-        .days-urgent { color: #EF4444; font-weight: 700; }
-        .days-warning { color: #F59E0B; font-weight: 600; }
-        .days-notice { color: #3B82F6; }
-        .days-fine { color: #22C55E; }
-        .days-label { font-size: 11px; color: #64748B; margin-right: 2px; }
+        .days-urgent { color: var(--danger); font-weight: 700; }
+        .days-warning { color: var(--warning); font-weight: 600; }
+        .days-notice { color: var(--primary-blue); }
+        .days-fine { color: var(--success); }
+        .days-label { font-size: 11px; color: var(--text-secondary); margin-right: 2px; }
 
         /* ─── Loading & Error States ─── */
         .loading-state {
@@ -338,23 +339,23 @@
         .spinner {
             width: 40px;
             height: 40px;
-            border: 3px solid #334155;
-            border-top-color: #3B82F6;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary-blue);
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .loading-text { color: #94A3B8; font-size: 14px; }
+        .loading-text { color: var(--text-secondary); font-size: 14px; }
 
         .error-state {
             text-align: center;
             padding: 60px 20px;
         }
         .error-state .err-icon { font-size: 48px; margin-bottom: 12px; }
-        .error-state .err-msg { color: #EF4444; font-size: 16px; margin-bottom: 8px; }
-        .error-state .err-detail { color: #94A3B8; font-size: 13px; margin-bottom: 16px; }
+        .error-state .err-msg { color: var(--danger); font-size: 16px; margin-bottom: 8px; }
+        .error-state .err-detail { color: var(--text-secondary); font-size: 13px; margin-bottom: 16px; }
         .retry-btn {
-            background: #3B82F6;
+            background: var(--primary-blue);
             color: white;
             border: none;
             padding: 10px 24px;
@@ -369,11 +370,11 @@
         .no-data {
             text-align: center;
             padding: 40px 20px;
-            color: #64748B;
+            color: var(--text-secondary);
             font-size: 14px;
         }
         .no-data .no-data-icon { font-size: 40px; margin-bottom: 12px; }
-        .no-data .no-data-sub { color: #475569; font-size: 13px; margin-top: 4px; }
+        .no-data .no-data-sub { color: var(--text-secondary); font-size: 13px; margin-top: 4px; }
 
         /* ─── Scrollable Table Wrapper ─── */
         .table-wrap {
@@ -509,12 +510,12 @@
 
         <!-- Summary Description Bar -->
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
-            <div style="font-size:13px;color:#94A3B8;">
+            <div style="font-size:13px;color:var(--text-secondary);">
                 تحليل توقعات الشراء لجميع الأدوية — يعتمد على متوسط المبيعات اليومية لآخر 30 يوماً
             </div>
             <template x-if="!loading && !error && loaded">
-                <div style="font-size:13px;color:#64748B;">
-                    إجمالي الأدوية: <strong style="color:#F8FAFC;" x-text="medicines.length"></strong>
+                <div style="font-size:13px;color:var(--text-secondary);">
+                    إجمالي الأدوية: <strong style="color:var(--text-primary);" x-text="medicines.length"></strong>
                 </div>
             </template>
         </div>
@@ -639,7 +640,7 @@
                                     <span style="font-size:20px;">🔴</span>
                                     <span style="font-size:14px;font-weight:600;color:#FCA5A5;">حرجة — شراء فوري مطلوب</span>
                                 </div>
-                                <div style="font-size:13px;color:#94A3B8;line-height:1.6;">
+                                <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;">
                                     <strong style="color:#FCA5A5;" x-text="summary.critical_count"></strong> دواء (أدوية) على وشك النفاد خلال 7 أيام أو أقل.
                                     يوصى بطلب شراء عاجل لتجنب نفاد المخزون وانقطاع الخدمة.
                                 </div>
@@ -649,7 +650,7 @@
                                     <span style="font-size:20px;">🟡</span>
                                     <span style="font-size:14px;font-weight:600;color:#FCD34D;">عالية — يجب الشراء هذا الأسبوع</span>
                                 </div>
-                                <div style="font-size:13px;color:#94A3B8;line-height:1.6;">
+                                <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;">
                                     <strong style="color:#FCD34D;" x-text="summary.high_count"></strong> دواء (أدوية) ستنفد خلال 14 يوماً.
                                     يوصى بتضمينها في طلب الشراء القادم هذا الأسبوع.
                                 </div>

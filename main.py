@@ -34,8 +34,8 @@ from reports import router as reports_router
 
 app = FastAPI(
     title="PharmaSUD API",
-    description="Pharmacy Point of Sale System - Stage 6.5 (Server Barcode Decoder)",
-    version="6.5.0"
+    description="Pharmacy Point of Sale System - Stage 7.1 (New Visual Identity)",
+    version="7.1.0"
 )
 
 # Create tables on startup (if they don't exist)
@@ -101,13 +101,18 @@ logger = logging.getLogger(__name__)
 # PUBLIC ENDPOINTS
 # ================================================================
 
-@app.get("/")
-async def root():
-    """Root endpoint with API info."""
+@app.get("/", response_class=HTMLResponse)
+async def root(request: Request):
+    """Splash screen -> redirects to /login (once per day via localStorage)."""
+    return templates.TemplateResponse("splash.html", {"request": request})
+
+@app.get("/api")
+async def api_info():
+    """API info endpoint."""
     return {
         "status": "PharmaSUD API Running",
-        "version": "6.5.0",
-        "stage": "Stage 6.5 - Permissions & Storage"
+        "version": "7.1.0",
+        "stage": "Stage 7 - New Visual Identity (Light + Blue)"
     }
 
 @app.get("/health")

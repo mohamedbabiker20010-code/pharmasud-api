@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/theme.css">
     <title>قائمة الأدوية - صيدلية الزاريات</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -11,10 +12,10 @@
         body { font-family: 'Cairo', sans-serif; }
     </style>
 </head>
-<body class="bg-[#0F172A] text-white min-h-screen">
+<body class="bg-[var(--background)] text-white min-h-screen">
     <div x-data="medicinesListApp()" x-init="init()">
         <!-- Header -->
-        <header class="bg-[#1E293B] border-b border-gray-700 sticky top-0 z-10">
+        <header class="bg-[var(--surface)] border-b border-gray-700 sticky top-0 z-10">
             <div class="max-w-3xl mx-auto px-4 py-4">
                 <div class="flex justify-between items-center">
                     <h1 class="text-xl font-bold">قائمة الأدوية</h1>
@@ -30,7 +31,7 @@
 
         <!-- Search and Filter -->
         <div class="max-w-3xl mx-auto px-4 py-4">
-            <div class="bg-[#1E293B] rounded-lg p-4 space-y-4">
+            <div class="bg-[var(--surface)] rounded-lg p-4 space-y-4">
                 <!-- Search -->
                 <div class="relative">
                     <input 
@@ -38,7 +39,7 @@
                         x-model="searchQuery"
                         @input="searchMedicines()"
                         placeholder="ابحث بالاسم أو الباركود..."
-                        class="w-full bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-3 pr-10 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                        class="w-full bg-[var(--background)] border border-gray-600 rounded-lg px-4 py-3 pr-10 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
                     >
                     <svg class="absolute left-3 top-3.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -49,7 +50,7 @@
                 <div class="flex gap-2 overflow-x-auto pb-2">
                     <button 
                         @click="selectedCategory = ''; searchMedicines()"
-                        :class="selectedCategory === '' ? 'bg-blue-600' : 'bg-[#0F172A] border border-gray-600'"
+                        :class="selectedCategory === '' ? 'bg-blue-600' : 'bg-[var(--background)] border border-gray-600'"
                         class="px-4 py-2 rounded-lg whitespace-nowrap text-sm"
                     >
                         الكل
@@ -57,7 +58,7 @@
                     <template x-for="category in categories" :key="category">
                         <button 
                             @click="selectedCategory = category; searchMedicines()"
-                            :class="selectedCategory === category ? 'bg-blue-600' : 'bg-[#0F172A] border border-gray-600'"
+                            :class="selectedCategory === category ? 'bg-blue-600' : 'bg-[var(--background)] border border-gray-600'"
                             class="px-4 py-2 rounded-lg whitespace-nowrap text-sm"
                             x-text="category"
                         ></button>
@@ -90,9 +91,9 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <template x-for="medicine in medicines" :key="medicine.id">
-                    <div class="bg-[#1E293B] rounded-lg overflow-hidden">
+                    <div class="bg-[var(--surface)] rounded-lg overflow-hidden">
                         <!-- Image -->
-                        <div class="h-32 bg-[#0F172A] flex items-center justify-center relative">
+                        <div class="h-32 bg-[var(--background)] flex items-center justify-center relative">
                             <img :src="medicine.image_url" class="h-full w-full object-contain p-4" :alt="medicine.trade_name">
                             <!-- Stock Status -->
                             <div 

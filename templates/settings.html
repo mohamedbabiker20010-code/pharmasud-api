@@ -3,48 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/theme.css">
     <title>الإعدادات - صيدلية الزاريات</title>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #0F172A;
-            color: #F8FAFC;
+            background: var(--background);
+            color: var(--text-primary);
             min-height: 100vh;
         }
         .container { max-width: 800px; margin: 0 auto; padding: 24px 20px; }
         .header {
             display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 24px; padding-bottom: 16px;
-            border-bottom: 1px solid #334155;
+            border-bottom: 1px solid var(--border);
         }
         .header h1 { font-size: 20px; display: flex; align-items: center; gap: 8px; }
-        .back-link { color: #94A3B8; text-decoration: none; font-size: 14px; }
-        .back-link:hover { color: #3B82F6; }
+        .back-link { color: var(--text-secondary); text-decoration: none; font-size: 14px; }
+        .back-link:hover { color: var(--primary-blue); }
 
         /* Tabs */
         .tabs {
             display: flex; gap: 4px; margin-bottom: 24px;
-            background: #1E293B; border-radius: 10px; padding: 4px;
+            background: var(--surface); border-radius: 10px; padding: 4px;
         }
         .tab-btn {
             flex: 1; padding: 10px; border: none; border-radius: 8px;
-            background: transparent; color: #94A3B8; font-size: 14px;
+            background: transparent; color: var(--text-secondary); font-size: 14px;
             cursor: pointer; font-family: inherit; transition: all 0.2s;
         }
-        .tab-btn:hover { color: #F8FAFC; background: #334155; }
-        .tab-btn.active { background: #3B82F6; color: white; }
+        .tab-btn:hover { color: var(--text-primary); background: var(--border); }
+        .tab-btn.active { background: var(--primary-blue); color: white; }
 
         /* Panels */
         .panel { display: none; }
         .panel.active { display: block; }
         .panel-card {
-            background: #1E293B; border: 1px solid #334155;
+            background: var(--surface); border: 1px solid var(--border);
             border-radius: 12px; padding: 24px;
         }
         .panel-card h2 {
-            font-size: 15px; color: #94A3B8; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+            font-size: 15px; color: var(--text-secondary); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
         }
 
         /* Messages */
@@ -57,12 +58,12 @@
         /* Employee List */
         .emp-row {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 12px 16px; background: #0F172A; border-radius: 8px; margin-bottom: 8px;
+            padding: 12px 16px; background: var(--background); border-radius: 8px; margin-bottom: 8px;
         }
         .emp-row:last-child { margin-bottom: 0; }
         .emp-info { flex: 1; }
         .emp-info .name { font-weight: 600; font-size: 14px; }
-        .emp-info .meta { font-size: 12px; color: #94A3B8; }
+        .emp-info .meta { font-size: 12px; color: var(--text-secondary); }
         .emp-info .role-badge {
             display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px;
         }
@@ -86,40 +87,40 @@
         .form-group {
             display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px;
         }
-        .form-group label { font-size: 13px; color: #94A3B8; }
-        .form-group label .required { color: #EF4444; }
+        .form-group label { font-size: 13px; color: var(--text-secondary); }
+        .form-group label .required { color: var(--danger); }
         .form-group input {
-            background: #0F172A; border: 1px solid #334155; padding: 10px 12px;
-            border-radius: 8px; color: #F8FAFC; font-size: 14px; font-family: inherit;
+            background: var(--background); border: 1px solid var(--border); padding: 10px 12px;
+            border-radius: 8px; color: var(--text-primary); font-size: 14px; font-family: inherit;
         }
-        .form-group input:focus { outline: none; border-color: #3B82F6; }
+        .form-group input:focus { outline: none; border-color: var(--primary-blue); }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 
         .submit-btn {
             width: 100%; margin-top: 8px; padding: 12px; border: none; border-radius: 8px;
-            background: #3B82F6; color: white; font-size: 14px; font-weight: 600;
+            background: var(--primary-blue); color: white; font-size: 14px; font-weight: 600;
             cursor: pointer; font-family: inherit;
         }
         .submit-btn:hover { background: #2563EB; }
-        .submit-btn:disabled { background: #334155; color: #64748B; cursor: not-allowed; }
+        .submit-btn:disabled { background: var(--border); color: var(--text-secondary); cursor: not-allowed; }
         .submit-btn.danger { background: #DC2626; }
         .submit-btn.danger:hover { background: #B91C1C; }
         .submit-btn.green { background: #059669; }
         .submit-btn.green:hover { background: #047857; }
 
-        .divider { border: none; border-top: 1px solid #334155; margin: 20px 0; }
+        .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
 
         .loading {
-            text-align: center; padding: 40px; color: #64748B;
+            text-align: center; padding: 40px; color: var(--text-secondary);
         }
         .loading .spinner {
             display: inline-block; width: 28px; height: 28px;
-            border: 3px solid #334155; border-top-color: #3B82F6;
+            border: 3px solid var(--border); border-top-color: var(--primary-blue);
             border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 8px;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        .no-data { text-align: center; padding: 30px; color: #64748B; font-size: 13px; }
+        .no-data { text-align: center; padding: 30px; color: var(--text-secondary); font-size: 13px; }
 
         /* Confirmation Dialog */
         .confirm-overlay {
@@ -127,17 +128,17 @@
             display: flex; align-items: center; justify-content: center; z-index: 100;
         }
         .confirm-dialog {
-            background: #1E293B; border: 1px solid #DC2626; border-radius: 12px;
+            background: var(--surface); border: 1px solid #DC2626; border-radius: 12px;
             padding: 24px; max-width: 380px; width: 90%; text-align: center;
         }
         .confirm-dialog h3 { color: #FCA5A5; margin-bottom: 12px; font-size: 15px; }
-        .confirm-dialog p { color: #94A3B8; font-size: 14px; margin-bottom: 16px; }
+        .confirm-dialog p { color: var(--text-secondary); font-size: 14px; margin-bottom: 16px; }
         .confirm-dialog .btn-row { display: flex; gap: 12px; justify-content: center; }
         .confirm-dialog button {
             padding: 8px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-family: inherit;
         }
         .confirm-dialog .btn-yes { background: #DC2626; color: white; }
-        .confirm-dialog .btn-no { background: #334155; color: #94A3B8; }
+        .confirm-dialog .btn-no { background: var(--border); color: var(--text-secondary); }
 
         @media (max-width: 600px) {
             .form-row { grid-template-columns: 1fr; }
@@ -188,7 +189,7 @@
                             <div class="meta">
                                 <span class="role-badge" :class="emp.role === 'admin' ? 'role-admin' : 'role-employee'" x-text="emp.role === 'admin' ? 'مدير' : 'موظف'"></span>
                                 <span style="margin-right:8px;">@<span x-text="emp.username"></span></span>
-                                <span style="color:#64748B; font-size:11px;" x-show="!emp.is_active"> | ❌ معطل</span>
+                                <span style="color:var(--text-secondary); font-size:11px;" x-show="!emp.is_active"> | ❌ معطل</span>
                             </div>
                         </div>
                         <div class="emp-actions">
@@ -222,7 +223,7 @@
                     </div>
                     <div class="form-group">
                         <label>الدور</label>
-                        <select x-model="empForm.role" style="background:#0F172A;border:1px solid #334155;padding:10px 12px;border-radius:8px;color:#F8FAFC;font-size:14px;font-family:inherit;">
+                        <select x-model="empForm.role" style="background:var(--background);border:1px solid var(--border);padding:10px 12px;border-radius:8px;color:var(--text-primary);font-size:14px;font-family:inherit;">
                             <option value="employee">موظف</option>
                             <option value="admin">مدير</option>
                         </select>
@@ -280,14 +281,14 @@
                         <div class="form-group">
                             <label>🔒 اسم الصيدلية <span style="color:#FCD34D;font-size:11px;">(مقفول)</span></label>
                             <input type="text" x-model="pharmacyForm.name" disabled
-                                   style="background:#0F172A;border:1px solid #334155;padding:10px 12px;border-radius:8px;color:#64748B;font-size:14px;font-family:inherit;cursor:not-allowed;">
+                                   style="background:var(--background);border:1px solid var(--border);padding:10px 12px;border-radius:8px;color:var(--text-secondary);font-size:14px;font-family:inherit;cursor:not-allowed;">
                             <p style="font-size:11px;color:#FCD34D;margin-top:4px;">🔒 لا يمكن تعديل اسم الصيدلية — اتصل بالمطور لتغييره</p>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
                                 <label>🔒 اسم المالك <span style="color:#FCD34D;font-size:11px;">(مقفول)</span></label>
                                 <input type="text" x-model="pharmacyForm.owner_name" disabled
-                                       style="background:#0F172A;border:1px solid #334155;padding:10px 12px;border-radius:8px;color:#64748B;font-size:14px;font-family:inherit;cursor:not-allowed;">
+                                       style="background:var(--background);border:1px solid var(--border);padding:10px 12px;border-radius:8px;color:var(--text-secondary);font-size:14px;font-family:inherit;cursor:not-allowed;">
                             </div>
                             <div class="form-group">
                                 <label>📞 رقم الهاتف</label>
@@ -297,7 +298,7 @@
                         <div class="form-group">
                             <label>العنوان</label>
                             <textarea x-model="pharmacyForm.address" 
-                                      style="background:#0F172A;border:1px solid #334155;padding:10px 12px;border-radius:8px;color:#F8FAFC;font-size:14px;font-family:inherit;resize:vertical;min-height:60px;"
+                                      style="background:var(--background);border:1px solid var(--border);padding:10px 12px;border-radius:8px;color:var(--text-primary);font-size:14px;font-family:inherit;resize:vertical;min-height:60px;"
                                       placeholder="عنوان الصيدلية"></textarea>
                         </div>
                         <button class="submit-btn green" @click="savePharmacy()">

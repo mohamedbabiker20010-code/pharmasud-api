@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <link rel="stylesheet" href="/static/css/theme.css">
     <title>نقطة البيع - PharmaSUD</title>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -13,8 +12,8 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--background);
-            color: var(--text-primary);
+            background: #0F172A;
+            color: #F8FAFC;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -22,12 +21,12 @@
         
         /* Header */
         .pos-header {
-            background: var(--surface);
+            background: #1E293B;
             padding: 12px 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid #334155;
             position: sticky;
             top: 0;
             z-index: 50;
@@ -39,17 +38,17 @@
         }
         .pos-header .logo-section h1 {
             font-size: 18px;
-            color: var(--primary-blue);
+            color: #3B82F6;
         }
         .pos-header .user-section {
             display: flex;
             align-items: center;
             gap: 12px;
             font-size: 13px;
-            color: var(--text-secondary);
+            color: #94A3B8;
         }
         .pos-header .user-section .name {
-            color: var(--text-primary);
+            color: #F8FAFC;
             font-weight: 600;
         }
         .btn-sm {
@@ -66,8 +65,8 @@
         }
         .btn-danger-sm:hover { background: #B91C1C; }
         .btn-icon {
-            background: var(--border);
-            color: var(--text-secondary);
+            background: #334155;
+            color: #94A3B8;
             border: none;
             width: 36px;
             height: 36px;
@@ -79,7 +78,7 @@
             font-size: 16px;
             transition: all 0.2s;
         }
-        .btn-icon:hover { background: var(--text-secondary); color: var(--text-primary); }
+        .btn-icon:hover { background: #475569; color: #F8FAFC; }
         
         /* Main Layout */
         .pos-layout {
@@ -95,14 +94,14 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            border-left: 1px solid var(--border);
+            border-left: 1px solid #334155;
         }
         
         /* Search Area */
         .search-area {
             padding: 12px 16px;
-            background: var(--surface);
-            border-bottom: 1px solid var(--border);
+            background: #1E293B;
+            border-bottom: 1px solid #334155;
         }
         .search-row {
             display: flex;
@@ -112,20 +111,20 @@
         .search-row input {
             flex: 1;
             padding: 10px 14px;
-            background: var(--border);
-            border: 2px solid var(--text-secondary);
+            background: #334155;
+            border: 2px solid #475569;
             border-radius: 8px;
-            color: var(--text-primary);
+            color: #F8FAFC;
             font-size: 14px;
             transition: border-color 0.2s;
         }
         .search-row input:focus {
             outline: none;
-            border-color: var(--primary-blue);
+            border-color: #3B82F6;
         }
-        .search-row input::placeholder { color: var(--text-secondary); }
+        .search-row input::placeholder { color: #64748B; }
         .btn-scan {
-            background: var(--primary-blue);
+            background: #3B82F6;
             color: white;
             border: none;
             padding: 10px 16px;
@@ -140,12 +139,12 @@
         /* Quick Medicines */
         .quick-meds {
             padding: 8px 16px;
-            background: var(--background);
-            border-bottom: 1px solid var(--border);
+            background: #0F172A;
+            border-bottom: 1px solid #334155;
         }
         .quick-meds-label {
             font-size: 11px;
-            color: var(--text-secondary);
+            color: #64748B;
             margin-bottom: 6px;
         }
         .quick-meds-grid {
@@ -155,11 +154,11 @@
             padding-bottom: 4px;
         }
         .quick-meds-grid::-webkit-scrollbar { height: 3px; }
-        .quick-meds-grid::-webkit-scrollbar-thumb { background: var(--text-secondary); border-radius: 3px; }
+        .quick-meds-grid::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
         .quick-med-btn {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            color: var(--text-primary);
+            background: #1E293B;
+            border: 1px solid #334155;
+            color: #F8FAFC;
             padding: 6px 14px;
             border-radius: 20px;
             cursor: pointer;
@@ -169,11 +168,11 @@
             flex-shrink: 0;
         }
         .quick-med-btn:hover {
-            background: var(--primary-blue);
-            border-color: var(--primary-blue);
+            background: #3B82F6;
+            border-color: #3B82F6;
         }
         .quick-med-btn .price {
-            color: var(--success);
+            color: #22C55E;
             font-size: 11px;
             margin-right: 4px;
         }
@@ -185,17 +184,17 @@
             padding: 8px 16px;
         }
         .search-results::-webkit-scrollbar { width: 5px; }
-        .search-results::-webkit-scrollbar-thumb { background: var(--text-secondary); border-radius: 3px; }
+        .search-results::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
         .search-empty {
             text-align: center;
             padding: 40px 20px;
-            color: var(--text-secondary);
+            color: #64748B;
         }
         .search-empty .icon { font-size: 48px; margin-bottom: 12px; }
         .search-empty p { font-size: 14px; }
         .medicine-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
+            background: #1E293B;
+            border: 1px solid #334155;
             border-radius: 10px;
             padding: 12px 14px;
             margin-bottom: 8px;
@@ -206,14 +205,14 @@
             gap: 12px;
         }
         .medicine-card:hover {
-            border-color: var(--primary-blue);
+            border-color: #3B82F6;
             background: #1E3A5F;
         }
         .medicine-card .med-img {
             width: 40px;
             height: 40px;
             border-radius: 8px;
-            background: var(--border);
+            background: #334155;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -239,18 +238,18 @@
         }
         .medicine-card .med-info .details {
             font-size: 12px;
-            color: var(--text-secondary);
+            color: #94A3B8;
             margin-top: 2px;
         }
         .medicine-card .med-info .stock {
             font-size: 11px;
-            color: var(--text-secondary);
+            color: #64748B;
             margin-top: 2px;
         }
         .medicine-card .med-price {
             font-size: 16px;
             font-weight: 700;
-            color: var(--success);
+            color: #22C55E;
             white-space: nowrap;
         }
         
@@ -259,19 +258,19 @@
             width: 380px;
             display: flex;
             flex-direction: column;
-            background: var(--surface);
+            background: #1E293B;
             overflow: hidden;
         }
         .cart-header {
             padding: 12px 16px;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid #334155;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
         .cart-header h2 { font-size: 16px; }
         .cart-header .count {
-            background: var(--primary-blue);
+            background: #3B82F6;
             color: white;
             padding: 2px 10px;
             border-radius: 12px;
@@ -283,16 +282,16 @@
             padding: 8px 12px;
         }
         .cart-items::-webkit-scrollbar { width: 4px; }
-        .cart-items::-webkit-scrollbar-thumb { background: var(--text-secondary); border-radius: 2px; }
+        .cart-items::-webkit-scrollbar-thumb { background: #475569; border-radius: 2px; }
         .cart-empty {
             text-align: center;
             padding: 40px 16px;
-            color: var(--text-secondary);
+            color: #64748B;
         }
         .cart-empty .icon { font-size: 36px; margin-bottom: 8px; }
         .cart-empty p { font-size: 13px; }
         .cart-item {
-            background: var(--background);
+            background: #0F172A;
             border-radius: 8px;
             padding: 10px 12px;
             margin-bottom: 8px;
@@ -309,12 +308,12 @@
         }
         .cart-item .item-header .item-unit {
             font-size: 11px;
-            color: var(--text-secondary);
+            color: #94A3B8;
         }
         .cart-item .item-header .item-total {
             font-size: 14px;
             font-weight: 700;
-            color: var(--success);
+            color: #22C55E;
         }
         .cart-item .item-controls {
             display: flex;
@@ -330,9 +329,9 @@
         .cart-item .qty-btn {
             width: 30px;
             height: 30px;
-            border: 1px solid var(--text-secondary);
-            background: var(--surface);
-            color: var(--text-primary);
+            border: 1px solid #475569;
+            background: #1E293B;
+            color: #F8FAFC;
             border-radius: 6px;
             cursor: pointer;
             font-size: 16px;
@@ -341,8 +340,8 @@
             justify-content: center;
             transition: all 0.2s;
         }
-        .cart-item .qty-btn:hover { background: var(--border); border-color: var(--primary-blue); }
-        .cart-item .qty-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+        .cart-item .qty-btn:hover { background: #334155; border-color: #3B82F6; }
+        .cart-item .qty-btn.danger:hover { border-color: #EF4444; color: #EF4444; }
         .cart-item .qty-value {
             font-size: 16px;
             font-weight: 700;
@@ -351,12 +350,12 @@
         }
         .cart-item .item-price {
             font-size: 12px;
-            color: var(--text-secondary);
+            color: #94A3B8;
         }
         .cart-footer {
             padding: 12px 16px;
-            border-top: 1px solid var(--border);
-            background: var(--background);
+            border-top: 1px solid #334155;
+            background: #0F172A;
         }
         .cart-footer .total-row {
             display: flex;
@@ -364,16 +363,16 @@
             align-items: center;
             margin-bottom: 12px;
         }
-        .cart-footer .total-row .label { font-size: 14px; color: var(--text-secondary); }
+        .cart-footer .total-row .label { font-size: 14px; color: #94A3B8; }
         .cart-footer .total-row .amount {
             font-size: 22px;
             font-weight: 700;
-            color: var(--success);
+            color: #22C55E;
         }
         .btn-checkout {
             width: 100%;
             padding: 14px;
-            background: var(--primary-blue);
+            background: #3B82F6;
             color: white;
             border: none;
             border-radius: 10px;
@@ -384,7 +383,7 @@
         }
         .btn-checkout:hover { background: #2563EB; }
         .btn-checkout:disabled {
-            background: var(--text-secondary);
+            background: #475569;
             cursor: not-allowed;
         }
         
@@ -403,7 +402,7 @@
             padding: 20px;
         }
         .modal {
-            background: var(--surface);
+            background: #1E293B;
             border-radius: 16px;
             padding: 24px;
             width: 100%;
@@ -417,7 +416,7 @@
             width: 60px;
             height: 60px;
             border-radius: 12px;
-            background: var(--border);
+            background: #334155;
             margin: 0 auto 16px;
             display: flex;
             align-items: center;
@@ -443,9 +442,9 @@
             margin-bottom: 16px;
         }
         .unit-btn {
-            background: var(--border);
-            border: 2px solid var(--text-secondary);
-            color: var(--text-primary);
+            background: #334155;
+            border: 2px solid #475569;
+            color: #F8FAFC;
             padding: 12px;
             border-radius: 8px;
             cursor: pointer;
@@ -453,15 +452,15 @@
             text-align: center;
             transition: all 0.2s;
         }
-        .unit-btn:hover { border-color: var(--primary-blue); }
+        .unit-btn:hover { border-color: #3B82F6; }
         .unit-btn.selected {
-            border-color: var(--primary-blue);
+            border-color: #3B82F6;
             background: #1E3A5F;
         }
         .unit-btn .unit-price {
             display: block;
             font-size: 11px;
-            color: var(--success);
+            color: #22C55E;
             margin-top: 4px;
         }
         .modal .qty-input-area {
@@ -473,26 +472,26 @@
         }
         .modal .qty-input-area label {
             font-size: 14px;
-            color: var(--text-secondary);
+            color: #94A3B8;
         }
         .modal .qty-input-area input {
             width: 70px;
             padding: 8px;
-            background: var(--background);
-            border: 2px solid var(--text-secondary);
+            background: #0F172A;
+            border: 2px solid #475569;
             border-radius: 6px;
-            color: var(--text-primary);
+            color: #F8FAFC;
             font-size: 16px;
             text-align: center;
         }
         .modal .qty-input-area input:focus {
             outline: none;
-            border-color: var(--primary-blue);
+            border-color: #3B82F6;
         }
         .modal .stock-info {
             text-align: center;
             font-size: 12px;
-            color: var(--text-secondary);
+            color: #94A3B8;
             margin-bottom: 16px;
         }
         .modal-actions {
@@ -510,15 +509,15 @@
             transition: all 0.2s;
         }
         .btn-confirm {
-            background: var(--primary-blue);
+            background: #3B82F6;
             color: white;
         }
         .btn-confirm:hover { background: #2563EB; }
         .btn-cancel {
-            background: var(--border);
-            color: var(--text-secondary);
+            background: #334155;
+            color: #94A3B8;
         }
-        .btn-cancel:hover { background: var(--text-secondary); color: var(--text-primary); }
+        .btn-cancel:hover { background: #475569; color: #F8FAFC; }
         
         /* Payment Modal */
         .payment-methods {
@@ -528,9 +527,9 @@
             margin-bottom: 20px;
         }
         .payment-btn {
-            background: var(--border);
-            border: 2px solid var(--text-secondary);
-            color: var(--text-primary);
+            background: #334155;
+            border: 2px solid #475569;
+            color: #F8FAFC;
             padding: 14px;
             border-radius: 10px;
             cursor: pointer;
@@ -538,9 +537,9 @@
             text-align: center;
             transition: all 0.2s;
         }
-        .payment-btn:hover { border-color: var(--primary-blue); }
+        .payment-btn:hover { border-color: #3B82F6; }
         .payment-btn.selected {
-            border-color: var(--success);
+            border-color: #22C55E;
             background: #065F46;
         }
         .payment-btn .pay-icon { font-size: 24px; display: block; margin-bottom: 4px; }
@@ -548,7 +547,7 @@
             text-align: center;
             font-size: 28px;
             font-weight: 700;
-            color: var(--success);
+            color: #22C55E;
             margin-bottom: 16px;
         }
         .modal .form-group {
@@ -557,21 +556,21 @@
         .modal .form-group label {
             display: block;
             font-size: 13px;
-            color: var(--text-secondary);
+            color: #94A3B8;
             margin-bottom: 6px;
         }
         .modal .form-group input {
             width: 100%;
             padding: 10px 14px;
-            background: var(--background);
-            border: 2px solid var(--text-secondary);
+            background: #0F172A;
+            border: 2px solid #475569;
             border-radius: 8px;
-            color: var(--text-primary);
+            color: #F8FAFC;
             font-size: 14px;
         }
         .modal .form-group input:focus {
             outline: none;
-            border-color: var(--primary-blue);
+            border-color: #3B82F6;
         }
         
         /* Toast / Alert */
@@ -617,12 +616,12 @@
         .spinner-overlay .spinner {
             width: 40px;
             height: 40px;
-            border: 4px solid var(--border);
-            border-top: 4px solid var(--primary-blue);
+            border: 4px solid #334155;
+            border-top: 4px solid #3B82F6;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
-        .spinner-overlay p { color: var(--text-secondary); font-size: 14px; }
+        .spinner-overlay p { color: #94A3B8; font-size: 14px; }
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -634,7 +633,7 @@
             .pos-cart {
                 width: 100%;
                 height: 50vh;
-                border-top: 1px solid var(--border);
+                border-top: 1px solid #334155;
             }
             .pos-products { height: 50vh; }
         }
@@ -672,7 +671,7 @@
         .scan-frame {
             width: 100%;
             height: 40%;
-            border: 3px solid var(--success);
+            border: 3px solid #22C55E;
             border-radius: 12px;
             box-shadow: 0 0 0 9999px rgba(0,0,0,0.55);
             position: relative;
@@ -681,7 +680,7 @@
         #scan-line {
             width: 100%;
             height: 3px;
-            background: var(--danger);
+            background: #EF4444;
             border-radius: 2px;
             animation: scanmove 2s ease-in-out infinite;
         }
@@ -699,9 +698,9 @@
             width: 100%;
             padding: 14px 16px;
             border-radius: 10px;
-            border: 1px solid var(--text-secondary);
-            background: var(--surface);
-            color: var(--text-primary);
+            border: 1px solid #475569;
+            background: #1E293B;
+            color: #F8FAFC;
             text-align: center;
             font-size: 18px;
             letter-spacing: 3px;
@@ -709,10 +708,10 @@
             direction: ltr;
         }
         .scanner-controls input:focus {
-            border-color: var(--primary-blue);
+            border-color: #3B82F6;
         }
         .scanner-controls input::placeholder {
-            color: var(--text-secondary);
+            color: #64748B;
             letter-spacing: normal;
         }
         .scanner-controls .btn-row {
@@ -729,7 +728,7 @@
             cursor: pointer;
             font-weight: 600;
         }
-        .btn-scan-search { background: var(--primary-blue); color: white; }
+        .btn-scan-search { background: #3B82F6; color: white; }
         .btn-scan-search:hover { background: #2563EB; }
         .btn-scan-close { background: #DC2626; color: white; }
         .btn-scan-close:hover { background: #B91C1C; }
@@ -738,20 +737,20 @@
         #scanner-debug {
             margin-top: 8px;
             font-size: 11px;
-            color: var(--text-secondary);
+            color: #64748B;
             text-align: center;
             direction: ltr;
             min-height: 16px;
             transition: color 0.3s;
         }
-        #scanner-debug.active { color: var(--success); }
-        #scanner-debug.error { color: var(--danger); }
+        #scanner-debug.active { color: #22C55E; }
+        #scanner-debug.error { color: #EF4444; }
         .divider-text {
             display: flex;
             align-items: center;
             gap: 12px;
             margin: 16px 0;
-            color: var(--text-secondary);
+            color: #64748B;
             font-size: 13px;
         }
         .divider-text::before,
@@ -759,17 +758,17 @@
             content: '';
             flex: 1;
             height: 1px;
-            background: var(--border);
+            background: #334155;
         }
         #scanner-status {
-            color: var(--text-secondary);
+            color: #94A3B8;
             font-size: 14px;
             margin-top: 12px;
             text-align: center;
             min-height: 24px;
         }
-        #scanner-status.success { color: var(--success); }
-        #scanner-status.error { color: var(--danger); }
+        #scanner-status.success { color: #22C55E; }
+        #scanner-status.error { color: #EF4444; }
     </style>
 </head>
 <body>
@@ -796,7 +795,7 @@
         <p id="scanner-status">📷 وجّه الكاميرا نحو الباركود ليقرأ تلقائياً</p>
         
         <div class="scanner-controls">
-            <div id="scan-result" style="display:none;text-align:center;padding:8px;background:#065F46;border-radius:8px;margin-bottom:10px;font-size:14px;font-weight:600;color:var(--success);">
+            <div id="scan-result" style="display:none;text-align:center;padding:8px;background:#065F46;border-radius:8px;margin-bottom:10px;font-size:14px;font-weight:600;color:#22C55E;">
                 ✅ <span id="scan-result-code"></span>
             </div>
             <div class="divider-text">أو أدخل الباركود يدوياً</div>
@@ -820,7 +819,7 @@
         <div class="pos-header">
             <div class="logo-section">
                 <h1>⚕️ PharmaSUD</h1>
-                <span style="font-size:12px;color:var(--text-secondary);background:var(--border);padding:2px 8px;border-radius:4px;">POS</span>
+                <span style="font-size:12px;color:#64748B;background:#334155;padding:2px 8px;border-radius:4px;">POS</span>
             </div>
             <div class="user-section">
                 <span><span class="name" x-text="userName"></span></span>
@@ -852,7 +851,7 @@
                             </button>
                         </template>
                         <template x-if="quickMeds.length === 0">
-                            <span style="font-size:12px;color:var(--text-secondary);">لا توجد أدوية</span>
+                            <span style="font-size:12px;color:#64748B;">لا توجد أدوية</span>
                         </template>
                     </div>
                 </div>
@@ -985,7 +984,7 @@
                 <h2>💳 إتمام البيع</h2>
                 <div class="payment-total" x-text="formatCurrency(cart.total) + ' ج.س'"></div>
                 
-                <div style="margin-bottom:12px;text-align:center;font-size:13px;color:var(--text-secondary);">اختر طريقة الدفع</div>
+                <div style="margin-bottom:12px;text-align:center;font-size:13px;color:#94A3B8;">اختر طريقة الدفع</div>
                 <div class="payment-methods">
                     <button class="payment-btn" :class="{ 'selected': paymentModal.method === 'cash' }" @click="paymentModal.method = 'cash'">
                         <span class="pay-icon">💵</span>
@@ -1019,7 +1018,7 @@
                 
                 <div x-show="saleProcessing" style="text-align:center;margin-top:12px;">
                     <div class="spinner" style="width:24px;height:24px;border-width:3px;margin:0 auto 8px;"></div>
-                    <span style="color:var(--text-secondary);font-size:13px;">جاري معالجة البيع...</span>
+                    <span style="color:#94A3B8;font-size:13px;">جاري معالجة البيع...</span>
                 </div>
             </div>
         </div>
@@ -1390,7 +1389,7 @@
                         const lineHeight = 5;
                         
                         // Colors
-                        const primaryColor = [59, 130, 246]; // var(--primary-blue)
+                        const primaryColor = [59, 130, 246]; // #3B82F6
                         const textColor = [30, 41, 59];
                         const mutedColor = [100, 116, 139];
                         
@@ -1615,185 +1614,311 @@
             };
         }
         
-        // ── scanner: tested dual-engine (BarcodeDetector → zxing-wasm) ──
+        // ── Scanner: Layered (BarcodeDetector → zxing-wasm) + ROI + rAF ──
         // ============================================================
-        // Production: Android Chrome = native BarcodeDetector
-        // Fallback:   iOS Safari   = zxing-wasm@2 (dynamic import)
+        // المحرّك: طبقتين — Native BarcodeDetector (Android Chrome) ← zxing-wasm fallback (iOS Safari)
+        // الإصلاح الأساسي: ROI crop — نقرأ الشريط الأوسط فقط (40% ارتفاع)، مش الفريم كامل
+        // zxing-wasm يُحمّل ديناميكياً (dynamic import) فقط لو الجهاز ما عنده BarcodeDetector
+        // ملاحظة: HTTPS إجباري + متصفح مباشر (Safari/Chrome) — الكاميرا ما تشتغل داخل متصفح التطبيقات
         // ============================================================
 
-        let scannerStream = null;
-        let scannerRunning = false;
-        let scannerEngine = null;
-        let scannerEngineType = '';
+        window.currentPosApp = null;
 
-        async function startScanner() {
-            document.getElementById('scanner-container').style.display = 'block';
-            scannerRunning = true;
+        // متغيرات المسح
+        let _scanState = {
+            stream: null,
+            track: null,
+            running: false,
+            rAFid: null,
+            engine: 'none',
+            torchOn: false,
+            lastDecodeMs: 0
+        };
 
-            let stream;
+        function debug(msg, type = '') {
+            const el = document.getElementById('scanner-debug');
+            if (!el) return;
+            el.textContent = msg;
+            el.className = type;
+        }
+
+        function updateStatus(msg, cls = '') {
+            const el = document.getElementById('scanner-status');
+            if (el) { el.textContent = msg; el.className = cls; }
+        }
+
+        // ── تشغيل المسح ──
+        async function startBarcodeScanner() {
+            const container = document.getElementById('scanner-container');
+            container.classList.add('active');
+            updateStatus('📷 جاري فتح الكاميرا...');
+            debug('requesting camera...');
+
             try {
-                stream = await navigator.mediaDevices.getUserMedia({
+                // 1. فتح الكاميرا (بيئة خارجية)
+                const stream = await navigator.mediaDevices.getUserMedia({
                     video: {
                         facingMode: { ideal: 'environment' },
                         width: { ideal: 1920 },
                         height: { ideal: 1080 }
-                    }
+                    },
+                    audio: false
                 });
-                scannerStream = stream;
-            } catch (e) {
-                showScannerError('لا يمكن الوصول للكاميرا: ' + e.message);
-                return;
-            }
+                _scanState.stream = stream;
+                _scanState.track = stream.getVideoTracks()[0];
+                const settings = _scanState.track.getSettings ? _scanState.track.getSettings() : {};
+                debug(`camera: ${settings.width||'?'}×${settings.height||'?'}`, 'active');
 
-            const video = document.getElementById('scanner-video');
-            video.srcObject = stream;
+                // الربط بالـ video
+                const video = document.getElementById('scanner-video');
+                video.srcObject = stream;
+                await video.play();
 
-            await new Promise(function(resolve) {
-                if (video.readyState >= 2) return resolve();
-                video.onloadedmetadata = function() { resolve(); };
-            });
-            await video.play();
+                // تركيز مستمر
+                try { await _scanState.track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }); } catch (_) {}
 
-            if (video.videoWidth === 0) {
-                showScannerError('الكاميرا لم تبدأ بشكل صحيح');
-                return;
-            }
+                // الفلاش — يظهر فقط لو مدعوم
+                const caps = _scanState.track.getCapabilities ? _scanState.track.getCapabilities() : {};
+                const torchBtn = document.getElementById('scan-torch-btn');
+                if (caps && caps.torch) {
+                    torchBtn.style.display = '';
+                    torchBtn.className = 'btn-scan-torch';
+                } else {
+                    torchBtn.style.display = 'none';
+                }
 
-            if ('BarcodeDetector' in window) {
-                try {
-                    var wanted = ['ean_13','ean_8','upc_a','upc_e','code_128','code_39'];
-                    var supported = await BarcodeDetector.getSupportedFormats();
-                    var usable = wanted.filter(function(f) { return supported.includes(f); });
-                    if (usable.length > 0) {
-                        scannerEngine = new BarcodeDetector({ formats: usable });
-                        scannerEngineType = 'native';
+                // 2. اختيار المحرّك
+                let decoderFn = null;
+                let engineName = '';
+
+                // المحاولة الأولى: Native BarcodeDetector
+                if ('BarcodeDetector' in window) {
+                    const supported = await BarcodeDetector.getSupportedFormats();
+                    const needed = ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39'];
+                    const available = needed.filter(f => supported.includes(f));
+                    if (available.length >= 1) {
+                        const detector = new BarcodeDetector({ formats: available });
+                        decoderFn = async (imageData) => {
+                            const codes = await detector.detect(imageData);
+                            return codes.length > 0 ? codes[0].rawValue : null;
+                        };
+                        engineName = 'BarcodeDetector (' + available.join(',') + ')';
                     }
-                } catch (e) {
-                    scannerEngine = null;
-                }
-            }
-
-            if (!scannerEngine) {
-                try {
-                    var mod = await import('https://esm.sh/zxing-wasm@2/reader');
-                    scannerEngine = mod.readBarcodesFromImageData;
-                    scannerEngineType = 'wasm';
-                } catch (e) {
-                    showScannerError('تعذر تحميل محرك المسح - استخدم الإدخال اليدوي');
-                    return;
-                }
-            }
-
-            updateScannerStatus(
-                scannerEngineType === 'native'
-                    ? '🟢 جاري المسح...'
-                    : '🟡 جاري المسح (متوافقية)...'
-            );
-
-            var canvas = document.createElement('canvas');
-            var ctx = canvas.getContext('2d', { willReadFrequently: true });
-
-            async function scanLoop() {
-                if (!scannerRunning) return;
-
-                if (video.readyState < 2 || video.videoWidth === 0) {
-                    requestAnimationFrame(scanLoop);
-                    return;
                 }
 
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-                try {
-                    var results = [];
-
-                    if (scannerEngineType === 'native') {
-                        results = await scannerEngine.detect(canvas);
-                    } else {
-                        var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                        var zx = await scannerEngine(imageData, {
+                // المحاولة الثانية: zxing-wasm (fallback)
+                if (!decoderFn) {
+                    try {
+                        const zxingMod = await import('https://esm.sh/zxing-wasm@2/reader');
+                        const readerOpts = {
                             tryHarder: true,
-                            formats: ['EAN-13','EAN-8','UPC-A','UPC-E','Code-128','Code-39'],
+                            formats: ['EAN-13', 'EAN-8', 'UPC-A', 'UPC-E', 'Code-128', 'Code-39'],
                             maxNumberOfSymbols: 1
-                        });
-                        results = zx.map(function(r) {
-                            return { rawValue: r.text, format: r.format };
-                        });
-                    }
-
-                    if (results.length > 0) {
-                        var barcode = results[0].rawValue;
-
-                        if (navigator.vibrate) {
-                            navigator.vibrate(120);
-                        }
-
-                        stopScannerInternal();
-
-                        // Call existing Alpine.js function — no new endpoint
-                        const app = window.currentPosApp;
-                        if (app && app.searchByBarcode) {
-                            await app.searchByBarcode(barcode);
-                        }
+                        };
+                        decoderFn = async (imageData) => {
+                            const results = await zxingMod.readBarcodesFromImageData(imageData, readerOpts);
+                            return (results && results.length > 0) ? results[0].text : null;
+                        };
+                        engineName = 'zxing-wasm@2';
+                    } catch (wasmErr) {
+                        updateStatus('⌨️ فشل تحميل محرك المسح — استخدم الإدخال اليدوي', 'error');
+                        debug('WASM load failed: ' + wasmErr.message, 'error');
+                        document.getElementById('manual-barcode-input').focus();
                         return;
                     }
-                } catch (e) {
-                    updateScannerStatus('⚠️ ' + e.name);
                 }
 
-                setTimeout(function() { requestAnimationFrame(scanLoop); }, 120);
-            }
+                _scanState.engine = engineName;
+                debug('🟢 ' + engineName, 'active');
+                updateStatus('🔍 وجّه الباركود داخل الإطار...');
 
-            scanLoop();
+                // 3. حلقة المسح مع ROI
+                _scanState.running = true;
+                await scanLoop(decoderFn);
+
+            } catch (err) {
+                console.error('Scanner failed:', err);
+                let msg = '⌨️ الكاميرا غير متاحة';
+                if (err.name === 'NotAllowedError') msg = '🔒 الإذن مرفوض — افتح في Safari/Chrome مباشرة';
+                else if (err.name === 'NotFoundError') msg = '📷 ما في كاميرا متاحة';
+                else if (err.name === 'NotReadableError') msg = '🔒 الكاميرا مشغولة بتطبيق آخر';
+                updateStatus(msg, 'error');
+                debug(err.name + ': ' + err.message, 'error');
+                fallbackToManual();
+            }
         }
 
-        function stopScannerInternal() {
-            scannerRunning = false;
-            if (scannerStream) {
-                scannerStream.getTracks().forEach(function(t) { t.stop(); });
-                scannerStream = null;
+        // ── حلقة المسح مع ROI ──
+        // نقرأ الشريط الأوسط فقط (~40% ارتفاع) بدلاً من الفريم الكامل
+        // هذا يرفع نسبة القراءة بشكل كبير للباركود الرفيع
+        async function scanLoop(decoderFn) {
+            const video = document.getElementById('scanner-video');
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            let lastDecode = 0;
+            const MIN_INTERVAL = 120; // ~8 محاولات/ثانية
+
+            function frame() {
+                if (!_scanState.running) return;
+                _scanState.rAFid = requestAnimationFrame(frame);
+
+                const now = performance.now();
+                if (now - lastDecode < MIN_INTERVAL) return;
+                lastDecode = now;
+
+                if (video.readyState < video.HAVE_CURRENT_DATA || !video.videoWidth) return;
+
+                const w = video.videoWidth;
+                const h = video.videoHeight;
+
+                // ROI: الشريط الأوسط — عرض كامل × ~40% ارتفاع
+                const roiH = Math.round(h * 0.40);
+                const roiY = Math.round((h - roiH) / 2);
+
+                canvas.width = w;
+                canvas.height = roiH;
+                ctx.drawImage(video, 0, roiY, w, roiH, 0, 0, w, roiH);
+                const imageData = ctx.getImageData(0, 0, w, roiH);
+
+                decoderFn(imageData).then(code => {
+                    if (code && code.length >= 3) {
+                        _scanState.running = false;
+                        cancelAnimationFrame(_scanState.rAFid);
+                        onBarcodeFound(code);
+                    } else {
+                        debug('decode: no barcode in frame', '');
+                    }
+                }).catch(err => {
+                    debug('decode error: ' + (err.message || err), 'error');
+                });
             }
-            var video = document.getElementById('scanner-video');
-            if (video && video.srcObject) {
-                video.srcObject.getTracks().forEach(function(t) { t.stop(); });
-                video.srcObject = null;
+
+            frame();
+        }
+
+        // ── تشغيل/إطفاء الفلاش ──
+        async function toggleTorch() {
+            if (!_scanState.track) return;
+            _scanState.torchOn = !_scanState.torchOn;
+            try {
+                await _scanState.track.applyConstraints({ advanced: [{ torch: _scanState.torchOn }] });
+                const btn = document.getElementById('scan-torch-btn');
+                if (btn) btn.className = 'btn-scan-torch' + (_scanState.torchOn ? ' on' : '');
+            } catch (err) {
+                debug('torch error: ' + err.message, 'error');
             }
         }
 
+        // ── تم العثور على باركود ──
+        let _scanFoundDebounce = false;
+        function onBarcodeFound(code) {
+            // Debounce: نفذ مرة واحدة فقط
+            if (_scanFoundDebounce) return;
+            _scanFoundDebounce = true;
+
+            // إيقاف الكاميرا وحلقة المسح
+            _scanState.running = false;
+            if (_scanState.rAFid) { cancelAnimationFrame(_scanState.rAFid); _scanState.rAFid = null; }
+            if (_scanState.track) {
+                try { _scanState.track.applyConstraints({ advanced: [{ torch: false }] }); } catch (_) {}
+                _scanState.track.stop();
+            }
+            if (_scanState.stream) {
+                _scanState.stream.getTracks().forEach(t => t.stop());
+            }
+            const videoEl = document.getElementById('scanner-video');
+            if (videoEl) videoEl.srcObject = null;
+
+            // اهتزاز
+            if (navigator.vibrate) navigator.vibrate(120);
+
+            // عرض النتيجة
+            document.getElementById('scan-result-code').textContent = code;
+            document.getElementById('scan-result').style.display = '';
+            document.getElementById('scanner-status').textContent = '✅ تم المسح بنجاح';
+            document.getElementById('scanner-status').className = 'success';
+            debug('✅ ' + code, 'active');
+
+            // إظهار زر "مسح مرة أخرى" وإخفاء الباقي
+            document.getElementById('scan-torch-btn').style.display = 'none';
+            document.getElementById('scan-again-btn').style.display = '';
+            document.getElementById('manual-barcode-input').value = code;
+            document.getElementById('manual-barcode-input').focus();
+
+            // إرسال للـ Alpine.js
+            const app = window.currentPosApp;
+            if (app && app.searchByBarcode) {
+                app.searchByBarcode(code);
+            }
+        }
+
+        // ── مسح مرة أخرى ──
+        async function restartScanner() {
+            // إعادة ضبط الـ UI
+            document.getElementById('scan-result').style.display = 'none';
+            document.getElementById('scan-result-code').textContent = '';
+            document.getElementById('scan-again-btn').style.display = 'none';
+            document.getElementById('manual-barcode-input').value = '';
+            _scanFoundDebounce = false;
+            _scanState.running = false;
+            _scanState.stream = null;
+            _scanState.track = null;
+            _scanState.rAFid = null;
+            _scanState.torchOn = false;
+            _scanState.engine = 'none';
+
+            // إعادة تشغيل المسح
+            await startBarcodeScanner();
+        }
+
+        // ── إيقاف المسح ──
         function stopScanner() {
-            stopScannerInternal();
-            document.getElementById('scanner-container').style.display = 'none';
+            _scanState.running = false;
+            _scanFoundDebounce = false;
+            if (_scanState.rAFid) { cancelAnimationFrame(_scanState.rAFid); _scanState.rAFid = null; }
+            if (_scanState.track) {
+                try { _scanState.track.applyConstraints({ advanced: [{ torch: false }] }); } catch (_) {}
+                _scanState.track.stop();
+            }
+            if (_scanState.stream) {
+                _scanState.stream.getTracks().forEach(t => t.stop());
+            }
+            _scanState.stream = null;
+            _scanState.track = null;
+            _scanState.torchOn = false;
+            _scanState.engine = 'none';
+            const v = document.getElementById('scanner-video');
+            if (v) v.srcObject = null;
+            document.getElementById('scanner-container').classList.remove('active');
+            // إعادة ضبط buttons
+            document.getElementById('scan-result').style.display = 'none';
+            document.getElementById('scan-again-btn').style.display = 'none';
         }
 
-        function showScannerError(msg) {
-            updateScannerStatus('❌ ' + msg);
+        // ── الرجوع للإدخال اليدوي ──
+        function fallbackToManual() {
+            document.getElementById('manual-barcode-input').focus();
         }
 
-        function updateScannerStatus(text) {
-            var el = document.getElementById('scanner-status');
-            if (el) el.textContent = text;
-        }
-
-        // ── manual barcode input (unchanged fallback) ──
+        // ── البحث اليدوي بالباركود ──
         function searchManualBarcode() {
-            var input = document.getElementById('manual-barcode-input');
-            var code = input.value.trim();
+            const input = document.getElementById('manual-barcode-input');
+            const code = input.value.trim();
             if (code && code.length >= 3) {
-                var app = window.currentPosApp;
+                const app = window.currentPosApp;
                 if (app && app.searchByBarcode) {
                     app.searchByBarcode(code);
                     stopScanner();
                 }
                 input.value = '';
             } else {
-                input.style.borderColor = 'var(--danger)';
-                setTimeout(function() { input.style.borderColor = ''; }, 1500);
+                input.style.borderColor = '#EF4444';
+                setTimeout(() => input.style.borderColor = '', 1500);
                 input.focus();
             }
         }
 
-        window.startBarcodeScanner = startScanner;
+        window.startBarcodeScanner = startBarcodeScanner;
     </script>
 </body>
 </html>

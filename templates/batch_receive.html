@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/theme.css">
     <title>استلام شحنة جديدة - صيدلية الزاريات</title>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #0F172A;
-            color: #F8FAFC;
+            background: var(--background);
+            color: var(--text-primary);
             min-height: 100vh;
         }
         .container { max-width: 700px; margin: 0 auto; padding: 24px 20px; }
@@ -20,45 +21,45 @@
             align-items: center;
             margin-bottom: 24px;
             padding-bottom: 16px;
-            border-bottom: 1px solid #334155;
+            border-bottom: 1px solid var(--border);
         }
         .header h1 { font-size: 20px; display: flex; align-items: center; gap: 8px; }
         .back-link {
-            color: #94A3B8;
+            color: var(--text-secondary);
             text-decoration: none;
             font-size: 14px;
             display: flex;
             align-items: center;
             gap: 6px;
         }
-        .back-link:hover { color: #3B82F6; }
+        .back-link:hover { color: var(--primary-blue); }
 
         /* Search / Barcode */
         .search-section {
-            background: #1E293B;
-            border: 1px solid #334155;
+            background: var(--surface);
+            border: 1px solid var(--border);
             border-radius: 12px;
             padding: 20px;
             margin-bottom: 20px;
         }
-        .search-section h2 { font-size: 14px; color: #94A3B8; margin-bottom: 12px; }
+        .search-section h2 { font-size: 14px; color: var(--text-secondary); margin-bottom: 12px; }
         .search-row {
             display: flex;
             gap: 8px;
         }
         .search-row input {
             flex: 1;
-            background: #0F172A;
-            border: 1px solid #334155;
+            background: var(--background);
+            border: 1px solid var(--border);
             padding: 10px 14px;
             border-radius: 8px;
-            color: #F8FAFC;
+            color: var(--text-primary);
             font-size: 14px;
             font-family: inherit;
         }
-        .search-row input:focus { outline: none; border-color: #3B82F6; }
+        .search-row input:focus { outline: none; border-color: var(--primary-blue); }
         .search-row button {
-            background: #3B82F6;
+            background: var(--primary-blue);
             border: none;
             color: white;
             padding: 10px 16px;
@@ -69,14 +70,14 @@
         }
         .search-row button:hover { background: #2563EB; }
         .search-row button.secondary {
-            background: #334155;
+            background: var(--border);
         }
-        .search-row button.secondary:hover { background: #475569; }
+        .search-row button.secondary:hover { background: var(--text-secondary); }
 
         /* Medicine Preview */
         .medicine-preview {
-            background: #1E293B;
-            border: 1px solid #3B82F6;
+            background: var(--surface);
+            border: 1px solid var(--primary-blue);
             border-radius: 12px;
             padding: 16px;
             margin-bottom: 20px;
@@ -89,10 +90,10 @@
             height: 64px;
             border-radius: 8px;
             object-fit: cover;
-            background: #0F172A;
+            background: var(--background);
         }
         .medicine-preview .info h3 { font-size: 16px; }
-        .medicine-preview .info p { font-size: 13px; color: #94A3B8; }
+        .medicine-preview .info p { font-size: 13px; color: var(--text-secondary); }
         .medicine-preview .info .category {
             display: inline-block;
             background: #1E3A5F;
@@ -105,12 +106,12 @@
 
         /* Form */
         .form-section {
-            background: #1E293B;
-            border: 1px solid #334155;
+            background: var(--surface);
+            border: 1px solid var(--border);
             border-radius: 12px;
             padding: 24px;
         }
-        .form-section h2 { font-size: 14px; color: #94A3B8; margin-bottom: 16px; }
+        .form-section h2 { font-size: 14px; color: var(--text-secondary); margin-bottom: 16px; }
         .form-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -120,24 +121,24 @@
         .form-group.full { grid-column: 1 / -1; }
         .form-group label {
             font-size: 13px;
-            color: #94A3B8;
+            color: var(--text-secondary);
         }
-        .form-group label .required { color: #EF4444; }
+        .form-group label .required { color: var(--danger); }
         .form-group input, .form-group select {
-            background: #0F172A;
-            border: 1px solid #334155;
+            background: var(--background);
+            border: 1px solid var(--border);
             padding: 10px 12px;
             border-radius: 8px;
-            color: #F8FAFC;
+            color: var(--text-primary);
             font-size: 14px;
             font-family: inherit;
         }
         .form-group input:focus, .form-group select:focus {
             outline: none;
-            border-color: #3B82F6;
+            border-color: var(--primary-blue);
         }
-        .form-group select option { background: #1E293B; color: #F8FAFC; }
-        .form-group .hint { font-size: 11px; color: #64748B; }
+        .form-group select option { background: var(--surface); color: var(--text-primary); }
+        .form-group .hint { font-size: 11px; color: var(--text-secondary); }
 
         .submit-btn {
             width: 100%;
@@ -154,8 +155,8 @@
         }
         .submit-btn:hover { background: #047857; }
         .submit-btn:disabled {
-            background: #334155;
-            color: #64748B;
+            background: var(--border);
+            color: var(--text-secondary);
             cursor: not-allowed;
         }
         .submit-btn.loading {
@@ -173,7 +174,7 @@
         .alert-success { background: #065F46; color: #6EE7B7; border: 1px solid #047857; }
         .alert-error { background: #7F1D1D; color: #FCA5A5; border: 1px solid #DC2626; }
         .alert-warning { background: #78350F; color: #FCD34D; border: 1px solid #D97706; }
-        .alert-info { background: #1E3A5F; color: #93C5FD; border: 1px solid #3B82F6; }
+        .alert-info { background: #1E3A5F; color: #93C5FD; border: 1px solid var(--primary-blue); }
 
         /* Confirmation Dialog */
         .confirm-overlay {
@@ -186,7 +187,7 @@
             z-index: 100;
         }
         .confirm-dialog {
-            background: #1E293B;
+            background: var(--surface);
             border: 1px solid #DC2626;
             border-radius: 14px;
             padding: 28px;
@@ -195,7 +196,7 @@
             text-align: center;
         }
         .confirm-dialog h3 { color: #FCA5A5; margin-bottom: 12px; font-size: 16px; }
-        .confirm-dialog p { color: #94A3B8; font-size: 14px; margin-bottom: 20px; line-height: 1.6; }
+        .confirm-dialog p { color: var(--text-secondary); font-size: 14px; margin-bottom: 20px; line-height: 1.6; }
         .confirm-dialog .btn-row { display: flex; gap: 12px; justify-content: center; }
         .confirm-dialog .btn-confirm {
             background: #DC2626;
@@ -209,20 +210,20 @@
         }
         .confirm-dialog .btn-confirm:hover { background: #B91C1C; }
         .confirm-dialog .btn-cancel {
-            background: #334155;
+            background: var(--border);
             border: none;
-            color: #94A3B8;
+            color: var(--text-secondary);
             padding: 10px 24px;
             border-radius: 8px;
             cursor: pointer;
             font-size: 14px;
             font-family: inherit;
         }
-        .confirm-dialog .btn-cancel:hover { background: #475569; }
+        .confirm-dialog .btn-cancel:hover { background: var(--text-secondary); }
 
         /* Result Box */
         .result-box {
-            background: #1E293B;
+            background: var(--surface);
             border: 1px solid #047857;
             border-radius: 12px;
             padding: 20px;
@@ -231,12 +232,12 @@
         }
         .result-box .success-icon { font-size: 48px; margin-bottom: 12px; }
         .result-box h3 { color: #6EE7B7; margin-bottom: 8px; }
-        .result-box .detail { color: #94A3B8; font-size: 14px; }
-        .result-box .detail span { color: #F8FAFC; font-weight: 600; }
+        .result-box .detail { color: var(--text-secondary); font-size: 14px; }
+        .result-box .detail span { color: var(--text-primary); font-weight: 600; }
         .result-box .new-btn {
             display: inline-block;
             margin-top: 16px;
-            background: #3B82F6;
+            background: var(--primary-blue);
             color: white;
             border: none;
             padding: 10px 20px;
@@ -339,7 +340,7 @@
 
                 <!-- Unit conversion info -->
                 <div x-show="form.quantity && form.unit_name && form.unit_name !== selectedMedicine.base_unit" 
-                     style="margin-top: 12px; padding: 10px; background: #0F172A; border-radius: 8px; font-size: 13px; color: #94A3B8;">
+                     style="margin-top: 12px; padding: 10px; background: var(--background); border-radius: 8px; font-size: 13px; color: var(--text-secondary);">
                     <span>⚡ سيتم تحويل <span x-text="form.quantity"></span> <span x-text="form.unit_name"></span>
                     إلى الوحدة الأساسية (عند الإرسال)</span>
                 </div>

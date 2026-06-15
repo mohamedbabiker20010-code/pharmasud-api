@@ -1,0 +1,24 @@
+/* PharmaSUD Design System - Light Mode + Blue Theme v1 */
+:root {
+  --primary-blue: #2563EB;
+  --primary-blue-dark: #1E40AF;
+  --primary-blue-light: #3B82F6;
+  --accent-sky: #0EA5E9;
+
+  --background: #FFFFFF;
+  --surface: #F8FAFC;
+  --surface-blue-tint: #EFF6FF;
+  --border: #E2E8F0;
+
+  --text-primary: #0F172A;
+  --text-secondary: #64748B;
+
+  --success: #10B981;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+
+  --main-gradient: linear-gradient(135deg, #2563EB 0%, #1E40AF 50%, #0EA5E9 100%);
+  --splash-gradient: linear-gradient(135deg, #1E40AF 0%, #2563EB 50%, #0EA5E9 100%);
+
+  --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+}

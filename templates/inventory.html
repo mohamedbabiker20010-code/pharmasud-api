@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/theme.css">
     <title>المخزون - صيدلية الزاريات</title>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #0F172A;
-            color: #F8FAFC;
+            background: var(--background);
+            color: var(--text-primary);
             min-height: 100vh;
         }
         .container { max-width: 960px; margin: 0 auto; padding: 24px 20px; }
@@ -20,11 +21,11 @@
             align-items: center;
             margin-bottom: 24px;
             padding-bottom: 16px;
-            border-bottom: 1px solid #334155;
+            border-bottom: 1px solid var(--border);
         }
         .header h1 { font-size: 20px; display: flex; align-items: center; gap: 8px; }
-        .back-link { color: #94A3B8; text-decoration: none; font-size: 14px; }
-        .back-link:hover { color: #3B82F6; }
+        .back-link { color: var(--text-secondary); text-decoration: none; font-size: 14px; }
+        .back-link:hover { color: var(--primary-blue); }
 
         /* Search & Filters */
         .toolbar {
@@ -36,27 +37,27 @@
         .toolbar input {
             flex: 1;
             min-width: 200px;
-            background: #1E293B;
-            border: 1px solid #334155;
+            background: var(--surface);
+            border: 1px solid var(--border);
             padding: 10px 14px;
             border-radius: 8px;
-            color: #F8FAFC;
+            color: var(--text-primary);
             font-size: 14px;
             font-family: inherit;
         }
-        .toolbar input:focus { outline: none; border-color: #3B82F6; }
+        .toolbar input:focus { outline: none; border-color: var(--primary-blue); }
         .toolbar select {
-            background: #1E293B;
-            border: 1px solid #334155;
+            background: var(--surface);
+            border: 1px solid var(--border);
             padding: 10px 14px;
             border-radius: 8px;
-            color: #F8FAFC;
+            color: var(--text-primary);
             font-size: 14px;
             font-family: inherit;
             min-width: 140px;
         }
-        .toolbar select:focus { outline: none; border-color: #3B82F6; }
-        .toolbar select option { background: #1E293B; }
+        .toolbar select:focus { outline: none; border-color: var(--primary-blue); }
+        .toolbar select option { background: var(--surface); }
 
         /* Stats Bar */
         .stats-bar {
@@ -66,25 +67,25 @@
             flex-wrap: wrap;
         }
         .stat-pill {
-            background: #1E293B;
-            border: 1px solid #334155;
+            background: var(--surface);
+            border: 1px solid var(--border);
             padding: 8px 16px;
             border-radius: 20px;
             font-size: 13px;
         }
-        .stat-pill span { color: #94A3B8; }
-        .stat-pill strong { color: #3B82F6; }
+        .stat-pill span { color: var(--text-secondary); }
+        .stat-pill strong { color: var(--primary-blue); }
 
         /* Medicine Cards */
         .med-list { display: flex; flex-direction: column; gap: 12px; }
         .med-card {
-            background: #1E293B;
-            border: 1px solid #334155;
+            background: var(--surface);
+            border: 1px solid var(--border);
             border-radius: 12px;
             padding: 16px;
             transition: border-color 0.2s;
         }
-        .med-card:hover { border-color: #475569; }
+        .med-card:hover { border-color: var(--text-secondary); }
         .med-card.expired-warning { border-right: 4px solid #DC2626; }
         .med-card.expiry-soon { border-right: 4px solid #D97706; }
         .med-card.expiry-warn { border-right: 4px solid #EAB308; }
@@ -99,17 +100,17 @@
             height: 48px;
             border-radius: 8px;
             object-fit: cover;
-            background: #0F172A;
+            background: var(--background);
         }
         .med-card-header .info { flex: 1; }
         .med-card-header .info h3 { font-size: 15px; }
         .med-card-header .info .category {
             font-size: 12px;
-            color: #94A3B8;
+            color: var(--text-secondary);
         }
         .med-card-header .stock-info { text-align: center; }
         .med-card-header .stock-info .qty { font-size: 22px; font-weight: 700; }
-        .med-card-header .stock-info .unit { font-size: 12px; color: #94A3B8; }
+        .med-card-header .stock-info .unit { font-size: 12px; color: var(--text-secondary); }
         .med-card-header .stock-info .status { font-size: 13px; }
 
         .status-available { color: #6EE7B7; }
@@ -131,35 +132,35 @@
         .batches-section {
             margin-top: 12px;
             padding-top: 12px;
-            border-top: 1px solid #334155;
+            border-top: 1px solid var(--border);
         }
         .batch-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 10px 12px;
-            background: #0F172A;
+            background: var(--background);
             border-radius: 8px;
             margin-bottom: 6px;
         }
         .batch-row:last-child { margin-bottom: 0; }
         .batch-row .batch-info { flex: 1; }
         .batch-row .batch-number { font-size: 13px; font-weight: 600; }
-        .batch-row .batch-meta { font-size: 12px; color: #94A3B8; margin-top: 2px; }
+        .batch-row .batch-meta { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
         .batch-row .batch-qty { font-size: 16px; font-weight: 700; margin: 0 16px; }
         .batch-row .batch-expiry { font-size: 12px; text-align: center; }
 
         .view-btn {
-            background: #334155;
+            background: var(--border);
             border: none;
-            color: #94A3B8;
+            color: var(--text-secondary);
             padding: 6px 12px;
             border-radius: 6px;
             cursor: pointer;
             font-size: 13px;
             font-family: inherit;
         }
-        .view-btn:hover { background: #475569; color: #F8FAFC; }
+        .view-btn:hover { background: var(--text-secondary); color: var(--text-primary); }
 
         /* Expired Alert */
         .expired-section {
@@ -184,7 +185,7 @@
             font-size: 12px;
         }
         .expired-item {
-            background: #1E293B;
+            background: var(--surface);
             border: 1px solid #7F1D1D;
             border-top: none;
             padding: 10px 16px;
@@ -198,14 +199,14 @@
         .loading {
             text-align: center;
             padding: 60px 20px;
-            color: #64748B;
+            color: var(--text-secondary);
         }
         .loading .spinner {
             display: inline-block;
             width: 32px;
             height: 32px;
-            border: 3px solid #334155;
-            border-top-color: #3B82F6;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary-blue);
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
             margin-bottom: 12px;
@@ -320,7 +321,7 @@
 
                     <!-- Batches Detail -->
                     <div class="batches-section" x-show="batchesOpen[item.medicine_id]" x-transition>
-                        <div x-show="loadingBatches[item.medicine_id]" style="text-align:center;padding:12px;color:#64748B;">
+                        <div x-show="loadingBatches[item.medicine_id]" style="text-align:center;padding:12px;color:var(--text-secondary);">
                             جاري تحميل الشحنات...
                         </div>
                         <template x-for="batch in batchesData[item.medicine_id] || []" :key="batch.batch_id">
@@ -335,7 +336,7 @@
                                 <div class="batch-qty" x-text="batch.quantity"></div>
                                 <div class="batch-expiry">
                                     <div x-text="batch.expiry_date"></div>
-                                    <div style="font-size:11px;color:#94A3B8;"
+                                    <div style="font-size:11px;color:var(--text-secondary);"
                                          :class="{ 'expiry-green': batch.expiry_status === 'سليم',
                                                    'expiry-yellow': batch.expiry_status === 'تحذير',
                                                    'expiry-orange': batch.expiry_status === 'ينتهي قريباً',
@@ -346,7 +347,7 @@
                             </div>
                         </template>
                         <div x-show="batchesData[item.medicine_id] && batchesData[item.medicine_id].length === 0 && !loadingBatches[item.medicine_id]"
-                             style="text-align:center;padding:12px;color:#64748B;font-size:13px;">
+                             style="text-align:center;padding:12px;color:var(--text-secondary);font-size:13px;">
                             لا توجد شحنات لهذا الدواء
                         </div>
                     </div>
@@ -355,7 +356,7 @@
 
             <!-- No Results -->
             <div x-show="filteredMedicines.length === 0 && !loading"
-                 style="text-align:center;padding:40px 20px;color:#64748B;">
+                 style="text-align:center;padding:40px 20px;color:var(--text-secondary);">
                 <p style="font-size:24px;margin-bottom:8px;">🔍</p>
                 <p>لا توجد نتائج تطابق بحثك</p>
             </div>

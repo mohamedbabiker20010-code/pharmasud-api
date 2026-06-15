@@ -3,24 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/theme.css">
     <title>الأدوية بطيئة الحركة - PharmaSUD</title>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #0F172A;
-            color: #F8FAFC;
+            background: var(--background);
+            color: var(--text-primary);
             min-height: 100vh;
         }
 
         /* ─── Sidebar ─── */
         .sidebar {
             width: 220px;
-            background: #1E293B;
+            background: var(--surface);
             min-height: 100vh;
             padding: 24px 0;
-            border-left: 1px solid #334155;
+            border-left: 1px solid var(--border);
             position: fixed;
             right: 0;
             top: 0;
@@ -30,12 +31,12 @@
         }
         .sidebar .logo {
             padding: 0 20px 24px;
-            border-bottom: 1px solid #334155;
+            border-bottom: 1px solid var(--border);
             margin-bottom: 16px;
         }
         .sidebar .logo h1 {
             font-size: 18px;
-            color: #3B82F6;
+            color: var(--primary-blue);
             display: flex;
             align-items: center;
             gap: 8px;
@@ -43,7 +44,7 @@
         .sidebar .logo h1 svg { flex-shrink: 0; }
         .sidebar .logo p {
             font-size: 11px;
-            color: #64748B;
+            color: var(--text-secondary);
             margin-top: 2px;
             margin-right: 30px;
         }
@@ -52,20 +53,20 @@
             align-items: center;
             gap: 12px;
             padding: 12px 20px;
-            color: #94A3B8;
+            color: var(--text-secondary);
             text-decoration: none;
             font-size: 14px;
             transition: all 0.2s;
             border-right: 3px solid transparent;
         }
         .nav-item:hover, .nav-item.active {
-            background: #334155;
-            color: #F8FAFC;
-            border-right-color: #3B82F6;
+            background: var(--border);
+            color: var(--text-primary);
+            border-right-color: var(--primary-blue);
         }
         .nav-item .icon { font-size: 18px; width: 22px; text-align: center; }
         .nav-item .badge {
-            background: #EF4444;
+            background: var(--danger);
             color: white;
             font-size: 10px;
             padding: 1px 6px;
@@ -75,11 +76,11 @@
         .sidebar-footer {
             margin-top: auto;
             padding: 16px 20px;
-            border-top: 1px solid #334155;
+            border-top: 1px solid var(--border);
         }
         .sidebar-footer .nav-item {
             border-right: none;
-            color: #EF4444;
+            color: var(--danger);
             padding: 12px 0;
         }
         .sidebar-footer .nav-item:hover {
@@ -90,9 +91,9 @@
         /* ─── Mobile toggle ─── */
         .mobile-toggle {
             display: none;
-            background: #334155;
+            background: var(--border);
             border: none;
-            color: #F8FAFC;
+            color: var(--text-primary);
             width: 40px;
             height: 40px;
             border-radius: 8px;
@@ -124,7 +125,7 @@
             align-items: center;
             margin-bottom: 28px;
             padding-bottom: 20px;
-            border-bottom: 1px solid #334155;
+            border-bottom: 1px solid var(--border);
             gap: 12px;
             flex-wrap: wrap;
         }
@@ -135,15 +136,15 @@
             align-items: center;
             gap: 16px;
             font-size: 13px;
-            color: #94A3B8;
+            color: var(--text-secondary);
         }
         .header-left .date { direction: ltr; }
         .header-left .user-info { text-align: left; }
-        .header-left .user-info .name { color: #F8FAFC; font-weight: 600; }
-        .header-left .user-info .pharmacy { font-size: 12px; color: #64748B; }
+        .header-left .user-info .name { color: var(--text-primary); font-weight: 600; }
+        .header-left .user-info .pharmacy { font-size: 12px; color: var(--text-secondary); }
         .notification-bell {
             position: relative;
-            background: #334155;
+            background: var(--border);
             border: none;
             width: 40px;
             height: 40px;
@@ -152,10 +153,10 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #94A3B8;
+            color: var(--text-secondary);
             transition: all 0.2s;
         }
-        .notification-bell:hover { background: #475569; color: #F8FAFC; }
+        .notification-bell:hover { background: var(--text-secondary); color: var(--text-primary); }
 
         /* ─── Filter Bar ─── */
         .filter-bar {
@@ -174,13 +175,13 @@
         }
         .filter-group label {
             font-size: 13px;
-            color: #94A3B8;
+            color: var(--text-secondary);
             font-weight: 600;
         }
         .filter-select {
-            background: #1E293B;
-            border: 1px solid #334155;
-            color: #F8FAFC;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
             padding: 8px 16px;
             border-radius: 8px;
             font-size: 14px;
@@ -190,9 +191,9 @@
             transition: border-color 0.2s;
             min-width: 100px;
         }
-        .filter-select:hover, .filter-select:focus { border-color: #3B82F6; }
+        .filter-select:hover, .filter-select:focus { border-color: var(--primary-blue); }
         .filter-btn {
-            background: #3B82F6;
+            background: var(--primary-blue);
             color: white;
             border: none;
             padding: 8px 20px;
@@ -208,9 +209,9 @@
         .filter-btn:hover { background: #2563EB; }
         .filter-stats {
             font-size: 13px;
-            color: #64748B;
+            color: var(--text-secondary);
         }
-        .filter-stats strong { color: #F8FAFC; }
+        .filter-stats strong { color: var(--text-primary); }
 
         /* ─── Summary Cards ─── */
         .cards-grid {
@@ -220,13 +221,13 @@
             margin-bottom: 28px;
         }
         .summary-card {
-            background: #1E293B;
-            border: 1px solid #334155;
+            background: var(--surface);
+            border: 1px solid var(--border);
             border-radius: 12px;
             padding: 20px;
             transition: border-color 0.2s;
         }
-        .summary-card:hover { border-color: #475569; }
+        .summary-card:hover { border-color: var(--text-secondary); }
         .summary-card .card-icon {
             width: 40px;
             height: 40px;
@@ -239,28 +240,28 @@
         }
         .summary-card .card-label {
             font-size: 13px;
-            color: #94A3B8;
+            color: var(--text-secondary);
             margin-bottom: 4px;
         }
         .summary-card .card-value {
             font-size: 24px;
             font-weight: 700;
-            color: #F8FAFC;
+            color: var(--text-primary);
         }
         .summary-card .card-sub {
             font-size: 12px;
-            color: #64748B;
+            color: var(--text-secondary);
             margin-top: 4px;
         }
-        .card-blue .card-icon { background: rgba(59,130,246,0.15); color: #3B82F6; }
-        .card-yellow .card-icon { background: rgba(245,158,11,0.15); color: #F59E0B; }
-        .card-red .card-icon { background: rgba(239,68,68,0.15); color: #EF4444; }
-        .card-green .card-icon { background: rgba(34,197,94,0.15); color: #22C55E; }
+        .card-blue .card-icon { background: rgba(59,130,246,0.15); color: var(--primary-blue); }
+        .card-yellow .card-icon { background: rgba(245,158,11,0.15); color: var(--warning); }
+        .card-red .card-icon { background: rgba(239,68,68,0.15); color: var(--danger); }
+        .card-green .card-icon { background: rgba(34,197,94,0.15); color: var(--success); }
 
         /* ─── Section Card ─── */
         .section-card {
-            background: #1E293B;
-            border: 1px solid #334155;
+            background: var(--surface);
+            border: 1px solid var(--border);
             border-radius: 12px;
             overflow: hidden;
             margin-bottom: 28px;
@@ -270,7 +271,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 16px 20px;
-            border-bottom: 1px solid #334155;
+            border-bottom: 1px solid var(--border);
         }
         .section-card .card-header h3 {
             font-size: 15px;
@@ -280,7 +281,7 @@
         }
         .section-card .card-header .subtitle {
             font-size: 12px;
-            color: #64748B;
+            color: var(--text-secondary);
         }
         .section-card .card-body { padding: 16px 20px; }
 
@@ -291,10 +292,10 @@
         }
         .report-table th {
             font-size: 12px;
-            color: #64748B;
+            color: var(--text-secondary);
             text-align: right;
             padding: 10px 8px;
-            border-bottom: 1px solid #334155;
+            border-bottom: 1px solid var(--border);
             font-weight: 600;
             white-space: nowrap;
             user-select: none;
@@ -302,7 +303,7 @@
         .report-table td {
             font-size: 13px;
             padding: 12px 8px;
-            border-bottom: 1px solid #1E293B;
+            border-bottom: 1px solid var(--surface);
         }
         .report-table tbody tr {
             transition: background 0.15s;
@@ -311,7 +312,7 @@
         .report-table tr:last-child td { border-bottom: none; }
         .report-table .med-name {
             font-weight: 600;
-            color: #F8FAFC;
+            color: var(--text-primary);
         }
         .report-table .stock-val {
             font-weight: 600;
@@ -355,11 +356,11 @@
         }
 
         /* ─── Expiry Warning ─── */
-        .expiry-urgent { color: #EF4444; font-weight: 600; }
-        .expiry-warning { color: #F59E0B; font-weight: 600; }
-        .expiry-ok { color: #22C55E; }
-        .expiry-far { color: #94A3B8; }
-        .expiry-none { color: #64748B; font-style: italic; }
+        .expiry-urgent { color: var(--danger); font-weight: 600; }
+        .expiry-warning { color: var(--warning); font-weight: 600; }
+        .expiry-ok { color: var(--success); }
+        .expiry-far { color: var(--text-secondary); }
+        .expiry-none { color: var(--text-secondary); font-style: italic; }
 
         /* ─── Recommendations ─── */
         .recommendations-grid {
@@ -405,7 +406,7 @@
         }
         .rec-card .rec-desc {
             font-size: 13px;
-            color: #94A3B8;
+            color: var(--text-secondary);
             line-height: 1.6;
         }
 
@@ -421,23 +422,23 @@
         .spinner {
             width: 40px;
             height: 40px;
-            border: 3px solid #334155;
-            border-top-color: #3B82F6;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary-blue);
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .loading-text { color: #94A3B8; font-size: 14px; }
+        .loading-text { color: var(--text-secondary); font-size: 14px; }
 
         .error-state {
             text-align: center;
             padding: 60px 20px;
         }
         .error-state .err-icon { font-size: 48px; margin-bottom: 12px; }
-        .error-state .err-msg { color: #EF4444; font-size: 16px; margin-bottom: 8px; }
-        .error-state .err-detail { color: #94A3B8; font-size: 13px; margin-bottom: 16px; }
+        .error-state .err-msg { color: var(--danger); font-size: 16px; margin-bottom: 8px; }
+        .error-state .err-detail { color: var(--text-secondary); font-size: 13px; margin-bottom: 16px; }
         .retry-btn {
-            background: #3B82F6;
+            background: var(--primary-blue);
             color: white;
             border: none;
             padding: 10px 24px;
@@ -452,11 +453,11 @@
         .no-data {
             text-align: center;
             padding: 40px 20px;
-            color: #64748B;
+            color: var(--text-secondary);
             font-size: 14px;
         }
         .no-data .no-data-icon { font-size: 40px; margin-bottom: 12px; }
-        .no-data .no-data-sub { color: #475569; font-size: 13px; margin-top: 4px; }
+        .no-data .no-data-sub { color: var(--text-secondary); font-size: 13px; margin-top: 4px; }
 
         /* ─── Responsive ─── */
         @media (max-width: 1200px) {
@@ -681,7 +682,7 @@
                                             <td x-text="formatDate(med.last_sale_date)"></td>
                                             <td>
                                                 <span x-text="med.days_since_last_sale" :class="med.days_since_last_sale >= 60 ? 'expiry-urgent' : (med.days_since_last_sale >= 30 ? 'expiry-warning' : '')"></span>
-                                                <span style="font-size:11px;color:#64748B;margin-right:2px;">يوم</span>
+                                                <span style="font-size:11px;color:var(--text-secondary);margin-right:2px;">يوم</span>
                                             </td>
                                             <td x-text="formatDate(med.nearest_expiry)"></td>
                                             <td>
@@ -772,7 +773,7 @@
                                     <span class="rec-title" style="color:#93C5FD;">إدارة المخزون العامة</span>
                                 </div>
                                 <div class="rec-desc">
-                                    القيمة الراكدة الإجمالية: <strong style="color:#F8FAFC;" x-text="formatCurrency(totalSlowMovingValue)"></strong> — هذا المبلغ مقيد ولا يحقق عائداً.
+                                    القيمة الراكدة الإجمالية: <strong style="color:var(--text-primary);" x-text="formatCurrency(totalSlowMovingValue)"></strong> — هذا المبلغ مقيد ولا يحقق عائداً.
                                 </div>
                                 <div class="rec-desc" style="margin-top:8px;">
                                     • إعادة تقييم سياسات الشراء لتجنب تكدس المخزون<br>

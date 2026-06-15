@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/theme.css">
     <title>نموذج الدواء - صيدلية الزاريات</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -11,10 +12,10 @@
         body { font-family: 'Cairo', sans-serif; }
     </style>
 </head>
-<body class="bg-[#0F172A] text-white min-h-screen">
+<body class="bg-[var(--background)] text-white min-h-screen">
     <div x-data="medicineFormApp()" x-init="init()">
         <!-- Header -->
-        <header class="bg-[#1E293B] border-b border-gray-700">
+        <header class="bg-[var(--surface)] border-b border-gray-700">
             <div class="max-w-3xl mx-auto px-4 py-4">
                 <div class="flex justify-between items-center">
                     <h1 class="text-xl font-bold" x-text="isEdit ? 'تعديل دواء' : 'إضافة دواء جديد'">إضافة دواء جديد</h1>
@@ -29,10 +30,10 @@
         </header>
         <!-- Form -->
         <div class="max-w-3xl mx-auto px-4 py-8">
-            <form @submit.prevent="saveMedicine()" class="bg-[#1E293B] rounded-lg p-6 space-y-6">
+            <form @submit.prevent="saveMedicine()" class="bg-[var(--surface)] rounded-lg p-6 space-y-6">
                 <!-- Image Upload -->
                 <div class="flex flex-col items-center">
-                    <div class="relative w-48 h-48 bg-[#0F172A] rounded-lg overflow-hidden border-2 border-dashed border-gray-600">
+                    <div class="relative w-48 h-48 bg-[var(--background)] rounded-lg overflow-hidden border-2 border-dashed border-gray-600">
                         <img :src="previewImage || '/static/images/default-medicine.svg'" class="w-full h-full object-contain p-4" alt="">
                         <input 
                             type="file" 
@@ -51,7 +52,7 @@
                             type="text" 
                             x-model="form.barcode"
                             placeholder="امسح أو أدخل الباركود"
-                            class="flex-1 bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                            class="flex-1 bg-[var(--background)] border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
                         >
                         <button 
                             type="button"
@@ -71,7 +72,7 @@
                         type="text" 
                         x-model="form.trade_name"
                         placeholder="مثال: بانادول أزرق"
-                        class="w-full bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                        class="w-full bg-[var(--background)] border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
                         :class="{'border-red-500': errors.trade_name}"
                     >
                     <p x-show="errors.trade_name" class="text-red-400 text-xs mt-1" x-text="errors.trade_name"></p>
@@ -83,7 +84,7 @@
                         type="text" 
                         x-model="form.scientific_name"
                         placeholder="مثال: Paracetamol"
-                        class="w-full bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                        class="w-full bg-[var(--background)] border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
                     >
                 </div>
                 <!-- Category -->
@@ -91,7 +92,7 @@
                     <label class="block text-sm font-medium mb-2">التصنيف *</label>
                     <select 
                         x-model="form.category"
-                        class="w-full bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                        class="w-full bg-[var(--background)] border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
                     >
                         <option value="">اختر التصنيف</option>
                         <template x-for="cat in categories" :key="cat">
@@ -109,7 +110,7 @@
                             step="0.01"
                             min="0"
                             placeholder="سعر البيع للجمهور"
-                            class="w-full bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                            class="w-full bg-[var(--background)] border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
                         >
                     </div>
                     <div>
@@ -120,7 +121,7 @@
                             step="0.01"
                             min="0"
                             placeholder="سعر الشراء"
-                            class="w-full bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                            class="w-full bg-[var(--background)] border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
                         >
                     </div>
                     <div>
@@ -130,7 +131,7 @@
                             x-model="form.min_stock"
                             min="1"
                             placeholder="الحد الأدنى للمخزون"
-                            class="w-full bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                            class="w-full bg-[var(--background)] border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
                         >
                     </div>
                 </div>
@@ -139,7 +140,7 @@
                     <label class="block text-sm font-medium mb-2">الوحدة الأساسية</label>
                     <select 
                         x-model="form.base_unit"
-                        class="w-full bg-[#0F172A] border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                        class="w-full bg-[var(--background)] border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
                     >
                         <option value="strip">شريط</option>
                         <option value="bottle">زجاجة</option>
@@ -170,7 +171,7 @@
 
         <!-- ====== Barcode Scanner Modal ====== -->
         <div x-show="showScanner" class="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4">
-            <div class="bg-[#1E293B] rounded-lg w-full max-w-lg p-4 relative">
+            <div class="bg-[var(--surface)] rounded-lg w-full max-w-lg p-4 relative">
                 <!-- زر إغلاق -->
                 <button @click="closeScanner()" class="absolute top-2 left-2 z-10 bg-black bg-opacity-50 rounded-full p-1 text-white hover:bg-opacity-70">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -201,7 +202,7 @@
                     <p class="text-xs text-gray-400 mb-2">أو أدخل الرقم يدوياً:</p>
                     <div class="flex gap-2">
                         <input type="text" x-model="manualBarcode" placeholder="رقم الباركود"
-                            class="flex-1 bg-[#0F172A] border border-gray-600 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                            class="flex-1 bg-[var(--background)] border border-gray-600 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-400 focus:outline-none focus:border-blue-500"
                             @keyup.enter="useManualBarcode()">
                         <button @click="useManualBarcode()" class="bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded-lg text-sm">تأكيد</button>
                     </div>

@@ -3,24 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/theme.css">
     <title>تقرير المبيعات - PharmaSUD</title>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #0F172A;
-            color: #F8FAFC;
+            background: var(--background);
+            color: var(--text-primary);
             min-height: 100vh;
         }
 
         /* ─── Sidebar ─── */
         .sidebar {
             width: 220px;
-            background: #1E293B;
+            background: var(--surface);
             min-height: 100vh;
             padding: 24px 0;
-            border-left: 1px solid #334155;
+            border-left: 1px solid var(--border);
             position: fixed;
             right: 0;
             top: 0;
@@ -30,12 +31,12 @@
         }
         .sidebar .logo {
             padding: 0 20px 24px;
-            border-bottom: 1px solid #334155;
+            border-bottom: 1px solid var(--border);
             margin-bottom: 16px;
         }
         .sidebar .logo h1 {
             font-size: 18px;
-            color: #3B82F6;
+            color: var(--primary-blue);
             display: flex;
             align-items: center;
             gap: 8px;
@@ -43,7 +44,7 @@
         .sidebar .logo h1 svg { flex-shrink: 0; }
         .sidebar .logo p {
             font-size: 11px;
-            color: #64748B;
+            color: var(--text-secondary);
             margin-top: 2px;
             margin-right: 30px;
         }
@@ -52,7 +53,7 @@
             align-items: center;
             gap: 12px;
             padding: 12px 20px;
-            color: #94A3B8;
+            color: var(--text-secondary);
             text-decoration: none;
             font-size: 14px;
             transition: all 0.2s;
@@ -67,19 +68,19 @@
             font-family: inherit;
         }
         .nav-item:hover, .nav-item.active {
-            background: #334155;
-            color: #F8FAFC;
-            border-right-color: #3B82F6;
+            background: var(--border);
+            color: var(--text-primary);
+            border-right-color: var(--primary-blue);
         }
         .nav-item .icon { font-size: 18px; width: 22px; text-align: center; }
         .sidebar-footer {
             margin-top: auto;
             padding: 16px 20px;
-            border-top: 1px solid #334155;
+            border-top: 1px solid var(--border);
         }
         .sidebar-footer .nav-item {
             border-right: none;
-            color: #EF4444;
+            color: var(--danger);
             padding: 12px 0;
         }
         .sidebar-footer .nav-item:hover {
@@ -90,9 +91,9 @@
         /* ─── Mobile toggle ─── */
         .mobile-toggle {
             display: none;
-            background: #334155;
+            background: var(--border);
             border: none;
-            color: #F8FAFC;
+            color: var(--text-primary);
             width: 40px;
             height: 40px;
             border-radius: 8px;
@@ -124,7 +125,7 @@
             align-items: center;
             margin-bottom: 24px;
             padding-bottom: 16px;
-            border-bottom: 1px solid #334155;
+            border-bottom: 1px solid var(--border);
             gap: 12px;
             flex-wrap: wrap;
         }
@@ -135,12 +136,12 @@
             align-items: center;
             gap: 16px;
             font-size: 13px;
-            color: #94A3B8;
+            color: var(--text-secondary);
         }
         .header-left .date { direction: ltr; }
         .header-left .user-info { text-align: left; }
-        .header-left .user-info .name { color: #F8FAFC; font-weight: 600; }
-        .header-left .user-info .pharmacy { font-size: 12px; color: #64748B; }
+        .header-left .user-info .name { color: var(--text-primary); font-weight: 600; }
+        .header-left .user-info .pharmacy { font-size: 12px; color: var(--text-secondary); }
 
         /* ─── Filter Bar ─── */
         .filter-bar {
@@ -151,9 +152,9 @@
             align-items: center;
         }
         .filter-btn {
-            background: #1E293B;
-            border: 1px solid #334155;
-            color: #94A3B8;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
             padding: 8px 16px;
             border-radius: 8px;
             cursor: pointer;
@@ -161,40 +162,40 @@
             font-family: inherit;
             transition: all 0.2s;
         }
-        .filter-btn:hover { border-color: #3B82F6; color: #F8FAFC; }
+        .filter-btn:hover { border-color: var(--primary-blue); color: var(--text-primary); }
         .filter-btn.active {
-            background: #3B82F6;
-            border-color: #3B82F6;
+            background: var(--primary-blue);
+            border-color: var(--primary-blue);
             color: white;
         }
         .filter-select {
-            background: #1E293B;
-            border: 1px solid #334155;
-            color: #F8FAFC;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
             padding: 8px 12px;
             border-radius: 8px;
             font-size: 13px;
             cursor: pointer;
             font-family: inherit;
         }
-        .filter-select:focus { outline: none; border-color: #3B82F6; }
+        .filter-select:focus { outline: none; border-color: var(--primary-blue); }
         .filter-date {
-            background: #1E293B;
-            border: 1px solid #334155;
-            color: #F8FAFC;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
             padding: 7px 12px;
             border-radius: 8px;
             font-size: 13px;
             font-family: inherit;
             direction: ltr;
         }
-        .filter-date:focus { outline: none; border-color: #3B82F6; }
+        .filter-date:focus { outline: none; border-color: var(--primary-blue); }
         .filter-date::-webkit-calendar-picker-indicator {
             filter: invert(0.7);
             cursor: pointer;
         }
         .search-btn {
-            background: #3B82F6;
+            background: var(--primary-blue);
             border: none;
             color: white;
             padding: 8px 20px;
@@ -215,13 +216,13 @@
             margin-bottom: 24px;
         }
         .summary-card {
-            background: #1E293B;
-            border: 1px solid #334155;
+            background: var(--surface);
+            border: 1px solid var(--border);
             border-radius: 12px;
             padding: 20px;
             transition: border-color 0.2s;
         }
-        .summary-card:hover { border-color: #475569; }
+        .summary-card:hover { border-color: var(--text-secondary); }
         .summary-card .card-icon {
             width: 40px;
             height: 40px;
@@ -234,17 +235,17 @@
         }
         .summary-card .card-label {
             font-size: 13px;
-            color: #94A3B8;
+            color: var(--text-secondary);
             margin-bottom: 4px;
         }
         .summary-card .card-value {
             font-size: 26px;
             font-weight: 700;
-            color: #F8FAFC;
+            color: var(--text-primary);
         }
-        .card-blue .card-icon { background: rgba(59,130,246,0.15); color: #3B82F6; }
-        .card-green .card-icon { background: rgba(34,197,94,0.15); color: #22C55E; }
-        .card-yellow .card-icon { background: rgba(245,158,11,0.15); color: #F59E0B; }
+        .card-blue .card-icon { background: rgba(59,130,246,0.15); color: var(--primary-blue); }
+        .card-green .card-icon { background: rgba(34,197,94,0.15); color: var(--success); }
+        .card-yellow .card-icon { background: rgba(245,158,11,0.15); color: var(--warning); }
 
         /* ─── Two Column Layout ─── */
         .two-col {
@@ -256,8 +257,8 @@
 
         /* ─── Section Card ─── */
         .section-card {
-            background: #1E293B;
-            border: 1px solid #334155;
+            background: var(--surface);
+            border: 1px solid var(--border);
             border-radius: 12px;
             overflow: hidden;
         }
@@ -266,7 +267,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 16px 20px;
-            border-bottom: 1px solid #334155;
+            border-bottom: 1px solid var(--border);
         }
         .section-card .card-header h3 {
             font-size: 15px;
@@ -276,7 +277,7 @@
         }
         .section-card .card-header .subtitle {
             font-size: 12px;
-            color: #64748B;
+            color: var(--text-secondary);
         }
         .section-card .card-body { padding: 16px 20px; }
 
@@ -286,7 +287,7 @@
             align-items: center;
             gap: 12px;
             padding: 10px 0;
-            border-bottom: 1px solid #0F172A;
+            border-bottom: 1px solid var(--background);
         }
         .payment-item:last-child { border-bottom: none; }
         .payment-icon {
@@ -304,12 +305,12 @@
         .payment-icon.fory { background: rgba(91,33,182,0.25); color: #A78BFA; }
         .payment-icon.transfer { background: rgba(120,53,15,0.25); color: #FBBF24; }
         .payment-info { flex: 1; min-width: 0; }
-        .payment-name { font-size: 13px; font-weight: 600; color: #F8FAFC; }
-        .payment-detail { font-size: 11px; color: #64748B; margin-top: 2px; }
+        .payment-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+        .payment-detail { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
         .payment-bar-wrap { margin-top: 6px; }
         .payment-bar-bg {
             height: 6px;
-            background: #0F172A;
+            background: var(--background);
             border-radius: 3px;
             overflow: hidden;
         }
@@ -325,13 +326,13 @@
         .payment-amount {
             font-size: 14px;
             font-weight: 700;
-            color: #F8FAFC;
+            color: var(--text-primary);
             text-align: left;
             white-space: nowrap;
         }
         .payment-percent {
             font-size: 11px;
-            color: #64748B;
+            color: var(--text-secondary);
             text-align: left;
         }
 
@@ -342,17 +343,17 @@
         }
         .data-table th {
             font-size: 12px;
-            color: #64748B;
+            color: var(--text-secondary);
             text-align: right;
             padding: 10px 6px;
-            border-bottom: 1px solid #334155;
+            border-bottom: 1px solid var(--border);
             font-weight: 600;
             white-space: nowrap;
         }
         .data-table td {
             font-size: 13px;
             padding: 10px 6px;
-            border-bottom: 1px solid #1E293B;
+            border-bottom: 1px solid var(--surface);
         }
         .data-table tr:last-child td { border-bottom: none; }
         .data-table tr:hover td { background: rgba(51,65,85,0.3); }
@@ -379,10 +380,10 @@
             font-size: 12px;
             font-weight: 700;
         }
-        .rank-1 { background: rgba(245,158,11,0.2); color: #F59E0B; }
-        .rank-2 { background: rgba(148,163,184,0.2); color: #94A3B8; }
+        .rank-1 { background: rgba(245,158,11,0.2); color: var(--warning); }
+        .rank-2 { background: rgba(148,163,184,0.2); color: var(--text-secondary); }
         .rank-3 { background: rgba(205,127,50,0.2); color: #CD7F32; }
-        .rank-n { background: rgba(59,130,246,0.15); color: #3B82F6; }
+        .rank-n { background: rgba(59,130,246,0.15); color: var(--primary-blue); }
 
         /* ─── Sales List ─── */
         .sales-list { margin-top: 24px; }
@@ -399,23 +400,23 @@
         .spinner {
             width: 40px;
             height: 40px;
-            border: 3px solid #334155;
-            border-top-color: #3B82F6;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary-blue);
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .loading-text { color: #94A3B8; font-size: 14px; }
+        .loading-text { color: var(--text-secondary); font-size: 14px; }
 
         .error-state {
             text-align: center;
             padding: 60px 20px;
         }
         .error-state .err-icon { font-size: 48px; margin-bottom: 12px; }
-        .error-state .err-msg { color: #EF4444; font-size: 16px; margin-bottom: 8px; }
-        .error-state .err-detail { color: #94A3B8; font-size: 13px; margin-bottom: 16px; }
+        .error-state .err-msg { color: var(--danger); font-size: 16px; margin-bottom: 8px; }
+        .error-state .err-detail { color: var(--text-secondary); font-size: 13px; margin-bottom: 16px; }
         .retry-btn {
-            background: #3B82F6;
+            background: var(--primary-blue);
             color: white;
             border: none;
             padding: 10px 24px;
@@ -427,7 +428,7 @@
         }
         .retry-btn:hover { background: #2563EB; }
 
-        .no-data { text-align: center; padding: 30px 20px; color: #64748B; font-size: 14px; }
+        .no-data { text-align: center; padding: 30px 20px; color: var(--text-secondary); font-size: 14px; }
 
         /* ─── Responsive ─── */
         @media (max-width: 1200px) {
@@ -567,9 +568,9 @@
             <!-- Date inputs (hidden until custom selected) -->
             <template x-if="filters.showCustom">
                 <div style="display:flex;gap:6px;align-items:center;">
-                    <span style="font-size:12px;color:#64748B;">من</span>
+                    <span style="font-size:12px;color:var(--text-secondary);">من</span>
                     <input type="date" class="filter-date" x-model="filters.startDate">
-                    <span style="font-size:12px;color:#64748B;">إلى</span>
+                    <span style="font-size:12px;color:var(--text-secondary);">إلى</span>
                     <input type="date" class="filter-date" x-model="filters.endDate">
                 </div>
             </template>
@@ -757,7 +758,7 @@
                                                           x-text="idx + 1"></span>
                                                 </td>
                                                 <td x-text="formatDate(day.date)"></td>
-                                                <td style="color:#22C55E;font-weight:600;" x-text="formatCurrency(day.revenue) + ' ج.س'"></td>
+                                                <td style="color:var(--success);font-weight:600;" x-text="formatCurrency(day.revenue) + ' ج.س'"></td>
                                                 <td x-text="day.invoices"></td>
                                             </tr>
                                         </template>
@@ -795,8 +796,8 @@
                                     <tbody>
                                         <template x-for="sale in report.sales" :key="sale.invoice_number">
                                             <tr>
-                                                <td style="color:#3B82F6;font-weight:600;" x-text="'#' + sale.invoice_number"></td>
-                                                <td style="font-size:12px;color:#94A3B8;" x-text="formatDateTime(sale.created_at)"></td>
+                                                <td style="color:var(--primary-blue);font-weight:600;" x-text="'#' + sale.invoice_number"></td>
+                                                <td style="font-size:12px;color:var(--text-secondary);" x-text="formatDateTime(sale.created_at)"></td>
                                                 <td x-text="sale.cashier_name"></td>
                                                 <td>
                                                     <span class="pm-badge" :class="getPaymentClass(sale.payment_method)"
@@ -804,7 +805,7 @@
                                                 </td>
                                                 <td x-text="sale.customer_name || '—'"></td>
                                                 <td x-text="sale.items_count + ' صنف'"></td>
-                                                <td style="text-align:left;color:#22C55E;font-weight:700;white-space:nowrap;"
+                                                <td style="text-align:left;color:var(--success);font-weight:700;white-space:nowrap;"
                                                     x-text="formatCurrency(sale.total_amount) + ' ج.س'"></td>
                                             </tr>
                                         </template>
