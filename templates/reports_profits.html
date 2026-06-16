@@ -75,6 +75,14 @@
       background: #1AA7EC;
       color: #fff;
     }
+        body.dark-mode .notif-dropdown { background: #1E293B; border-color: #334155; }
+    body.dark-mode .notif-header { color: #E2E8F0; border-color: #334155; }
+    body.dark-mode .notif-item { border-color: #1E293B; }
+    body.dark-mode .notif-item:hover { background: #111C2E; }
+    body.dark-mode .notif-title { color: #F1F5F9; }
+    body.dark-mode .notif-desc { color: #94A3B8; }
+    body.dark-mode .notif-time { color: #64748B; }
+    body.dark-mode .notif-empty { color: #64748B; }
     body.dark-mode .main-content {
       background: #0F172A;
     }
@@ -982,6 +990,38 @@
       to { transform: rotate(360deg); }
     }
     [x-cloak] { display: none !important; }
+      .notif-dropdown {
+      position: absolute; top: 64px; left: 0; width: 380px; max-height: 460px;
+      background: #fff; border: 1px solid #E2E8F0; border-radius: 14px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.12); z-index: 200; overflow: hidden;
+    }
+    .notif-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px; border-bottom: 1px solid #E2E8F0;
+      font-weight: 700; font-size: 14px; color: #0F172A;
+    }
+    .notif-header a { font-size: 12px; color: #1AA7EC; text-decoration: none; }
+    .notif-list { max-height: 340px; overflow-y: auto; }
+    .notif-item {
+      display: flex; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #F1F5F9;
+      cursor: pointer; transition: background 0.15s;
+    }
+    .notif-item:hover { background: #F6F8FA; }
+    .notif-item .notif-icon {
+      width: 38px; height: 38px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; font-size: 16px;
+    }
+    .notif-icon.expiry { background: #FEF3C7; color: #D97706; }
+    .notif-icon.stock { background: #FEE2E2; color: #DC2626; }
+    .notif-icon.system { background: #DBEAFE; color: #2563EB; }
+    .notif-body { flex: 1; min-width: 0; }
+    .notif-title { font-size: 13px; font-weight: 600; color: #0F172A; }
+    .notif-desc { font-size: 12px; color: #64748B; margin-top: 2px; }
+    .notif-time { font-size: 11px; color: #94A3B8; margin-top: 3px; }
+    .notif-empty { padding: 28px 16px; text-align: center; color: #94A3B8; font-size: 13px; }
+    .notif-loading { padding: 16px; text-align: center; color: #64748B; font-size: 13px; }
+
   </style>
 </head>
 <body class="show">
@@ -1061,7 +1101,7 @@
       <button class="icon-btn" @click="toggleTheme()">
         <i :data-lucide="isDark ? 'sun' : 'moon'"></i>
       </button>
-      <button class="icon-btn">
+      <button class="icon-btn" @click="showNotifications = !showNotifications">
         <i data-lucide="bell"></i>
         <span class="dot"></span>
       </button>
