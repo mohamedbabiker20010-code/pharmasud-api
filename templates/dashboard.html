@@ -704,9 +704,9 @@
 
   </style>
 </head>
-<body x-data="dashboardApp()">
+<body class="show">
 
-  <div class="app-layout">
+<div x-data="dashboardApp()" x-init="init()" class="app-layout">
     <!-- Sidebar -->
     <aside class="sidebar">
       <div class="brand">
