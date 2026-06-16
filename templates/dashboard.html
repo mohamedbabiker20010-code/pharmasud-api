@@ -1090,8 +1090,6 @@
           localStorage.setItem("darkMode", this.isDark);
           document.body.classList.toggle("dark-mode", this.isDark);
         },
-      }
-    }
 
         async loadNotifications() {
           this.notificationsLoading = true;
@@ -1125,6 +1123,8 @@
           } catch (e) { /* silent */ }
           this.notificationsLoading = false;
         },
+      }
+    }
   </script>
 
 </body>
