@@ -1063,7 +1063,7 @@
           this.loading = true;
           this.error = false;
           try {
-            const res = await fetch('/api/dashboard', {
+            const res = await fetch('/api/reports/dashboard', {
               headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
             });
             if (!res.ok) throw new Error('Failed to load');
