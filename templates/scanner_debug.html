@@ -1,442 +1,971 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" data-theme="light">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <link rel="stylesheet" href="/static/css/theme.css?v7.2.0">
-<title>تشخيص الباركود - PharmaSUD</title>
-<style>
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { background:var(--background); color:var(--text-primary); font-family:sans-serif; padding:10px; }
-  h2 { text-align:center; margin-bottom:8px; font-size:18px; }
-  .btn-row { display:flex; gap:8px; }
-  button {
-    flex:1; padding:14px; border:none; border-radius:8px; font-size:16px;
-    cursor:pointer; font-weight:600;
-  }
-  #start-btn { background:var(--success); color:var(--text-primary); }
-  #stop-btn { background:var(--danger); color:#fff; }
-  #video-container { position:relative; width:100%; max-width:500px; margin:8px auto; }
-  video { width:100%; border-radius:8px; background:#000; display:block; }
-  #debug-panel {
-    background:var(--surface); padding:10px; margin-top:8px; border-radius:8px;
-    font-family:'Cascadia Code','Fira Code',monospace; font-size:12px;
-    direction:ltr; text-align:left; white-space:pre-wrap;
-    max-height:50vh; overflow-y:auto; line-height:1.6;
-  }
-  .row { margin-bottom:2px; word-break:break-all; }
-  .ok { color:var(--success); }
-  .err { color:var(--danger); font-weight:bold; }
-  .warn { color:var(--warning); }
-  .info { color:#4ADEDE; }
-  .success { color:var(--success); font-weight:bold; font-size:15px; }
-  .sep { color:var(--border); text-align:center; margin:6px 0; }
-</style>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="stylesheet" href="/static/css/theme.css?v7.2.0">
+  <title>اختبار الماسح - PharmaSUD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
   <style>
-    .sidebar { width:248px; background:#fff; border-left:1px solid #EEF2F6; display:flex; flex-direction:column; padding:22px 16px; position:fixed; right:0; top:0; bottom:0; z-index:100; font-family:'IBM Plex Sans Arabic','IBM Plex Sans',sans-serif; }
-    .sidebar .brand { display:flex; align-items:center; gap:11px; padding:0 8px 22px; }
-    .sidebar .brand .icon { width:38px; height:38px; border-radius:11px; background:#1AA7EC; position:relative; flex-shrink:0; }
-    .sidebar .brand .icon::before,.sidebar .brand .icon::after { content:''; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); background:#fff; border-radius:3px; }
-    .sidebar .brand .icon::before { width:18px; height:5.5px; }
-    .sidebar .brand .icon::after { width:5.5px; height:18px; }
-    .sidebar .brand .name { font:700 18px/1 'IBM Plex Sans Arabic',sans-serif; letter-spacing:-0.02em; }
-    .sidebar .brand .name span { color:#1AA7EC; }
-    .sidebar .nav-section { font:600 11px/1 'IBM Plex Mono',monospace; letter-spacing:0.1em; color:#CBD5E1; padding:14px 10px 10px; }
-    .sidebar .nav-item { display:flex; align-items:center; gap:12px; padding:11px 12px; border-radius:11px; color:#475569; font-size:14px; font-weight:500; text-decoration:none; margin-bottom:4px; transition:all 0.2s ease; }
-    .sidebar .nav-item:hover { background:#F8FAFC; color:#0F172A; }
-    .sidebar .nav-item.active { background:#1AA7EC; color:#fff; box-shadow:0 8px 18px -8px rgba(26,167,236,0.55); }
-    .sidebar .nav-item svg { width:19px; height:19px; flex-shrink:0; }
-    .sidebar .nav-item .badge { margin-right:auto; background:#FEF2F2; color:#DC2626; font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; }
-    .sidebar .user-card { margin-top:auto; display:flex; align-items:center; gap:11px; padding:11px; border:1px solid #EEF2F6; border-radius:13px; cursor:pointer; }
-    .sidebar .user-avatar { width:36px; height:36px; border-radius:10px; background:#1AA7EC; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0; }
-    .sidebar .user-name { font-size:13.5px; font-weight:600; }
-    .sidebar .user-role { font-size:11.5px; color:#94A3B8; }
-    .sidebar .user-card svg { width:16px; height:16px; color:#CBD5E1; flex-shrink:0; margin-right:auto; }
-    .main-wrap { margin-right:248px; min-height:100vh; }
-    @media(max-width:1024px){ .sidebar{display:none;} .main-wrap{margin-right:0;} }
+    html, body {
+      margin: 0; padding: 0;
+      min-height: 100vh;
+      font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif;
+      background: #F6F8FA;
+      color: #0F172A;
+      -webkit-font-smoothing: antialiased;
+    }
+    .app-layout { display: flex; min-height: 100vh; }
+
+    /* ─── Sidebar (RTL) ─── */
+    .sidebar {
+      width: 248px; background: #fff; border-left: 1px solid #EEF2F6;
+      display: flex; flex-direction: column; padding: 22px 16px;
+      position: fixed; right: 0; top: 0; bottom: 0; z-index: 100;
+    }
+    .sidebar .brand {
+      display: flex; align-items: center; gap: 11px;
+      padding: 0 8px 22px;
+    }
+    .sidebar .brand .icon {
+      width: 38px; height: 38px; border-radius: 11px;
+      background: #1AA7EC; position: relative; flex-shrink: 0;
+    }
+    .sidebar .brand .icon::before, .sidebar .brand .icon::after {
+      content: ''; position: absolute; left: 50%; top: 50%;
+      transform: translate(-50%, -50%); background: #fff; border-radius: 3px;
+    }
+    .sidebar .brand .icon::before { width: 18px; height: 5.5px; }
+    .sidebar .brand .icon::after { width: 5.5px; height: 18px; }
+    .sidebar .brand .name {
+      font: 700 18px/1 'IBM Plex Sans Arabic', sans-serif; letter-spacing: -0.02em;
+    }
+    .sidebar .brand .name span { color: #1AA7EC; }
+    .sidebar .nav-section {
+      font: 600 11px/1 'IBM Plex Mono', monospace; letter-spacing: 0.1em;
+      color: #CBD5E1; padding: 14px 10px 10px;
+    }
+    .sidebar .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 12px; border-radius: 11px;
+      color: #475569; font-size: 14px; font-weight: 500;
+      text-decoration: none; margin-bottom: 4px;
+      transition: all 0.2s ease;
+    }
+    .sidebar .nav-item:hover { background: #F8FAFC; color: #0F172A; }
+    .sidebar .nav-item.active {
+      background: #1AA7EC; color: #fff;
+      box-shadow: 0 8px 18px -8px rgba(26,167,236,0.55);
+    }
+    .sidebar .nav-item svg { width: 19px; height: 19px; flex-shrink: 0; }
+    .sidebar .nav-item .badge {
+      margin-right: auto; background: #FEF2F2; color: #DC2626;
+      font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px;
+    }
+    .sidebar .user-card {
+      margin-top: auto; display: flex; align-items: center; gap: 11px;
+      padding: 11px; border: 1px solid #EEF2F6; border-radius: 13px; cursor: pointer;
+    }
+    .sidebar .user-avatar {
+      width: 36px; height: 36px; border-radius: 10px; background: #1AA7EC;
+      color: #fff; display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px; flex-shrink: 0;
+    }
+    .sidebar .user-name { font-size: 13.5px; font-weight: 600; }
+    .sidebar .user-role { font-size: 11.5px; color: #94A3B8; }
+    .sidebar .user-card svg { width: 16px; height: 16px; color: #CBD5E1; flex-shrink: 0; }
+
+    /* ─── Topbar (RTL) ─── */
+    .topbar {
+      height: 70px; background: #fff; border-bottom: 1px solid #EEF2F6;
+      display: flex; align-items: center; padding: 0 28px; gap: 18px;
+      position: fixed; top: 0; right: 248px; left: 0; z-index: 90;
+    }
+    .topbar .search-box {
+      display: flex; align-items: center; gap: 10px; flex: 1; max-width: 380px;
+      height: 42px; padding: 0 14px; border-radius: 11px; background: #F6F8FA;
+      color: #94A3B8; font-size: 14px;
+    }
+    .topbar .search-box svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .topbar .actions { margin-right: auto; display: flex; align-items: center; gap: 12px; }
+    .topbar .lang-toggle {
+      display: flex; border: 1px solid #E2E8F0; border-radius: 9px;
+      overflow: hidden; font-size: 13px; font-weight: 600; cursor: pointer;
+    }
+    .topbar .lang-toggle span {
+      padding: 7px 12px; color: #64748B; transition: all 0.2s ease;
+    }
+    .topbar .lang-toggle span.active { background: #1AA7EC; color: #fff; }
+    .topbar .icon-btn {
+      width: 42px; height: 42px; border-radius: 11px; border: 1px solid #E2E8F0;
+      display: flex; align-items: center; justify-content: center;
+      color: #475569; background: transparent; cursor: pointer; position: relative;
+      transition: all 0.2s ease;
+    }
+    .topbar .icon-btn:hover { background: #F8FAFC; }
+    .topbar .icon-btn svg { width: 18px; height: 18px; }
+    .topbar .icon-btn .dot {
+      position: absolute; top: 9px; left: 11px; width: 8px; height: 8px;
+      border-radius: 50%; background: #DC2626; border: 2px solid #fff;
+    }
+
+    /* ─── Main Content ─── */
+    .main-content {
+      margin-right: 248px;
+      padding: calc(70px + 28px) 28px 28px;
+      min-height: 100vh;
+    }
+
+    /* ─── Page Header ─── */
+    .page-header {
+      display: flex; align-items: flex-end; justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .page-header h1 {
+      margin: 0 0 6px; font: 700 26px/1.1 'IBM Plex Sans Arabic', sans-serif;
+      letter-spacing: -0.02em;
+    }
+    .page-header .subtitle {
+      margin: 0; color: #64748B; font-size: 14.5px;
+    }
+
+    /* ─── Card ─── */
+    .card {
+      background: #fff; border: 1px solid #EEF2F6;
+      border-radius: 16px; padding: 22px 24px;
+      box-shadow: 0 1px 2px rgba(15,23,42,0.04);
+    }
+    .card + .card { margin-top: 18px; }
+    .card-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 20px; padding-bottom: 16px;
+      border-bottom: 1px solid #EEF2F6;
+    }
+    .card-title {
+      font-size: 15px; font-weight: 600; color: #0F172A;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-title svg { width: 18px; height: 18px; color: #1AA7EC; }
+    .card-subtitle {
+      font-size: 12.5px; color: #94A3B8; margin-top: 3px;
+    }
+
+    /* ─── Buttons ─── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 8px; padding: 10px 20px; border-radius: 11px;
+      font-family: inherit; font-size: 14px; font-weight: 600;
+      cursor: pointer; border: none; transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    .btn svg { width: 17px; height: 17px; }
+    .btn-success {
+      background: #16A34A; color: #fff;
+      box-shadow: 0 10px 22px -8px rgba(22,163,74,0.45);
+    }
+    .btn-success:hover { filter: brightness(1.05); transform: translateY(-1px); }
+    .btn-danger {
+      background: #DC2626; color: #fff;
+      box-shadow: 0 10px 22px -8px rgba(220,38,38,0.45);
+    }
+    .btn-danger:hover { filter: brightness(1.05); }
+    .btn-secondary {
+      background: #fff; color: #334155; border: 1px solid #E2E8F0;
+    }
+    .btn-secondary:hover { background: #F8FAFC; }
+    .btn-full { width: 100%; }
+
+    /* ─── Video Container ─── */
+    .video-wrapper {
+      position: relative; width: 100%; max-width: 560px; margin: 0 auto;
+      border-radius: 16px; overflow: hidden; background: #0F172A;
+      box-shadow: 0 4px 20px rgba(15,23,42,0.12);
+    }
+    .video-wrapper video {
+      width: 100%; display: block; border-radius: 16px;
+    }
+    .video-overlay {
+      position: absolute; inset: 0; display: flex;
+      align-items: center; justify-content: center;
+      color: #94A3B8; font-size: 15px; font-weight: 500;
+      pointer-events: none; transition: opacity 0.3s ease;
+    }
+    .video-overlay.hidden { opacity: 0; }
+
+    /* ─── Scan Region Indicator ─── */
+    .scan-region {
+      position: absolute; top: 30%; bottom: 30%; left: 10%; right: 10%;
+      border: 2px dashed rgba(26,167,236,0.5); border-radius: 12px;
+      pointer-events: none; transition: opacity 0.3s ease;
+    }
+    .scan-region::before {
+      content: ''; position: absolute; inset: -4px;
+      border: 1px solid rgba(26,167,236,0.15); border-radius: 14px;
+    }
+
+    /* ─── Debug Panel ─── */
+    .debug-panel {
+      background: #0F172A; padding: 16px; border-radius: 16px;
+      font-family: 'IBM Plex Mono', 'Cascadia Code', 'Fira Code', monospace;
+      font-size: 12.5px; line-height: 1.7;
+      direction: ltr; text-align: left; white-space: pre-wrap;
+      max-height: 44vh; overflow-y: auto;
+      border: 1px solid #1E293B;
+    }
+    .debug-panel .row { margin-bottom: 1px; word-break: break-all; }
+    .debug-panel .ok { color: #4ADEDE; }
+    .debug-panel .err { color: #FCA5A5; font-weight: bold; }
+    .debug-panel .warn { color: #FCD34D; }
+    .debug-panel .info { color: #4ADEDE; }
+    .debug-panel .success { color: #6EE7B7; font-weight: bold; font-size: 14px; }
+    .debug-panel .sep { color: #334155; text-align: center; margin: 6px 0; }
+
+    /* ─── Status Indicator ─── */
+    .status-indicator {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 14px; border-radius: 999px;
+      font-size: 13px; font-weight: 600;
+    }
+    .status-indicator.idle { background: #F1F5F9; color: #94A3B8; }
+    .status-indicator.running { background: #DBEAFE; color: #1AA7EC; }
+    .status-indicator.running .pulse-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: #1AA7EC;
+      animation: pulse 1.5s ease infinite;
+    }
+    .status-indicator.error { background: #FEF2F2; color: #DC2626; }
+
+    /* ─── Info Badges ─── */
+    .info-badges {
+      display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px;
+    }
+    .info-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 14px; border-radius: 999px;
+      font-size: 12.5px; font-weight: 600;
+      background: #F1F5F9; color: #475569; border: 1px solid #E2E8F0;
+    }
+    .info-badge svg { width: 14px; height: 14px; }
+
+    /* ─── Toast ─── */
+    .toast {
+      position: fixed; bottom: 28px; left: 28px; z-index: 9999;
+      padding: 14px 20px; border-radius: 11px;
+      font-size: 14px; font-weight: 600; font-family: inherit;
+      display: flex; align-items: center; gap: 10px;
+      box-shadow: 0 10px 25px rgba(15,23,42,0.15);
+      animation: slideInLeft 0.3s cubic-bezier(0.22,1,0.36,1);
+    }
+    .toast.success { background: #065F46; color: #6EE7B7; }
+    .toast.error   { background: #7F1D1D; color: #FCA5A5; }
+    .toast svg { width: 18px; height: 18px; }
+
+    /* ─── Animations ─── */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    @keyframes slideInLeft {
+      from { opacity: 0; transform: translateX(-20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+    @keyframes scanLine {
+      0% { top: 30%; }
+      50% { top: 70%; }
+      100% { top: 30%; }
+    }
+    .animate-fade-up { animation: fadeUp 0.4s cubic-bezier(0.22,1,0.36,1) forwards; }
+
+    /* ═══════════════════════════════════════ */
+    /* ─── Dark Mode ───                      */
+    /* ═══════════════════════════════════════ */
+    [data-theme="dark"] html,
+    [data-theme="dark"] body {
+      background: #0B1120;
+      color: #E2E8F0;
+    }
+    [data-theme="dark"] .sidebar {
+      background: #111827;
+      border-color: #1E293B;
+    }
+    [data-theme="dark"] .sidebar .nav-item {
+      color: #94A3B8;
+    }
+    [data-theme="dark"] .sidebar .nav-item:hover {
+      background: #1E293B;
+      color: #E2E8F0;
+    }
+    [data-theme="dark"] .sidebar .nav-item.active {
+      background: #1AA7EC;
+      color: #fff;
+      box-shadow: 0 8px 18px -8px rgba(26,167,236,0.55);
+    }
+    [data-theme="dark"] .sidebar .nav-item .badge {
+      background: #7F1D1D;
+      color: #FCA5A5;
+    }
+    [data-theme="dark"] .sidebar .user-card {
+      border-color: #1E293B;
+    }
+    [data-theme="dark"] .sidebar .user-role {
+      color: #64748B;
+    }
+    [data-theme="dark"] .topbar {
+      background: #111827;
+      border-color: #1E293B;
+    }
+    [data-theme="dark"] .topbar .search-box {
+      background: #1E293B;
+      color: #64748B;
+    }
+    [data-theme="dark"] .topbar .icon-btn {
+      border-color: #1E293B;
+      color: #94A3B8;
+    }
+    [data-theme="dark"] .topbar .icon-btn:hover {
+      background: #1E293B;
+    }
+    [data-theme="dark"] .topbar .lang-toggle {
+      border-color: #1E293B;
+    }
+    [data-theme="dark"] .topbar .lang-toggle span {
+      color: #94A3B8;
+    }
+    [data-theme="dark"] .topbar .lang-toggle span.active {
+      background: #1AA7EC;
+      color: #fff;
+    }
+    [data-theme="dark"] .card {
+      background: #111827;
+      border-color: #1E293B;
+    }
+    [data-theme="dark"] .card-title {
+      color: #E2E8F0;
+    }
+    [data-theme="dark"] .card-subtitle {
+      color: #64748B;
+    }
+    [data-theme="dark"] .card-header {
+      border-color: #1E293B;
+    }
+    [data-theme="dark"] .page-header h1 {
+      color: #E2E8F0;
+    }
+    [data-theme="dark"] .page-header .subtitle {
+      color: #64748B;
+    }
+    [data-theme="dark"] .info-badge {
+      background: #1E293B;
+      color: #94A3B8;
+      border-color: #334155;
+    }
+    [data-theme="dark"] .status-indicator.idle {
+      background: #1E293B;
+      color: #64748B;
+    }
+    [data-theme="dark"] .status-indicator.running {
+      background: #172554;
+      color: #60A5FA;
+    }
+    [data-theme="dark"] .status-indicator.error {
+      background: #7F1D1D;
+      color: #FCA5A5;
+    }
+    [data-theme="dark"] .debug-panel {
+      background: #060D1B;
+      border-color: #1E293B;
+    }
+    [data-theme="dark"] .btn-secondary {
+      background: #1E293B;
+      color: #94A3B8;
+      border-color: #334155;
+    }
+    [data-theme="dark"] .btn-secondary:hover {
+      background: #334155;
+    }
+    [data-theme="dark"] .video-wrapper {
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+    [data-theme="dark"] .video-overlay {
+      color: #64748B;
+    }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 1024px) {
+      .sidebar { display: none; }
+      .topbar { right: 0; }
+      .main-content { margin-right: 0; }
+    }
+    @media (max-width: 640px) {
+      .page-header { flex-direction: column; align-items: flex-start; gap: 14px; }
+      .info-badges { gap: 6px; }
+      .info-badge { padding: 5px 10px; font-size: 11.5px; }
+    }
   </style>
-
 </head>
-<body>
+<body x-data="scannerApp()" x-init="init()">
 
-  <!-- Cloud Design Sidebar -->
-  <aside class="sidebar" id="cloud-sidebar">
-    <div class="brand">
-      <div class="icon"></div>
-      <div class="name">Pharma<span>SUD</span></div>
-    </div>
-    <div class="nav-section">MENU</div>
-    <a href="/dashboard" class="nav-item" id="nav-dashboard"><i data-lucide="layout-dashboard"></i><span>لوحة التحكم</span></a>
-    <a href="/pos" class="nav-item active" id="nav-pos"><i data-lucide="scan-barcode"></i><span>نقطة البيع</span></a>
-    <a href="/medicines" class="nav-item" id="nav-medicines"><i data-lucide="pill"></i><span>الأدوية</span></a>
-    <a href="/inventory" class="nav-item" id="nav-inventory"><i data-lucide="package"></i><span>المخزون</span></a>
-    <a href="/batches" class="nav-item" id="nav-batches"><i data-lucide="calendar-clock"></i><span>الدفعات</span></a>
-    <a href="/reports-sales" class="nav-item" id="nav-reports"><i data-lucide="chart-line"></i><span>التقارير</span></a>
-    <a href="/employees" class="nav-item" id="nav-employees" style="display:none"><i data-lucide="users"></i><span>الموظفين</span></a>
-    <a href="/alerts" class="nav-item" id="nav-alerts"><i data-lucide="bell"></i><span>التنبيهات</span><span class="badge">7</span></a>
-    <a href="/settings" class="nav-item" id="nav-settings"><i data-lucide="settings"></i><span>الإعدادات</span></a>
-    <div class="user-card" onclick="logout()">
-      <div class="user-avatar" id="user-initials">U</div>
-      <div style="min-width:0;flex:1">
-        <div class="user-name" id="user-name">المستخدم</div>
-        <div class="user-role" id="user-role">صيدلي</div>
+  <div class="app-layout">
+    <!-- ═══════ Sidebar ═══════ -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="icon"></div>
+        <div class="name">Pharma<span>SUD</span></div>
       </div>
-      <i data-lucide="chevron-left"></i>
-    </div>
-  </aside>
+      <div class="nav-section">MENU</div>
+      <a href="/dashboard" class="nav-item"><i data-lucide="layout-dashboard"></i><span>لوحة التحكم</span></a>
+      <a href="/pos" class="nav-item active"><i data-lucide="scan-barcode"></i><span>نقطة البيع</span></a>
+      <a href="/medicines" class="nav-item"><i data-lucide="pill"></i><span>الأدوية</span></a>
+      <a href="/inventory" class="nav-item"><i data-lucide="package"></i><span>المخزون</span></a>
+      <a href="/batches" class="nav-item"><i data-lucide="calendar-clock"></i><span>الدفعات</span></a>
+      <a href="/reports-sales" class="nav-item"><i data-lucide="chart-line"></i><span>التقارير</span></a>
+      <a href="/employees" class="nav-item" id="nav-employees-link" style="display:none"><i data-lucide="users"></i><span>الموظفين</span></a>
+      <a href="/alerts" class="nav-item"><i data-lucide="bell"></i><span>التنبيهات</span><span class="badge">7</span></a>
+      <a href="/settings" class="nav-item"><i data-lucide="settings"></i><span>الإعدادات</span></a>
+      <div class="user-card" onclick="logout()">
+        <div class="user-avatar" id="user-initials">U</div>
+        <div style="min-width:0;flex:1">
+          <div class="user-name" id="user-name">المستخدم</div>
+          <div class="user-role" id="user-role">صيدلي</div>
+        </div>
+        <i data-lucide="chevron-left"></i>
+      </div>
+    </aside>
+
+    <!-- ═══════ Topbar ═══════ -->
+    <header class="topbar">
+      <div class="search-box">
+        <i data-lucide="search"></i>
+        <span>البحث في الأدوية، المبيعات، الدفعات...</span>
+      </div>
+      <div class="actions">
+        <div class="lang-toggle" onclick="toggleLang()">
+          <span :class="{ active: lang === 'en' }" @click="lang='en'">EN</span>
+          <span :class="{ active: lang === 'ar' }" @click="lang='ar'">ع</span>
+        </div>
+        <button class="icon-btn" @click="toggleDark()" :title="darkMode ? 'الوضع الفاتح' : 'الوضع الداكن'">
+          <i :data-lucide="darkMode ? 'sun' : 'moon'"></i>
+        </button>
+        <button class="icon-btn" onclick="window.location.href='/alerts'">
+          <i data-lucide="bell"></i>
+          <span class="dot"></span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ═══════ Main Content ═══════ -->
+    <main class="main-content">
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div>
+          <h1>🔬 اختبار الماسح</h1>
+          <p class="subtitle">تشخيص محرك الباركود — Android Chrome → BarcodeDetector (native) ← iOS Safari → zxing-wasm (fallback)</p>
+        </div>
+        <div>
+          <div class="status-indicator" :class="scannerStatus">
+            <template x-if="scannerStatus === 'running'"><span class="pulse-dot"></span></template>
+            <span x-text="scannerStatus === 'idle' ? 'متوقف' : scannerStatus === 'running' ? 'يعمل' : 'خطأ'"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Info Badges -->
+      <div class="info-badges">
+        <div class="info-badge">
+          <i data-lucide="shield-check"></i>
+          <span x-text="isSecure ? '✅ سياق آمن' : '❌ غير آمن'"></span>
+        </div>
+        <div class="info-badge">
+          <i data-lucide="scan-barcode"></i>
+          <span x-text="hasBarcodeDetector ? '✅ BarcodeDetector' : '⚠️ بدون BarcodeDetector'"></span>
+        </div>
+        <div class="info-badge">
+          <i data-lucide="cpu"></i>
+          <span x-text="engineName || 'لم يتم التحديد'"></span>
+        </div>
+      </div>
+
+      <!-- Video + Controls Card -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">
+              <i data-lucide="camera"></i>
+              الكاميرا والمسح
+            </div>
+            <div class="card-subtitle">وجّه الباركود داخل منطقة المسح</div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-success" @click="startTest()" :disabled="running">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              ابدأ الاختبار
+            </button>
+            <button class="btn btn-danger" @click="stopTest()" :disabled="!running">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+              إيقاف
+            </button>
+          </div>
+        </div>
+
+        <!-- Video Container -->
+        <div class="video-wrapper" style="max-width:480px;">
+          <video id="video" playsinline muted style="width:100%;display:block;border-radius:16px;background:#0F172A;"></video>
+          <div class="video-overlay" :class="{ hidden: running }">
+            <div style="text-align:center;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 10px;display:block;opacity:0.4;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              <span>اضغط "ابدأ الاختبار" لتشغيل الكاميرا</span>
+            </div>
+          </div>
+          <div class="scan-region" x-show="running" x-transition></div>
+        </div>
+      </div>
+
+      <!-- Debug Log Card -->
+      <div class="card" style="margin-top:18px;">
+        <div class="card-header">
+          <div>
+            <div class="card-title">
+              <i data-lucide="terminal"></i>
+              سجل التشخيص
+            </div>
+            <div class="card-subtitle" x-text="logCount + ' رسالة'"></div>
+          </div>
+          <button class="btn btn-secondary" @click="clearLog()" style="padding:7px 14px;font-size:12.5px;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            مسح السجل
+          </button>
+        </div>
+        <div class="debug-panel" id="debug-panel">
+          <div class="row info">▲ اضغط "ابدأ الاختبار" ووجّه الكاميرا لباركود دواء حقيقي</div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ═══════ Toast ═══════ -->
+  <div x-show="message.text" x-transition
+       class="toast" :class="message.type"
+       style="position:fixed;bottom:28px;left:28px;z-index:9999;">
+    <template x-if="message.type === 'success'">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    </template>
+    <template x-if="message.type === 'error'">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+    </template>
+    <span x-text="message.text"></span>
+  </div>
+
+  <!-- ═══════ Scripts ═══════ -->
   <script>
-    function logout() { localStorage.clear(); window.location.href='/login'; }
+    function logout() { localStorage.clear(); window.location.href = '/login'; }
+
+    // ─── Dark Mode ───
+    function initDarkMode() {
+      const saved = localStorage.getItem('darkMode');
+      if (saved === 'true') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    }
+    initDarkMode();
+
+    // ─── Language Toggle ───
+    function toggleLang() {
+      // Stub — can be expanded later
+    }
+
+    // ─── User Info in Sidebar ───
     document.addEventListener('DOMContentLoaded', function() {
       const name = localStorage.getItem('userName') || 'المستخدم';
       const role = localStorage.getItem('role') || 'pharmacist';
-      document.getElementById('user-name').textContent = name;
-      document.getElementById('user-role').textContent = role === 'admin' ? 'مدير' : 'صيدلي';
-      document.getElementById('user-initials').textContent = name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
-      if(role === 'admin') document.getElementById('nav-employees').style.display='flex';
+      if (document.getElementById('user-name')) document.getElementById('user-name').textContent = name;
+      if (document.getElementById('user-role')) document.getElementById('user-role').textContent = role === 'admin' ? 'مدير' : 'صيدلي';
+      if (document.getElementById('user-initials')) document.getElementById('user-initials').textContent = name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+      if (role === 'admin' && document.getElementById('nav-employees-link')) document.getElementById('nav-employees-link').style.display = 'flex';
+      if (typeof lucide !== 'undefined') lucide.createIcons();
     });
+
+    // ═══════════════════════════════════════════════════════════════
+    // صفحة تشخيص الباركود — كل شيء يظهر على الشاشة
+    // ═══════════════════════════════════════════════════════════════
+    // لا يوجد .catch(() => {}) — كل خطأ يُسجّل على الشاشة
+    // ═══════════════════════════════════════════════════════════════
+
+    function scannerApp() {
+      return {
+        running: false,
+        scannerStatus: 'idle',
+        engineName: '',
+        isSecure: window.isSecureContext,
+        hasBarcodeDetector: 'BarcodeDetector' in window,
+        logCount: 1,
+        darkMode: localStorage.getItem('darkMode') === 'true',
+        lang: 'ar',
+        message: { text: '', type: '' },
+        currentStream: null,
+        attemptCount: 0,
+        lastLoggedSecond: 0,
+
+        showMessage(text, type) {
+          this.message = { text, type };
+          setTimeout(() => { this.message = { text: '', type: '' }; }, 4000);
+        },
+
+        toggleDark() {
+          this.darkMode = !this.darkMode;
+          localStorage.setItem('darkMode', this.darkMode);
+          document.documentElement.setAttribute('data-theme', this.darkMode ? 'dark' : 'light');
+          this.$nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); });
+        },
+
+        init() {
+          const token = localStorage.getItem('token');
+          if (!token) { window.location.href = '/login'; return; }
+          this.$nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); });
+        },
+
+        log(msg, type) {
+          const debugPanel = document.getElementById('debug-panel');
+          if (!debugPanel) return;
+          const time = new Date().toLocaleTimeString('en-GB');
+          const cls = type ? (' ' + type) : '';
+          const line = document.createElement('div');
+          line.className = 'row' + cls;
+          line.textContent = '[' + time + '] ' + msg;
+          debugPanel.appendChild(line);
+          if (debugPanel.children.length > 80) {
+            debugPanel.removeChild(debugPanel.firstChild);
+          }
+          debugPanel.scrollTop = debugPanel.scrollHeight;
+          this.logCount = debugPanel.children.length;
+        },
+
+        logSep() {
+          const debugPanel = document.getElementById('debug-panel');
+          if (!debugPanel) return;
+          const line = document.createElement('div');
+          line.className = 'row sep';
+          line.textContent = '─────────────────────';
+          debugPanel.appendChild(line);
+          debugPanel.scrollTop = debugPanel.scrollHeight;
+        },
+
+        clearLog() {
+          const debugPanel = document.getElementById('debug-panel');
+          if (!debugPanel) return;
+          debugPanel.innerHTML = '<div class="row info">▲ تم مسح السجل</div>';
+          this.logCount = 1;
+        },
+
+        async stopTest() {
+          this.running = false;
+          this.scannerStatus = 'idle';
+          if (this.currentStream) {
+            try {
+              this.currentStream.getTracks().forEach(function(t) { t.stop(); });
+            } catch(e) {
+              this.log('خطأ في إيقاف الكاميرا: ' + e.message, 'err');
+            }
+            this.currentStream = null;
+          }
+          this.log('⏹️ تم الإيقاف', 'warn');
+        },
+
+        async startTest() {
+          this.clearLog();
+          this.running = true;
+          this.scannerStatus = 'running';
+          this.attemptCount = 0;
+          this.lastLoggedSecond = 0;
+
+          this.logSep();
+          this.log('🚀 بدء تشخيص الباركود', 'info');
+          this.log('الجهاز: ' + navigator.userAgent, 'info');
+          this.log('HTTPS (secure context): ' + window.isSecureContext, window.isSecureContext ? 'ok' : 'err');
+          this.log('BarcodeDetector API: ' + ('BarcodeDetector' in window), ('BarcodeDetector' in window) ? 'ok' : 'warn');
+          this.logSep();
+
+          var videoEl = document.getElementById('video');
+
+          // ──── 1. الكاميرا ────
+          this.log('📷 الخطوة 1: فتح الكاميرا...', 'info');
+
+          var stream;
+          try {
+            stream = await navigator.mediaDevices.getUserMedia({
+              video: {
+                facingMode: { ideal: 'environment' },
+                width: { ideal: 1920 },
+                height: { ideal: 1080 }
+              },
+              audio: false
+            });
+            this.currentStream = stream;
+            this.log('✅ getUserMedia نجح', 'ok');
+          } catch (e) {
+            this.log('❌ getUserMedia فشل', 'err');
+            this.log('   الاسم: ' + e.name, 'err');
+            this.log('   الرسالة: ' + e.message, 'err');
+            if (e.name === 'NotAllowedError') {
+              this.log('🔒 السبب: الإذن مرفوض. افتح في Safari/Chrome مباشرة (ليس Telegram)', 'err');
+            } else if (e.name === 'NotFoundError') {
+              this.log('📷 السبب: ما في كاميرا متاحة على هذا الجهاز', 'err');
+            } else if (e.name === 'NotReadableError') {
+              this.log('🔒 السبب: الكاميرا مشغولة بتطبيق آخر', 'err');
+            } else if (e.name === 'TypeError') {
+              this.log('⚠️ السبب: navigator.mediaDevices غير موجود (متصفح تطبيقات)', 'err');
+            }
+            this.running = false;
+            this.scannerStatus = 'error';
+            this.showMessage('فشل فتح الكاميرا: ' + e.message, 'error');
+            return;
+          }
+
+          // ──── 2. الفيديو ────
+          this.log('📹 الخطوة 2: ربط الفيديو...', 'info');
+
+          videoEl.srcObject = stream;
+
+          try {
+            await new Promise(function(resolve, reject) {
+              if (videoEl.readyState >= 2) { resolve(); return; }
+              videoEl.onloadedmetadata = function() { resolve(); };
+              videoEl.onerror = function() {
+                reject(new Error('فيديو error: ' + (videoEl.error ? videoEl.error.message : 'unknown')));
+              };
+              setTimeout(function() { reject(new Error('Timeout - الفيديو ما جهز خلال 5 ثوان')); }, 5000);
+            });
+          } catch (e) {
+            this.log('❌ الفيديو فشل: ' + e.message, 'err');
+            this.running = false;
+            this.scannerStatus = 'error';
+            this.showMessage('فشل ربط الفيديو: ' + e.message, 'error');
+            return;
+          }
+
+          try {
+            await videoEl.play();
+            this.log('✅ video.play() نجح', 'ok');
+          } catch (e) {
+            this.log('❌ video.play() فشل: ' + e.message, 'err');
+            this.running = false;
+            this.scannerStatus = 'error';
+            this.showMessage('فشل تشغيل الفيديو: ' + e.message, 'error');
+            return;
+          }
+
+          var vw = videoEl.videoWidth;
+          var vh = videoEl.videoHeight;
+          var track = stream.getVideoTracks()[0];
+          var settings = {};
+          try { settings = track.getSettings(); } catch (_) {}
+
+          this.log('Video readyState: ' + videoEl.readyState, 'info');
+          this.log('Video أبعاد: ' + vw + 'x' + vh, (vw > 0 && vh > 0) ? 'ok' : 'err');
+          this.log('Camera label: ' + (track.label || 'غير معروف'), 'info');
+          this.log('Camera resolution: ' + (settings.width || '?') + 'x' + (settings.height || '?'), 'info');
+
+          if (vw === 0 || vh === 0) {
+            this.log('🛑 توقف: الفيديو بأبعاد صفرية — هذا قد يكون السبب الجذري', 'err');
+            this.running = false;
+            this.scannerStatus = 'error';
+            this.showMessage('الفيديو بأبعاد صفرية', 'error');
+            return;
+          }
+
+          // ──── 3. تركيز مستمر ────
+          try {
+            await track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] });
+            this.log('✅ focusMode: continuous تم تفعيله', 'ok');
+          } catch (e) {
+            this.log('ℹ️ focusMode غير مدعوم: ' + e.message, 'warn');
+          }
+
+          // ──── 4. الفلاش ────
+          var caps = {};
+          try { caps = track.getCapabilities(); } catch (_) {}
+          if (caps && caps.torch) {
+            this.log('✅ الفلاش (Torch) مدعوم', 'ok');
+          } else {
+            this.log('ℹ️ الفلاش غير مدعوم على هذا الجهاز', 'warn');
+          }
+
+          this.logSep();
+          this.log('🔧 الخطوة 3: تهيئة المحرك...', 'info');
+
+          // ──── 5. المحرك ────
+          var self = this;
+          var detector = null;
+          var zxingMod = null;
+          var engineName = '';
+
+          if ('BarcodeDetector' in window) {
+            try {
+              var wanted = ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39'];
+              var supported = await BarcodeDetector.getSupportedFormats();
+              this.log('📋 Supported formats: ' + supported.join(', '), 'info');
+
+              var usable = wanted.filter(function(f) { return supported.indexOf(f) >= 0; });
+              this.log('📋 usable (من الـ 6 المطلوبة): ' + usable.join(', '), 'info');
+
+              if (usable.length === 0) {
+                this.log('⚠️ الصيغ المطلوبة غير مدعومة — سينتقل إلى zxing-wasm', 'warn');
+              } else {
+                detector = new BarcodeDetector({ formats: usable });
+                engineName = 'BarcodeDetector (native)';
+                this.log('✅ ✅ المحرك: BarcodeDetector — الصيغ: ' + usable.join(', '), 'success');
+              }
+            } catch (e) {
+              this.log('❌ BarcodeDetector فشل: ' + e.name + ' — ' + e.message, 'err');
+            }
+          }
+
+          if (!detector) {
+            this.log('⏳ تحميل zxing-wasm@2 من esm.sh...', 'info');
+            try {
+              var startTime = Date.now();
+              zxingMod = await import('https://esm.sh/zxing-wasm@2/reader');
+              var loadTime = Date.now() - startTime;
+              this.log('✅ zxing-wasm@2 تحمّل في ' + loadTime + 'ms', 'ok');
+              this.log('📦 الوظائف المتاحة: readBarcodesFromImageData', 'info');
+              engineName = 'zxing-wasm@2 (fallback)';
+              this.log('✅ ✅ المحرك: zxing-wasm@2', 'success');
+            } catch (e) {
+              this.log('❌ zxing-wasm@2 فشل التحميل', 'err');
+              this.log('   الاسم: ' + e.name, 'err');
+              this.log('   الرسالة: ' + e.message, 'err');
+              this.log('🛑 توقف: لا يوجد محرك يعمل — استخدم الإدخال اليدوي', 'err');
+              this.running = false;
+              this.scannerStatus = 'error';
+              this.engineName = 'لا يوجد';
+              this.showMessage('لا يوجد محرك باركود يعمل', 'error');
+              return;
+            }
+          }
+
+          this.engineName = engineName;
+          this.logSep();
+          this.log('🔄 الخطوة 4: بدء حلقة المسح...', 'info');
+          this.log('المحرك النهائي: ' + engineName, 'success');
+          this.log('سنحاول ~8 مرات/ثانية. وجه الباركود داخل الكاميرا.', 'info');
+          this.logSep();
+
+          // ──── 6. حلقة المسح ────
+          var canvas = document.createElement('canvas');
+          var ctx = canvas.getContext('2d', { willReadFrequently: true });
+          var selfRef = this;
+
+          async function scanLoop() {
+            if (!selfRef.running) return;
+
+            if (videoEl.readyState < 2 || videoEl.videoWidth === 0) {
+              requestAnimationFrame(scanLoop);
+              return;
+            }
+
+            var w = videoEl.videoWidth;
+            var h = videoEl.videoHeight;
+            var roiH = Math.round(h * 0.40);
+            var roiY = Math.round((h - roiH) / 2);
+
+            canvas.width = w;
+            canvas.height = roiH;
+
+            try {
+              ctx.drawImage(videoEl, 0, roiY, w, roiH, 0, 0, w, roiH);
+            } catch (e) {
+              selfRef.log('❌ drawImage فشل: ' + e.message, 'err');
+              setTimeout(function() { requestAnimationFrame(scanLoop); }, 120);
+              return;
+            }
+
+            selfRef.attemptCount++;
+            var nowSec = Math.floor(Date.now() / 1000);
+            if (nowSec !== selfRef.lastLoggedSecond) {
+              selfRef.lastLoggedSecond = nowSec;
+              selfRef.log('📡 محاولة #' + selfRef.attemptCount + ' | canvas: ' + w + 'x' + roiH + ' | ' + engineName, 'info');
+            }
+
+            try {
+              var results = [];
+
+              if (detector) {
+                var codes = await detector.detect(canvas);
+                for (var i = 0; i < codes.length; i++) {
+                  results.push({ text: codes[i].rawValue, format: codes[i].format });
+                }
+              } else if (zxingMod) {
+                var imageData = ctx.getImageData(0, 0, w, roiH);
+                var zxResults = await zxingMod.readBarcodesFromImageData(imageData, {
+                  tryHarder: true,
+                  formats: ['EAN-13', 'EAN-8', 'UPC-A', 'UPC-E', 'Code-128', 'Code-39'],
+                  maxNumberOfSymbols: 1
+                });
+                if (zxResults && zxResults.length > 0) {
+                  for (var j = 0; j < zxResults.length; j++) {
+                    results.push({ text: zxResults[j].text, format: zxResults[j].format });
+                  }
+                }
+              }
+
+              if (results.length > 0) {
+                var code = results[0].text;
+                var fmt = results[0].format;
+                selfRef.log('🎉🎉🎉 نجح المسح!', 'success');
+                selfRef.log('الكود: ' + code, 'success');
+                selfRef.log('النوع: ' + fmt, 'success');
+                selfRef.log('المحاولة #' + selfRef.attemptCount, 'success');
+
+                if (navigator.vibrate) {
+                  navigator.vibrate(120);
+                  selfRef.log('📳 اهتزاز', 'ok');
+                }
+
+                // تجربة البحث في قاعدة البيانات
+                selfRef.logSep();
+                selfRef.log('🔍 الخطوة 5: البحث في قاعدة البيانات...', 'info');
+                try {
+                  var resp = await fetch('/api/sales/pos/barcode/' + encodeURIComponent(code));
+                  var data = await resp.json();
+                  if (data.found && data.medicine) {
+                    selfRef.log('✅ الدواء موجود: ' + (data.medicine.trade_name || 'غير معروف'), 'success');
+                    selfRef.log('   السعر: ' + (data.medicine.sale_price || '?'), 'ok');
+                    selfRef.showMessage('تم المسح: ' + (data.medicine.trade_name || code), 'success');
+                  } else {
+                    selfRef.log('⚠️ الباركود غير موجود في قاعدة البيانات', 'warn');
+                    selfRef.showMessage('تم المسح لكن الباركود غير موجود: ' + code, 'error');
+                  }
+                } catch (e) {
+                  selfRef.log('❌ فشل البحث في قاعدة البيانات: ' + e.message, 'err');
+                }
+              }
+            } catch (e) {
+              selfRef.log('❌ decode error: ' + e.name + ' — ' + e.message, 'err');
+              if (e.stack) {
+                selfRef.log('   stack: ' + e.stack.split('\n')[1].trim(), 'err');
+              }
+            }
+
+            setTimeout(function() { requestAnimationFrame(scanLoop); }, 120);
+          }
+
+          scanLoop();
+        }
+      };
+    }
   </script>
 
-  <h2>🔬 تشخيص محرك الباركود</h2>
-  <p style="text-align:center;font-size:12px;color:var(--text-secondary);margin-bottom:8px;">
-    Android Chrome → BarcodeDetector (native) ← iOS Safari → zxing-wasm (fallback)
-  </p>
-
-  <div class="btn-row">
-    <button id="start-btn" onclick="startTest()">▶️ ابدأ الاختبار</button>
-    <button id="stop-btn" onclick="stopTest()">⏹️ إيقاف</button>
-  </div>
-
-  <div id="video-container">
-    <video id="video" playsinline muted></video>
-  </div>
-
-  <div id="debug-panel">
-    <div class="row info">▲ اضغط "ابدأ الاختبار" ووجّه الكاميرا لباركود دواء حقيقي</div>
-  </div>
-
-<script>
-// ═══════════════════════════════════════════════════════════════
-// صفحة تشخيص الباركود — كل شيء يظهر على الشاشة
-// ═══════════════════════════════════════════════════════════════
-// لا يوجد .catch(() => {}) — كل خطأ يُسجّل على الشاشة
-// ═══════════════════════════════════════════════════════════════
-
-const debugPanel = document.getElementById('debug-panel');
-const videoEl = document.getElementById('video');
-let running = false;
-let currentStream = null;
-let attemptCount = 0;
-let lastLoggedSecond = 0;
-
-function log(msg, type) {
-  const time = new Date().toLocaleTimeString('en-GB');
-  const cls = type ? (' ' + type) : '';
-  const line = document.createElement('div');
-  line.className = 'row' + cls;
-  line.textContent = '[' + time + '] ' + msg;
-  debugPanel.appendChild(line);
-  if (debugPanel.children.length > 80) {
-    debugPanel.removeChild(debugPanel.firstChild);
-  }
-  debugPanel.scrollTop = debugPanel.scrollHeight;
-}
-
-function logSep() {
-  const line = document.createElement('div');
-  line.className = 'row sep';
-  line.textContent = '─────────────────────';
-  debugPanel.appendChild(line);
-  debugPanel.scrollTop = debugPanel.scrollHeight;
-}
-
-function clearLog() {
-  debugPanel.innerHTML = '';
-}
-
-async function stopTest() {
-  running = false;
-  if (currentStream) {
-    try {
-      currentStream.getTracks().forEach(function(t) { t.stop(); });
-    } catch(e) {
-      log('خطأ في إيقاف الكاميرا: ' + e.message, 'err');
-    }
-    currentStream = null;
-  }
-  log('⏹️ تم الإيقاف', 'warn');
-}
-
-async function startTest() {
-  clearLog();
-  running = true;
-  attemptCount = 0;
-  lastLoggedSecond = 0;
-
-  logSep();
-  log('🚀 بدء تشخيص الباركود', 'info');
-  log('الجهاز: ' + navigator.userAgent, 'info');
-  log('HTTPS (secure context): ' + window.isSecureContext, window.isSecureContext ? 'ok' : 'err');
-  log('BarcodeDetector API: ' + ('BarcodeDetector' in window), ('BarcodeDetector' in window) ? 'ok' : 'warn');
-  logSep();
-
-  // ──── 1. الكاميرا ────
-  log('📷 الخطوة 1: فتح الكاميرا...', 'info');
-
-  var stream;
-  try {
-    stream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: { ideal: 'environment' },
-        width: { ideal: 1920 },
-        height: { ideal: 1080 }
-      },
-      audio: false
-    });
-    currentStream = stream;
-    log('✅ getUserMedia نجح', 'ok');
-  } catch (e) {
-    log('❌ getUserMedia فشل', 'err');
-    log('   الاسم: ' + e.name, 'err');
-    log('   الرسالة: ' + e.message, 'err');
-    if (e.name === 'NotAllowedError') {
-      log('🔒 السبب: الإذن مرفوض. افتح في Safari/Chrome مباشرة (ليس Telegram)', 'err');
-    } else if (e.name === 'NotFoundError') {
-      log('📷 السبب: ما في كاميرا متاحة على هذا الجهاز', 'err');
-    } else if (e.name === 'NotReadableError') {
-      log('🔒 السبب: الكاميرا مشغولة بتطبيق آخر', 'err');
-    } else if (e.name === 'TypeError') {
-      log('⚠️ السبب: navigator.mediaDevices غير موجود (متصفح تطبيقات)', 'err');
-    }
-    running = false;
-    return;
-  }
-
-  // ──── 2. الفيديو ────
-  log('📹 الخطوة 2: ربط الفيديو...', 'info');
-
-  videoEl.srcObject = stream;
-
-  // ننتظر تحميل metadata
-  try {
-    await new Promise(function(resolve, reject) {
-      if (videoEl.readyState >= 2) { resolve(); return; }
-      videoEl.onloadedmetadata = function() { resolve(); };
-      videoEl.onerror = function() {
-        reject(new Error('فيديو error: ' + (videoEl.error ? videoEl.error.message : 'unknown')));
-      };
-      // Timeout 5 ثوان
-      setTimeout(function() { reject(new Error('Timeout - الفيديو ما جهز خلال 5 ثوان')); }, 5000);
-    });
-  } catch (e) {
-    log('❌ الفيديو فشل: ' + e.message, 'err');
-    running = false;
-    return;
-  }
-
-  try {
-    await videoEl.play();
-    log('✅ video.play() نجح', 'ok');
-  } catch (e) {
-    log('❌ video.play() فشل: ' + e.message, 'err');
-    running = false;
-    return;
-  }
-
-  var vw = videoEl.videoWidth;
-  var vh = videoEl.videoHeight;
-  var track = stream.getVideoTracks()[0];
-  var settings = {};
-  try { settings = track.getSettings(); } catch (_) {}
-
-  log('Video readyState: ' + videoEl.readyState, 'info');
-  log('Video أبعاد: ' + vw + 'x' + vh, (vw > 0 && vh > 0) ? 'ok' : 'err');
-  log('Camera label: ' + (track.label || 'غير معروف'), 'info');
-  log('Camera resolution: ' + (settings.width || '?') + 'x' + (settings.height || '?'), 'info');
-
-  if (vw === 0 || vh === 0) {
-    log('🛑 توقف: الفيديو بأبعاد صفرية — هذا قد يكون السبب الجذري', 'err');
-    running = false;
-    return;
-  }
-
-  // ──── 3. تركيز مستمر ────
-  try {
-    await track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] });
-    log('✅ focusMode: continuous تم تفعيله', 'ok');
-  } catch (e) {
-    log('ℹ️ focusMode غير مدعوم: ' + e.message, 'warn');
-  }
-
-  // ──── 4. الفلاش ────
-  var caps = {};
-  try { caps = track.getCapabilities(); } catch (_) {}
-  if (caps && caps.torch) {
-    log('✅ الفلاش (Torch) مدعوم', 'ok');
-  } else {
-    log('ℹ️ الفلاش غير مدعوم على هذا الجهاز', 'warn');
-  }
-
-  logSep();
-  log('🔧 الخطوة 3: تهيئة المحرك...', 'info');
-
-  // ──── 5. المحرك ────
-  var detector = null;
-  var zxingMod = null;
-  var engineName = '';
-
-  // المحاولة الأولى: BarcodeDetector (أندرويد Chrome)
-  if ('BarcodeDetector' in window) {
-    try {
-      var wanted = ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39'];
-      var supported = await BarcodeDetector.getSupportedFormats();
-      log('📋 Supported formats: ' + supported.join(', '), 'info');
-
-      var usable = wanted.filter(function(f) { return supported.indexOf(f) >= 0; });
-      log('📋 usable (من الـ 6 المطلوبة): ' + usable.join(', '), 'info');
-
-      if (usable.length === 0) {
-        log('⚠️ الصيغ المطلوبة غير مدعومة — سينتقل إلى zxing-wasm', 'warn');
-      } else {
-        detector = new BarcodeDetector({ formats: usable });
-        engineName = 'BarcodeDetector (native)';
-        log('✅ ✅ المحرك: BarcodeDetector — الصيغ: ' + usable.join(', '), 'success');
-      }
-    } catch (e) {
-      log('❌ BarcodeDetector فشل: ' + e.name + ' — ' + e.message, 'err');
-    }
-  }
-
-  // المحاولة الثانية: zxing-wasm (iOS Safari)
-  if (!detector) {
-    log('⏳ تحميل zxing-wasm@2 من esm.sh...', 'info');
-    try {
-      var startTime = Date.now();
-      zxingMod = await import('https://esm.sh/zxing-wasm@2/reader');
-      var loadTime = Date.now() - startTime;
-      log('✅ zxing-wasm@2 تحمّل في ' + loadTime + 'ms', 'ok');
-      log('📦 الوظائف المتاحة: readBarcodesFromImageData', 'info');
-      engineName = 'zxing-wasm@2 (fallback)';
-      log('✅ ✅ المحرك: zxing-wasm@2', 'success');
-    } catch (e) {
-      log('❌ zxing-wasm@2 فشل التحميل', 'err');
-      log('   الاسم: ' + e.name, 'err');
-      log('   الرسالة: ' + e.message, 'err');
-      log('🛑 توقف: لا يوجد محرك يعمل — استخدم الإدخال اليدوي', 'err');
-      running = false;
-      return;
-    }
-  }
-
-  logSep();
-  log('🔄 الخطوة 4: بدء حلقة المسح...', 'info');
-  log('المحرك النهائي: ' + engineName, 'success');
-  log('سنحاول ~8 مرات/ثانية. وجه الباركود داخل الكاميرا.', 'info');
-  logSep();
-
-  // ──── 6. حلقة المسح ────
-  var canvas = document.createElement('canvas');
-  var ctx = canvas.getContext('2d', { willReadFrequently: true });
-
-  async function scanLoop() {
-    if (!running) return;
-
-    if (videoEl.readyState < 2 || videoEl.videoWidth === 0) {
-      requestAnimationFrame(scanLoop);
-      return;
-    }
-
-    // نحاول بالـ ROI أولاً (40% وسط)
-    var w = videoEl.videoWidth;
-    var h = videoEl.videoHeight;
-    var roiH = Math.round(h * 0.40);
-    var roiY = Math.round((h - roiH) / 2);
-
-    canvas.width = w;
-    canvas.height = roiH;
-
-    try {
-      ctx.drawImage(videoEl, 0, roiY, w, roiH, 0, 0, w, roiH);
-    } catch (e) {
-      log('❌ drawImage فشل: ' + e.message, 'err');
-      setTimeout(function() { requestAnimationFrame(scanLoop); }, 120);
-      return;
-    }
-
-    attemptCount++;
-    var nowSec = Math.floor(Date.now() / 1000);
-    if (nowSec !== lastLoggedSecond) {
-      lastLoggedSecond = nowSec;
-      log('📡 محاولة #' + attemptCount + ' | canvas: ' + w + 'x' + roiH + ' | ' + engineName, 'info');
-    }
-
-    try {
-      var results = [];
-
-      if (detector) {
-        // BarcodeDetector يقبل canvas مباشرة
-        var codes = await detector.detect(canvas);
-        for (var i = 0; i < codes.length; i++) {
-          results.push({ text: codes[i].rawValue, format: codes[i].format });
-        }
-      } else if (zxingMod) {
-        // zxing-wasm يحتاج ImageData
-        var imageData = ctx.getImageData(0, 0, w, roiH);
-        var zxResults = await zxingMod.readBarcodesFromImageData(imageData, {
-          tryHarder: true,
-          formats: ['EAN-13', 'EAN-8', 'UPC-A', 'UPC-E', 'Code-128', 'Code-39'],
-          maxNumberOfSymbols: 1
-        });
-        if (zxResults && zxResults.length > 0) {
-          for (var j = 0; j < zxResults.length; j++) {
-            results.push({ text: zxResults[j].text, format: zxResults[j].format });
-          }
-        }
-      }
-
-      if (results.length > 0) {
-        var code = results[0].text;
-        var fmt = results[0].format;
-        log('🎉🎉🎉 نجح المسح!', 'success');
-        log('الكود: ' + code, 'success');
-        log('النوع: ' + fmt, 'success');
-        log('المحاولة #' + attemptCount, 'success');
-
-        if (navigator.vibrate) {
-          navigator.vibrate(120);
-          log('📳 اهتزاز', 'ok');
-        }
-
-        // تجربة البحث في قاعدة البيانات
-        logSep();
-        log('🔍 الخطوة 5: البحث في قاعدة البيانات...', 'info');
-        try {
-          var resp = await fetch('/api/sales/pos/barcode/' + encodeURIComponent(code));
-          var data = await resp.json();
-          if (data.found && data.medicine) {
-            log('✅ الدواء موجود: ' + (data.medicine.trade_name || 'غير معروف'), 'success');
-            log('   السعر: ' + (data.medicine.sale_price || '?'), 'ok');
-          } else {
-            log('⚠️ الباركود غير موجود في قاعدة البيانات', 'warn');
-          }
-        } catch (e) {
-          log('❌ فشل البحث في قاعدة البيانات: ' + e.message, 'err');
-        }
-      }
-    } catch (e) {
-      // لا يوجد .catch صامت — كل خطأ يُسجّل
-      log('❌ decode error: ' + e.name + ' — ' + e.message, 'err');
-      if (e.stack) {
-        log('   stack: ' + e.stack.split('\n')[1].trim(), 'err');
-      }
-    }
-
-    setTimeout(function() { requestAnimationFrame(scanLoop); }, 120);
-  }
-
-  scanLoop();
-}
-</script>
 </body>
 </html>
-<!-- ✅ scanner_debug.html - تشخيص الباركود - بدون .catch(() => {}) --><!-- 1781564609 -->
+<!-- Cloud Design v7.2.0 -->

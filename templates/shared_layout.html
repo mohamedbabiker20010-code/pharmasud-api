@@ -113,6 +113,19 @@
       .topbar { right: 0; }
       .main-content { margin-right: 0; }
     }
+    html.dark, html.dark body { background: #0b1220; color: #e2e8f0; }
+    html.dark .sidebar { background: #0f1a2e; border-left-color: #1e293b; }
+    html.dark .sidebar .brand .name { color: #fff; }
+    html.dark .sidebar .nav-item { color: #94a3b8; }
+    html.dark .sidebar .nav-item:hover { background: #111c2e; color: #e2e8f0; }
+    html.dark .sidebar .user-card { border-color: #1e293b; }
+    html.dark .sidebar .user-name { color: #e2e8f0; }
+    html.dark .topbar { background: #0f1a2e; border-bottom-color: #1e293b; }
+    html.dark .topbar .search-box { background: #1e293b; color: #94a3b8; }
+    html.dark .icon-btn { border-color: #1e293b; color: #94a3b8; }
+    html.dark .lang-toggle { border-color: #1e293b; }
+    html.dark .lang-toggle span:not(.active) { color: #94a3b8; }
+    html.dark .main-content { background: #0b1220; }
   </style>
 </head>
 <body x-data="pageApp()">
@@ -150,9 +163,12 @@
       </div>
       <div class="actions">
         <div class="lang-toggle">
-          <span>EN</span>
-          <span class="active">ع</span>
+          <span :class="{'active':lang==='en'}" @click="switchLang('en')">EN</span>
+          <span :class="{'active':lang==='ar'}" @click="switchLang('ar')">ع</span>
         </div>
+        <button class="icon-btn" @click="toggleDark()">
+          <i :data-lucide="isDark?'sun':'moon'"></i>
+        </button>
         <button class="icon-btn" @click="showNotifications = !showNotifications">
           <i data-lucide="bell"></i>
           <span class="dot"></span>
@@ -172,10 +188,26 @@
         isAdmin: localStorage.getItem('role') === 'admin',
         userInitials: '',
         showNotifications: false,
+        lang: localStorage.getItem('lang') || 'ar',
+        isDark: localStorage.getItem('darkMode') === 'true',
         init() {
           const name = this.userName;
           this.userInitials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
           if(!localStorage.getItem('token')) window.location.href = '/login';
+          if(this.isDark) document.documentElement.classList.add('dark');
+          this.$nextTick(() => { if(window.lucide) lucide.createIcons(); });
+        },
+        switchLang(l) {
+          this.lang = l;
+          localStorage.setItem('lang', l);
+          document.documentElement.setAttribute('dir', l==='ar'?'rtl':'ltr');
+          document.documentElement.setAttribute('lang', l);
+        },
+        toggleDark() {
+          this.isDark = !this.isDark;
+          localStorage.setItem('darkMode', this.isDark);
+          document.documentElement.classList.toggle('dark', this.isDark);
+          this.$nextTick(() => { if(window.lucide) lucide.createIcons(); });
         },
         logout() { localStorage.clear(); window.location.href = '/login'; }
       }

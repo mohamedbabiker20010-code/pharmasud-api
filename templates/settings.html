@@ -1,592 +1,1056 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/css/theme.css?v7.2.0">
-    <title>الإعدادات - صيدلية الزاريات</title>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans Arabic', system-ui, -apple-system, sans-serif;
-            background: var(--background);
-            color: var(--text-primary);
-            min-height: 100vh;
-        }
-        .container { max-width: 800px; margin: 0 auto; padding: 24px 20px; }
-        .header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 24px; padding-bottom: 16px;
-            border-bottom: 1px solid var(--border);
-        }
-        .header h1 { font-size: 20px; display: flex; align-items: center; gap: 8px; }
-        .back-link { color: var(--text-secondary); text-decoration: none; font-size: 14px; }
-        .back-link:hover { color: var(--primary-blue); }
-
-        /* Tabs */
-        .tabs {
-            display: flex; gap: 4px; margin-bottom: 24px;
-            background: var(--surface); border-radius: 10px; padding: 4px;
-        }
-        .tab-btn {
-            flex: 1; padding: 10px; border: none; border-radius: 8px;
-            background: transparent; color: var(--text-secondary); font-size: 14px;
-            cursor: pointer; font-family: inherit; transition: all 0.2s;
-        }
-        .tab-btn:hover { color: var(--text-primary); background: var(--border); }
-        .tab-btn.active { background: var(--primary-blue); color: white; }
-
-        /* Panels */
-        .panel { display: none; }
-        .panel.active { display: block; }
-        .panel-card {
-            background: var(--surface); border: 1px solid var(--border);
-            border-radius: 12px; padding: 24px;
-        }
-        .panel-card h2 {
-            font-size: 15px; color: var(--text-secondary); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
-        }
-
-        /* Messages */
-        .alert {
-            padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 14px;
-        }
-        .alert-success { background: rgba(16,185,129,0.15); color: #6EE7B7; border: 1px solid #047857; }
-        .alert-error { background: rgba(239,68,68,0.15); color: #FCA5A5; border: 1px solid #DC2626; }
-
-        /* Employee List */
-        .emp-row {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 12px 16px; background: var(--background); border-radius: 8px; margin-bottom: 8px;
-        }
-        .emp-row:last-child { margin-bottom: 0; }
-        .emp-info { flex: 1; }
-        .emp-info .name { font-weight: 600; font-size: 14px; }
-        .emp-info .meta { font-size: 12px; color: var(--text-secondary); }
-        .emp-info .role-badge {
-            display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px;
-        }
-        .role-admin { background: rgba(26,167,236,0.10); color: #4ADEDE; }
-        .role-employee { background: rgba(16,185,129,0.15); color: #6EE7B7; }
-        .status-dot {
-            display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-left: 6px;
-        }
-        .status-active { background: #6EE7B7; }
-        .status-inactive { background: #FCA5A5; }
-        .emp-actions { display: flex; gap: 8px; }
-        .emp-actions button {
-            padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer;
-            font-size: 12px; font-family: inherit;
-        }
-        .btn-toggle-on { background: rgba(16,185,129,0.15); color: #6EE7B7; }
-        .btn-toggle-off { background: rgba(245,158,11,0.15); color: #FCD34D; }
-        .btn-delete { background: rgba(239,68,68,0.15); color: #FCA5A5; }
-
-        /* Forms */
-        .form-group {
-            display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px;
-        }
-        .form-group label { font-size: 13px; color: var(--text-secondary); }
-        .form-group label .required { color: var(--danger); }
-        .form-group input {
-            background: var(--background); border: 1px solid var(--border); padding: 10px 12px;
-            border-radius: 8px; color: var(--text-primary); font-size: 14px; font-family: inherit;
-        }
-        .form-group input:focus { outline: none; border-color: var(--primary-blue); }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-
-        .submit-btn {
-            width: 100%; margin-top: 8px; padding: 12px; border: none; border-radius: 8px;
-            background: var(--primary-blue); color: white; font-size: 14px; font-weight: 600;
-            cursor: pointer; font-family: inherit;
-        }
-        .submit-btn:hover { background: #1AA7EC; }
-        .submit-btn:disabled { background: var(--border); color: var(--text-secondary); cursor: not-allowed; }
-        .submit-btn.danger { background: #DC2626; }
-        .submit-btn.danger:hover { background: #B91C1C; }
-        .submit-btn.green { background: #059669; }
-        .submit-btn.green:hover { background: #047857; }
-
-        .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
-
-        .loading {
-            text-align: center; padding: 40px; color: var(--text-secondary);
-        }
-        .loading .spinner {
-            display: inline-block; width: 28px; height: 28px;
-            border: 3px solid var(--border); border-top-color: var(--primary-blue);
-            border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 8px;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        .no-data { text-align: center; padding: 30px; color: var(--text-secondary); font-size: 13px; }
-
-        /* Confirmation Dialog */
-        .confirm-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.6);
-            display: flex; align-items: center; justify-content: center; z-index: 100;
-        }
-        .confirm-dialog {
-            background: var(--surface); border: 1px solid #DC2626; border-radius: 12px;
-            padding: 24px; max-width: 380px; width: 90%; text-align: center;
-        }
-        .confirm-dialog h3 { color: #FCA5A5; margin-bottom: 12px; font-size: 15px; }
-        .confirm-dialog p { color: var(--text-secondary); font-size: 14px; margin-bottom: 16px; }
-        .confirm-dialog .btn-row { display: flex; gap: 12px; justify-content: center; }
-        .confirm-dialog button {
-            padding: 8px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-family: inherit;
-        }
-        .confirm-dialog .btn-yes { background: #DC2626; color: white; }
-        .confirm-dialog .btn-no { background: var(--border); color: var(--text-secondary); }
-
-        @media (max-width: 600px) {
-            .form-row { grid-template-columns: 1fr; }
-            .emp-row { flex-direction: column; gap: 12px; }
-            .emp-actions { width: 100%; justify-content: flex-end; }
-        }
-    </style>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/static/css/theme.css?v7.2.0">
+  <title>الإعدادات - PharmaSUD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
   <style>
-    .sidebar { width:248px; background:#fff; border-left:1px solid #EEF2F6; display:flex; flex-direction:column; padding:22px 16px; position:fixed; right:0; top:0; bottom:0; z-index:100; font-family:'IBM Plex Sans Arabic','IBM Plex Sans',sans-serif; }
-    .sidebar .brand { display:flex; align-items:center; gap:11px; padding:0 8px 22px; }
-    .sidebar .brand .icon { width:38px; height:38px; border-radius:11px; background:#1AA7EC; position:relative; flex-shrink:0; }
-    .sidebar .brand .icon::before,.sidebar .brand .icon::after { content:''; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); background:#fff; border-radius:3px; }
-    .sidebar .brand .icon::before { width:18px; height:5.5px; }
-    .sidebar .brand .icon::after { width:5.5px; height:18px; }
-    .sidebar .brand .name { font:700 18px/1 'IBM Plex Sans Arabic',sans-serif; letter-spacing:-0.02em; }
-    .sidebar .brand .name span { color:#1AA7EC; }
-    .sidebar .nav-section { font:600 11px/1 'IBM Plex Mono',monospace; letter-spacing:0.1em; color:#CBD5E1; padding:14px 10px 10px; }
-    .sidebar .nav-item { display:flex; align-items:center; gap:12px; padding:11px 12px; border-radius:11px; color:#475569; font-size:14px; font-weight:500; text-decoration:none; margin-bottom:4px; transition:all 0.2s ease; }
-    .sidebar .nav-item:hover { background:#F8FAFC; color:#0F172A; }
-    .sidebar .nav-item.active { background:#1AA7EC; color:#fff; box-shadow:0 8px 18px -8px rgba(26,167,236,0.55); }
-    .sidebar .nav-item svg { width:19px; height:19px; flex-shrink:0; }
-    .sidebar .nav-item .badge { margin-right:auto; background:#FEF2F2; color:#DC2626; font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; }
-    .sidebar .user-card { margin-top:auto; display:flex; align-items:center; gap:11px; padding:11px; border:1px solid #EEF2F6; border-radius:13px; cursor:pointer; }
-    .sidebar .user-avatar { width:36px; height:36px; border-radius:10px; background:#1AA7EC; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0; }
-    .sidebar .user-name { font-size:13.5px; font-weight:600; }
-    .sidebar .user-role { font-size:11.5px; color:#94A3B8; }
-    .sidebar .user-card svg { width:16px; height:16px; color:#CBD5E1; flex-shrink:0; margin-right:auto; }
-    .main-wrap { margin-right:248px; min-height:100vh; }
-    @media(max-width:1024px){ .sidebar{display:none;} .main-wrap{margin-right:0;} }
+    html, body {
+      margin: 0; padding: 0;
+      min-height: 100vh;
+      font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif;
+      background: #F6F8FA;
+      color: #0F172A;
+      -webkit-font-smoothing: antialiased;
+    }
+    .app-layout { display: flex; min-height: 100vh; }
+
+    /* ─── Sidebar ─── */
+    .sidebar {
+      width: 248px; background: #fff; border-left: 1px solid #EEF2F6;
+      display: flex; flex-direction: column; padding: 22px 16px;
+      position: fixed; right: 0; top: 0; bottom: 0; z-index: 100;
+    }
+    .sidebar .brand {
+      display: flex; align-items: center; gap: 11px;
+      padding: 0 8px 22px;
+    }
+    .sidebar .brand .icon {
+      width: 38px; height: 38px; border-radius: 11px;
+      background: #1AA7EC; position: relative; flex-shrink: 0;
+    }
+    .sidebar .brand .icon::before, .sidebar .brand .icon::after {
+      content: ''; position: absolute; left: 50%; top: 50%;
+      transform: translate(-50%, -50%); background: #fff; border-radius: 3px;
+    }
+    .sidebar .brand .icon::before { width: 18px; height: 5.5px; }
+    .sidebar .brand .icon::after { width: 5.5px; height: 18px; }
+    .sidebar .brand .name {
+      font: 700 18px/1 'IBM Plex Sans Arabic', sans-serif; letter-spacing: -0.02em;
+    }
+    .sidebar .brand .name span { color: #1AA7EC; }
+    .sidebar .nav-section {
+      font: 600 11px/1 'IBM Plex Mono', monospace; letter-spacing: 0.1em;
+      color: #CBD5E1; padding: 14px 10px 10px;
+    }
+    .sidebar .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 12px; border-radius: 11px;
+      color: #475569; font-size: 14px; font-weight: 500;
+      text-decoration: none; margin-bottom: 4px;
+      transition: all 0.2s ease;
+    }
+    .sidebar .nav-item:hover { background: #F8FAFC; color: #0F172A; }
+    .sidebar .nav-item.active {
+      background: #1AA7EC; color: #fff;
+      box-shadow: 0 8px 18px -8px rgba(26,167,236,0.55);
+    }
+    .sidebar .nav-item svg { width: 19px; height: 19px; flex-shrink: 0; }
+    .sidebar .nav-item .badge {
+      margin-right: auto; background: #FEF2F2; color: #DC2626;
+      font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px;
+    }
+    .sidebar .user-card {
+      margin-top: auto; display: flex; align-items: center; gap: 11px;
+      padding: 11px; border: 1px solid #EEF2F6; border-radius: 13px; cursor: pointer;
+    }
+    .sidebar .user-avatar {
+      width: 36px; height: 36px; border-radius: 10px; background: #1AA7EC;
+      color: #fff; display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px; flex-shrink: 0;
+    }
+    .sidebar .user-name { font-size: 13.5px; font-weight: 600; }
+    .sidebar .user-role { font-size: 11.5px; color: #94A3B8; }
+    .sidebar .user-card svg { width: 16px; height: 16px; color: #CBD5E1; flex-shrink: 0; }
+
+    /* ─── Topbar ─── */
+    .topbar {
+      height: 70px; background: #fff; border-bottom: 1px solid #EEF2F6;
+      display: flex; align-items: center; padding: 0 28px; gap: 18px;
+      position: fixed; top: 0; right: 248px; left: 0; z-index: 90;
+    }
+    .topbar .search-box {
+      display: flex; align-items: center; gap: 10px; flex: 1; max-width: 380px;
+      height: 42px; padding: 0 14px; border-radius: 11px; background: #F6F8FA;
+      color: #94A3B8; font-size: 14px;
+    }
+    .topbar .search-box svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .topbar .actions { margin-right: auto; display: flex; align-items: center; gap: 12px; }
+    .topbar .lang-toggle {
+      display: flex; border: 1px solid #E2E8F0; border-radius: 9px;
+      overflow: hidden; font-size: 13px; font-weight: 600;
+    }
+    .topbar .lang-toggle span { padding: 7px 12px; color: #64748B; }
+    .topbar .lang-toggle span.active { background: #1AA7EC; color: #fff; }
+    .topbar .icon-btn {
+      width: 42px; height: 42px; border-radius: 11px; border: 1px solid #E2E8F0;
+      display: flex; align-items: center; justify-content: center;
+      color: #475569; background: transparent; cursor: pointer; position: relative;
+      transition: all 0.2s ease;
+    }
+    .topbar .icon-btn:hover { background: #F8FAFC; }
+    .topbar .icon-btn svg { width: 18px; height: 18px; }
+    .topbar .icon-btn .dot {
+      position: absolute; top: 9px; left: 11px; width: 8px; height: 8px;
+      border-radius: 50%; background: #DC2626; border: 2px solid #fff;
+    }
+
+    /* ─── Main Content ─── */
+    .main-content {
+      margin-right: 248px;
+      padding: calc(70px + 28px) 28px 28px;
+      min-height: 100vh;
+    }
+
+    /* ─── Page Header ─── */
+    .page-header {
+      display: flex; align-items: flex-end; justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .page-header h1 {
+      margin: 0 0 6px; font: 700 26px/1.1 'IBM Plex Sans Arabic', sans-serif;
+      letter-spacing: -0.02em;
+    }
+    .page-header .subtitle {
+      margin: 0; color: #64748B; font-size: 14.5px;
+    }
+
+    /* ─── Filter Chips (Tab Navigation) ─── */
+    .filter-chips {
+      display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap;
+    }
+    .filter-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border-radius: 999px;
+      font-size: 13.5px; font-weight: 600;
+      background: #fff; color: #475569; border: 1px solid #E2E8F0;
+      cursor: pointer; transition: all 0.2s ease; font-family: inherit;
+    }
+    .filter-chip:hover { background: #F8FAFC; border-color: #CBD5E1; }
+    .filter-chip.active {
+      background: #1AA7EC; color: #fff; border-color: #1AA7EC;
+    }
+    .filter-chip svg { width: 15px; height: 15px; }
+
+    /* ─── Card ─── */
+    .card {
+      background: #fff; border: 1px solid #EEF2F6;
+      border-radius: 16px; padding: 22px 24px;
+      box-shadow: 0 1px 2px rgba(15,23,42,0.04);
+    }
+    .card + .card { margin-top: 18px; }
+    .card-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 20px; padding-bottom: 16px;
+      border-bottom: 1px solid #EEF2F6;
+    }
+    .card-title {
+      font-size: 15px; font-weight: 600; color: #0F172A;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-title svg { width: 18px; height: 18px; color: #1AA7EC; }
+    .card-subtitle {
+      font-size: 12.5px; color: #94A3B8; margin-top: 3px;
+    }
+
+    /* ─── Form Controls ─── */
+    .form-group {
+      display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px;
+    }
+    .form-group:last-child { margin-bottom: 0; }
+    .form-label {
+      font-size: 13px; font-weight: 600; color: #334155;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .form-label .required { color: #DC2626; font-size: 11px; }
+    .form-label .locked-hint {
+      font-size: 11px; color: #F59E0B; font-weight: 500;
+      display: flex; align-items: center; gap: 3px;
+    }
+    .form-label .locked-hint svg { width: 12px; height: 12px; }
+    .form-input {
+      width: 100%; height: 46px; padding: 0 14px;
+      border: 1px solid #E2E8F0; border-radius: 11px;
+      font-family: inherit; font-size: 14.5px; color: #0F172A;
+      background: #F6F8FA; outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .form-input:focus {
+      border-color: #1AA7EC;
+      box-shadow: 0 0 0 3px rgba(26,167,236,0.12);
+      background: #fff;
+    }
+    .form-input::placeholder { color: #94A3B8; }
+    .form-input:disabled {
+      background: #F1F5F9; color: #94A3B8; cursor: not-allowed;
+      border-color: #EEF2F6;
+    }
+    .form-input.error {
+      border-color: #DC2626;
+      box-shadow: 0 0 0 3px rgba(220,38,38,0.1);
+    }
+    .form-textarea {
+      width: 100%; padding: 12px 14px;
+      border: 1px solid #E2E8F0; border-radius: 11px;
+      font-family: inherit; font-size: 14.5px; color: #0F172A;
+      background: #F6F8FA; outline: none; resize: vertical; min-height: 80px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .form-textarea:focus {
+      border-color: #1AA7EC;
+      box-shadow: 0 0 0 3px rgba(26,167,236,0.12);
+      background: #fff;
+    }
+    .form-textarea::placeholder { color: #94A3B8; }
+    .form-select {
+      width: 100%; height: 46px; padding: 0 14px;
+      border: 1px solid #E2E8F0; border-radius: 11px;
+      font-family: inherit; font-size: 14.5px; color: #0F172A;
+      background: #F6F8FA; outline: none; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: left 14px center;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .form-select:focus {
+      border-color: #1AA7EC;
+      box-shadow: 0 0 0 3px rgba(26,167,236,0.12);
+      background-color: #fff;
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-hint {
+      font-size: 11.5px; color: #94A3B8; margin-top: 2px;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .form-hint svg { width: 13px; height: 13px; }
+    .form-error-hint {
+      font-size: 12px; color: #DC2626; margin-top: 6px;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .form-error-hint svg { width: 14px; height: 14px; }
+
+    /* ─── Buttons ─── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 8px; padding: 10px 20px; border-radius: 11px;
+      font-family: inherit; font-size: 14px; font-weight: 600;
+      cursor: pointer; border: none; transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background: #1AA7EC; color: #fff;
+      box-shadow: 0 10px 22px -8px rgba(26,167,236,0.55);
+    }
+    .btn-primary:hover { filter: brightness(1.05); transform: translateY(-1px); }
+    .btn-primary:disabled {
+      background: #E2E8F0; color: #94A3B8; box-shadow: none;
+      cursor: not-allowed; transform: none; filter: none;
+    }
+    .btn-success {
+      background: #16A34A; color: #fff;
+      box-shadow: 0 10px 22px -8px rgba(22,163,74,0.45);
+    }
+    .btn-success:hover { filter: brightness(1.05); transform: translateY(-1px); }
+    .btn-success:disabled {
+      background: #E2E8F0; color: #94A3B8; box-shadow: none;
+      cursor: not-allowed; transform: none; filter: none;
+    }
+    .btn-danger {
+      background: #DC2626; color: #fff;
+      box-shadow: 0 10px 22px -8px rgba(220,38,38,0.45);
+    }
+    .btn-danger:hover { filter: brightness(1.05); }
+    .btn-secondary {
+      background: #fff; color: #334155; border: 1px solid #E2E8F0;
+    }
+    .btn-secondary:hover { background: #F8FAFC; }
+    .btn-full { width: 100%; }
+    .btn svg { width: 17px; height: 17px; }
+
+    /* ─── Employee Row ─── */
+    .emp-list { display: flex; flex-direction: column; gap: 8px; }
+    .emp-row {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 16px; background: #F6F8FA;
+      border-radius: 11px; transition: all 0.2s ease;
+    }
+    .emp-row:hover { background: #EFF6FF; }
+    .emp-avatar {
+      width: 38px; height: 38px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px; color: #fff; flex-shrink: 0;
+    }
+    .emp-avatar.admin { background: #1AA7EC; }
+    .emp-avatar.employee { background: #16A34A; }
+    .emp-info { flex: 1; min-width: 0; }
+    .emp-name {
+      font-size: 14px; font-weight: 600; color: #0F172A;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .emp-name .status-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      display: inline-block; flex-shrink: 0;
+    }
+    .emp-name .status-dot.active { background: #16A34A; }
+    .emp-name .status-dot.inactive { background: #DC2626; }
+    .emp-meta {
+      font-size: 12px; color: #64748B; margin-top: 2px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .role-badge {
+      display: inline-flex; align-items: center; gap: 3px;
+      padding: 2px 8px; border-radius: 999px;
+      font-size: 11px; font-weight: 700;
+    }
+    .role-badge.admin { background: #DBEAFE; color: #1AA7EC; }
+    .role-badge.employee { background: #ECFDF5; color: #16A34A; }
+    .inactive-tag {
+      font-size: 11px; color: #DC2626; font-weight: 600;
+      display: flex; align-items: center; gap: 3px;
+    }
+    .inactive-tag svg { width: 11px; height: 11px; }
+    .emp-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .emp-action-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 5px; padding: 6px 12px; border-radius: 8px;
+      font-size: 12px; font-weight: 600; cursor: pointer;
+      border: none; font-family: inherit; transition: all 0.2s ease;
+    }
+    .emp-action-btn svg { width: 14px; height: 14px; }
+    .emp-action-btn.toggle-on {
+      background: #ECFDF5; color: #16A34A;
+    }
+    .emp-action-btn.toggle-on:hover { background: #D1FAE5; }
+    .emp-action-btn.toggle-off {
+      background: #FEF3C7; color: #D97706;
+    }
+    .emp-action-btn.toggle-off:hover { background: #FDE68A; }
+    .emp-action-btn.delete {
+      background: #FEF2F2; color: #DC2626;
+    }
+    .emp-action-btn.delete:hover { background: #FEE2E2; }
+
+    /* ─── Divider ─── */
+    .divider {
+      border: none; border-top: 1px solid #EEF2F6; margin: 20px 0;
+    }
+
+    /* ─── Empty State ─── */
+    .empty-state {
+      text-align: center; padding: 40px 20px;
+    }
+    .empty-state .empty-icon {
+      width: 56px; height: 56px; border-radius: 14px;
+      background: #F1F5F9; color: #94A3B8;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 14px;
+    }
+    .empty-state .empty-icon svg { width: 24px; height: 24px; }
+    .empty-state h3 {
+      font-size: 15px; font-weight: 600; color: #334155; margin-bottom: 4px;
+    }
+    .empty-state p { font-size: 13px; color: #94A3B8; }
+
+    /* ─── Loading ─── */
+    .loading-state {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; padding: 40px; gap: 12px; color: #94A3B8;
+    }
+    .loading-state .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid #E2E8F0; border-top-color: #1AA7EC;
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+
+    /* ─── Toast ─── */
+    .toast {
+      position: fixed; bottom: 28px; left: 28px; z-index: 9999;
+      padding: 14px 20px; border-radius: 11px;
+      font-size: 14px; font-weight: 600; font-family: inherit;
+      display: flex; align-items: center; gap: 10px;
+      box-shadow: 0 10px 25px rgba(15,23,42,0.15);
+      animation: slideInLeft 0.3s cubic-bezier(0.22,1,0.36,1);
+    }
+    .toast.success { background: #065F46; color: #6EE7B7; }
+    .toast.error   { background: #7F1D1D; color: #FCA5A5; }
+    .toast svg { width: 18px; height: 18px; }
+
+    /* ─── Confirm Dialog ─── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(15,23,42,0.5);
+      backdrop-filter: blur(4px);
+      z-index: 1000; display: flex;
+      align-items: center; justify-content: center;
+      animation: fadeIn 0.2s ease;
+    }
+    .modal {
+      background: #fff; border-radius: 16px;
+      box-shadow: 0 10px 15px -3px rgba(15,23,42,0.06), 0 4px 6px -4px rgba(15,23,42,0.04);
+      width: 100%; max-width: 400px; margin: 20px;
+      animation: scaleIn 0.2s cubic-bezier(0.22,1,0.36,1);
+      overflow: hidden;
+    }
+    .modal-header {
+      padding: 20px 24px 0; text-align: center;
+    }
+    .modal-icon {
+      width: 52px; height: 52px; border-radius: 14px;
+      background: #FEF2F2; color: #DC2626;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 14px;
+    }
+    .modal-icon svg { width: 24px; height: 24px; }
+    .modal-title {
+      font-size: 16px; font-weight: 700; color: #0F172A; margin-bottom: 6px;
+    }
+    .modal-desc {
+      font-size: 14px; color: #64748B; line-height: 1.5;
+    }
+    .modal-desc strong { color: #0F172A; }
+    .modal-actions {
+      display: flex; gap: 0; margin-top: 20px;
+      border-top: 1px solid #EEF2F6;
+    }
+    .modal-actions button {
+      flex: 1; padding: 14px; border: none;
+      font-family: inherit; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: all 0.2s ease;
+    }
+    .modal-actions .btn-cancel {
+      background: transparent; color: #64748B;
+      border-left: 1px solid #EEF2F6;
+    }
+    .modal-actions .btn-cancel:hover { background: #F8FAFC; }
+    .modal-actions .btn-confirm-delete {
+      background: transparent; color: #DC2626;
+    }
+    .modal-actions .btn-confirm-delete:hover { background: #FEF2F2; }
+
+    /* ─── Animations ─── */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    @keyframes slideInLeft {
+      from { opacity: 0; transform: translateX(-20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-fade-up { animation: fadeUp 0.4s cubic-bezier(0.22,1,0.36,1) forwards; }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 1024px) {
+      .sidebar { display: none; }
+      .topbar { right: 0; }
+      .main-content { margin-right: 0; }
+    }
+    @media (max-width: 640px) {
+      .page-header { flex-direction: column; align-items: flex-start; gap: 14px; }
+      .form-row { grid-template-columns: 1fr; }
+      .emp-row { flex-wrap: wrap; }
+      .emp-actions { width: 100%; justify-content: flex-end; }
+      .filter-chips { gap: 6px; }
+      .filter-chip { padding: 6px 12px; font-size: 12.5px; }
+    }
   </style>
-
 </head>
-<body>
+<body x-data="settingsApp()" x-init="init()">
 
-  <!-- Cloud Design Sidebar -->
-  <aside class="sidebar" id="cloud-sidebar">
-    <div class="brand">
-      <div class="icon"></div>
-      <div class="name">Pharma<span>SUD</span></div>
-    </div>
-    <div class="nav-section">MENU</div>
-    <a href="/dashboard" class="nav-item" id="nav-dashboard"><i data-lucide="layout-dashboard"></i><span>لوحة التحكم</span></a>
-    <a href="/pos" class="nav-item" id="nav-pos"><i data-lucide="scan-barcode"></i><span>نقطة البيع</span></a>
-    <a href="/medicines" class="nav-item" id="nav-medicines"><i data-lucide="pill"></i><span>الأدوية</span></a>
-    <a href="/inventory" class="nav-item" id="nav-inventory"><i data-lucide="package"></i><span>المخزون</span></a>
-    <a href="/batches" class="nav-item" id="nav-batches"><i data-lucide="calendar-clock"></i><span>الدفعات</span></a>
-    <a href="/reports-sales" class="nav-item" id="nav-reports"><i data-lucide="chart-line"></i><span>التقارير</span></a>
-    <a href="/employees" class="nav-item" id="nav-employees" style="display:none"><i data-lucide="users"></i><span>الموظفين</span></a>
-    <a href="/alerts" class="nav-item" id="nav-alerts"><i data-lucide="bell"></i><span>التنبيهات</span><span class="badge">7</span></a>
-    <a href="/settings" class="nav-item active" id="nav-settings"><i data-lucide="settings"></i><span>الإعدادات</span></a>
-    <div class="user-card" onclick="logout()">
-      <div class="user-avatar" id="user-initials">U</div>
-      <div style="min-width:0;flex:1">
-        <div class="user-name" id="user-name">المستخدم</div>
-        <div class="user-role" id="user-role">صيدلي</div>
+  <div class="app-layout">
+    <!-- ═══════ Sidebar ═══════ -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="icon"></div>
+        <div class="name">Pharma<span>SUD</span></div>
       </div>
-      <i data-lucide="chevron-left"></i>
+      <div class="nav-section">MENU</div>
+      <a href="/dashboard" class="nav-item"><i data-lucide="layout-dashboard"></i><span>لوحة التحكم</span></a>
+      <a href="/pos" class="nav-item"><i data-lucide="scan-barcode"></i><span>نقطة البيع</span></a>
+      <a href="/medicines" class="nav-item"><i data-lucide="pill"></i><span>الأدوية</span></a>
+      <a href="/inventory" class="nav-item"><i data-lucide="package"></i><span>المخزون</span></a>
+      <a href="/batches" class="nav-item"><i data-lucide="calendar-clock"></i><span>الدفعات</span></a>
+      <a href="/reports-sales" class="nav-item"><i data-lucide="chart-line"></i><span>التقارير</span></a>
+      <a href="/employees" class="nav-item" id="nav-employees-link" style="display:none"><i data-lucide="users"></i><span>الموظفين</span></a>
+      <a href="/alerts" class="nav-item"><i data-lucide="bell"></i><span>التنبيهات</span><span class="badge">7</span></a>
+      <a href="/settings" class="nav-item active"><i data-lucide="settings"></i><span>الإعدادات</span></a>
+      <div class="user-card" onclick="logout()">
+        <div class="user-avatar" id="user-initials">U</div>
+        <div style="min-width:0;flex:1">
+          <div class="user-name" id="user-name">المستخدم</div>
+          <div class="user-role" id="user-role">صيدلي</div>
+        </div>
+        <i data-lucide="chevron-left"></i>
+      </div>
+    </aside>
+
+    <!-- ═══════ Topbar ═══════ -->
+    <header class="topbar">
+      <div class="search-box">
+        <i data-lucide="search"></i>
+        <span>البحث في الأدوية، المبيعات، الدفعات...</span>
+      </div>
+      <div class="actions">
+        <div class="lang-toggle">
+          <span>EN</span>
+          <span class="active">ع</span>
+        </div>
+        <button class="icon-btn">
+          <i data-lucide="moon"></i>
+        </button>
+        <button class="icon-btn">
+          <i data-lucide="bell"></i>
+          <span class="dot"></span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ═══════ Main Content ═══════ -->
+    <main class="main-content">
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div>
+          <h1>الإعدادات</h1>
+          <p class="subtitle">ملف الصيدلية والتفعيل</p>
+        </div>
+      </div>
+
+      <!-- Tab Filter Chips -->
+      <div class="filter-chips">
+        <button class="filter-chip" :class="{ active: activeTab === 'employees' }" @click="activeTab='employees'">
+          <i data-lucide="users"></i>
+          الموظفين
+        </button>
+        <button class="filter-chip" :class="{ active: activeTab === 'password' }" @click="activeTab='password'">
+          <i data-lucide="key-round"></i>
+          كلمة المرور
+        </button>
+        <button class="filter-chip" :class="{ active: activeTab === 'pharmacy' }" @click="activeTab='pharmacy'; loadPharmacy()">
+          <i data-lucide="building-2"></i>
+          إعدادات الصيدلية
+        </button>
+      </div>
+
+      <!-- ═══════════════════════════════════ -->
+      <!-- TAB 1: EMPLOYEES                   -->
+      <!-- ═══════════════════════════════════ -->
+      <div x-show="activeTab === 'employees'" x-transition:enter="animate-fade-up" style="animation-delay:0ms">
+
+        <!-- Employee List Card -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">
+                <i data-lucide="users"></i>
+                قائمة الموظفين
+              </div>
+              <div class="card-subtitle" x-text="employees.length + ' موظف مسجل'"></div>
+            </div>
+          </div>
+
+          <!-- Loading -->
+          <div class="loading-state" x-show="loadingEmployees">
+            <div class="spinner"></div>
+            <p>جاري تحميل الموظفين...</p>
+          </div>
+
+          <!-- Employee List -->
+          <div class="emp-list" x-show="!loadingEmployees && employees.length > 0">
+            <template x-for="emp in employees" :key="emp.id">
+              <div class="emp-row">
+                <div class="emp-avatar" :class="emp.role === 'admin' ? 'admin' : 'employee'"
+                     x-text="(emp.full_name || emp.username || '?').split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2)">
+                </div>
+                <div class="emp-info">
+                  <div class="emp-name">
+                    <span class="status-dot" :class="emp.is_active ? 'active' : 'inactive'"></span>
+                    <span x-text="emp.full_name || emp.username"></span>
+                  </div>
+                  <div class="emp-meta">
+                    <span class="role-badge" :class="emp.role === 'admin' ? 'admin' : 'employee'"
+                          x-text="emp.role === 'admin' ? 'مدير' : 'موظف'"></span>
+                    <span>@<span x-text="emp.username"></span></span>
+                    <template x-if="!emp.is_active">
+                      <span class="inactive-tag">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                        معطل
+                      </span>
+                    </template>
+                  </div>
+                </div>
+                <div class="emp-actions">
+                  <button class="emp-action-btn toggle-on" x-show="!emp.is_active" @click="toggleEmployee(emp)">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    تفعيل
+                  </button>
+                  <button class="emp-action-btn toggle-off" x-show="emp.is_active" @click="toggleEmployee(emp)">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                    تعطيل
+                  </button>
+                  <button class="emp-action-btn delete" @click="confirmDelete(emp)"
+                          x-show="emp.role !== 'admin' || emp.id !== currentUserId">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    حذف
+                  </button>
+                </div>
+              </div>
+            </template>
+          </div>
+
+          <!-- Empty State -->
+          <div class="empty-state" x-show="!loadingEmployees && employees.length === 0">
+            <div class="empty-icon">
+              <i data-lucide="users"></i>
+            </div>
+            <h3>لا يوجد موظفين بعد</h3>
+            <p>أضف أول موظف من النموذج أدناه</p>
+          </div>
+        </div>
+
+        <!-- Add Employee Card -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">
+                <i data-lucide="user-plus"></i>
+                إضافة موظف جديد
+              </div>
+              <div class="card-subtitle">أنشئ حساب موظف جديد للوصول للنظام</div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">الاسم الكامل <span class="required">*</span></label>
+              <input type="text" class="form-input" x-model="empForm.full_name" placeholder="مثال: أحمد محمد">
+            </div>
+            <div class="form-group">
+              <label class="form-label">اسم المستخدم <span class="required">*</span></label>
+              <input type="text" class="form-input" x-model="empForm.username" placeholder="ahmed">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">كلمة السر <span class="required">*</span></label>
+              <input type="password" class="form-input" x-model="empForm.password" placeholder="6 أحرف على الأقل">
+            </div>
+            <div class="form-group">
+              <label class="form-label">الدور</label>
+              <select class="form-select" x-model="empForm.role">
+                <option value="employee">موظف</option>
+                <option value="admin">مدير</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-top: 18px;">
+            <button class="btn btn-success btn-full" @click="addEmployee()"
+                    :disabled="!empForm.full_name || !empForm.username || !empForm.password">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+              إضافة موظف
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════ -->
+      <!-- TAB 2: CHANGE PASSWORD             -->
+      <!-- ═══════════════════════════════════ -->
+      <div x-show="activeTab === 'password'" x-transition:enter="animate-fade-up" style="animation-delay:0ms">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">
+                <i data-lucide="key-round"></i>
+                تغيير كلمة المرور
+              </div>
+              <div class="card-subtitle">قم بتحديث كلمة المرور الخاصة بك للحفاظ على أمان حسابك</div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">كلمة المرور الحالية <span class="required">*</span></label>
+            <input type="password" class="form-input" x-model="passForm.current" placeholder="أدخل كلمة المرور الحالية">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">كلمة المرور الجديدة <span class="required">*</span></label>
+              <input type="password" class="form-input" x-model="passForm.new_pass" placeholder="6 أحرف على الأقل">
+            </div>
+            <div class="form-group">
+              <label class="form-label">تأكيد كلمة المرور الجديدة <span class="required">*</span></label>
+              <input type="password" class="form-input" x-model="passForm.confirm" placeholder="أعد كتابة كلمة المرور"
+                     :class="{ error: passForm.new_pass && passForm.confirm && passForm.new_pass !== passForm.confirm }">
+            </div>
+          </div>
+
+          <template x-if="passForm.new_pass && passForm.confirm && passForm.new_pass !== passForm.confirm">
+            <div class="form-error-hint" style="margin-top: 8px;">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              كلمتا المرور غير متطابقتين
+            </div>
+          </template>
+
+          <div style="margin-top: 18px;">
+            <button class="btn btn-primary btn-full" @click="changePassword()"
+                    :disabled="!passForm.current || !passForm.new_pass || !passForm.confirm || passForm.new_pass !== passForm.confirm">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+              تغيير كلمة المرور
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════ -->
+      <!-- TAB 3: PHARMACY SETTINGS           -->
+      <!-- ═══════════════════════════════════ -->
+      <div x-show="activeTab === 'pharmacy'" x-transition:enter="animate-fade-up" style="animation-delay:0ms">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">
+                <i data-lucide="building-2"></i>
+                إعدادات الصيدلية
+              </div>
+              <div class="card-subtitle">معلومات الصيدلية وبيانات الاتصال</div>
+            </div>
+          </div>
+
+          <!-- Loading -->
+          <div class="loading-state" x-show="loadingPharmacy">
+            <div class="spinner"></div>
+            <p>جاري تحميل الإعدادات...</p>
+          </div>
+
+          <template x-if="!loadingPharmacy">
+            <div>
+              <!-- Pharmacy Name (Locked) -->
+              <div class="form-group">
+                <label class="form-label">
+                  اسم الصيدلية
+                  <span class="locked-hint">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    مقفول
+                  </span>
+                </label>
+                <input type="text" class="form-input" x-model="pharmacyForm.name" disabled>
+                <div class="form-hint">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                  لا يمكن تعديل اسم الصيدلية — اتصل بالمطور لتغييره
+                </div>
+              </div>
+
+              <div class="form-row">
+                <!-- Owner Name (Locked) -->
+                <div class="form-group">
+                  <label class="form-label">
+                    اسم المالك
+                    <span class="locked-hint">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                      مقفول
+                    </span>
+                  </label>
+                  <input type="text" class="form-input" x-model="pharmacyForm.owner_name" disabled>
+                </div>
+                <!-- Phone (Editable) -->
+                <div class="form-group">
+                  <label class="form-label">رقم الهاتف</label>
+                  <input type="text" class="form-input" x-model="pharmacyForm.phone" placeholder="+249xxxxxxxx">
+                </div>
+              </div>
+
+              <!-- Address (Editable) -->
+              <div class="form-group">
+                <label class="form-label">العنوان</label>
+                <textarea class="form-textarea" x-model="pharmacyForm.address" placeholder="عنوان الصيدلية"></textarea>
+              </div>
+
+              <div style="margin-top: 18px;">
+                <button class="btn btn-success btn-full" @click="savePharmacy()">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                  حفظ بيانات الاتصال
+                </button>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ═══════ Toast Notification ═══════ -->
+  <div x-show="message.text" x-transition
+       class="toast" :class="message.type"
+       style="position:fixed;bottom:28px;left:28px;z-index:9999;">
+    <template x-if="message.type === 'success'">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    </template>
+    <template x-if="message.type === 'error'">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+    </template>
+    <span x-text="message.text"></span>
+  </div>
+
+  <!-- ═══════ Confirm Delete Dialog ═══════ -->
+  <div x-show="showConfirm" class="modal-overlay" @click.self="showConfirm=false">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+        </div>
+        <div class="modal-title">تأكيد الحذف</div>
+        <div class="modal-desc">
+          هل أنت متأكد من حذف الموظف
+          <strong x-text="deleteTarget?.full_name || deleteTarget?.username"></strong>؟
+          <br>لا يمكن التراجع عن هذا الإجراء.
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-confirm-delete" @click="doDelete()">نعم، احذف</button>
+        <button class="btn-cancel" @click="showConfirm=false">إلغاء</button>
+      </div>
     </div>
-  </aside>
+  </div>
+
+  <!-- ═══════ Scripts ═══════ -->
   <script>
-    function logout() { localStorage.clear(); window.location.href='/login'; }
+    function logout() { localStorage.clear(); window.location.href = '/login'; }
+
     document.addEventListener('DOMContentLoaded', function() {
       const name = localStorage.getItem('userName') || 'المستخدم';
       const role = localStorage.getItem('role') || 'pharmacist';
-      document.getElementById('user-name').textContent = name;
-      document.getElementById('user-role').textContent = role === 'admin' ? 'مدير' : 'صيدلي';
-      document.getElementById('user-initials').textContent = name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
-      if(role === 'admin') document.getElementById('nav-employees').style.display='flex';
+      const el = (id) => document.getElementById(id);
+      if (el('user-name')) el('user-name').textContent = name;
+      if (el('user-role')) el('user-role').textContent = role === 'admin' ? 'مدير' : 'صيدلي';
+      if (el('user-initials')) el('user-initials').textContent = name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+      if (role === 'admin' && el('nav-employees-link')) el('nav-employees-link').style.display = 'flex';
+      // Re-render Lucide icons after DOM is ready
+      if (typeof lucide !== 'undefined') lucide.createIcons();
     });
+
+    function settingsApp() {
+      return {
+        activeTab: 'employees',
+        message: { text: '', type: '' },
+        currentUserId: localStorage.getItem('user_id') || '',
+
+        // Employees
+        loadingEmployees: true,
+        employees: [],
+        empForm: { full_name: '', username: '', password: '', role: 'employee' },
+        showConfirm: false,
+        deleteTarget: null,
+
+        // Password
+        passForm: { current: '', new_pass: '', confirm: '' },
+
+        // Pharmacy
+        loadingPharmacy: true,
+        pharmacyForm: { name: '', owner_name: '', phone: '', address: '' },
+
+        // Messages
+        showMessage(text, type = 'success') {
+          this.message = { text, type };
+          setTimeout(() => { this.message = { text: '', type: '' }; }, 4000);
+        },
+
+        // Init
+        async init() {
+          const token = localStorage.getItem('token');
+          if (!token) { window.location.href = '/login'; return; }
+          const userRole = localStorage.getItem('role');
+          if (userRole !== 'admin') {
+            this.showMessage('هذه الصفحة للمدير فقط', 'error');
+            setTimeout(() => { window.location.href = '/dashboard'; }, 2000);
+            return;
+          }
+          this.currentUserId = localStorage.getItem('user_id') || '';
+          await this.loadEmployees();
+          // Re-render Lucide after Alpine has rendered dynamic content
+          this.$nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); });
+        },
+
+        // ========== EMPLOYEES ==========
+        async loadEmployees() {
+          this.loadingEmployees = true;
+          try {
+            const token = localStorage.getItem('token');
+            const r = await fetch('/api/settings/employees', {
+              headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (!r.ok) { throw new Error('غير مصرح'); }
+            const data = await r.json();
+            this.employees = data.employees || [];
+          } catch (e) {
+            this.showMessage('فشل تحميل الموظفين: ' + e.message, 'error');
+          } finally {
+            this.loadingEmployees = false;
+            this.$nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); });
+          }
+        },
+
+        async addEmployee() {
+          try {
+            const token = localStorage.getItem('token');
+            const r = await fetch('/api/settings/employees', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+              body: JSON.stringify(this.empForm)
+            });
+            const data = await r.json();
+            if (r.ok) {
+              this.showMessage(data.message, 'success');
+              this.empForm = { full_name: '', username: '', password: '', role: 'employee' };
+              await this.loadEmployees();
+            } else {
+              this.showMessage(data.detail || data.message || 'فشل الإضافة', 'error');
+            }
+          } catch (e) {
+            this.showMessage('فشل الاتصال: ' + e.message, 'error');
+          }
+        },
+
+        confirmDelete(emp) {
+          this.deleteTarget = emp;
+          this.showConfirm = true;
+        },
+
+        async doDelete() {
+          this.showConfirm = false;
+          if (!this.deleteTarget) return;
+          try {
+            const token = localStorage.getItem('token');
+            const r = await fetch('/api/settings/employees/' + this.deleteTarget.id, {
+              method: 'DELETE',
+              headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const data = await r.json();
+            if (r.ok) {
+              this.showMessage(data.message, 'success');
+              await this.loadEmployees();
+            } else {
+              this.showMessage(data.detail || data.message || 'فشل الحذف', 'error');
+            }
+          } catch (e) {
+            this.showMessage('فشل الاتصال: ' + e.message, 'error');
+          }
+          this.deleteTarget = null;
+        },
+
+        async toggleEmployee(emp) {
+          try {
+            const token = localStorage.getItem('token');
+            const r = await fetch('/api/settings/employees/' + emp.id + '/toggle', {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+              body: JSON.stringify({ is_active: !emp.is_active })
+            });
+            const data = await r.json();
+            if (r.ok) {
+              this.showMessage(data.message, 'success');
+              await this.loadEmployees();
+            } else {
+              this.showMessage(data.detail || data.message || 'فشل التعديل', 'error');
+            }
+          } catch (e) {
+            this.showMessage('فشل الاتصال: ' + e.message, 'error');
+          }
+        },
+
+        // ========== PASSWORD ==========
+        async changePassword() {
+          if (this.passForm.new_pass !== this.passForm.confirm) {
+            this.showMessage('كلمتا السر غير متطابقتين', 'error');
+            return;
+          }
+          try {
+            const token = localStorage.getItem('token');
+            const r = await fetch('/api/settings/change-password', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+              body: JSON.stringify({
+                current_password: this.passForm.current,
+                new_password: this.passForm.new_pass
+              })
+            });
+            const data = await r.json();
+            if (r.ok) {
+              this.showMessage(data.message, 'success');
+              this.passForm = { current: '', new_pass: '', confirm: '' };
+            } else {
+              this.showMessage(data.detail || data.message || 'فشل التغيير', 'error');
+            }
+          } catch (e) {
+            this.showMessage('فشل الاتصال: ' + e.message, 'error');
+          }
+        },
+
+        // ========== PHARMACY ==========
+        async loadPharmacy() {
+          if (!this.loadingPharmacy && this.pharmacyForm.name) return;
+          this.loadingPharmacy = true;
+          try {
+            const token = localStorage.getItem('token');
+            const r = await fetch('/api/settings/pharmacy', {
+              headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (!r.ok) throw new Error('غير مصرح');
+            const data = await r.json();
+            this.pharmacyForm = {
+              name: data.name || '',
+              owner_name: data.owner_name || '',
+              phone: data.phone || '',
+              address: data.address || ''
+            };
+          } catch (e) {
+            this.showMessage('فشل تحميل الإعدادات: ' + e.message, 'error');
+          } finally {
+            this.loadingPharmacy = false;
+          }
+        },
+
+        async savePharmacy() {
+          try {
+            const token = localStorage.getItem('token');
+            const r = await fetch('/api/settings/pharmacy', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+              body: JSON.stringify(this.pharmacyForm)
+            });
+            const data = await r.json();
+            if (r.ok) {
+              this.showMessage(data.message, 'success');
+              localStorage.setItem('pharmacy_name', this.pharmacyForm.name);
+            } else {
+              this.showMessage(data.detail || data.message || 'فشل الحفظ', 'error');
+            }
+          } catch (e) {
+            this.showMessage('فشل الاتصال: ' + e.message, 'error');
+          }
+        }
+      };
+    }
   </script>
 
-    <div class="container" x-data="settingsApp()" x-init="init()">
-        <!-- Header -->
-        <div class="header">
-            <h1>⚙️ الإعدادات</h1>
-            <a href="/dashboard" class="back-link">← الرجوع</a>
-        </div>
-
-        <!-- Messages -->
-        <div x-show="message.text" x-transition>
-            <div :class="'alert alert-' + message.type" x-text="message.text"></div>
-        </div>
-
-        <!-- Tabs -->
-        <div class="tabs">
-            <button class="tab-btn" :class="{ active: activeTab === 'employees' }" @click="activeTab='employees'">👥 الموظفين</button>
-            <button class="tab-btn" :class="{ active: activeTab === 'password' }" @click="activeTab='password'">🔑 تغيير كلمة السر</button>
-            <button class="tab-btn" :class="{ active: activeTab === 'pharmacy' }" @click="activeTab='pharmacy'; loadPharmacy()">🏥 إعدادات الصيدلية</button>
-        </div>
-
-        <!-- ============================================ -->
-        <!-- TAB 1: EMPLOYEES -->
-        <!-- ============================================ -->
-        <div class="panel" :class="{ active: activeTab === 'employees' }">
-            <div class="panel-card">
-                <h2>👥 قائمة الموظفين</h2>
-
-                <div class="loading" x-show="loadingEmployees">
-                    <div class="spinner"></div>
-                    <p>جاري تحميل الموظفين...</p>
-                </div>
-
-                <template x-for="emp in employees" :key="emp.id">
-                    <div class="emp-row" x-show="!loadingEmployees">
-                        <div class="emp-info">
-                            <div class="name">
-                                <span class="status-dot" :class="emp.is_active ? 'status-active' : 'status-inactive'"></span>
-                                <span x-text="emp.full_name || emp.username"></span>
-                            </div>
-                            <div class="meta">
-                                <span class="role-badge" :class="emp.role === 'admin' ? 'role-admin' : 'role-employee'" x-text="emp.role === 'admin' ? 'مدير' : 'موظف'"></span>
-                                <span style="margin-right:8px;">@<span x-text="emp.username"></span></span>
-                                <span style="color:var(--text-secondary); font-size:11px;" x-show="!emp.is_active"> | ❌ معطل</span>
-                            </div>
-                        </div>
-                        <div class="emp-actions">
-                            <button class="btn-toggle-on" x-show="!emp.is_active" @click="toggleEmployee(emp)">✅ تفعيل</button>
-                            <button class="btn-toggle-off" x-show="emp.is_active" @click="toggleEmployee(emp)">⏸ تعطيل</button>
-                            <button class="btn-delete" @click="confirmDelete(emp)" x-show="emp.role !== 'admin' || emp.id !== currentUserId">🗑 حذف</button>
-                        </div>
-                    </div>
-                </template>
-
-                <div class="no-data" x-show="!loadingEmployees && employees.length === 0">
-                    لا يوجد موظفين بعد
-                </div>
-
-                <hr class="divider">
-
-                <!-- Add Employee Form -->
-                <h2 style="margin-bottom:16px;">➕ إضافة موظف جديد</h2>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>الاسم الكامل <span class="required">*</span></label>
-                        <input type="text" x-model="empForm.full_name" placeholder="مثال: أحمد محمد">
-                    </div>
-                    <div class="form-group">
-                        <label>اسم المستخدم <span class="required">*</span></label>
-                        <input type="text" x-model="empForm.username" placeholder="ahmed">
-                    </div>
-                    <div class="form-group">
-                        <label>كلمة السر <span class="required">*</span></label>
-                        <input type="password" x-model="empForm.password" placeholder="6 أحرف على الأقل">
-                    </div>
-                    <div class="form-group">
-                        <label>الدور</label>
-                        <select x-model="empForm.role" style="background:var(--background);border:1px solid var(--border);padding:10px 12px;border-radius:8px;color:var(--text-primary);font-size:14px;font-family:inherit;">
-                            <option value="employee">موظف</option>
-                            <option value="admin">مدير</option>
-                        </select>
-                    </div>
-                </div>
-                <button class="submit-btn green" @click="addEmployee()" :disabled="!empForm.full_name || !empForm.username || !empForm.password">
-                    ➕ إضافة موظف
-                </button>
-            </div>
-        </div>
-
-        <!-- ============================================ -->
-        <!-- TAB 2: CHANGE PASSWORD -->
-        <!-- ============================================ -->
-        <div class="panel" :class="{ active: activeTab === 'password' }">
-            <div class="panel-card">
-                <h2>🔑 تغيير كلمة السر</h2>
-                <div class="form-group">
-                    <label>كلمة السر الحالية <span class="required">*</span></label>
-                    <input type="password" x-model="passForm.current" placeholder="أدخل كلمة السر الحالية">
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>كلمة السر الجديدة <span class="required">*</span></label>
-                        <input type="password" x-model="passForm.new_pass" placeholder="6 أحرف على الأقل">
-                    </div>
-                    <div class="form-group">
-                        <label>تأكيد كلمة السر الجديدة <span class="required">*</span></label>
-                        <input type="password" x-model="passForm.confirm" placeholder="أعد كتابة كلمة السر">
-                    </div>
-                </div>
-                <button class="submit-btn" @click="changePassword()" 
-                        :disabled="!passForm.current || !passForm.new_pass || !passForm.confirm || passForm.new_pass !== passForm.confirm">
-                    🔄 تغيير كلمة السر
-                </button>
-                <p x-show="passForm.new_pass && passForm.confirm && passForm.new_pass !== passForm.confirm"
-                   style="color:#FCA5A5;font-size:13px;margin-top:8px;">⚠️ كلمتا السر غير متطابقتين</p>
-            </div>
-        </div>
-
-        <!-- ============================================ -->
-        <!-- TAB 3: PHARMACY SETTINGS -->
-        <!-- ============================================ -->
-        <div class="panel" :class="{ active: activeTab === 'pharmacy' }">
-            <div class="panel-card">
-                <h2>🏥 إعدادات الصيدلية</h2>
-
-                <div class="loading" x-show="loadingPharmacy">
-                    <div class="spinner"></div>
-                    <p>جاري تحميل الإعدادات...</p>
-                </div>
-
-                <template x-if="!loadingPharmacy">
-                    <div>
-                        <div class="form-group">
-                            <label>🔒 اسم الصيدلية <span style="color:#FCD34D;font-size:11px;">(مقفول)</span></label>
-                            <input type="text" x-model="pharmacyForm.name" disabled
-                                   style="background:var(--background);border:1px solid var(--border);padding:10px 12px;border-radius:8px;color:var(--text-secondary);font-size:14px;font-family:inherit;cursor:not-allowed;">
-                            <p style="font-size:11px;color:#FCD34D;margin-top:4px;">🔒 لا يمكن تعديل اسم الصيدلية — اتصل بالمطور لتغييره</p>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>🔒 اسم المالك <span style="color:#FCD34D;font-size:11px;">(مقفول)</span></label>
-                                <input type="text" x-model="pharmacyForm.owner_name" disabled
-                                       style="background:var(--background);border:1px solid var(--border);padding:10px 12px;border-radius:8px;color:var(--text-secondary);font-size:14px;font-family:inherit;cursor:not-allowed;">
-                            </div>
-                            <div class="form-group">
-                                <label>📞 رقم الهاتف</label>
-                                <input type="text" x-model="pharmacyForm.phone" placeholder="+249xxxxxxxx">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>العنوان</label>
-                            <textarea x-model="pharmacyForm.address" 
-                                      style="background:var(--background);border:1px solid var(--border);padding:10px 12px;border-radius:8px;color:var(--text-primary);font-size:14px;font-family:inherit;resize:vertical;min-height:60px;"
-                                      placeholder="عنوان الصيدلية"></textarea>
-                        </div>
-                        <button class="submit-btn green" @click="savePharmacy()">
-                            💾 حفظ بيانات الاتصال
-                        </button>
-                    </div>
-                </template>
-            </div>
-        </div>
-
-        <!-- Confirm Delete Dialog -->
-        <div x-show="showConfirm" class="confirm-overlay" x-transition>
-            <div class="confirm-dialog">
-                <h3>🗑 تأكيد الحذف</h3>
-                <p>هل أنت متأكد من حذف <strong x-text="deleteTarget?.full_name || deleteTarget?.username"></strong>؟</p>
-                <div class="btn-row">
-                    <button class="btn-no" @click="showConfirm=false">إلغاء</button>
-                    <button class="btn-yes" @click="doDelete()">نعم، احذف</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        function settingsApp() {
-            return {
-                activeTab: 'employees',
-                message: { text: '', type: '' },
-                currentUserId: localStorage.getItem('user_id') || '',
-
-                // Employees
-                loadingEmployees: true,
-                employees: [],
-                empForm: { full_name: '', username: '', password: '', role: 'employee' },
-                showConfirm: false,
-                deleteTarget: null,
-
-                // Password
-                passForm: { current: '', new_pass: '', confirm: '' },
-
-                // Pharmacy
-                loadingPharmacy: true,
-                pharmacyForm: { name: '', owner_name: '', phone: '', address: '' },
-
-                // Messages
-                showMessage(text, type = 'success') {
-                    this.message = { text, type };
-                    setTimeout(() => { this.message = { text: '', type: '' }; }, 4000);
-                },
-
-                // Init
-                async init() {
-                    const token = localStorage.getItem('token');
-                    if (!token) { window.location.href = '/login'; return; }
-                    // Check admin role
-                    const userRole = localStorage.getItem('role');
-if (userRole !== 'admin') {
-                            this.showMessage('هذه الصفحة للمدير فقط', 'error');
-                            setTimeout(() => { window.location.href = '/dashboard'; }, 2000);
-                            return;
-                    }
-                    this.currentUserId = localStorage.getItem('user_id') || '';
-                    await this.loadEmployees();
-                },
-
-                // ========== EMPLOYEES ==========
-                async loadEmployees() {
-                    this.loadingEmployees = true;
-                    try {
-                        const token = localStorage.getItem('token');
-                        const r = await fetch('/api/settings/employees', {
-                            headers: { 'Authorization': 'Bearer ' + token }
-                        });
-                        if (!r.ok) { throw new Error('غير مصرح'); }
-                        const data = await r.json();
-                        this.employees = data.employees || [];
-                    } catch (e) {
-                        this.showMessage('فشل تحميل الموظفين: ' + e.message, 'error');
-                    } finally {
-                        this.loadingEmployees = false;
-                    }
-                },
-
-                async addEmployee() {
-                    try {
-                        const token = localStorage.getItem('token');
-                        const r = await fetch('/api/settings/employees', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-                            body: JSON.stringify(this.empForm)
-                        });
-                        const data = await r.json();
-                        if (r.ok) {
-                            this.showMessage(data.message, 'success');
-                            this.empForm = { full_name: '', username: '', password: '', role: 'employee' };
-                            await this.loadEmployees();
-                        } else {
-                            this.showMessage(data.detail || data.message || 'فشل الإضافة', 'error');
-                        }
-                    } catch (e) {
-                        this.showMessage('فشل الاتصال: ' + e.message, 'error');
-                    }
-                },
-
-                confirmDelete(emp) {
-                    this.deleteTarget = emp;
-                    this.showConfirm = true;
-                },
-
-                async doDelete() {
-                    this.showConfirm = false;
-                    if (!this.deleteTarget) return;
-                    try {
-                        const token = localStorage.getItem('token');
-                        const r = await fetch('/api/settings/employees/' + this.deleteTarget.id, {
-                            method: 'DELETE',
-                            headers: { 'Authorization': 'Bearer ' + token }
-                        });
-                        const data = await r.json();
-                        if (r.ok) {
-                            this.showMessage(data.message, 'success');
-                            await this.loadEmployees();
-                        } else {
-                            this.showMessage(data.detail || data.message || 'فشل الحذف', 'error');
-                        }
-                    } catch (e) {
-                        this.showMessage('فشل الاتصال: ' + e.message, 'error');
-                    }
-                    this.deleteTarget = null;
-                },
-
-                async toggleEmployee(emp) {
-                    try {
-                        const token = localStorage.getItem('token');
-                        const r = await fetch('/api/settings/employees/' + emp.id + '/toggle', {
-                            method: 'PATCH',
-                            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-                            body: JSON.stringify({ is_active: !emp.is_active })
-                        });
-                        const data = await r.json();
-                        if (r.ok) {
-                            this.showMessage(data.message, 'success');
-                            await this.loadEmployees();
-                        } else {
-                            this.showMessage(data.detail || data.message || 'فشل التعديل', 'error');
-                        }
-                    } catch (e) {
-                        this.showMessage('فشل الاتصال: ' + e.message, 'error');
-                    }
-                },
-
-                // ========== PASSWORD ==========
-                async changePassword() {
-                    if (this.passForm.new_pass !== this.passForm.confirm) {
-                        this.showMessage('كلمتا السر غير متطابقتين', 'error');
-                        return;
-                    }
-                    try {
-                        const token = localStorage.getItem('token');
-                        const r = await fetch('/api/settings/change-password', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-                            body: JSON.stringify({
-                                current_password: this.passForm.current,
-                                new_password: this.passForm.new_pass
-                            })
-                        });
-                        const data = await r.json();
-                        if (r.ok) {
-                            this.showMessage(data.message, 'success');
-                            this.passForm = { current: '', new_pass: '', confirm: '' };
-                        } else {
-                            this.showMessage(data.detail || data.message || 'فشل التغيير', 'error');
-                        }
-                    } catch (e) {
-                        this.showMessage('فشل الاتصال: ' + e.message, 'error');
-                    }
-                },
-
-                // ========== PHARMACY ==========
-                async loadPharmacy() {
-                    if (!this.loadingPharmacy && this.pharmacyForm.name) return; // Already loaded
-                    this.loadingPharmacy = true;
-                    try {
-                        const token = localStorage.getItem('token');
-                        const r = await fetch('/api/settings/pharmacy', {
-                            headers: { 'Authorization': 'Bearer ' + token }
-                        });
-                        if (!r.ok) throw new Error('غير مصرح');
-                        const data = await r.json();
-                        this.pharmacyForm = {
-                            name: data.name || '',
-                            owner_name: data.owner_name || '',
-                            phone: data.phone || '',
-                            address: data.address || ''
-                        };
-                    } catch (e) {
-                        this.showMessage('فشل تحميل الإعدادات: ' + e.message, 'error');
-                    } finally {
-                        this.loadingPharmacy = false;
-                    }
-                },
-
-                async savePharmacy() {
-                    try {
-                        const token = localStorage.getItem('token');
-                        const r = await fetch('/api/settings/pharmacy', {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-                            body: JSON.stringify(this.pharmacyForm)
-                        });
-                        const data = await r.json();
-                        if (r.ok) {
-                            this.showMessage(data.message, 'success');
-                            // Update stored pharmacy name
-                            localStorage.setItem('pharmacy_name', this.pharmacyForm.name);
-                        } else {
-                            this.showMessage(data.detail || data.message || 'فشل الحفظ', 'error');
-                        }
-                    } catch (e) {
-                        this.showMessage('فشل الاتصال: ' + e.message, 'error');
-                    }
-                }
-            };
-        }
-    </script>
 </body>
-</html><!-- 1781564609 -->
+</html><!-- Cloud Design v7.2.0 -->

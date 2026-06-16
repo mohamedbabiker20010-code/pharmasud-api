@@ -1,588 +1,994 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/css/theme.css?v7.2.0">
-    <title>نموذج الدواء - صيدلية الزاريات</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=IBM Plex Sans Arabic:wght@400;600;700&display=swap');
-        body { font-family: 'IBM Plex Sans Arabic', sans-serif; }
-    </style>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/static/css/theme.css?v7.2.0">
+  <title>نموذج الدواء - PharmaSUD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
   <style>
-    .sidebar { width:248px; background:#fff; border-left:1px solid #EEF2F6; display:flex; flex-direction:column; padding:22px 16px; position:fixed; right:0; top:0; bottom:0; z-index:100; font-family:'IBM Plex Sans Arabic','IBM Plex Sans',sans-serif; }
-    .sidebar .brand { display:flex; align-items:center; gap:11px; padding:0 8px 22px; }
-    .sidebar .brand .icon { width:38px; height:38px; border-radius:11px; background:#1AA7EC; position:relative; flex-shrink:0; }
-    .sidebar .brand .icon::before,.sidebar .brand .icon::after { content:''; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); background:#fff; border-radius:3px; }
-    .sidebar .brand .icon::before { width:18px; height:5.5px; }
-    .sidebar .brand .icon::after { width:5.5px; height:18px; }
-    .sidebar .brand .name { font:700 18px/1 'IBM Plex Sans Arabic',sans-serif; letter-spacing:-0.02em; }
-    .sidebar .brand .name span { color:#1AA7EC; }
-    .sidebar .nav-section { font:600 11px/1 'IBM Plex Mono',monospace; letter-spacing:0.1em; color:#CBD5E1; padding:14px 10px 10px; }
-    .sidebar .nav-item { display:flex; align-items:center; gap:12px; padding:11px 12px; border-radius:11px; color:#475569; font-size:14px; font-weight:500; text-decoration:none; margin-bottom:4px; transition:all 0.2s ease; }
-    .sidebar .nav-item:hover { background:#F8FAFC; color:#0F172A; }
-    .sidebar .nav-item.active { background:#1AA7EC; color:#fff; box-shadow:0 8px 18px -8px rgba(26,167,236,0.55); }
-    .sidebar .nav-item svg { width:19px; height:19px; flex-shrink:0; }
-    .sidebar .nav-item .badge { margin-right:auto; background:#FEF2F2; color:#DC2626; font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; }
-    .sidebar .user-card { margin-top:auto; display:flex; align-items:center; gap:11px; padding:11px; border:1px solid #EEF2F6; border-radius:13px; cursor:pointer; }
-    .sidebar .user-avatar { width:36px; height:36px; border-radius:10px; background:#1AA7EC; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0; }
-    .sidebar .user-name { font-size:13.5px; font-weight:600; }
-    .sidebar .user-role { font-size:11.5px; color:#94A3B8; }
-    .sidebar .user-card svg { width:16px; height:16px; color:#CBD5E1; flex-shrink:0; margin-right:auto; }
-    .main-wrap { margin-right:248px; min-height:100vh; }
-    @media(max-width:1024px){ .sidebar{display:none;} .main-wrap{margin-right:0;} }
+    html, body {
+      margin: 0; padding: 0;
+      min-height: 100vh;
+      font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif;
+      background: #F6F8FA;
+      color: #0F172A;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── Layout ─── */
+    .app-layout { display: flex; min-height: 100vh; }
+
+    /* ─── Sidebar ─── */
+    .sidebar {
+      width: 248px; background: #fff; border-left: 1px solid #EEF2F6;
+      display: flex; flex-direction: column; padding: 22px 16px;
+      position: fixed; right: 0; top: 0; bottom: 0; z-index: 100;
+    }
+    .sidebar .brand { display: flex; align-items: center; gap: 11px; padding: 0 8px 22px; }
+    .sidebar .brand .icon {
+      width: 38px; height: 38px; border-radius: 11px;
+      background: #1AA7EC; position: relative; flex-shrink: 0;
+    }
+    .sidebar .brand .icon::before, .sidebar .brand .icon::after {
+      content: ''; position: absolute; left: 50%; top: 50%;
+      transform: translate(-50%, -50%); background: #fff; border-radius: 3px;
+    }
+    .sidebar .brand .icon::before { width: 18px; height: 5.5px; }
+    .sidebar .brand .icon::after { width: 5.5px; height: 18px; }
+    .sidebar .brand .name {
+      font: 700 18px/1 'IBM Plex Sans Arabic', sans-serif; letter-spacing: -0.02em;
+    }
+    .sidebar .brand .name span { color: #1AA7EC; }
+    .sidebar .nav-section {
+      font: 600 11px/1 'IBM Plex Mono', monospace; letter-spacing: 0.1em;
+      color: #CBD5E1; padding: 14px 10px 10px;
+    }
+    .sidebar .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 12px; border-radius: 11px;
+      color: #475569; font-size: 14px; font-weight: 500;
+      text-decoration: none; margin-bottom: 4px;
+      transition: all 0.2s ease;
+    }
+    .sidebar .nav-item:hover { background: #F8FAFC; color: #0F172A; }
+    .sidebar .nav-item.active {
+      background: #1AA7EC; color: #fff;
+      box-shadow: 0 8px 18px -8px rgba(26, 167, 236, 0.55);
+    }
+    .sidebar .nav-item svg { width: 19px; height: 19px; flex-shrink: 0; }
+    .sidebar .nav-item .badge {
+      margin-right: auto; background: #FEF2F2; color: #DC2626;
+      font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px;
+    }
+    .sidebar .user-card {
+      margin-top: auto; display: flex; align-items: center; gap: 11px;
+      padding: 11px; border: 1px solid #EEF2F6; border-radius: 13px; cursor: pointer;
+    }
+    .sidebar .user-avatar {
+      width: 36px; height: 36px; border-radius: 10px; background: #1AA7EC;
+      color: #fff; display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px; flex-shrink: 0;
+    }
+    .sidebar .user-name { font-size: 13.5px; font-weight: 600; }
+    .sidebar .user-role { font-size: 11.5px; color: #94A3B8; }
+    .sidebar .user-card svg { width: 16px; height: 16px; color: #CBD5E1; flex-shrink: 0; }
+
+    /* ─── Topbar ─── */
+    .topbar {
+      height: 70px; background: #fff; border-bottom: 1px solid #EEF2F6;
+      display: flex; align-items: center; padding: 0 28px; gap: 18px;
+      position: fixed; top: 0; right: 248px; left: 0; z-index: 90;
+    }
+    .topbar .page-info h1 {
+      font: 700 20px/1 'IBM Plex Sans Arabic', sans-serif; letter-spacing: -0.02em;
+      margin: 0;
+    }
+    .topbar .page-info .subtitle {
+      font-size: 12.5px; color: #64748B; margin-top: 3px;
+    }
+    .topbar .actions { margin-right: auto; display: flex; align-items: center; gap: 12px; }
+    .topbar .lang-toggle {
+      display: flex; border: 1px solid #E2E8F0; border-radius: 9px;
+      overflow: hidden; font-size: 13px; font-weight: 600;
+    }
+    .topbar .lang-toggle span { padding: 7px 12px; color: #64748B; }
+    .topbar .lang-toggle span.active { background: #1AA7EC; color: #fff; }
+    .topbar .icon-btn {
+      width: 42px; height: 42px; border-radius: 11px; border: 1px solid #E2E8F0;
+      display: flex; align-items: center; justify-content: center;
+      color: #475569; background: transparent; cursor: pointer; position: relative;
+      transition: all 0.2s ease;
+    }
+    .topbar .icon-btn:hover { background: #F8FAFC; }
+    .topbar .icon-btn svg { width: 18px; height: 18px; }
+    .topbar .icon-btn .dot {
+      position: absolute; top: 9px; left: 11px; width: 8px; height: 8px;
+      border-radius: 50%; background: #DC2626; border: 2px solid #fff;
+    }
+    .topbar .btn-back {
+      display: flex; align-items: center; gap: 8px;
+      height: 42px; padding: 0 18px; border-radius: 11px;
+      background: #fff; color: #334155; border: 1px solid #E2E8F0;
+      cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 600;
+      transition: all 0.2s ease; text-decoration: none;
+    }
+    .topbar .btn-back:hover { background: #F8FAFC; border-color: #CBD5E1; }
+    .topbar .btn-back svg { width: 17px; height: 17px; }
+
+    /* ─── Main Content ─── */
+    .main-content {
+      margin-right: 248px; padding: calc(70px + 28px) 28px 28px; min-height: 100vh;
+    }
+
+    /* ─── Form Card ─── */
+    .form-card {
+      background: #fff; border: 1px solid #EEF2F6; border-radius: 16px;
+      padding: 28px; max-width: 720px; margin: 0 auto;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+
+    /* ─── Image Upload ─── */
+    .image-upload-area {
+      display: flex; flex-direction: column; align-items: center;
+      margin-bottom: 28px;
+    }
+    .image-upload-box {
+      position: relative; width: 160px; height: 160px;
+      background: #F6F8FA; border-radius: 16px; overflow: hidden;
+      border: 2px dashed #E2E8F0; cursor: pointer;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .image-upload-box:hover {
+      border-color: #1AA7EC; box-shadow: 0 0 0 3px rgba(26, 167, 236, 0.12);
+    }
+    .image-upload-box img {
+      width: 100%; height: 100%; object-fit: contain; padding: 16px;
+    }
+    .image-upload-box .upload-placeholder {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      height: 100%; gap: 8px; color: #CBD5E1;
+    }
+    .image-upload-box .upload-placeholder svg { width: 36px; height: 36px; }
+    .image-upload-box .upload-placeholder span { font-size: 12px; color: #94A3B8; font-weight: 500; }
+    .image-upload-hint {
+      margin-top: 10px; font-size: 13px; color: #94A3B8; font-weight: 500;
+    }
+
+    /* ─── Form Fields ─── */
+    .form-section { margin-bottom: 24px; }
+    .form-section:last-child { margin-bottom: 0; }
+    .form-row { display: grid; gap: 16px; }
+    .form-row.cols-2 { grid-template-columns: 1fr 1fr; }
+    .form-row.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+    .field-group { display: flex; flex-direction: column; }
+    .field-label {
+      font-size: 13.5px; font-weight: 600; color: #334155;
+      margin-bottom: 8px; display: flex; align-items: center; gap: 4px;
+    }
+    .field-label .required { color: #DC2626; font-size: 14px; }
+    .field-input {
+      width: 100%; height: 46px; padding: 0 14px;
+      border: 1px solid #E2E8F0; border-radius: 11px;
+      font-family: inherit; font-size: 14.5px; color: #0F172A;
+      background: #fff; outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .field-input:focus {
+      border-color: #1AA7EC; box-shadow: 0 0 0 3px rgba(26, 167, 236, 0.12);
+    }
+    .field-input::placeholder { color: #94A3B8; }
+    .field-input.error { border-color: #DC2626; }
+    .field-input.error:focus { box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12); }
+    .field-error { font-size: 12px; color: #DC2626; margin-top: 5px; font-weight: 500; }
+
+    .field-select {
+      width: 100%; height: 46px; padding: 0 14px;
+      border: 1px solid #E2E8F0; border-radius: 11px;
+      font-family: inherit; font-size: 14.5px; color: #0F172A;
+      background: #fff; outline: none; cursor: pointer;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      -webkit-appearance: none; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: left 12px center;
+      padding-left: 36px;
+    }
+    .field-select:focus {
+      border-color: #1AA7EC; box-shadow: 0 0 0 3px rgba(26, 167, 236, 0.12);
+    }
+
+    /* ─── Barcode Input Group ─── */
+    .barcode-input-group {
+      display: flex; gap: 10px; align-items: stretch;
+    }
+    .barcode-input-group .field-input { flex: 1; }
+    .scan-btn {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      height: 46px; padding: 0 16px; border-radius: 11px;
+      background: #16A34A; color: #fff; border: none; cursor: pointer;
+      font-family: inherit; font-size: 14px; font-weight: 600;
+      transition: all 0.2s ease; white-space: nowrap;
+    }
+    .scan-btn:hover { background: #15803D; transform: translateY(-1px); }
+    .scan-btn svg { width: 18px; height: 18px; }
+
+    /* ─── Submit Button ─── */
+    .submit-btn {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      width: 100%; height: 52px; border-radius: 11px;
+      background: #1AA7EC; color: #fff; border: none; cursor: pointer;
+      font-family: inherit; font-size: 16px; font-weight: 700;
+      box-shadow: 0 10px 22px -8px rgba(26, 167, 236, 0.55);
+      transition: all 0.2s ease;
+    }
+    .submit-btn:hover { filter: brightness(1.05); transform: translateY(-1px); }
+    .submit-btn:disabled {
+      opacity: 0.65; cursor: not-allowed; transform: none; filter: none;
+    }
+    .submit-btn svg { width: 20px; height: 20px; }
+
+    /* ─── Divider ─── */
+    .form-divider {
+      height: 1px; background: #EEF2F6; margin: 24px 0;
+    }
+
+    /* ─── Section Title ─── */
+    .section-title {
+      font: 600 14px/1 'IBM Plex Sans Arabic', sans-serif;
+      color: #64748B; margin-bottom: 16px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-title svg { width: 16px; height: 16px; color: #1AA7EC; }
+
+    /* ─── Scanner Modal ─── */
+    .scanner-overlay {
+      position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px); z-index: 1000;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .scanner-modal {
+      background: #fff; border-radius: 16px;
+      width: 100%; max-width: 480px; padding: 24px; position: relative;
+      box-shadow: 0 30px 70px -28px rgba(15, 23, 42, 0.32);
+    }
+    .scanner-modal .close-btn {
+      position: absolute; top: 12px; left: 12px; z-index: 10;
+      width: 36px; height: 36px; border-radius: 10px;
+      background: rgba(15, 23, 42, 0.06); border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: #475569; transition: all 0.2s ease;
+    }
+    .scanner-modal .close-btn:hover { background: rgba(15, 23, 42, 0.12); }
+    .scanner-modal .close-btn svg { width: 18px; height: 18px; }
+    .scanner-modal .scanner-title {
+      font: 700 18px/1 'IBM Plex Sans Arabic', sans-serif;
+      text-align: center; margin-bottom: 18px; color: #0F172A;
+    }
+    .scanner-video-wrap {
+      position: relative; border-radius: 12px; overflow: hidden;
+      background: #0F172A;
+    }
+    .scanner-video-wrap video {
+      width: 100%; height: 260px; object-fit: cover; display: block;
+    }
+    .scanner-video-wrap .scan-frame {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      pointer-events: none;
+    }
+    .scanner-video-wrap .scan-frame .frame-border {
+      width: 75%; height: 45%;
+      border: 2px solid rgba(34, 197, 94, 0.7);
+      border-radius: 12px;
+      box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.3);
+    }
+    .scanner-hint {
+      text-align: center; font-size: 13px; color: #94A3B8;
+      margin-top: 12px; font-weight: 500;
+    }
+    .capture-btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; height: 48px; border-radius: 11px;
+      background: #16A34A; color: #fff; border: none; cursor: pointer;
+      font-family: inherit; font-size: 15px; font-weight: 700;
+      margin-top: 14px; transition: all 0.2s ease;
+    }
+    .capture-btn:hover { background: #15803D; }
+    .capture-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .capture-btn svg { width: 20px; height: 20px; }
+    .manual-input-section {
+      margin-top: 16px; padding-top: 16px; border-top: 1px solid #EEF2F6;
+    }
+    .manual-input-section .manual-label {
+      font-size: 12px; color: #94A3B8; margin-bottom: 8px; font-weight: 500;
+    }
+    .manual-input-row { display: flex; gap: 8px; }
+    .manual-input-row input {
+      flex: 1; height: 42px; padding: 0 12px;
+      border: 1px solid #E2E8F0; border-radius: 11px;
+      font-family: inherit; font-size: 14px; color: #0F172A;
+      outline: none; transition: border-color 0.2s ease;
+    }
+    .manual-input-row input:focus { border-color: #1AA7EC; }
+    .manual-input-row input::placeholder { color: #94A3B8; }
+    .manual-input-row .confirm-btn {
+      height: 42px; padding: 0 16px; border-radius: 11px;
+      background: #1AA7EC; color: #fff; border: none; cursor: pointer;
+      font-family: inherit; font-size: 14px; font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    .manual-input-row .confirm-btn:hover { filter: brightness(1.05); }
+
+    /* ─── Spinner ─── */
+    .spinner {
+      width: 20px; height: 20px; border: 2.5px solid rgba(255,255,255,0.3);
+      border-top-color: #fff; border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 1024px) {
+      .sidebar { display: none; }
+      .topbar { right: 0; }
+      .main-content { margin-right: 0; }
+    }
+    @media (max-width: 640px) {
+      .topbar { padding: 0 16px; gap: 10px; }
+      .main-content { padding: calc(70px + 16px) 16px 16px; }
+      .form-card { padding: 20px; }
+      .form-row.cols-2 { grid-template-columns: 1fr; }
+      .form-row.cols-3 { grid-template-columns: 1fr; }
+      .topbar .btn-back span { display: none; }
+    }
+
+    /* ─── Dark Mode ─── */
+    html.dark body, html.dark .main-content { background: #0F172A; color: #E2E8F0; }
+    html.dark .sidebar { background: #1E293B; border-color: #334155; }
+    html.dark .sidebar .nav-item { color: #94A3B8; }
+    html.dark .sidebar .nav-item:hover { background: #334155; color: #E2E8F0; }
+    html.dark .sidebar .user-card { border-color: #334155; }
+    html.dark .sidebar .user-role { color: #64748B; }
+    html.dark .topbar { background: #1E293B; border-color: #334155; }
+    html.dark .topbar .icon-btn { border-color: #334155; color: #94A3B8; }
+    html.dark .topbar .icon-btn:hover { background: #334155; }
+    html.dark .topbar .lang-toggle { border-color: #334155; }
+    html.dark .topbar .lang-toggle span { color: #94A3B8; }
+    html.dark .topbar .btn-back { background: #1E293B; border-color: #334155; color: #CBD5E1; }
+    html.dark .topbar .btn-back:hover { background: #334155; }
+    html.dark .form-card { background: #1E293B; border-color: #334155; }
+    html.dark .field-input, html.dark .field-select {
+      background: #0F172A; border-color: #334155; color: #E2E8F0;
+    }
+    html.dark .field-input::placeholder { color: #64748B; }
+    html.dark .field-input:focus, html.dark .field-select:focus {
+      border-color: #1AA7EC;
+    }
+    html.dark .field-label { color: #CBD5E1; }
+    html.dark .section-title { color: #94A3B8; }
+    html.dark .form-divider { background: #334155; }
+    html.dark .image-upload-box { background: #0F172A; border-color: #334155; }
+    html.dark .image-upload-box:hover { border-color: #1AA7EC; }
+    html.dark .image-upload-hint { color: #64748B; }
+    html.dark .scanner-modal { background: #1E293B; }
+    html.dark .scanner-modal .scanner-title { color: #E2E8F0; }
+    html.dark .manual-input-section { border-color: #334155; }
+    html.dark .manual-input-row input { background: #0F172A; border-color: #334155; color: #E2E8F0; }
   </style>
-
 </head>
-<body class="bg-[var(--background)] text-[#0F172A] min-h-screen">
+<body x-data="medicineFormApp()" x-init="init()">
 
-  <!-- Cloud Design Sidebar -->
-  <aside class="sidebar" id="cloud-sidebar">
-    <div class="brand">
-      <div class="icon"></div>
-      <div class="name">Pharma<span>SUD</span></div>
-    </div>
-    <div class="nav-section">MENU</div>
-    <a href="/dashboard" class="nav-item" id="nav-dashboard"><i data-lucide="layout-dashboard"></i><span>لوحة التحكم</span></a>
-    <a href="/pos" class="nav-item" id="nav-pos"><i data-lucide="scan-barcode"></i><span>نقطة البيع</span></a>
-    <a href="/medicines" class="nav-item active" id="nav-medicines"><i data-lucide="pill"></i><span>الأدوية</span></a>
-    <a href="/inventory" class="nav-item" id="nav-inventory"><i data-lucide="package"></i><span>المخزون</span></a>
-    <a href="/batches" class="nav-item" id="nav-batches"><i data-lucide="calendar-clock"></i><span>الدفعات</span></a>
-    <a href="/reports-sales" class="nav-item" id="nav-reports"><i data-lucide="chart-line"></i><span>التقارير</span></a>
-    <a href="/employees" class="nav-item" id="nav-employees" style="display:none"><i data-lucide="users"></i><span>الموظفين</span></a>
-    <a href="/alerts" class="nav-item" id="nav-alerts"><i data-lucide="bell"></i><span>التنبيهات</span><span class="badge">7</span></a>
-    <a href="/settings" class="nav-item" id="nav-settings"><i data-lucide="settings"></i><span>الإعدادات</span></a>
-    <div class="user-card" onclick="logout()">
-      <div class="user-avatar" id="user-initials">U</div>
-      <div style="min-width:0;flex:1">
-        <div class="user-name" id="user-name">المستخدم</div>
-        <div class="user-role" id="user-role">صيدلي</div>
+  <div class="app-layout">
+
+    <!-- ═══════ Sidebar ═══════ -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="icon"></div>
+        <div class="name">Pharma<span>SUD</span></div>
       </div>
-      <i data-lucide="chevron-left"></i>
+      <div class="nav-section">MENU</div>
+      <a href="/dashboard" class="nav-item" id="nav-dashboard">
+        <i data-lucide="layout-dashboard"></i><span>لوحة التحكم</span>
+      </a>
+      <a href="/pos" class="nav-item" id="nav-pos">
+        <i data-lucide="scan-barcode"></i><span>نقطة البيع</span>
+      </a>
+      <a href="/medicines" class="nav-item active" id="nav-medicines">
+        <i data-lucide="pill"></i><span>الأدوية</span>
+      </a>
+      <a href="/inventory" class="nav-item" id="nav-inventory">
+        <i data-lucide="package"></i><span>المخزون</span>
+      </a>
+      <a href="/batches" class="nav-item" id="nav-batches">
+        <i data-lucide="calendar-clock"></i><span>الدفعات</span>
+      </a>
+      <a href="/reports-sales" class="nav-item" id="nav-reports">
+        <i data-lucide="chart-line"></i><span>التقارير</span>
+      </a>
+      <a href="/employees" class="nav-item" id="nav-employees" x-show="isAdmin">
+        <i data-lucide="users"></i><span>الموظفين</span>
+      </a>
+      <a href="/alerts" class="nav-item" id="nav-alerts">
+        <i data-lucide="bell"></i><span>التنبيهات</span><span class="badge">7</span>
+      </a>
+      <a href="/settings" class="nav-item" id="nav-settings">
+        <i data-lucide="settings"></i><span>الإعدادات</span>
+      </a>
+      <div class="user-card" @click="logout()">
+        <div class="user-avatar" x-text="userInitials"></div>
+        <div style="min-width:0;flex:1">
+          <div class="user-name" x-text="userName || 'المستخدم'"></div>
+          <div class="user-role" x-text="isAdmin ? 'مدير' : 'صيدلي'"></div>
+        </div>
+        <i data-lucide="chevron-left"></i>
+      </div>
+    </aside>
+
+    <!-- ═══════ Topbar ═══════ -->
+    <header class="topbar">
+      <div class="page-info">
+        <h1 x-text="isEdit ? 'تعديل دواء' : 'إضافة دواء'">إضافة دواء</h1>
+        <div class="subtitle" x-text="isEdit ? 'تعديل بيانات الدواء المحدد' : 'إضافة دواء جديد للصيدلية'">إضافة دواء جديد للصيدلية</div>
+      </div>
+      <div class="actions">
+        <div class="lang-toggle">
+          <span>EN</span>
+          <span class="active">ع</span>
+        </div>
+        <button class="icon-btn" @click="toggleDarkMode()" title="الوضع الداكن">
+          <i data-lucide="moon"></i>
+        </button>
+        <button class="icon-btn" title="التنبيهات" onclick="window.location.href='/alerts'">
+          <i data-lucide="bell"></i>
+          <span class="dot"></span>
+        </button>
+        <a href="/medicines" class="btn-back">
+          <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          <span>الرجوع</span>
+        </a>
+      </div>
+    </header>
+
+    <!-- ═══════ Main Content ═══════ -->
+    <main class="main-content">
+
+      <form @submit.prevent="saveMedicine()" class="form-card">
+
+        <!-- Image Upload -->
+        <div class="image-upload-area">
+          <div class="image-upload-box">
+            <img x-show="previewImage" :src="previewImage" alt="صورة الدواء">
+            <div class="upload-placeholder" x-show="!previewImage">
+              <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg>
+              <span>رفع صورة</span>
+            </div>
+            <input type="file" @change="handleImageUpload($event)" accept="image/*"
+                   class="absolute inset-0 opacity-0 cursor-pointer" style="position:absolute;inset:0;opacity:0;cursor:pointer;">
+          </div>
+          <p class="image-upload-hint">اضغط لرفع صورة (اختياري)</p>
+        </div>
+
+        <!-- Barcode Section -->
+        <div class="form-section">
+          <div class="section-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg>
+            الباركود
+          </div>
+          <div class="barcode-input-group">
+            <input type="text" x-model="form.barcode"
+                   placeholder="امسح أو أدخل الباركود"
+                   class="field-input"
+                   :class="{'error': errors.barcode}">
+            <button type="button" @click="openBarcodeScanner()" class="scan-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" x2="17" y1="12" y2="12"/></svg>
+              مسح
+            </button>
+          </div>
+          <p x-show="errors.barcode" class="field-error" x-text="errors.barcode"></p>
+        </div>
+
+        <div class="form-divider"></div>
+
+        <!-- Medicine Info -->
+        <div class="form-section">
+          <div class="section-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg>
+            بيانات الدواء
+          </div>
+          <div class="form-row cols-2">
+            <div class="field-group">
+              <label class="field-label">الاسم التجاري <span class="required">*</span></label>
+              <input type="text" x-model="form.trade_name"
+                     placeholder="مثال: بانادول أزرق"
+                     class="field-input"
+                     :class="{'error': errors.trade_name}">
+              <p x-show="errors.trade_name" class="field-error" x-text="errors.trade_name"></p>
+            </div>
+            <div class="field-group">
+              <label class="field-label">الاسم العلمي</label>
+              <input type="text" x-model="form.scientific_name"
+                     placeholder="مثال: Paracetamol"
+                     class="field-input">
+            </div>
+          </div>
+        </div>
+
+        <!-- Category & Unit -->
+        <div class="form-section">
+          <div class="form-row cols-2">
+            <div class="field-group">
+              <label class="field-label">التصنيف <span class="required">*</span></label>
+              <select x-model="form.category" class="field-select"
+                      :class="{'error': errors.category}">
+                <option value="">اختر التصنيف</option>
+                <template x-for="cat in categories" :key="cat">
+                  <option :value="cat" x-text="cat"></option>
+                </template>
+              </select>
+              <p x-show="errors.category" class="field-error" x-text="errors.category"></p>
+            </div>
+            <div class="field-group">
+              <label class="field-label">الوحدة الأساسية</label>
+              <select x-model="form.base_unit" class="field-select">
+                <option value="strip">شريط</option>
+                <option value="bottle">زجاجة</option>
+                <option value="box">علبة</option>
+                <option value="vial">أمبولة</option>
+                <option value="tube">أنبوب</option>
+                <option value="sachet">ظرف</option>
+                <option value="spray">بخاخ</option>
+                <option value="piece">قطعة</option>
+                <option value="ml">مل</option>
+                <option value="g">جم</option>
+                <option value="other">أخرى</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-divider"></div>
+
+        <!-- Prices & Stock -->
+        <div class="form-section">
+          <div class="section-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            الأسعار والمخزون
+          </div>
+          <div class="form-row cols-3">
+            <div class="field-group">
+              <label class="field-label">سعر البيع <span class="required">*</span></label>
+              <input type="number" x-model="form.sale_price"
+                     step="0.01" min="0"
+                     placeholder="0.00"
+                     class="field-input"
+                     :class="{'error': errors.sale_price}">
+              <p x-show="errors.sale_price" class="field-error" x-text="errors.sale_price"></p>
+            </div>
+            <div class="field-group">
+              <label class="field-label">سعر الشراء</label>
+              <input type="number" x-model="form.purchase_price"
+                     step="0.01" min="0"
+                     placeholder="0.00"
+                     class="field-input">
+            </div>
+            <div class="field-group">
+              <label class="field-label">الحد الأدنى</label>
+              <input type="number" x-model="form.min_stock"
+                     min="1"
+                     placeholder="10"
+                     class="field-input">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-divider"></div>
+
+        <!-- Submit -->
+        <div class="form-section">
+          <button type="submit" :disabled="saving" class="submit-btn">
+            <div x-show="saving" class="spinner"></div>
+            <svg x-show="!saving" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+            <span x-show="!saving" x-text="isEdit ? 'حفظ التعديلات' : 'إضافة الدواء'"></span>
+            <span x-show="saving">جاري الحفظ...</span>
+          </button>
+        </div>
+
+      </form>
+
+    </main>
+  </div>
+
+  <!-- ═══════ Barcode Scanner Modal ═══════ -->
+  <div x-show="showScanner" class="scanner-overlay" @click.self="closeScanner()">
+    <div class="scanner-modal">
+      <button @click="closeScanner()" class="close-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+      <div class="scanner-title">مسح الباركود</div>
+      <div class="scanner-video-wrap">
+        <video id="scanner-video" autoplay playsinline></video>
+        <div class="scan-frame">
+          <div class="frame-border"></div>
+        </div>
+      </div>
+      <p class="scanner-hint">وجّه الكاميرا نحو الباركود ثم اضغط الزر</p>
+      <button @click="captureBarcode()" :disabled="scanning" class="capture-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><circle cx="12" cy="13" r="3"/></svg>
+        <span x-text="scanning ? 'جاري المسح...' : '📷 تصوير الباركود'"></span>
+      </button>
+      <canvas id="scanner-canvas" style="display:none;"></canvas>
+      <div class="manual-input-section">
+        <div class="manual-label">أو أدخل الرقم يدوياً:</div>
+        <div class="manual-input-row">
+          <input type="text" x-model="manualBarcode" placeholder="رقم الباركود"
+                 @keyup.enter="useManualBarcode()">
+          <button @click="useManualBarcode()" class="confirm-btn">تأكيد</button>
+        </div>
+      </div>
     </div>
-  </aside>
+  </div>
+
+  <!-- ═══════ Scripts ═══════ -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script>
-    function logout() { localStorage.clear(); window.location.href='/login'; }
-    document.addEventListener('DOMContentLoaded', function() {
-      const name = localStorage.getItem('userName') || 'المستخدم';
-      const role = localStorage.getItem('role') || 'pharmacist';
-      document.getElementById('user-name').textContent = name;
-      document.getElementById('user-role').textContent = role === 'admin' ? 'مدير' : 'صيدلي';
-      document.getElementById('user-initials').textContent = name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
-      if(role === 'admin') document.getElementById('nav-employees').style.display='flex';
+    function medicineFormApp() {
+      return {
+        isEdit: false,
+        isAdmin: false,
+        saving: false,
+        showScanner: false,
+        scanning: false,
+        manualBarcode: '',
+        categories: [],
+        previewImage: null,
+        mediaStream: null,
+        userName: localStorage.getItem('userName') || 'المستخدم',
+        userInitials: '',
+        form: {
+          trade_name: '',
+          scientific_name: '',
+          category: '',
+          barcode: '',
+          sale_price: '',
+          purchase_price: '',
+          base_unit: 'strip',
+          min_stock: 10,
+          image_path: '',
+        },
+        errors: {},
+
+        async init() {
+          const urlParams = new URLSearchParams(window.location.search);
+          const medicineId = urlParams.get('id');
+
+          // User info
+          this.isAdmin = localStorage.getItem('role') === 'admin';
+          const name = this.userName;
+          this.userInitials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+
+          // Auth check
+          if (!localStorage.getItem('token')) {
+            window.location.href = '/login';
+            return;
+          }
+
+          // Redirect non-admin
+          if (!this.isAdmin) {
+            alert('هذه الصفحة للمدير فقط');
+            window.location.href = '/dashboard';
+            return;
+          }
+
+          const barcode = urlParams.get('barcode');
+          await this.loadCategories();
+          if (medicineId) {
+            this.isEdit = true;
+            await this.loadMedicine(medicineId);
+          } else if (barcode) {
+            this.form.barcode = barcode;
+          }
+        },
+
+        async loadCategories() {
+          try {
+            const response = await fetch('/api/medicines/categories/list', {
+              headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('token')
+              }
+            });
+            const data = await response.json();
+            this.categories = data.categories;
+          } catch (error) {
+            console.error('Error loading categories:', error);
+          }
+        },
+
+        async loadMedicine(id) {
+          try {
+            const response = await fetch(`/api/medicines/${id}`, {
+              headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('token')
+              }
+            });
+            const data = await response.json();
+            this.form = {
+              trade_name: data.trade_name,
+              scientific_name: data.scientific_name || '',
+              category: data.category,
+              barcode: data.barcode || '',
+              sale_price: data.sale_price,
+              purchase_price: data.purchase_price || '',
+              base_unit: data.base_unit,
+              min_stock: data.min_stock,
+              image_path: data.image_url || '',
+            };
+            if (data.image_url && !data.image_url.includes('default')) {
+              this.previewImage = data.image_url;
+            }
+          } catch (error) {
+            console.error('Error loading medicine:', error);
+          }
+        },
+
+        async handleImageUpload(event) {
+          const file = event.target.files[0];
+          if (!file) return;
+          const formData = new FormData();
+          formData.append('file', file);
+          try {
+            const response = await fetch('/api/medicines/upload-image', {
+              method: 'POST',
+              headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('token')
+              },
+              body: formData
+            });
+            const data = await response.json();
+            if (data.success) {
+              this.form.image_path = data.image_url;
+              this.previewImage = data.image_url;
+            }
+          } catch (error) {
+            alert('فشل في رفع الصورة');
+          }
+        },
+
+        async saveMedicine() {
+          this.saving = true;
+          this.errors = {};
+          const urlParams = new URLSearchParams(window.location.search);
+          const medicineId = urlParams.get('id');
+          const url = medicineId ? `/api/medicines/${medicineId}` : '/api/medicines/';
+          const method = medicineId ? 'PUT' : 'POST';
+          // تحويل الأسعار لأرقام لتجنب أخطاء الـ API
+          const formData = {
+            ...this.form,
+            sale_price: parseFloat(this.form.sale_price) || 0,
+            purchase_price: parseFloat(this.form.purchase_price) || 0,
+            min_stock: parseInt(this.form.min_stock) || 10
+          };
+          // التحقق من البيانات قبل الإرسال
+          if (!formData.trade_name || formData.trade_name.trim() === '') {
+            this.errors.trade_name = 'الاسم التجاري مطلوب';
+            this.saving = false;
+            return;
+          }
+          if (!formData.category) {
+            this.errors.category = 'التصنيف مطلوب';
+            this.saving = false;
+            return;
+          }
+          if (formData.sale_price <= 0) {
+            this.errors.sale_price = 'سعر البيع يجب أن يكون أكبر من صفر';
+            this.saving = false;
+            return;
+          }
+          if (formData.purchase_price <= 0) {
+            alert('سعر الشراء يجب أن يكون أكبر من صفر');
+            this.saving = false;
+            return;
+          }
+          try {
+            const response = await fetch(url, {
+              method: method,
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + localStorage.getItem('token')
+              },
+              body: JSON.stringify(formData)
+            });
+            const data = await response.json();
+            if (data.success) {
+              alert(medicineId ? 'تم تحديث الدواء بنجاح' : 'تم إضافة الدواء بنجاح');
+              window.location.href = '/medicines';
+            } else {
+              alert(data.detail || data.message || 'حدث خطأ في حفظ الدواء');
+            }
+          } catch (error) {
+            alert('فشل في الاتصال بالسيرفر: ' + error.message);
+          } finally {
+            this.saving = false;
+          }
+        },
+
+        // ===== Scanner Methods =====
+        openBarcodeScanner() {
+          this.showScanner = true;
+          this.manualBarcode = '';
+          setTimeout(() => this.startCamera(), 300);
+        },
+
+        async startCamera() {
+          try {
+            this.mediaStream = await navigator.mediaDevices.getUserMedia({
+              video: { facingMode: "environment", width: { ideal: 640 }, height: { ideal: 480 } }
+            });
+            const video = document.getElementById('scanner-video');
+            video.srcObject = this.mediaStream;
+          } catch (err) {
+            console.error('Camera error:', err);
+            alert('لا يمكن الوصول للكاميرا.\n\n' +
+              'iPhone: استخدم Safari (Chrome ما يدعم الكاميرا في iOS)\n' +
+              'Android: Chrome أو أي متصفح\n' +
+              'تأكد من إعطاء صلاحية الكاميرا للموقع\n\n' +
+              'أو أدخل رقم الباركود يدوياً');
+            this.showScanner = false;
+          }
+        },
+
+        closeScanner() {
+          this.showScanner = false;
+          this.scanning = false;
+          if (this.mediaStream) {
+            this.mediaStream.getTracks().forEach(track => track.stop());
+            this.mediaStream = null;
+          }
+        },
+
+        useManualBarcode() {
+          if (this.manualBarcode && this.manualBarcode.trim()) {
+            this.form.barcode = this.manualBarcode.trim();
+            this.closeScanner();
+            alert('تم إدخال الباركود: ' + this.form.barcode);
+          }
+        },
+
+        async captureBarcode() {
+          if (this.scanning) return;
+          this.scanning = true;
+
+          const video = document.getElementById('scanner-video');
+          const canvas = document.getElementById('scanner-canvas');
+
+          // تشغيل فلاش أبيض (تأثير تصوير)
+          video.style.filter = 'brightness(2)';
+          setTimeout(() => video.style.filter = '', 100);
+
+          // رسم الإطار الحالي من الفيديو على الكانفاس
+          canvas.width = video.videoWidth || 640;
+          canvas.height = video.videoHeight || 480;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+          // محاولة قراءة الباركود
+          try {
+            const barcode = await this.detectBarcode(canvas);
+            if (barcode) {
+              this.form.barcode = barcode;
+              this.closeScanner();
+              alert('✅ تم قراءة الباركود: ' + barcode);
+            } else {
+              // المحاولة الثانية: قلب الألوان (للباركود الأبيض على خلفية سوداء)
+              ctx.filter = 'invert(1)';
+              ctx.drawImage(canvas, 0, 0);
+              ctx.filter = 'none';
+              const barcode2 = await this.detectBarcode(canvas);
+              if (barcode2) {
+                this.form.barcode = barcode2;
+                this.closeScanner();
+                alert('✅ تم قراءة الباركود: ' + barcode2);
+              } else {
+                this.scanning = false;
+                alert('❌ لم يتم التعرف على الباركود.\n\n' +
+                  'تأكد من:\n' +
+                  '1. الباركود واضح ومضاء جيداً\n' +
+                  '2. الكاميرا مركزة على الباركود\n' +
+                  '3. الباركود غير تالف أو مشوه\n\n' +
+                  'أو أدخل الرقم يدوياً في الحقل أسفل');
+              }
+            }
+          } catch (err) {
+            console.error('Detection error:', err);
+            this.scanning = false;
+            alert('❌ حدث خطأ في قراءة الباركود.\nأدخل الرقم يدوياً في الحقل أسفل.');
+          }
+        },
+
+        async detectBarcode(canvas) {
+          // الطريقة 1: استخدام BarcodeDetector API (الأفضل - يدعمه Chrome وسفاري الحديث)
+          if ('BarcodeDetector' in window) {
+            try {
+              const formats = ['ean_13', 'ean_8', 'upc_a', 'upc_e',
+                'code_128', 'code_39', 'code_93', 'codabar',
+                'itf', 'qr_code', 'data_matrix', 'aztec', 'pdf417'
+              ];
+              const detector = new BarcodeDetector({ formats });
+              const barcodes = await detector.detect(canvas);
+              if (barcodes.length > 0) {
+                console.log('Native BarcodeDetector:', barcodes[0].rawValue);
+                return barcodes[0].rawValue;
+              }
+            } catch (e) {
+              console.warn('BarcodeDetector error:', e);
+            }
+          }
+
+          // الطريقة 2: استخدام Html5Qrcode (احتياطي)
+          try {
+            const result = await this.decodeWithHtml5Qr(canvas);
+            if (result) return result;
+          } catch (e) {
+            console.warn('Html5Qr fallback failed:', e);
+          }
+
+          return null;
+        },
+
+        decodeWithHtml5Qr(canvas) {
+          return new Promise((resolve) => {
+            try {
+              const img = new Image();
+              img.onload = () => {
+                try {
+                  const scanner = new Html5Qrcode();
+                  if (typeof scanner.decodeFromImage === 'function') {
+                    scanner.decodeFromImage(img)
+                      .then(result => resolve(result))
+                      .catch(() => resolve(null));
+                  } else {
+                    resolve(null);
+                  }
+                } catch (e) {
+                  resolve(null);
+                }
+              };
+              img.onerror = () => resolve(null);
+              img.src = canvas.toDataURL('image/jpeg', 0.9);
+            } catch (e) {
+              resolve(null);
+            }
+          });
+        },
+
+        toggleDarkMode() {
+          document.documentElement.classList.toggle('dark');
+          localStorage.setItem('darkMode', document.documentElement.classList.contains('dark'));
+        },
+
+        logout() {
+          localStorage.clear();
+          window.location.href = '/login';
+        }
+      }
+    }
+
+    // Initialize Lucide icons
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide) lucide.createIcons();
+      // Restore dark mode preference
+      if (localStorage.getItem('darkMode') === 'true') {
+        document.documentElement.classList.add('dark');
+      }
     });
   </script>
 
-    <div x-data="medicineFormApp()" x-init="init()">
-        <!-- Header -->
-        <header class="bg-[var(--surface)] border-b border-[#EEF2F6]">
-            <div class="max-w-3xl mx-auto px-4 py-4">
-                <div class="flex justify-between items-center">
-                    <h1 class="text-xl font-bold" x-text="isEdit ? 'تعديل دواء' : 'إضافة دواء جديد'">إضافة دواء جديد</h1>
-                    <a href="/medicines" class="text-[#94A3B8] hover:text-[#0F172A] flex items-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                        </svg>
-                        الرجوع
-                    </a>
-                </div>
-            </div>
-        </header>
-        <!-- Form -->
-        <div class="max-w-3xl mx-auto px-4 py-8">
-            <form @submit.prevent="saveMedicine()" class="bg-[var(--surface)] rounded-lg p-6 space-y-6">
-                <!-- Image Upload -->
-                <div class="flex flex-col items-center">
-                    <div class="relative w-48 h-48 bg-[var(--background)] rounded-lg overflow-hidden border-2 border-dashed border-[#E2E8F0]">
-                        <img :src="previewImage || '/static/images/default-medicine.svg'" class="w-full h-full object-contain p-4" alt="">
-                        <input 
-                            type="file" 
-                            @change="handleImageUpload($event)"
-                            accept="image/*"
-                            class="absolute inset-0 opacity-0 cursor-pointer"
-                        >
-                    </div>
-                    <p class="text-[#94A3B8] text-sm mt-2">اضغط لرفع صورة (اختياري)</p>
-                </div>
-                <!-- Barcode -->
-                <div>
-                    <label class="block text-sm font-medium mb-2">الباركود</label>
-                    <div class="flex gap-2">
-                        <input 
-                            type="text" 
-                            x-model="form.barcode"
-                            placeholder="امسح أو أدخل الباركود"
-                            class="flex-1 bg-[var(--background)] border border-[#E2E8F0] rounded-lg px-4 py-2 text-[#0F172A] placeholder-gray-400 focus:outline-none focus:border-[#1AA7EC]"
-                        >
-                        <button 
-                            type="button"
-                            @click="openBarcodeScanner()"
-                            class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg"
-                        >
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-                <!-- Trade Name -->
-                <div>
-                    <label class="block text-sm font-medium mb-2">الاسم التجاري *</label>
-                    <input 
-                        type="text" 
-                        x-model="form.trade_name"
-                        placeholder="مثال: بانادول أزرق"
-                        class="w-full bg-[var(--background)] border border-[#E2E8F0] rounded-lg px-4 py-2 text-[#0F172A] placeholder-gray-400 focus:outline-none focus:border-[#1AA7EC]"
-                        :class="{'border-red-500': errors.trade_name}"
-                    >
-                    <p x-show="errors.trade_name" class="text-red-400 text-xs mt-1" x-text="errors.trade_name"></p>
-                </div>
-                <!-- Scientific Name -->
-                <div>
-                    <label class="block text-sm font-medium mb-2">الاسم العلمي</label>
-                    <input 
-                        type="text" 
-                        x-model="form.scientific_name"
-                        placeholder="مثال: Paracetamol"
-                        class="w-full bg-[var(--background)] border border-[#E2E8F0] rounded-lg px-4 py-2 text-[#0F172A] placeholder-gray-400 focus:outline-none focus:border-[#1AA7EC]"
-                    >
-                </div>
-                <!-- Category -->
-                <div>
-                    <label class="block text-sm font-medium mb-2">التصنيف *</label>
-                    <select 
-                        x-model="form.category"
-                        class="w-full bg-[var(--background)] border border-[#E2E8F0] rounded-lg px-4 py-2 text-[#0F172A] focus:outline-none focus:border-[#1AA7EC]"
-                    >
-                        <option value="">اختر التصنيف</option>
-                        <template x-for="cat in categories" :key="cat">
-                            <option :value="cat" x-text="cat"></option>
-                        </template>
-                    </select>
-                </div>
-                <!-- Prices & Unit -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-2">سعر البيع *</label>
-                        <input 
-                            type="number" 
-                            x-model="form.sale_price"
-                            step="0.01"
-                            min="0"
-                            placeholder="سعر البيع للجمهور"
-                            class="w-full bg-[var(--background)] border border-[#E2E8F0] rounded-lg px-4 py-2 text-[#0F172A] placeholder-gray-400 focus:outline-none focus:border-[#1AA7EC]"
-                        >
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">سعر الشراء</label>
-                        <input 
-                            type="number" 
-                            x-model="form.purchase_price"
-                            step="0.01"
-                            min="0"
-                            placeholder="سعر الشراء"
-                            class="w-full bg-[var(--background)] border border-[#E2E8F0] rounded-lg px-4 py-2 text-[#0F172A] placeholder-gray-400 focus:outline-none focus:border-[#1AA7EC]"
-                        >
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">الحد الأدنى</label>
-                        <input 
-                            type="number" 
-                            x-model="form.min_stock"
-                            min="1"
-                            placeholder="الحد الأدنى للمخزون"
-                            class="w-full bg-[var(--background)] border border-[#E2E8F0] rounded-lg px-4 py-2 text-[#0F172A] placeholder-gray-400 focus:outline-none focus:border-[#1AA7EC]"
-                        >
-                    </div>
-                </div>
-                <!-- Base Unit -->
-                <div>
-                    <label class="block text-sm font-medium mb-2">الوحدة الأساسية</label>
-                    <select 
-                        x-model="form.base_unit"
-                        class="w-full bg-[var(--background)] border border-[#E2E8F0] rounded-lg px-4 py-2 text-[#0F172A] focus:outline-none focus:border-[#1AA7EC]"
-                    >
-                        <option value="strip">شريط</option>
-                        <option value="bottle">زجاجة</option>
-                        <option value="box">علبة</option>
-                        <option value="vial">أمبولة</option>
-                        <option value="tube">أنبوب</option>
-                        <option value="sachet">ظرف</option>
-                        <option value="spray">بخاخ</option>
-                        <option value="piece">قطعة</option>
-                        <option value="ml">مل</option>
-                        <option value="g">جم</option>
-                        <option value="other">أخرى</option>
-                    </select>
-                </div>
-                <!-- Submit -->
-                <div>
-                    <button 
-                        type="submit"
-                        :disabled="saving"
-                        class="w-full bg-[#1AA7EC] hover:bg-blue-700 disabled:bg-blue-800 py-3 rounded-lg font-bold text-lg"
-                    >
-                        <span x-show="!saving" x-text="isEdit ? 'حفظ التعديلات' : 'إضافة الدواء'"></span>
-                        <span x-show="saving">جاري الحفظ...</span>
-                    </button>
-                </div>
-            </form>
-        </div>
-
-        <!-- ====== Barcode Scanner Modal ====== -->
-        <div x-show="showScanner" class="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4">
-            <div class="bg-[var(--surface)] rounded-lg w-full max-w-lg p-4 relative">
-                <!-- زر إغلاق -->
-                <button @click="closeScanner()" class="absolute top-2 left-2 z-10 bg-black bg-opacity-50 rounded-full p-1 text-[#0F172A] hover:bg-opacity-70">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
-                <h3 class="text-lg font-bold mb-3 text-center">مسح الباركود</h3>
-                <!-- كاميرا مباشرة -->
-                <div class="relative">
-                    <video id="scanner-video" autoplay playsinline class="w-full h-64 bg-black rounded-lg object-cover"></video>
-                    <!-- إطار توجيه -->
-                    <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <div class="border-2 border-green-400 rounded-lg w-3/4 h-2/5 opacity-70"></div>
-                    </div>
-                </div>
-                <p class="text-center text-[#94A3B8] text-sm mt-2">وجّه الكاميرا نحو الباركود ثم اضغط الزر</p>
-                <!-- زر التصوير -->
-                <button @click="captureBarcode()" :disabled="scanning" class="w-full mt-3 bg-green-600 hover:bg-green-700 disabled:bg-green-800 py-3 rounded-lg font-bold text-lg flex items-center justify-center gap-2">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
-                    <span x-text="scanning ? 'جاري المسح...' : '📷 تصوير الباركود'"></span>
-                </button>
-                <canvas id="scanner-canvas" class="hidden"></canvas>
-                <!-- حقل إدخال يدوي (احتياطي) -->
-                <div class="mt-4 pt-3 border-t border-[#E2E8F0]">
-                    <p class="text-xs text-[#94A3B8] mb-2">أو أدخل الرقم يدوياً:</p>
-                    <div class="flex gap-2">
-                        <input type="text" x-model="manualBarcode" placeholder="رقم الباركود"
-                            class="flex-1 bg-[var(--background)] border border-[#E2E8F0] rounded-lg px-3 py-2 text-[#0F172A] text-sm placeholder-gray-400 focus:outline-none focus:border-[#1AA7EC]"
-                            @keyup.enter="useManualBarcode()">
-                        <button @click="useManualBarcode()" class="bg-[#1AA7EC] hover:bg-blue-700 px-3 py-2 rounded-lg text-sm">تأكيد</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-    <script>
-        function medicineFormApp() {
-            return {
-                isEdit: false,
-                isAdmin: false,
-                saving: false,
-                showScanner: false,
-                scanning: false,
-                manualBarcode: '',
-                categories: [],
-                previewImage: null,
-                mediaStream: null,
-                form: {
-                    trade_name: '',
-                    scientific_name: '',
-                    category: '',
-                    barcode: '',
-                    sale_price: '',
-                    purchase_price: '',
-                    base_unit: 'strip',
-                    min_stock: 10,
-                    image_path: '',
-                },
-                errors: {},
-                async init() {
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const medicineId = urlParams.get('id');
-                    // Check if admin from stored role
-                    this.isAdmin = localStorage.getItem('role') === 'admin';
-
-                    // Redirect non-admin
-                    if (!this.isAdmin) {
-                        alert('هذه الصفحة للمدير فقط');
-                        window.location.href = '/dashboard';
-                        return;
-                    }
-
-                    const barcode = urlParams.get('barcode');
-                    await this.loadCategories();
-                    if (medicineId) {
-                        this.isEdit = true;
-                        await this.loadMedicine(medicineId);
-                    } else if (barcode) {
-                        this.form.barcode = barcode;
-                    }
-                },
-                async loadCategories() {
-                    try {
-                        const response = await fetch('/api/medicines/categories/list', {
-                            headers: {
-                                'Authorization': 'Bearer ' + localStorage.getItem('token')
-                            }
-                        });
-                        const data = await response.json();
-                        this.categories = data.categories;
-                    } catch (error) {
-                        console.error('Error loading categories:', error);
-                    }
-                },
-                async loadMedicine(id) {
-                    try {
-                        const response = await fetch(`/api/medicines/${id}`, {
-                            headers: {
-                                'Authorization': 'Bearer ' + localStorage.getItem('token')
-                            }
-                        });
-                        const data = await response.json();
-                        this.form = {
-                            trade_name: data.trade_name,
-                            scientific_name: data.scientific_name || '',
-                            category: data.category,
-                            barcode: data.barcode || '',
-                            sale_price: data.sale_price,
-                            purchase_price: data.purchase_price || '',
-                            base_unit: data.base_unit,
-                            min_stock: data.min_stock,
-                            image_path: data.image_url || '',
-                        };
-                        if (data.image_url && !data.image_url.includes('default')) {
-                            this.previewImage = data.image_url;
-                        }
-                    } catch (error) {
-                        console.error('Error loading medicine:', error);
-                    }
-                },
-                async handleImageUpload(event) {
-                    const file = event.target.files[0];
-                    if (!file) return;
-                    const formData = new FormData();
-                    formData.append('file', file);
-                    try {
-                        const response = await fetch('/api/medicines/upload-image', {
-                            method: 'POST',
-                            headers: {
-                                'Authorization': 'Bearer ' + localStorage.getItem('token')
-                            },
-                            body: formData
-                        });
-                        const data = await response.json();
-                        if (data.success) {
-                            this.form.image_path = data.image_url;
-                            this.previewImage = data.image_url;
-                        }
-                    } catch (error) {
-                        alert('فشل في رفع الصورة');
-                    }
-                },
-                async saveMedicine() {
-                    this.saving = true;
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const medicineId = urlParams.get('id');
-                    const url = medicineId ? `/api/medicines/${medicineId}` : '/api/medicines/';
-                    const method = medicineId ? 'PUT' : 'POST';
-                    // تحويل الأسعار لأرقام لتجنب أخطاء الـ API
-                    const formData = {
-                        ...this.form,
-                        sale_price: parseFloat(this.form.sale_price) || 0,
-                        purchase_price: parseFloat(this.form.purchase_price) || 0,
-                        min_stock: parseInt(this.form.min_stock) || 10
-                    };
-                    // التحقق من البيانات قبل الإرسال
-                    if (!formData.trade_name || formData.trade_name.trim() === '') {
-                        alert('الاسم التجاري مطلوب');
-                        this.saving = false;
-                        return;
-                    }
-                    if (!formData.category) {
-                        alert('التصنيف مطلوب');
-                        this.saving = false;
-                        return;
-                    }
-                    if (formData.sale_price <= 0) {
-                        alert('سعر البيع يجب أن يكون أكبر من صفر');
-                        this.saving = false;
-                        return;
-                    }
-                    if (formData.purchase_price <= 0) {
-                        alert('سعر الشراء يجب أن يكون أكبر من صفر');
-                        this.saving = false;
-                        return;
-                    }
-                    try {
-                        const response = await fetch(url, {
-                            method: method,
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': 'Bearer ' + localStorage.getItem('token')
-                            },
-                            body: JSON.stringify(formData)
-                        });
-                        const data = await response.json();
-                        if (data.success) {
-                            alert(medicineId ? 'تم تحديث الدواء بنجاح' : 'تم إضافة الدواء بنجاح');
-                            window.location.href = '/medicines';
-                        } else {
-                            alert(data.detail || data.message || 'حدث خطأ في حفظ الدواء');
-                        }
-                    } catch (error) {
-                        alert('فشل في الاتصال بالسيرفر: ' + error.message);
-                    } finally {
-                        this.saving = false;
-                    }
-                },
-                // ===== Scanner Methods =====
-                openBarcodeScanner() {
-                    this.showScanner = true;
-                    this.manualBarcode = '';
-                    // ننتظر حتى يتحدّث DOM من Alpine.js قبل بدء الكاميرا
-                    setTimeout(() => this.startCamera(), 300);
-                },
-                async startCamera() {
-                    try {
-                        this.mediaStream = await navigator.mediaDevices.getUserMedia({
-                            video: { facingMode: "environment", width: { ideal: 640 }, height: { ideal: 480 } }
-                        });
-                        const video = document.getElementById('scanner-video');
-                        video.srcObject = this.mediaStream;
-                    } catch (err) {
-                        console.error('Camera error:', err);
-                        alert('لا يمكن الوصول للكاميرا.\n\n' +
-                            'iPhone: استخدم Safari (Chrome ما يدعم الكاميرا في iOS)\n' +
-                            'Android: Chrome أو أي متصفح\n' +
-                            'تأكد من إعطاء صلاحية الكاميرا للموقع\n\n' +
-                            'أو أدخل رقم الباركود يدوياً');
-                        this.showScanner = false;
-                    }
-                },
-                closeScanner() {
-                    this.showScanner = false;
-                    this.scanning = false;
-                    if (this.mediaStream) {
-                        this.mediaStream.getTracks().forEach(track => track.stop());
-                        this.mediaStream = null;
-                    }
-                },
-                useManualBarcode() {
-                    if (this.manualBarcode && this.manualBarcode.trim()) {
-                        this.form.barcode = this.manualBarcode.trim();
-                        this.closeScanner();
-                        alert('تم إدخال الباركود: ' + this.form.barcode);
-                    }
-                },
-                async captureBarcode() {
-                    if (this.scanning) return;
-                    this.scanning = true;
-
-                    const video = document.getElementById('scanner-video');
-                    const canvas = document.getElementById('scanner-canvas');
-
-                    // تشغيل فلاش أبيض (تأثير تصوير)
-                    video.style.filter = 'brightness(2)';
-                    setTimeout(() => video.style.filter = '', 100);
-
-                    // رسم الإطار الحالي من الفيديو على الكانفاس
-                    canvas.width = video.videoWidth || 640;
-                    canvas.height = video.videoHeight || 480;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-                    // محاولة قراءة الباركود
-                    try {
-                        const barcode = await this.detectBarcode(canvas);
-                        if (barcode) {
-                            this.form.barcode = barcode;
-                            this.closeScanner();
-                            alert('✅ تم قراءة الباركود: ' + barcode);
-                        } else {
-                            // المحاولة الثانية: قلب الألوان (للباركود الأبيض على خلفية سوداء)
-                            ctx.filter = 'invert(1)';
-                            ctx.drawImage(canvas, 0, 0);
-                            ctx.filter = 'none';
-                            const barcode2 = await this.detectBarcode(canvas);
-                            if (barcode2) {
-                                this.form.barcode = barcode2;
-                                this.closeScanner();
-                                alert('✅ تم قراءة الباركود: ' + barcode2);
-                            } else {
-                                this.scanning = false;
-                                alert('❌ لم يتم التعرف على الباركود.\n\n' +
-                                    'تأكد من:\n' +
-                                    '1. الباركود واضح ومضاء جيداً\n' +
-                                    '2. الكاميرا مركزة على الباركود\n' +
-                                    '3. الباركود غير تالف أو مشوه\n\n' +
-                                    'أو أدخل الرقم يدوياً في الحقل أسفل');
-                            }
-                        }
-                    } catch (err) {
-                        console.error('Detection error:', err);
-                        this.scanning = false;
-                        alert('❌ حدث خطأ في قراءة الباركود.\nأدخلي الرقم يدوياً في الحقل أسفل.');
-                    }
-                },
-                async detectBarcode(canvas) {
-                    // الطريقة 1: استخدام BarcodeDetector API (الأفضل - يدعمه Chrome وسفاري الحديث)
-                    if ('BarcodeDetector' in window) {
-                        try {
-                            const formats = ['ean_13', 'ean_8', 'upc_a', 'upc_e',
-                                'code_128', 'code_39', 'code_93', 'codabar',
-                                'itf', 'qr_code', 'data_matrix', 'aztec', 'pdf417'
-                            ];
-                            const detector = new BarcodeDetector({ formats });
-                            const barcodes = await detector.detect(canvas);
-                            if (barcodes.length > 0) {
-                                console.log('Native BarcodeDetector:', barcodes[0].rawValue);
-                                return barcodes[0].rawValue;
-                            }
-                        } catch (e) {
-                            console.warn('BarcodeDetector error:', e);
-                        }
-                    }
-
-                    // الطريقة 2: استخدام Html5Qrcode (احتياطي)
-                    try {
-                        const result = await this.decodeWithHtml5Qr(canvas);
-                        if (result) return result;
-                    } catch (e) {
-                        console.warn('Html5Qr fallback failed:', e);
-                    }
-
-                    return null;
-                },
-                decodeWithHtml5Qr(canvas) {
-                    return new Promise((resolve) => {
-                        try {
-                            const img = new Image();
-                            img.onload = () => {
-                                try {
-                                    const scanner = new Html5Qrcode();
-                                    // بعض إصدارات المكتبة تدعم decodeFromImage مباشرة
-                                    if (typeof scanner.decodeFromImage === 'function') {
-                                        scanner.decodeFromImage(img)
-                                            .then(result => resolve(result))
-                                            .catch(() => resolve(null));
-                                    } else {
-                                        resolve(null);
-                                    }
-                                } catch (e) {
-                                    resolve(null);
-                                }
-                            };
-                            img.onerror = () => resolve(null);
-                            img.src = canvas.toDataURL('image/jpeg', 0.9);
-                        } catch (e) {
-                            resolve(null);
-                        }
-                    });
-                }
-            }
-        }
-    </script>
 </body>
-</html><!-- 1781564608 -->
+</html>
+<!-- 1781564608 -->

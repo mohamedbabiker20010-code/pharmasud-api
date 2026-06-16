@@ -1,556 +1,1163 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/css/theme.css?v7.2.0">
-    <title>المخزون - صيدلية الزاريات</title>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans Arabic', system-ui, -apple-system, sans-serif;
-            background: var(--background);
-            color: var(--text-primary);
-            min-height: 100vh;
-        }
-        .container { max-width: 960px; margin: 0 auto; padding: 24px 20px; }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid var(--border);
-        }
-        .header h1 { font-size: 20px; display: flex; align-items: center; gap: 8px; }
-        .back-link { color: var(--text-secondary); text-decoration: none; font-size: 14px; }
-        .back-link:hover { color: var(--primary-blue); }
-
-        /* Search & Filters */
-        .toolbar {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-        .toolbar input {
-            flex: 1;
-            min-width: 200px;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            padding: 10px 14px;
-            border-radius: 8px;
-            color: var(--text-primary);
-            font-size: 14px;
-            font-family: inherit;
-        }
-        .toolbar input:focus { outline: none; border-color: var(--primary-blue); }
-        .toolbar select {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            padding: 10px 14px;
-            border-radius: 8px;
-            color: var(--text-primary);
-            font-size: 14px;
-            font-family: inherit;
-            min-width: 140px;
-        }
-        .toolbar select:focus { outline: none; border-color: var(--primary-blue); }
-        .toolbar select option { background: var(--surface); }
-
-        /* Stats Bar */
-        .stats-bar {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-        .stat-pill {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 13px;
-        }
-        .stat-pill span { color: var(--text-secondary); }
-        .stat-pill strong { color: var(--primary-blue); }
-
-        /* Medicine Cards */
-        .med-list { display: flex; flex-direction: column; gap: 12px; }
-        .med-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 16px;
-            transition: border-color 0.2s;
-        }
-        .med-card:hover { border-color: var(--text-secondary); }
-        .med-card.expired-warning { border-right: 4px solid #DC2626; }
-        .med-card.expiry-soon { border-right: 4px solid #D97706; }
-        .med-card.expiry-warn { border-right: 4px solid #EAB308; }
-        .med-card-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            cursor: pointer;
-        }
-        .med-card-header img {
-            width: 48px;
-            height: 48px;
-            border-radius: 8px;
-            object-fit: cover;
-            background: var(--background);
-        }
-        .med-card-header .info { flex: 1; }
-        .med-card-header .info h3 { font-size: 15px; }
-        .med-card-header .info .category {
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-        .med-card-header .stock-info { text-align: center; }
-        .med-card-header .stock-info .qty { font-size: 22px; font-weight: 700; }
-        .med-card-header .stock-info .unit { font-size: 12px; color: var(--text-secondary); }
-        .med-card-header .stock-info .status { font-size: 13px; }
-
-        .status-available { color: #6EE7B7; }
-        .status-low { color: #FCD34D; }
-        .status-out { color: #FCA5A5; }
-
-        .med-card-header .expiry-badge {
-            font-size: 12px;
-            padding: 4px 10px;
-            border-radius: 6px;
-            white-space: nowrap;
-        }
-        .expiry-green { background: rgba(16,185,129,0.15); color: #6EE7B7; }
-        .expiry-yellow { background: rgba(245,158,11,0.15); color: #FCD34D; }
-        .expiry-orange { background: rgba(239,68,68,0.15); color: #FCA5A5; }
-        .expiry-red { background: rgba(239,68,68,0.08); color: #FECACA; }
-
-        /* Expanded Batches */
-        .batches-section {
-            margin-top: 12px;
-            padding-top: 12px;
-            border-top: 1px solid var(--border);
-        }
-        .batch-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 12px;
-            background: var(--background);
-            border-radius: 8px;
-            margin-bottom: 6px;
-        }
-        .batch-row:last-child { margin-bottom: 0; }
-        .batch-row .batch-info { flex: 1; }
-        .batch-row .batch-number { font-size: 13px; font-weight: 600; }
-        .batch-row .batch-meta { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
-        .batch-row .batch-qty { font-size: 16px; font-weight: 700; margin: 0 16px; }
-        .batch-row .batch-expiry { font-size: 12px; text-align: center; }
-
-        .view-btn {
-            background: var(--border);
-            border: none;
-            color: var(--text-secondary);
-            padding: 6px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-            font-family: inherit;
-        }
-        .view-btn:hover { background: var(--text-secondary); color: var(--text-primary); }
-
-        /* Expired Alert */
-        .expired-section {
-            margin-bottom: 20px;
-        }
-        .expired-header {
-            background: rgba(239,68,68,0.08);
-            border: 1px solid #DC2626;
-            border-radius: 10px;
-            padding: 14px 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-        }
-        .expired-header h3 { color: #FCA5A5; font-size: 14px; }
-        .expired-header .count {
-            background: #DC2626;
-            color: white;
-            padding: 2px 10px;
-            border-radius: 10px;
-            font-size: 12px;
-        }
-        .expired-item {
-            background: var(--surface);
-            border: 1px solid rgba(239,68,68,0.15);
-            border-top: none;
-            padding: 10px 16px;
-            display: flex;
-            justify-content: space-between;
-            font-size: 13px;
-        }
-        .expired-item:last-child { border-radius: 0 0 10px 10px; }
-
-        /* Loading */
-        .loading {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--text-secondary);
-        }
-        .loading .spinner {
-            display: inline-block;
-            width: 32px;
-            height: 32px;
-            border: 3px solid var(--border);
-            border-top-color: var(--primary-blue);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin-bottom: 12px;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        @media (max-width: 600px) {
-            .med-card-header { flex-wrap: wrap; }
-            .batch-row { flex-wrap: wrap; gap: 8px; }
-            .stats-bar { gap: 8px; }
-            .stat-pill { font-size: 12px; padding: 6px 12px; }
-        }
-    </style>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/static/css/theme.css?v7.2.0">
+  <title>المخزون - PharmaSUD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
   <style>
-    .sidebar { width:248px; background:#fff; border-left:1px solid #EEF2F6; display:flex; flex-direction:column; padding:22px 16px; position:fixed; right:0; top:0; bottom:0; z-index:100; font-family:'IBM Plex Sans Arabic','IBM Plex Sans',sans-serif; }
-    .sidebar .brand { display:flex; align-items:center; gap:11px; padding:0 8px 22px; }
-    .sidebar .brand .icon { width:38px; height:38px; border-radius:11px; background:#1AA7EC; position:relative; flex-shrink:0; }
-    .sidebar .brand .icon::before,.sidebar .brand .icon::after { content:''; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); background:#fff; border-radius:3px; }
-    .sidebar .brand .icon::before { width:18px; height:5.5px; }
-    .sidebar .brand .icon::after { width:5.5px; height:18px; }
-    .sidebar .brand .name { font:700 18px/1 'IBM Plex Sans Arabic',sans-serif; letter-spacing:-0.02em; }
-    .sidebar .brand .name span { color:#1AA7EC; }
-    .sidebar .nav-section { font:600 11px/1 'IBM Plex Mono',monospace; letter-spacing:0.1em; color:#CBD5E1; padding:14px 10px 10px; }
-    .sidebar .nav-item { display:flex; align-items:center; gap:12px; padding:11px 12px; border-radius:11px; color:#475569; font-size:14px; font-weight:500; text-decoration:none; margin-bottom:4px; transition:all 0.2s ease; }
-    .sidebar .nav-item:hover { background:#F8FAFC; color:#0F172A; }
-    .sidebar .nav-item.active { background:#1AA7EC; color:#fff; box-shadow:0 8px 18px -8px rgba(26,167,236,0.55); }
-    .sidebar .nav-item svg { width:19px; height:19px; flex-shrink:0; }
-    .sidebar .nav-item .badge { margin-right:auto; background:#FEF2F2; color:#DC2626; font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; }
-    .sidebar .user-card { margin-top:auto; display:flex; align-items:center; gap:11px; padding:11px; border:1px solid #EEF2F6; border-radius:13px; cursor:pointer; }
-    .sidebar .user-avatar { width:36px; height:36px; border-radius:10px; background:#1AA7EC; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0; }
-    .sidebar .user-name { font-size:13.5px; font-weight:600; }
-    .sidebar .user-role { font-size:11.5px; color:#94A3B8; }
-    .sidebar .user-card svg { width:16px; height:16px; color:#CBD5E1; flex-shrink:0; margin-right:auto; }
-    .main-wrap { margin-right:248px; min-height:100vh; }
-    @media(max-width:1024px){ .sidebar{display:none;} .main-wrap{margin-right:0;} }
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif;
+      background: #F6F8FA;
+      color: #0F172A;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── Layout ─── */
+    .app-layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ─── Sidebar ─── */
+    .sidebar {
+      width: 248px;
+      background: #fff;
+      border-left: 1px solid #EEF2F6;
+      display: flex;
+      flex-direction: column;
+      padding: 22px 16px;
+      position: fixed;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      z-index: 100;
+    }
+    .sidebar .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 0 8px 22px;
+    }
+    .sidebar .brand .icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 11px;
+      background: #1AA7EC;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .sidebar .brand .icon::before,
+    .sidebar .brand .icon::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      background: #fff;
+      border-radius: 3px;
+    }
+    .sidebar .brand .icon::before { width: 18px; height: 5.5px; }
+    .sidebar .brand .icon::after { width: 5.5px; height: 18px; }
+    .sidebar .brand .name {
+      font: 700 18px/1 'IBM Plex Sans Arabic', sans-serif;
+      letter-spacing: -0.02em;
+    }
+    .sidebar .brand .name span { color: #1AA7EC; }
+    .sidebar .nav-section {
+      font: 600 11px/1 'IBM Plex Mono', monospace;
+      letter-spacing: 0.1em;
+      color: #CBD5E1;
+      padding: 14px 10px 10px;
+    }
+    .sidebar .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 12px;
+      border-radius: 11px;
+      color: #475569;
+      font-size: 14px;
+      font-weight: 500;
+      text-decoration: none;
+      margin-bottom: 4px;
+      transition: all 0.2s ease;
+    }
+    .sidebar .nav-item:hover {
+      background: #F8FAFC;
+      color: #0F172A;
+    }
+    .sidebar .nav-item.active {
+      background: #1AA7EC;
+      color: #fff;
+      box-shadow: 0 8px 18px -8px rgba(26, 167, 236, 0.55);
+    }
+    .sidebar .nav-item svg {
+      width: 19px;
+      height: 19px;
+      flex-shrink: 0;
+    }
+    .sidebar .nav-item .badge {
+      margin-right: auto;
+      background: #FEF2F2;
+      color: #DC2626;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+    .sidebar .user-card {
+      margin-top: auto;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 11px;
+      border: 1px solid #EEF2F6;
+      border-radius: 13px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    .sidebar .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: #1AA7EC;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .sidebar .user-info {
+      min-width: 0;
+      flex: 1;
+    }
+    .sidebar .user-name {
+      font-size: 13.5px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .sidebar .user-role {
+      font-size: 11.5px;
+      color: #94A3B8;
+    }
+    .sidebar .user-card svg {
+      width: 16px;
+      height: 16px;
+      color: #CBD5E1;
+      flex-shrink: 0;
+    }
+
+    /* ─── Topbar ─── */
+    .topbar {
+      height: 70px;
+      background: #fff;
+      border-bottom: 1px solid #EEF2F6;
+      display: flex;
+      align-items: center;
+      padding: 0 28px;
+      gap: 18px;
+      position: fixed;
+      top: 0;
+      right: 248px;
+      left: 0;
+      z-index: 90;
+    }
+    .topbar .topbar-title {
+      min-width: 0;
+    }
+    .topbar .topbar-title h1 {
+      margin: 0;
+      font: 700 18px/1.1 'IBM Plex Sans Arabic', sans-serif;
+      letter-spacing: -0.02em;
+    }
+    .topbar .topbar-title .subtitle {
+      margin: 2px 0 0;
+      color: #64748B;
+      font-size: 12.5px;
+    }
+    .topbar .search-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      max-width: 340px;
+      height: 42px;
+      padding: 0 14px;
+      border-radius: 11px;
+      background: #F6F8FA;
+      color: #94A3B8;
+      font-size: 14px;
+      border: 1px solid transparent;
+      transition: all 0.2s ease;
+    }
+    .topbar .search-box:focus-within {
+      border-color: #1AA7EC;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(26, 167, 236, 0.1);
+    }
+    .topbar .search-box input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      color: #0F172A;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+    }
+    .topbar .search-box input::placeholder {
+      color: #94A3B8;
+    }
+    .topbar .search-box svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      color: #94A3B8;
+    }
+    .topbar .filter-select {
+      height: 42px;
+      padding: 0 14px;
+      border-radius: 11px;
+      border: 1px solid #E2E8F0;
+      background: #fff;
+      color: #334155;
+      font-size: 13.5px;
+      font-family: inherit;
+      font-weight: 500;
+      cursor: pointer;
+      outline: none;
+      transition: all 0.2s ease;
+      min-width: 140px;
+    }
+    .topbar .filter-select:focus {
+      border-color: #1AA7EC;
+      box-shadow: 0 0 0 3px rgba(26, 167, 236, 0.1);
+    }
+    .topbar .filter-select option {
+      background: #fff;
+    }
+    .topbar .actions {
+      margin-right: auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .topbar .lang-toggle {
+      display: flex;
+      border: 1px solid #E2E8F0;
+      border-radius: 9px;
+      overflow: hidden;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .topbar .lang-toggle span {
+      padding: 7px 12px;
+      color: #64748B;
+    }
+    .topbar .lang-toggle span.active {
+      background: #1AA7EC;
+      color: #fff;
+    }
+    .topbar .icon-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 11px;
+      border: 1px solid #E2E8F0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #475569;
+      background: transparent;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+    .topbar .icon-btn:hover {
+      background: #F8FAFC;
+      border-color: #CBD5E1;
+    }
+    .topbar .icon-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+    .topbar .icon-btn .dot {
+      position: absolute;
+      top: 9px;
+      left: 11px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #DC2626;
+      border: 2px solid #fff;
+    }
+
+    /* ─── Main Content ─── */
+    .main-content {
+      margin-right: 248px;
+      padding: calc(70px + 28px) 28px 28px;
+      min-height: 100vh;
+    }
+
+    /* ─── Stats Cards Row ─── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+    .stat-card {
+      background: #fff;
+      border: 1px solid #EEF2F6;
+      border-radius: 14px;
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .stat-card .stat-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .stat-card .stat-icon svg {
+      width: 20px;
+      height: 20px;
+    }
+    .stat-card .stat-icon.blue { background: #DBEAFE; color: #1AA7EC; }
+    .stat-card .stat-icon.cyan { background: #E0F2FE; color: #0284C7; }
+    .stat-card .stat-icon.yellow { background: #FEF3C7; color: #D97706; }
+    .stat-card .stat-icon.red { background: #FEE2E2; color: #DC2626; }
+    .stat-card .stat-icon.orange { background: #FFEDD5; color: #EA580C; }
+    .stat-card .stat-value {
+      font: 700 22px/1 'IBM Plex Sans Arabic', sans-serif;
+      letter-spacing: -0.02em;
+      color: #0F172A;
+    }
+    .stat-card .stat-label {
+      font-size: 12.5px;
+      color: #94A3B8;
+      font-weight: 500;
+      margin-top: 3px;
+    }
+
+    /* ─── Expired Alert Section ─── */
+    .expired-alert {
+      background: #fff;
+      border: 1px solid #DC2626;
+      border-radius: 14px;
+      margin-bottom: 22px;
+      overflow: hidden;
+    }
+    .expired-alert-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      cursor: pointer;
+      background: rgba(239, 68, 68, 0.04);
+      transition: background 0.2s ease;
+    }
+    .expired-alert-header:hover {
+      background: rgba(239, 68, 68, 0.07);
+    }
+    .expired-alert-header .alert-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #DC2626;
+    }
+    .expired-alert-header .alert-title svg {
+      width: 18px;
+      height: 18px;
+    }
+    .expired-alert-header .alert-count {
+      background: #DC2626;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 12px;
+      border-radius: 999px;
+    }
+    .expired-alert-header .alert-toggle {
+      color: #94A3B8;
+      transition: transform 0.2s ease;
+    }
+    .expired-alert-header .alert-toggle svg {
+      width: 18px;
+      height: 18px;
+    }
+    .expired-alert-body {
+      border-top: 1px solid rgba(239, 68, 68, 0.12);
+    }
+    .expired-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      border-bottom: 1px solid rgba(239, 68, 68, 0.06);
+      font-size: 13.5px;
+    }
+    .expired-row:last-child {
+      border-bottom: none;
+    }
+    .expired-row .expired-med {
+      font-weight: 600;
+      color: #0F172A;
+    }
+    .expired-row .expired-batch {
+      color: #64748B;
+      font-size: 12.5px;
+      margin-right: 8px;
+    }
+    .expired-row .expired-detail {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #64748B;
+      font-size: 13px;
+    }
+    .expired-row .expired-days {
+      font-weight: 700;
+      color: #DC2626;
+      font-size: 12px;
+      background: #FEF2F2;
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+
+    /* ─── Medicine Cards (List Format) ─── */
+    .medicine-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .medicine-card {
+      background: #fff;
+      border: 1px solid #EEF2F6;
+      border-radius: 14px;
+      padding: 18px 20px;
+      transition: all 0.2s ease;
+    }
+    .medicine-card:hover {
+      border-color: #E2E8F0;
+      box-shadow: 0 4px 12px -4px rgba(0, 0, 0, 0.06);
+    }
+    .medicine-card.expiry-critical {
+      border-right: 4px solid #DC2626;
+    }
+    .medicine-card.expiry-warning {
+      border-right: 4px solid #D97706;
+    }
+    .medicine-card.expiry-caution {
+      border-right: 4px solid #EAB308;
+    }
+    .medicine-card-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+    }
+    .medicine-card-header .med-thumb {
+      width: 50px;
+      height: 50px;
+      border-radius: 11px;
+      object-fit: cover;
+      background: #F6F8FA;
+      flex-shrink: 0;
+      border: 1px solid #EEF2F6;
+    }
+    .medicine-card-header .med-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .medicine-card-header .med-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: #0F172A;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .medicine-card-header .med-category {
+      font-size: 12.5px;
+      color: #94A3B8;
+      margin-top: 2px;
+    }
+    .medicine-card-header .med-stock {
+      text-align: center;
+      min-width: 80px;
+    }
+    .medicine-card-header .med-stock .stock-qty {
+      font: 700 22px/1 'IBM Plex Sans Arabic', sans-serif;
+      letter-spacing: -0.02em;
+      color: #0F172A;
+    }
+    .medicine-card-header .med-stock .stock-unit {
+      font-size: 12px;
+      color: #94A3B8;
+      margin-top: 1px;
+    }
+    .medicine-card-header .med-stock .stock-status {
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+    .stock-status.available { color: #16A34A; }
+    .stock-status.low { color: #D97706; }
+    .stock-status.out { color: #DC2626; }
+
+    /* ─── Expiry Badge ─── */
+    .expiry-badge {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 8px;
+      white-space: nowrap;
+      margin: 0 8px;
+    }
+    .expiry-badge.healthy { background: #ECFDF5; color: #16A34A; }
+    .expiry-badge.caution { background: #FFFbeb; color: #D97706; }
+    .expiry-badge.warning { background: #FEF3C7; color: #B45309; }
+    .expiry-badge.critical { background: #FEF2F2; color: #DC2626; }
+    .expiry-badge.none { background: #F1F5F9; color: #94A3B8; }
+
+    /* ─── Expand Button ─── */
+    .expand-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #F6F8FA;
+      border: 1px solid #EEF2F6;
+      color: #475569;
+      padding: 7px 14px;
+      border-radius: 9px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: inherit;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    .expand-btn:hover {
+      background: #EEF2F6;
+      color: #0F172A;
+    }
+    .expand-btn svg {
+      width: 15px;
+      height: 15px;
+      transition: transform 0.2s ease;
+    }
+    .expand-btn.open svg {
+      transform: rotate(180deg);
+    }
+
+    /* ─── Batches Section ─── */
+    .batches-section {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid #F1F5F9;
+    }
+    .batches-table-header {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr 80px 100px 90px;
+      gap: 8px;
+      font: 600 11px/1 'IBM Plex Mono', monospace;
+      letter-spacing: 0.06em;
+      color: #CBD5E1;
+      padding: 0 14px 10px;
+    }
+    .batch-row {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr 80px 100px 90px;
+      gap: 8px;
+      align-items: center;
+      padding: 12px 14px;
+      background: #F8FAFC;
+      border-radius: 10px;
+      margin-bottom: 6px;
+      transition: background 0.15s ease;
+    }
+    .batch-row:last-child { margin-bottom: 0; }
+    .batch-row:hover { background: #F1F5F9; }
+    .batch-row .batch-num {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #0F172A;
+    }
+    .batch-row .batch-supplier {
+      font-size: 13px;
+      color: #64748B;
+    }
+    .batch-row .batch-qty {
+      font-size: 14px;
+      font-weight: 700;
+      color: #0F172A;
+    }
+    .batch-row .batch-expiry-date {
+      font-size: 13px;
+      color: #475569;
+    }
+    .batch-row .batch-expiry-status {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 6px;
+      text-align: center;
+    }
+    .batch-expiry-status.healthy { background: #ECFDF5; color: #16A34A; }
+    .batch-expiry-status.caution { background: #FFFbeb; color: #D97706; }
+    .batch-expiry-status.warning { background: #FEF3C7; color: #B45309; }
+    .batch-expiry-status.critical { background: #FEF2F2; color: #DC2626; }
+
+    .no-batches {
+      text-align: center;
+      padding: 16px;
+      color: #94A3B8;
+      font-size: 13px;
+    }
+
+    /* ─── Loading State ─── */
+    .loading-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 400px;
+      gap: 16px;
+      color: #94A3B8;
+    }
+    .loading-state .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #E2E8F0;
+      border-top-color: #1AA7EC;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    /* ─── Empty State ─── */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      color: #94A3B8;
+    }
+    .empty-state svg {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 12px;
+    }
+    .empty-state .empty-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #64748B;
+      margin-bottom: 4px;
+    }
+    .empty-state .empty-sub {
+      font-size: 14px;
+    }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 1024px) {
+      .sidebar { display: none; }
+      .topbar { right: 0; }
+      .main-content { margin-right: 0; }
+      .stats-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 768px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .topbar { padding: 0 16px; gap: 10px; }
+      .main-content { padding: calc(70px + 16px) 16px 16px; }
+      .medicine-card-header { flex-wrap: wrap; }
+      .batches-table-header,
+      .batch-row { grid-template-columns: 1fr 1fr 60px 80px; }
+      .batches-table-header > :nth-child(2),
+      .batch-row > :nth-child(2) { display: none; }
+    }
+    @media (max-width: 640px) {
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .topbar .topbar-title { display: none; }
+      .batch-row { grid-template-columns: 1fr 60px 80px; }
+      .batches-table-header { grid-template-columns: 1fr 60px 80px; }
+      .batches-table-header > :nth-child(4),
+      .batch-row > :nth-child(4) { display: none; }
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
-
 </head>
-<body>
+<body x-data="inventoryApp()" x-init="loadInventory()">
 
-  <!-- Cloud Design Sidebar -->
-  <aside class="sidebar" id="cloud-sidebar">
-    <div class="brand">
-      <div class="icon"></div>
-      <div class="name">Pharma<span>SUD</span></div>
-    </div>
-    <div class="nav-section">MENU</div>
-    <a href="/dashboard" class="nav-item" id="nav-dashboard"><i data-lucide="layout-dashboard"></i><span>لوحة التحكم</span></a>
-    <a href="/pos" class="nav-item" id="nav-pos"><i data-lucide="scan-barcode"></i><span>نقطة البيع</span></a>
-    <a href="/medicines" class="nav-item" id="nav-medicines"><i data-lucide="pill"></i><span>الأدوية</span></a>
-    <a href="/inventory" class="nav-item active" id="nav-inventory"><i data-lucide="package"></i><span>المخزون</span></a>
-    <a href="/batches" class="nav-item" id="nav-batches"><i data-lucide="calendar-clock"></i><span>الدفعات</span></a>
-    <a href="/reports-sales" class="nav-item" id="nav-reports"><i data-lucide="chart-line"></i><span>التقارير</span></a>
-    <a href="/employees" class="nav-item" id="nav-employees" style="display:none"><i data-lucide="users"></i><span>الموظفين</span></a>
-    <a href="/alerts" class="nav-item" id="nav-alerts"><i data-lucide="bell"></i><span>التنبيهات</span><span class="badge">7</span></a>
-    <a href="/settings" class="nav-item" id="nav-settings"><i data-lucide="settings"></i><span>الإعدادات</span></a>
-    <div class="user-card" onclick="logout()">
-      <div class="user-avatar" id="user-initials">U</div>
-      <div style="min-width:0;flex:1">
-        <div class="user-name" id="user-name">المستخدم</div>
-        <div class="user-role" id="user-role">صيدلي</div>
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="icon"></div>
+        <div class="name">Pharma<span>SUD</span></div>
       </div>
-      <i data-lucide="chevron-left"></i>
-    </div>
-  </aside>
-  <script>
-    function logout() { localStorage.clear(); window.location.href='/login'; }
-    document.addEventListener('DOMContentLoaded', function() {
-      const name = localStorage.getItem('userName') || 'المستخدم';
-      const role = localStorage.getItem('role') || 'pharmacist';
-      document.getElementById('user-name').textContent = name;
-      document.getElementById('user-role').textContent = role === 'admin' ? 'مدير' : 'صيدلي';
-      document.getElementById('user-initials').textContent = name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
-      if(role === 'admin') document.getElementById('nav-employees').style.display='flex';
-    });
-  </script>
 
-    <div class="container" x-data="inventoryApp()" x-init="loadInventory()">
-        <!-- Header -->
-        <div class="header">
-            <h1>📦 المخزون الحالي</h1>
-            <a href="/dashboard" class="back-link">← الرجوع</a>
+      <div class="nav-section">MENU</div>
+      <a href="/dashboard" class="nav-item" id="nav-dashboard">
+        <i data-lucide="layout-dashboard"></i>
+        <span>لوحة التحكم</span>
+      </a>
+      <a href="/pos" class="nav-item" id="nav-pos">
+        <i data-lucide="scan-barcode"></i>
+        <span>نقطة البيع</span>
+      </a>
+      <a href="/medicines" class="nav-item" id="nav-medicines">
+        <i data-lucide="pill"></i>
+        <span>الأدوية</span>
+      </a>
+      <a href="/inventory" class="nav-item active" id="nav-inventory">
+        <i data-lucide="package"></i>
+        <span>المخزون</span>
+      </a>
+      <a href="/batches" class="nav-item" id="nav-batches">
+        <i data-lucide="calendar-clock"></i>
+        <span>الدفعات</span>
+      </a>
+      <a href="/reports-sales" class="nav-item" id="nav-reports">
+        <i data-lucide="chart-line"></i>
+        <span>التقارير</span>
+      </a>
+      <a href="/employees" class="nav-item" id="nav-employees" x-show="isAdmin">
+        <i data-lucide="users"></i>
+        <span>الموظفين</span>
+      </a>
+      <a href="/alerts" class="nav-item" id="nav-alerts">
+        <i data-lucide="bell"></i>
+        <span>التنبيهات</span>
+        <span class="badge">7</span>
+      </a>
+      <a href="/settings" class="nav-item" id="nav-settings">
+        <i data-lucide="settings"></i>
+        <span>الإعدادات</span>
+      </a>
+
+      <div class="user-card" @click="logout()">
+        <div class="user-avatar" x-text="userInitials"></div>
+        <div class="user-info">
+          <div class="user-name" x-text="userName || 'المستخدم'"></div>
+          <div class="user-role" x-text="isAdmin ? 'مدير' : 'صيدلي'"></div>
         </div>
+        <i data-lucide="chevron-left"></i>
+      </div>
+    </aside>
 
-        <!-- Stats Bar -->
-        <div class="stats-bar" x-show="!loading">
-            <div class="stat-pill">
-                <span>إجمالي الأدوية:</span>
-                <strong x-text="stats.totalMedicines">-</strong>
-            </div>
-            <div class="stat-pill">
-                <span>إجمالي المخزون:</span>
-                <strong x-text="stats.totalStock">-</strong>
-            </div>
-            <div class="stat-pill" style="border-color: #FCD34D;">
-                <span>⚠️ منخفض:</span>
-                <strong x-text="stats.lowStock" style="color:#FCD34D;">-</strong>
-            </div>
-            <div class="stat-pill" style="border-color: #FCA5A5;">
-                <span>🔴 نفد:</span>
-                <strong x-text="stats.outOfStock" style="color:#FCA5A5;">-</strong>
-            </div>
-            <div class="stat-pill" x-show="stats.expiredCount > 0" style="border-color: #DC2626;">
-                <span>🚫 منتهي:</span>
-                <strong x-text="stats.expiredCount" style="color:#FCA5A5;">-</strong>
-            </div>
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-title">
+        <h1>المخزون</h1>
+        <p class="subtitle">إدارة المخزون والشحنات</p>
+      </div>
+
+      <div class="search-box">
+        <i data-lucide="search"></i>
+        <input type="text" x-model="searchQuery" placeholder="ابحث باسم الدواء...">
+      </div>
+
+      <select class="filter-select" x-model="statusFilter" @change="applyFilters()">
+        <option value="all">كل الأدوية</option>
+        <option value="available">متوفر</option>
+        <option value="low">منخفض</option>
+        <option value="out">نفد</option>
+        <option value="expiry_warning">تحذير صلاحية</option>
+      </select>
+
+      <div class="actions">
+        <div class="lang-toggle">
+          <span>EN</span>
+          <span class="active">ع</span>
         </div>
+        <button class="icon-btn" @click="toggleTheme()">
+          <i data-lucide="moon"></i>
+        </button>
+        <button class="icon-btn">
+          <i data-lucide="bell"></i>
+          <span class="dot"></span>
+        </button>
+      </div>
+    </header>
 
-        <!-- Expired Alert -->
-        <div class="expired-section" x-show="expiredItems.length > 0" x-transition>
-            <div class="expired-header" @click="showExpired = !showExpired">
-                <h3>🚫 أدوية منتهية الصلاحية</h3>
-                <span class="count" x-text="expiredItems.length + ' شحنة'"></span>
+    <!-- Main Content -->
+    <main class="main-content">
+
+      <!-- Loading State -->
+      <template x-if="loading">
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <span>جاري تحميل المخزون...</span>
+        </div>
+      </template>
+
+      <!-- Content -->
+      <template x-if="!loading">
+        <div>
+          <!-- Stats Grid -->
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon blue">
+                <i data-lucide="pill"></i>
+              </div>
+              <div>
+                <div class="stat-value" x-text="stats.totalMedicines">0</div>
+                <div class="stat-label">إجمالي الأدوية</div>
+              </div>
             </div>
-            <template x-for="item in expiredItems" :key="item.batch_number">
-                <div class="expired-item" x-show="showExpired">
-                    <span><strong x-text="item.medicine_name"></strong> - <span x-text="item.batch_number"></span></span>
-                    <span><span x-text="item.quantity"></span> وحدة - منتهية منذ <span x-text="item.days_expired"></span> يوم</span>
+            <div class="stat-card">
+              <div class="stat-icon cyan">
+                <i data-lucide="package"></i>
+              </div>
+              <div>
+                <div class="stat-value" x-text="stats.totalStock">0</div>
+                <div class="stat-label">إجمالي المخزون</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon yellow">
+                <i data-lucide="package-minus"></i>
+              </div>
+              <div>
+                <div class="stat-value" x-text="stats.lowStock">0</div>
+                <div class="stat-label">منخفض</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon red">
+                <i data-lucide="package-x"></i>
+              </div>
+              <div>
+                <div class="stat-value" x-text="stats.outOfStock">0</div>
+                <div class="stat-label">نفد</div>
+              </div>
+            </div>
+            <div class="stat-card" x-show="stats.expiredCount > 0">
+              <div class="stat-icon orange">
+                <i data-lucide="calendar-x"></i>
+              </div>
+              <div>
+                <div class="stat-value" x-text="stats.expiredCount">0</div>
+                <div class="stat-label">منتهي</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Expired Alert Section -->
+          <div class="expired-alert" x-show="expiredItems.length > 0" x-transition>
+            <div class="expired-alert-header" @click="showExpired = !showExpired">
+              <div class="alert-title">
+                <i data-lucide="triangle-alert"></i>
+                <span>أدوية منتهية الصلاحية</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span class="alert-count" x-text="expiredItems.length + ' شحنة'"></span>
+                <span class="alert-toggle">
+                  <i data-lucide="chevron-down"></i>
+                </span>
+              </div>
+            </div>
+            <div class="expired-alert-body" x-show="showExpired" x-transition>
+              <template x-for="item in expiredItems" :key="item.batch_number">
+                <div class="expired-row">
+                  <div>
+                    <span class="expired-med" x-text="item.medicine_name"></span>
+                    <span class="expired-batch" x-text="'#' + item.batch_number"></span>
+                  </div>
+                  <div class="expired-detail">
+                    <span><span x-text="item.quantity"></span> وحدة</span>
+                    <span class="expired-days" x-text="item.days_expired + ' يوم'"></span>
+                  </div>
                 </div>
-            </template>
-        </div>
+              </template>
+            </div>
+          </div>
 
-        <!-- Toolbar -->
-        <div class="toolbar" x-show="!loading">
-            <input type="text" x-model="searchQuery" placeholder="🔍 ابحث باسم الدواء...">
-            <select x-model="statusFilter" @change="applyFilters()">
-                <option value="all">كل الأدوية</option>
-                <option value="available">✅ متوفر</option>
-                <option value="low">⚠️ منخفض</option>
-                <option value="out">🔴 نفد</option>
-                <option value="expiry_warning">🟡 تحذير صلاحية</option>
-            </select>
-        </div>
-
-        <!-- Loading -->
-        <div class="loading" x-show="loading">
-            <div class="spinner"></div>
-            <p>جاري تحميل المخزون...</p>
-        </div>
-
-        <!-- Medicine List -->
-        <div class="med-list" x-show="!loading">
+          <!-- Medicine List -->
+          <div class="medicine-list">
             <template x-for="item in filteredMedicines" :key="item.medicine_id">
-                <div class="med-card"
-                     :class="{ 'expired-warning': item.nearest_expiry_status === 'ينتهي قريباً',
-                               'expiry-soon': item.nearest_expiry_status === 'تحذير',
-                               'expiry-warn': item.stock_status === 'low' }">
-                    <div class="med-card-header" @click="toggleBatches(item.medicine_id)">
-                        <img :src="item.image_url" alt="">
-                        <div class="info">
-                            <h3 x-text="item.trade_name"></h3>
-                            <span class="category" x-text="item.category"></span>
-                        </div>
-                        <div class="stock-info">
-                            <div class="qty" x-text="item.total_stock"></div>
-                            <div class="unit" x-text="item.base_unit"></div>
-                            <div class="status"
-                                 :class="{ 'status-available': item.stock_status === 'available',
-                                           'status-low': item.stock_status === 'low',
-                                           'status-out': item.stock_status === 'out' }"
-                                 x-text="item.stock_status === 'available' ? '✅ متوفر' :
-                                          item.stock_status === 'low' ? '⚠️ منخفض' : '🔴 نفد'">
-                            </div>
-                        </div>
-                        <div class="expiry-badge"
-                             :class="{ 'expiry-green': item.nearest_expiry_status === 'سليم',
-                                       'expiry-yellow': item.nearest_expiry_status === 'تحذير',
-                                       'expiry-orange': item.nearest_expiry_status === 'ينتهي قريباً',
-                                       'expiry-red': !item.nearest_expiry_status }"
-                             x-text="item.nearest_expiry || 'لا توجد شحنات'">
-                        </div>
-                        <button class="view-btn" x-text="batchesOpen[item.medicine_id] ? '▲ إخفاء' : '▼ عرض الشحنات'"></button>
-                    </div>
+              <div class="medicine-card"
+                   :class="{
+                     'expiry-critical': item.nearest_expiry_status === 'ينتهي قريباً',
+                     'expiry-warning': item.nearest_expiry_status === 'تحذير',
+                     'expiry-caution': item.stock_status === 'low'
+                   }">
+                <div class="medicine-card-header" @click="toggleBatches(item.medicine_id)">
+                  <img class="med-thumb" :src="item.image_url" :alt="item.trade_name">
 
-                    <!-- Batches Detail -->
-                    <div class="batches-section" x-show="batchesOpen[item.medicine_id]" x-transition>
-                        <div x-show="loadingBatches[item.medicine_id]" style="text-align:center;padding:12px;color:var(--text-secondary);">
-                            جاري تحميل الشحنات...
-                        </div>
-                        <template x-for="batch in batchesData[item.medicine_id] || []" :key="batch.batch_id">
-                            <div class="batch-row">
-                                <div class="batch-info">
-                                    <div class="batch-number" x-text="batch.batch_number"></div>
-                                    <div class="batch-meta">
-                                        <span x-text="batch.supplier_name || 'مورد غير معروف'"></span>
-                                        <span x-show="batch.received_at"> · <span x-text="batch.received_at.slice(0,10)"></span></span>
-                                    </div>
-                                </div>
-                                <div class="batch-qty" x-text="batch.quantity"></div>
-                                <div class="batch-expiry">
-                                    <div x-text="batch.expiry_date"></div>
-                                    <div style="font-size:11px;color:var(--text-secondary);"
-                                         :class="{ 'expiry-green': batch.expiry_status === 'سليم',
-                                                   'expiry-yellow': batch.expiry_status === 'تحذير',
-                                                   'expiry-orange': batch.expiry_status === 'ينتهي قريباً',
-                                                   'expiry-red': batch.expiry_status === 'منتهي' }"
-                                         x-text="batch.expiry_status">
-                                    </div>
-                                </div>
-                            </div>
-                        </template>
-                        <div x-show="batchesData[item.medicine_id] && batchesData[item.medicine_id].length === 0 && !loadingBatches[item.medicine_id]"
-                             style="text-align:center;padding:12px;color:var(--text-secondary);font-size:13px;">
-                            لا توجد شحنات لهذا الدواء
-                        </div>
+                  <div class="med-info">
+                    <div class="med-name" x-text="item.trade_name"></div>
+                    <div class="med-category" x-text="item.category"></div>
+                  </div>
+
+                  <div class="med-stock">
+                    <div class="stock-qty" x-text="item.total_stock"></div>
+                    <div class="stock-unit" x-text="item.base_unit"></div>
+                    <div class="stock-status"
+                         :class="{
+                           'available': item.stock_status === 'available',
+                           'low': item.stock_status === 'low',
+                           'out': item.stock_status === 'out'
+                         }"
+                         x-text="item.stock_status === 'available' ? 'متوفر' :
+                                  item.stock_status === 'low' ? 'منخفض' : 'نفد'">
                     </div>
+                  </div>
+
+                  <div class="expiry-badge"
+                       :class="{
+                         'healthy': item.nearest_expiry_status === 'سليم',
+                         'caution': item.nearest_expiry_status === 'تحذير',
+                         'warning': item.nearest_expiry_status === 'ينتهي قريباً',
+                         'critical': item.nearest_expiry_status === 'منتهي',
+                         'none': !item.nearest_expiry_status
+                       }"
+                       x-text="item.nearest_expiry || 'لا توجد شحنات'">
+                  </div>
+
+                  <button class="expand-btn" :class="{ 'open': batchesOpen[item.medicine_id] }">
+                    <i data-lucide="chevron-down"></i>
+                    <span x-text="batchesOpen[item.medicine_id] ? 'إخفاء' : 'الشحنات'"></span>
+                  </button>
                 </div>
+
+                <!-- Batches Detail -->
+                <div class="batches-section" x-show="batchesOpen[item.medicine_id]" x-transition>
+                  <div x-show="loadingBatches[item.medicine_id]"
+                       style="text-align:center;padding:16px;color:#94A3B8;font-size:13px;">
+                    <div class="spinner" style="width:24px;height:24px;border-width:2px;margin:0 auto 8px;display:inline-block;vertical-align:middle;"></div>
+                    جاري تحميل الشحنات...
+                  </div>
+
+                  <template x-if="!loadingBatches[item.medicine_id] && batchesData[item.medicine_id] && batchesData[item.medicine_id].length > 0">
+                    <div>
+                      <div class="batches-table-header">
+                        <span>رقم الشحنة</span>
+                        <span>المورد</span>
+                        <span>الكمية</span>
+                        <span>تاريخ الانتهاء</span>
+                        <span>الحالة</span>
+                      </div>
+                      <template x-for="batch in batchesData[item.medicine_id]" :key="batch.batch_id">
+                        <div class="batch-row">
+                          <div class="batch-num" x-text="batch.batch_number"></div>
+                          <div class="batch-supplier" x-text="batch.supplier_name || 'غير معروف'"></div>
+                          <div class="batch-qty" x-text="batch.quantity"></div>
+                          <div class="batch-expiry-date" x-text="batch.expiry_date"></div>
+                          <div class="batch-expiry-status"
+                               :class="{
+                                 'healthy': batch.expiry_status === 'سليم',
+                                 'caution': batch.expiry_status === 'تحذير',
+                                 'warning': batch.expiry_status === 'ينتهي قريباً',
+                                 'critical': batch.expiry_status === 'منتهي'
+                               }"
+                               x-text="batch.expiry_status">
+                          </div>
+                        </div>
+                      </template>
+                    </div>
+                  </template>
+
+                  <div x-show="batchesData[item.medicine_id] && batchesData[item.medicine_id].length === 0 && !loadingBatches[item.medicine_id]"
+                       class="no-batches">
+                    لا توجد شحنات لهذا الدواء
+                  </div>
+                </div>
+              </div>
             </template>
 
-            <!-- No Results -->
-            <div x-show="filteredMedicines.length === 0 && !loading"
-                 style="text-align:center;padding:40px 20px;color:var(--text-secondary);">
-                <p style="font-size:24px;margin-bottom:8px;">🔍</p>
-                <p>لا توجد نتائج تطابق بحثك</p>
-            </div>
+            <!-- Empty State -->
+            <template x-if="filteredMedicines.length === 0">
+              <div class="empty-state">
+                <i data-lucide="package-open"></i>
+                <div class="empty-title">لا توجد نتائج</div>
+                <div class="empty-sub">لا توجد أدوية تطابق بحثك أو الفلتر المحدد</div>
+              </div>
+            </template>
+          </div>
+
         </div>
-    </div>
+      </template>
 
-    <script>
-        function inventoryApp() {
-            return {
-                // State
-                loading: true,
-                searchQuery: '',
-                statusFilter: 'all',
-                allMedicines: [],
-                expiredItems: [],
-                batchesOpen: {},
-                batchesData: {},
-                loadingBatches: {},
-                showExpired: true,
+    </main>
+  </div>
 
-                // Stats
-                stats: {
-                    totalMedicines: 0,
-                    totalStock: 0,
-                    lowStock: 0,
-                    outOfStock: 0,
-                    expiredCount: 0
-                },
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide) lucide.createIcons();
+    });
 
-                // Computed
-                get filteredMedicines() {
-                    let items = this.allMedicines;
-                    const query = this.searchQuery.trim().toLowerCase();
+    function inventoryApp() {
+      return {
+        // State
+        loading: true,
+        searchQuery: '',
+        statusFilter: 'all',
+        allMedicines: [],
+        expiredItems: [],
+        batchesOpen: {},
+        batchesData: {},
+        loadingBatches: {},
+        showExpired: true,
 
-                    if (query) {
-                        items = items.filter(m =>
-                            m.trade_name.toLowerCase().includes(query) ||
-                            (m.scientific_name && m.scientific_name.toLowerCase().includes(query))
-                        );
-                    }
+        // User
+        userName: '',
+        userInitials: '',
+        isAdmin: false,
 
-                    if (this.statusFilter === 'available') {
-                        items = items.filter(m => m.stock_status === 'available');
-                    } else if (this.statusFilter === 'low') {
-                        items = items.filter(m => m.stock_status === 'low');
-                    } else if (this.statusFilter === 'out') {
-                        items = items.filter(m => m.stock_status === 'out');
-                    } else if (this.statusFilter === 'expiry_warning') {
-                        items = items.filter(m =>
-                            m.nearest_expiry_status === 'تحذير' ||
-                            m.nearest_expiry_status === 'ينتهي قريباً'
-                        );
-                    }
+        // Stats
+        stats: {
+          totalMedicines: 0,
+          totalStock: 0,
+          lowStock: 0,
+          outOfStock: 0,
+          expiredCount: 0
+        },
 
-                    return items;
-                },
+        // Computed
+        get filteredMedicines() {
+          let items = this.allMedicines;
+          const query = this.searchQuery.trim().toLowerCase();
 
-                // Methods
-                applyFilters() {
-                    // Alpine reactivity handles this automatically via filteredMedicines
-                },
+          if (query) {
+            items = items.filter(m =>
+              m.trade_name.toLowerCase().includes(query) ||
+              (m.scientific_name && m.scientific_name.toLowerCase().includes(query))
+            );
+          }
 
-                async loadInventory() {
-                    this.loading = true;
-                    try {
-                        const token = localStorage.getItem('token');
-                        if (!token) { window.location.href = '/login'; return; }
+          if (this.statusFilter === 'available') {
+            items = items.filter(m => m.stock_status === 'available');
+          } else if (this.statusFilter === 'low') {
+            items = items.filter(m => m.stock_status === 'low');
+          } else if (this.statusFilter === 'out') {
+            items = items.filter(m => m.stock_status === 'out');
+          } else if (this.statusFilter === 'expiry_warning') {
+            items = items.filter(m =>
+              m.nearest_expiry_status === 'تحذير' ||
+              m.nearest_expiry_status === 'ينتهي قريباً'
+            );
+          }
 
-                        // Load inventory
-                        const invResp = await fetch('/api/inventory/', {
-                            headers: { 'Authorization': 'Bearer ' + token }
-                        });
-                        const invData = await invResp.json();
-                        this.allMedicines = invData.medicines || [];
-                        this.stats.totalMedicines = invData.total || 0;
+          return items;
+        },
 
-                        // Calculate stats
-                        let totalStock = 0, lowStock = 0, outOfStock = 0;
-                        for (const med of this.allMedicines) {
-                            totalStock += med.total_stock;
-                            if (med.stock_status === 'low') lowStock++;
-                            else if (med.stock_status === 'out') outOfStock++;
-                        }
-                        this.stats.totalStock = totalStock;
-                        this.stats.lowStock = lowStock;
-                        this.stats.outOfStock = outOfStock;
+        // Methods
+        applyFilters() {
+          // Alpine reactivity handles this automatically via filteredMedicines
+        },
 
-                        // Load expired items
-                        try {
-                            const expResp = await fetch('/api/inventory/expired', {
-                                headers: { 'Authorization': 'Bearer ' + token }
-                            });
-                            const expData = await expResp.json();
-                            this.expiredItems = expData.expired || [];
-                            this.stats.expiredCount = expData.total_expired_items || 0;
-                        } catch (e) {
-                            console.error('Failed to load expired:', e);
-                        }
+        toggleTheme() {
+          document.body.classList.toggle('dark-mode');
+        },
 
-                    } catch (err) {
-                        console.error('Failed to load inventory:', err);
-                    } finally {
-                        this.loading = false;
-                    }
-                },
+        logout() {
+          localStorage.clear();
+          window.location.href = '/login';
+        },
 
-                async toggleBatches(medicineId) {
-                    if (this.batchesOpen[medicineId]) {
-                        this.batchesOpen[medicineId] = false;
-                        return;
-                    }
+        async loadInventory() {
+          this.loading = true;
 
-                    this.batchesOpen[medicineId] = true;
-                    this.loadingBatches[medicineId] = true;
+          // Set user info
+          this.userName = localStorage.getItem('userName') || 'المستخدم';
+          this.isAdmin = localStorage.getItem('role') === 'admin';
+          this.userInitials = this.userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 
-                    try {
-                        const token = localStorage.getItem('token');
-                        const resp = await fetch(`/api/inventory/${medicineId}/batches`, {
-                            headers: { 'Authorization': 'Bearer ' + token }
-                        });
-                        const data = await resp.json();
-                        this.batchesData[medicineId] = data.batches || [];
-                    } catch (err) {
-                        console.error('Failed to load batches:', err);
-                        this.batchesData[medicineId] = [];
-                    } finally {
-                        this.loadingBatches[medicineId] = false;
-                    }
-                }
-            };
+          try {
+            const token = localStorage.getItem('token');
+            if (!token) { window.location.href = '/login'; return; }
+
+            // Load inventory
+            const invResp = await fetch('/api/inventory/', {
+              headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const invData = await invResp.json();
+            this.allMedicines = invData.medicines || [];
+            this.stats.totalMedicines = invData.total || 0;
+
+            // Calculate stats
+            let totalStock = 0, lowStock = 0, outOfStock = 0;
+            for (const med of this.allMedicines) {
+              totalStock += med.total_stock;
+              if (med.stock_status === 'low') lowStock++;
+              else if (med.stock_status === 'out') outOfStock++;
+            }
+            this.stats.totalStock = totalStock;
+            this.stats.lowStock = lowStock;
+            this.stats.outOfStock = outOfStock;
+
+            // Load expired items
+            try {
+              const expResp = await fetch('/api/inventory/expired', {
+                headers: { 'Authorization': 'Bearer ' + token }
+              });
+              const expData = await expResp.json();
+              this.expiredItems = expData.expired || [];
+              this.stats.expiredCount = expData.total_expired_items || 0;
+            } catch (e) {
+              console.error('Failed to load expired:', e);
+            }
+
+          } catch (err) {
+            console.error('Failed to load inventory:', err);
+          } finally {
+            this.loading = false;
+            // Re-init lucide icons after Alpine renders
+            this.$nextTick(() => {
+              if (window.lucide) lucide.createIcons();
+            });
+          }
+        },
+
+        async toggleBatches(medicineId) {
+          if (this.batchesOpen[medicineId]) {
+            this.batchesOpen[medicineId] = false;
+            return;
+          }
+
+          this.batchesOpen[medicineId] = true;
+          this.loadingBatches[medicineId] = true;
+
+          try {
+            const token = localStorage.getItem('token');
+            const resp = await fetch(`/api/inventory/${medicineId}/batches`, {
+              headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const data = await resp.json();
+            this.batchesData[medicineId] = data.batches || [];
+          } catch (err) {
+            console.error('Failed to load batches:', err);
+            this.batchesData[medicineId] = [];
+          } finally {
+            this.loadingBatches[medicineId] = false;
+            this.$nextTick(() => {
+              if (window.lucide) lucide.createIcons();
+            });
+          }
         }
-    </script>
+      };
+    }
+  </script>
 </body>
-</html><!-- 1781564608 -->
+</html>

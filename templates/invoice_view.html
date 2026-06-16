@@ -1,369 +1,713 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/css/theme.css?v7.2.0">
-    <title>الفاتورة - PharmaSUD</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans Arabic', system-ui, -apple-system, sans-serif;
-            background: var(--background);
-            color: var(--text-primary);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        .invoice-container {
-            background: var(--surface);
-            border-radius: 16px;
-            padding: 32px;
-            width: 100%;
-            max-width: 420px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-        }
-        .invoice-header {
-            text-align: center;
-            padding-bottom: 20px;
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 20px;
-        }
-        .invoice-header h1 {
-            font-size: 22px;
-            color: var(--primary-blue);
-            margin-bottom: 4px;
-        }
-        .invoice-header .sub {
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-        .invoice-info {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            padding: 16px;
-            background: var(--background);
-            border-radius: 10px;
-            margin-bottom: 16px;
-            font-size: 13px;
-        }
-        .invoice-info .label { color: var(--text-secondary); }
-        .invoice-info .value { color: var(--text-primary); text-align: left; }
-        .invoice-info .full-width {
-            grid-column: 1 / -1;
-        }
-        .items-section {
-            margin-bottom: 16px;
-        }
-        .items-header {
-            display: grid;
-            grid-template-columns: 3fr 1fr 1fr 1fr;
-            padding: 8px 12px;
-            background: var(--border);
-            border-radius: 8px;
-            font-size: 12px;
-            color: var(--text-secondary);
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-        .item-row {
-            display: grid;
-            grid-template-columns: 3fr 1fr 1fr 1fr;
-            padding: 8px 12px;
-            font-size: 13px;
-            border-bottom: 1px solid var(--surface);
-        }
-        .item-row:last-child { border-bottom: none; }
-        .item-row .item-name {
-            font-weight: 600;
-        }
-        .item-row .item-unit {
-            font-size: 11px;
-            color: var(--text-secondary);
-        }
-        .item-row .amount { text-align: left; color: var(--success); }
-        .total-section {
-            background: var(--background);
-            border-radius: 10px;
-            padding: 16px;
-            margin-bottom: 16px;
-        }
-        .total-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .total-row .label { color: var(--text-secondary); font-size: 14px; }
-        .total-row .value {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--success);
-        }
-        .payment-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-top: 8px;
-        }
-        .payment-cash { background: rgba(16,185,129,0.15); color: #6EE7B7; }
-        .payment-bankak { background: rgba(26,167,236,0.10); color: #4ADEDE; }
-        .payment-fory { background: #5B21B6; color: #A78BFA; }
-        .payment-transfer { background: rgba(245,158,11,0.15); color: #FBBF24; }
-        .footer {
-            text-align: center;
-            padding-top: 16px;
-            border-top: 1px solid var(--border);
-            color: var(--text-secondary);
-            font-size: 12px;
-        }
-        .loading {
-            text-align: center;
-            padding: 40px;
-        }
-        .loading .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid var(--border);
-            border-top: 4px solid var(--primary-blue);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 16px;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .error-msg {
-            text-align: center;
-            padding: 40px;
-            color: var(--danger);
-        }
-        .error-msg .icon { font-size: 48px; margin-bottom: 12px; }
-        .back-link {
-            display: block;
-            text-align: center;
-            margin-top: 16px;
-            color: var(--primary-blue);
-            text-decoration: none;
-            font-size: 13px;
-        }
-    </style>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/static/css/theme.css?v7.2.0">
+  <title>فاتورة - PharmaSUD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
   <style>
-    .sidebar { width:248px; background:#fff; border-left:1px solid #EEF2F6; display:flex; flex-direction:column; padding:22px 16px; position:fixed; right:0; top:0; bottom:0; z-index:100; font-family:'IBM Plex Sans Arabic','IBM Plex Sans',sans-serif; }
-    .sidebar .brand { display:flex; align-items:center; gap:11px; padding:0 8px 22px; }
-    .sidebar .brand .icon { width:38px; height:38px; border-radius:11px; background:#1AA7EC; position:relative; flex-shrink:0; }
-    .sidebar .brand .icon::before,.sidebar .brand .icon::after { content:''; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); background:#fff; border-radius:3px; }
-    .sidebar .brand .icon::before { width:18px; height:5.5px; }
-    .sidebar .brand .icon::after { width:5.5px; height:18px; }
-    .sidebar .brand .name { font:700 18px/1 'IBM Plex Sans Arabic',sans-serif; letter-spacing:-0.02em; }
-    .sidebar .brand .name span { color:#1AA7EC; }
-    .sidebar .nav-section { font:600 11px/1 'IBM Plex Mono',monospace; letter-spacing:0.1em; color:#CBD5E1; padding:14px 10px 10px; }
-    .sidebar .nav-item { display:flex; align-items:center; gap:12px; padding:11px 12px; border-radius:11px; color:#475569; font-size:14px; font-weight:500; text-decoration:none; margin-bottom:4px; transition:all 0.2s ease; }
-    .sidebar .nav-item:hover { background:#F8FAFC; color:#0F172A; }
-    .sidebar .nav-item.active { background:#1AA7EC; color:#fff; box-shadow:0 8px 18px -8px rgba(26,167,236,0.55); }
-    .sidebar .nav-item svg { width:19px; height:19px; flex-shrink:0; }
-    .sidebar .nav-item .badge { margin-right:auto; background:#FEF2F2; color:#DC2626; font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; }
-    .sidebar .user-card { margin-top:auto; display:flex; align-items:center; gap:11px; padding:11px; border:1px solid #EEF2F6; border-radius:13px; cursor:pointer; }
-    .sidebar .user-avatar { width:36px; height:36px; border-radius:10px; background:#1AA7EC; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0; }
-    .sidebar .user-name { font-size:13.5px; font-weight:600; }
-    .sidebar .user-role { font-size:11.5px; color:#94A3B8; }
-    .sidebar .user-card svg { width:16px; height:16px; color:#CBD5E1; flex-shrink:0; margin-right:auto; }
-    .main-wrap { margin-right:248px; min-height:100vh; }
-    @media(max-width:1024px){ .sidebar{display:none;} .main-wrap{margin-right:0;} }
+    /* ─── Base ─── */
+    html, body {
+      margin: 0; padding: 0;
+      min-height: 100vh;
+      font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif;
+      background: #F6F8FA;
+      color: #0F172A;
+      -webkit-font-smoothing: antialiased;
+    }
+    .app-layout { display: flex; min-height: 100vh; }
+
+    /* ─── Sidebar ─── */
+    .sidebar {
+      width: 248px; background: #fff; border-left: 1px solid #EEF2F6;
+      display: flex; flex-direction: column; padding: 22px 16px;
+      position: fixed; right: 0; top: 0; bottom: 0; z-index: 100;
+      transition: background 0.3s ease, border-color 0.3s ease;
+    }
+    .sidebar .brand {
+      display: flex; align-items: center; gap: 11px;
+      padding: 0 8px 22px;
+    }
+    .sidebar .brand .icon {
+      width: 38px; height: 38px; border-radius: 11px;
+      background: #1AA7EC; position: relative; flex-shrink: 0;
+    }
+    .sidebar .brand .icon::before, .sidebar .brand .icon::after {
+      content: ''; position: absolute; left: 50%; top: 50%;
+      transform: translate(-50%, -50%); background: #fff; border-radius: 3px;
+    }
+    .sidebar .brand .icon::before { width: 18px; height: 5.5px; }
+    .sidebar .brand .icon::after { width: 5.5px; height: 18px; }
+    .sidebar .brand .name {
+      font: 700 18px/1 'IBM Plex Sans Arabic', sans-serif; letter-spacing: -0.02em;
+    }
+    .sidebar .brand .name span { color: #1AA7EC; }
+    .sidebar .nav-section {
+      font: 600 11px/1 'IBM Plex Mono', monospace; letter-spacing: 0.1em;
+      color: #CBD5E1; padding: 14px 10px 10px;
+    }
+    .sidebar .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 12px; border-radius: 11px;
+      color: #475569; font-size: 14px; font-weight: 500;
+      text-decoration: none; margin-bottom: 4px;
+      transition: all 0.2s ease;
+    }
+    .sidebar .nav-item:hover { background: #F8FAFC; color: #0F172A; }
+    .sidebar .nav-item.active {
+      background: #1AA7EC; color: #fff;
+      box-shadow: 0 8px 18px -8px rgba(26,167,236,0.55);
+    }
+    .sidebar .nav-item svg { width: 19px; height: 19px; flex-shrink: 0; }
+    .sidebar .nav-item .badge {
+      margin-right: auto; background: #FEF2F2; color: #DC2626;
+      font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px;
+    }
+    .sidebar .user-card {
+      margin-top: auto; display: flex; align-items: center; gap: 11px;
+      padding: 11px; border: 1px solid #EEF2F6; border-radius: 13px; cursor: pointer;
+      transition: border-color 0.3s ease;
+    }
+    .sidebar .user-avatar {
+      width: 36px; height: 36px; border-radius: 10px; background: #1AA7EC;
+      color: #fff; display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px; flex-shrink: 0;
+    }
+    .sidebar .user-name { font-size: 13.5px; font-weight: 600; }
+    .sidebar .user-role { font-size: 11.5px; color: #94A3B8; }
+    .sidebar .user-card svg { width: 16px; height: 16px; color: #CBD5E1; flex-shrink: 0; }
+
+    /* ─── Topbar ─── */
+    .topbar {
+      height: 70px; background: #fff; border-bottom: 1px solid #EEF2F6;
+      display: flex; align-items: center; padding: 0 28px; gap: 18px;
+      position: fixed; top: 0; right: 248px; left: 0; z-index: 90;
+      transition: background 0.3s ease, border-color 0.3s ease;
+    }
+    .topbar .search-box {
+      display: flex; align-items: center; gap: 10px; flex: 1; max-width: 380px;
+      height: 42px; padding: 0 14px; border-radius: 11px; background: #F6F8FA;
+      color: #94A3B8; font-size: 14px;
+    }
+    .topbar .search-box svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .topbar .actions { margin-right: auto; display: flex; align-items: center; gap: 12px; }
+    .topbar .lang-toggle {
+      display: flex; border: 1px solid #E2E8F0; border-radius: 9px;
+      overflow: hidden; font-size: 13px; font-weight: 600;
+      transition: border-color 0.3s ease;
+    }
+    .topbar .lang-toggle span {
+      padding: 7px 12px; color: #64748B; cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .topbar .lang-toggle span:hover { background: #F8FAFC; }
+    .topbar .lang-toggle span.active { background: #1AA7EC; color: #fff; }
+    .topbar .icon-btn {
+      width: 42px; height: 42px; border-radius: 11px; border: 1px solid #E2E8F0;
+      display: flex; align-items: center; justify-content: center;
+      color: #475569; background: transparent; cursor: pointer; position: relative;
+      transition: all 0.2s ease;
+    }
+    .topbar .icon-btn:hover { background: #F8FAFC; }
+    .topbar .icon-btn svg { width: 18px; height: 18px; }
+    .topbar .icon-btn .dot {
+      position: absolute; top: 9px; left: 11px; width: 8px; height: 8px;
+      border-radius: 50%; background: #DC2626; border: 2px solid #fff;
+    }
+
+    /* ─── Main Content ─── */
+    .main-content {
+      margin-right: 248px;
+      padding: calc(70px + 28px) 28px 28px;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+    }
+
+    /* ─── Invoice Container ─── */
+    .invoice-container {
+      background: #fff;
+      border: 1px solid #EEF2F6;
+      border-radius: 16px;
+      padding: 32px;
+      width: 100%;
+      max-width: 520px;
+      box-shadow: 0 1px 2px rgba(15,23,42,0.04);
+      transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+      animation: fadeUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    .invoice-header {
+      text-align: center;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #EEF2F6;
+      margin-bottom: 20px;
+    }
+    .invoice-header h1 {
+      font: 700 22px/1.2 'IBM Plex Sans Arabic', sans-serif;
+      color: #1AA7EC;
+      margin-bottom: 4px;
+      letter-spacing: -0.01em;
+    }
+    .invoice-header .sub {
+      font-size: 13px;
+      color: #64748B;
+    }
+    .invoice-info {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 16px;
+      background: #F6F8FA;
+      border-radius: 11px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      transition: background 0.3s ease;
+    }
+    .invoice-info .label { color: #64748B; }
+    .invoice-info .value { color: #0F172A; text-align: left; font-weight: 600; }
+    .invoice-info .full-width { grid-column: 1 / -1; }
+
+    /* ─── Items Section ─── */
+    .items-section { margin-bottom: 16px; }
+    .items-header {
+      display: grid;
+      grid-template-columns: 3fr 1fr 1fr 1fr;
+      padding: 8px 12px;
+      background: #EEF2F6;
+      border-radius: 8px;
+      font: 600 12px/1 'IBM Plex Mono', monospace;
+      letter-spacing: 0.04em;
+      color: #64748B;
+      margin-bottom: 8px;
+      transition: background 0.3s ease;
+    }
+    .item-row {
+      display: grid;
+      grid-template-columns: 3fr 1fr 1fr 1fr;
+      padding: 10px 12px;
+      font-size: 13px;
+      border-bottom: 1px solid #F6F8FA;
+      transition: background 0.2s ease;
+    }
+    .item-row:last-child { border-bottom: none; }
+    .item-row:hover { background: #F8FAFC; }
+    .item-row .item-name { font-weight: 600; color: #0F172A; }
+    .item-row .item-unit { font-size: 11px; color: #94A3B8; margin-top: 2px; }
+    .item-row .amount { text-align: left; color: #16A34A; font-weight: 600; }
+
+    /* ─── Total Section ─── */
+    .total-section {
+      background: #F6F8FA;
+      border-radius: 11px;
+      padding: 16px;
+      margin-bottom: 16px;
+      transition: background 0.3s ease;
+    }
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .total-row .label { color: #64748B; font-size: 14px; }
+    .total-row .value {
+      font: 700 24px/1 'IBM Plex Sans Arabic', sans-serif;
+      color: #16A34A;
+      letter-spacing: -0.02em;
+    }
+
+    /* ─── Payment Badge ─── */
+    .payment-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 10px;
+    }
+    .payment-cash { background: rgba(16,185,129,0.12); color: #16A34A; }
+    .payment-bankak { background: rgba(26,167,236,0.10); color: #1AA7EC; }
+    .payment-fory { background: #EDE9FE; color: #7C3AED; }
+    .payment-transfer { background: rgba(245,158,11,0.12); color: #D97706; }
+
+    /* ─── Footer ─── */
+    .invoice-footer {
+      text-align: center;
+      padding-top: 16px;
+      border-top: 1px solid #EEF2F6;
+      color: #94A3B8;
+      font-size: 12px;
+    }
+
+    /* ─── Loading ─── */
+    .loading {
+      text-align: center;
+      padding: 60px 20px;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid #EEF2F6;
+      border-top: 3px solid #1AA7EC;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+    .loading p { color: #64748B; font-size: 14px; font-weight: 500; }
+
+    /* ─── Error ─── */
+    .error-msg {
+      text-align: center;
+      padding: 60px 20px;
+    }
+    .error-msg .icon { font-size: 48px; margin-bottom: 12px; }
+    .error-msg h2 {
+      font: 600 18px/1.3 'IBM Plex Sans Arabic', sans-serif;
+      color: #0F172A; margin-bottom: 6px;
+    }
+    .error-msg p { color: #64748B; font-size: 13px; }
+
+    /* ─── Back Link ─── */
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 20px;
+      color: #1AA7EC;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      transition: color 0.2s ease;
+    }
+    .back-link:hover { color: #0284C7; }
+    .back-link svg { width: 16px; height: 16px; }
+
+    /* ─── Print Button ─── */
+    .print-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 20px; border-radius: 11px;
+      font-family: inherit; font-size: 14px; font-weight: 600;
+      cursor: pointer; border: none;
+      background: #1AA7EC; color: #fff;
+      box-shadow: 0 10px 22px -8px rgba(26,167,236,0.55);
+      transition: all 0.2s ease;
+      margin-top: 16px;
+    }
+    .print-btn:hover { filter: brightness(1.05); transform: translateY(-1px); }
+    .print-btn svg { width: 17px; height: 17px; }
+
+    /* ─── Animations ─── */
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 1024px) {
+      .sidebar { display: none; }
+      .topbar { right: 0; }
+      .main-content { margin-right: 0; }
+    }
+    @media (max-width: 600px) {
+      .main-content { padding: calc(70px + 16px) 16px 16px; }
+      .invoice-container { padding: 20px; }
+      .items-header, .item-row { font-size: 11px; }
+      .total-row .value { font-size: 20px; }
+    }
+
+    /* ═══════════════════════════════════
+       DARK MODE
+    ═══════════════════════════════════ */
+    html.dark body {
+      background: #0B1120;
+      color: #E2E8F0;
+    }
+    html.dark .sidebar {
+      background: #111827;
+      border-color: #1E293B;
+    }
+    html.dark .sidebar .brand .name { color: #E2E8F0; }
+    html.dark .sidebar .nav-item { color: #94A3B8; }
+    html.dark .sidebar .nav-item:hover { background: #1E293B; color: #E2E8F0; }
+    html.dark .sidebar .nav-item.active { background: #1AA7EC; color: #fff; }
+    html.dark .sidebar .user-card { border-color: #1E293B; }
+    html.dark .sidebar .user-name { color: #E2E8F0; }
+    html.dark .sidebar .user-role { color: #64748B; }
+    html.dark .sidebar .user-card svg { color: #475569; }
+
+    html.dark .topbar {
+      background: #111827;
+      border-color: #1E293B;
+    }
+    html.dark .topbar .search-box {
+      background: #1E293B;
+      color: #64748B;
+    }
+    html.dark .topbar .lang-toggle { border-color: #334155; }
+    html.dark .topbar .lang-toggle span { color: #94A3B8; }
+    html.dark .topbar .lang-toggle span.active { background: #1AA7EC; color: #fff; }
+    html.dark .topbar .icon-btn {
+      border-color: #334155; color: #94A3B8;
+    }
+    html.dark .topbar .icon-btn:hover { background: #1E293B; }
+
+    html.dark .invoice-container {
+      background: #111827;
+      border-color: #1E293B;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+    }
+    html.dark .invoice-header { border-color: #1E293B; }
+    html.dark .invoice-header h1 { color: #4ADEDE; }
+    html.dark .invoice-header .sub { color: #94A3B8; }
+
+    html.dark .invoice-info { background: #1E293B; }
+    html.dark .invoice-info .label { color: #94A3B8; }
+    html.dark .invoice-info .value { color: #E2E8F0; }
+
+    html.dark .items-header { background: #1E293B; color: #94A3B8; }
+    html.dark .item-row { border-color: #1E293B; }
+    html.dark .item-row:hover { background: #1E293B; }
+    html.dark .item-row .item-name { color: #E2E8F0; }
+    html.dark .item-row .item-unit { color: #64748B; }
+    html.dark .item-row .amount { color: #6EE7B7; }
+
+    html.dark .total-section { background: #1E293B; }
+    html.dark .total-row .label { color: #94A3B8; }
+    html.dark .total-row .value { color: #6EE7B7; }
+
+    html.dark .invoice-footer { border-color: #1E293B; color: #64748B; }
+
+    html.dark .payment-cash { background: rgba(16,185,129,0.15); color: #6EE7B7; }
+    html.dark .payment-bankak { background: rgba(26,167,236,0.15); color: #4ADEDE; }
+    html.dark .payment-fory { background: rgba(124,58,237,0.2); color: #A78BFA; }
+    html.dark .payment-transfer { background: rgba(245,158,11,0.15); color: #FBBF24; }
+
+    html.dark .loading p { color: #94A3B8; }
+    html.dark .spinner { border-color: #1E293B; border-top-color: #1AA7EC; }
+    html.dark .error-msg h2 { color: #E2E8F0; }
+    html.dark .error-msg p { color: #94A3B8; }
+
+    html.dark .back-link { color: #4ADEDE; }
+    html.dark .back-link:hover { color: #67E8F9; }
+
+    html.dark .print-btn { box-shadow: 0 10px 22px -8px rgba(26,167,236,0.35); }
+
+    /* ─── Print Styles ─── */
+    @media print {
+      .sidebar, .topbar { display: none !important; }
+      .main-content { margin: 0 !important; padding: 0 !important; }
+      .invoice-container {
+        box-shadow: none !important;
+        border: none !important;
+        max-width: 100% !important;
+      }
+      .print-btn, .back-link { display: none !important; }
+    }
   </style>
-
 </head>
-<body>
+<body x-data="invoiceApp()">
 
-  <!-- Cloud Design Sidebar -->
-  <aside class="sidebar" id="cloud-sidebar">
-    <div class="brand">
-      <div class="icon"></div>
-      <div class="name">Pharma<span>SUD</span></div>
-    </div>
-    <div class="nav-section">MENU</div>
-    <a href="/dashboard" class="nav-item" id="nav-dashboard"><i data-lucide="layout-dashboard"></i><span>لوحة التحكم</span></a>
-    <a href="/pos" class="nav-item" id="nav-pos"><i data-lucide="scan-barcode"></i><span>نقطة البيع</span></a>
-    <a href="/medicines" class="nav-item" id="nav-medicines"><i data-lucide="pill"></i><span>الأدوية</span></a>
-    <a href="/inventory" class="nav-item" id="nav-inventory"><i data-lucide="package"></i><span>المخزون</span></a>
-    <a href="/batches" class="nav-item" id="nav-batches"><i data-lucide="calendar-clock"></i><span>الدفعات</span></a>
-    <a href="/reports-sales" class="nav-item active" id="nav-reports"><i data-lucide="chart-line"></i><span>التقارير</span></a>
-    <a href="/employees" class="nav-item" id="nav-employees" style="display:none"><i data-lucide="users"></i><span>الموظفين</span></a>
-    <a href="/alerts" class="nav-item" id="nav-alerts"><i data-lucide="bell"></i><span>التنبيهات</span><span class="badge">7</span></a>
-    <a href="/settings" class="nav-item" id="nav-settings"><i data-lucide="settings"></i><span>الإعدادات</span></a>
-    <div class="user-card" onclick="logout()">
-      <div class="user-avatar" id="user-initials">U</div>
-      <div style="min-width:0;flex:1">
-        <div class="user-name" id="user-name">المستخدم</div>
-        <div class="user-role" id="user-role">صيدلي</div>
+  <div class="app-layout">
+    <!-- ═══════ Sidebar ═══════ -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="icon"></div>
+        <div class="name">Pharma<span>SUD</span></div>
       </div>
-      <i data-lucide="chevron-left"></i>
-    </div>
-  </aside>
+      <div class="nav-section">MENU</div>
+      <a href="/dashboard" class="nav-item"><i data-lucide="layout-dashboard"></i><span x-text="lang==='ar'?'لوحة التحكم':'Dashboard'"></span></a>
+      <a href="/pos" class="nav-item"><i data-lucide="scan-barcode"></i><span x-text="lang==='ar'?'نقطة البيع':'POS'"></span></a>
+      <a href="/medicines" class="nav-item"><i data-lucide="pill"></i><span x-text="lang==='ar'?'الأدوية':'Medicines'"></span></a>
+      <a href="/inventory" class="nav-item"><i data-lucide="package"></i><span x-text="lang==='ar'?'المخزون':'Inventory'"></span></a>
+      <a href="/batches" class="nav-item"><i data-lucide="calendar-clock"></i><span x-text="lang==='ar'?'الدفعات':'Batches'"></span></a>
+      <a href="/reports-sales" class="nav-item active"><i data-lucide="chart-line"></i><span x-text="lang==='ar'?'التقارير':'Reports'"></span></a>
+      <a href="/employees" class="nav-item" x-show="isAdmin"><i data-lucide="users"></i><span x-text="lang==='ar'?'الموظفين':'Employees'"></span></a>
+      <a href="/alerts" class="nav-item"><i data-lucide="bell"></i><span x-text="lang==='ar'?'التنبيهات':'Alerts'"></span><span class="badge">7</span></a>
+      <a href="/settings" class="nav-item"><i data-lucide="settings"></i><span x-text="lang==='ar'?'الإعدادات':'Settings'"></span></a>
+      <div class="user-card" @click="logout()">
+        <div class="user-avatar" x-text="userInitials || 'U'"></div>
+        <div style="min-width:0;flex:1">
+          <div class="user-name" x-text="userName || (lang==='ar'?'المستخدم':'User')"></div>
+          <div class="user-role" x-text="isAdmin ? (lang==='ar'?'مدير':'Admin') : (lang==='ar'?'صيدلي':'Pharmacist')"></div>
+        </div>
+        <i data-lucide="chevron-left"></i>
+      </div>
+    </aside>
+
+    <!-- ═══════ Topbar ═══════ -->
+    <header class="topbar">
+      <div class="search-box">
+        <i data-lucide="search"></i>
+        <span x-text="lang==='ar'?'البحث في الأدوية، المبيعات، الدفعات...':'Search medicines, sales, batches...'"></span>
+      </div>
+      <div class="actions">
+        <div class="lang-toggle">
+          <span :class="{ 'active': lang==='en' }" @click="switchLang('en')">EN</span>
+          <span :class="{ 'active': lang==='ar' }" @click="switchLang('ar')">ع</span>
+        </div>
+        <button class="icon-btn" @click="toggleDark()" :title="isDark ? (lang==='ar'?'الوضع الفاتح':'Light Mode') : (lang==='ar'?'الوضع الداكن':'Dark Mode')">
+          <i :data-lucide="isDark ? 'sun' : 'moon'"></i>
+        </button>
+        <a href="/alerts" class="icon-btn" style="text-decoration:none;">
+          <i data-lucide="bell"></i>
+          <span class="dot"></span>
+        </a>
+      </div>
+    </header>
+
+    <!-- ═══════ Main Content ═══════ -->
+    <main class="main-content">
+
+      <!-- Loading State -->
+      <div class="invoice-container" x-show="loading">
+        <div class="loading">
+          <div class="spinner"></div>
+          <p x-text="lang==='ar'?'جاري تحميل الفاتورة...':'Loading invoice...'"></p>
+        </div>
+      </div>
+
+      <!-- Error State -->
+      <div class="invoice-container" x-show="error && !loading" style="display:none;">
+        <div class="error-msg">
+          <div class="icon">⚠️</div>
+          <h2 x-text="lang==='ar'?'الفاتورة غير موجودة':'Invoice Not Found'"></h2>
+          <p x-text="errorMessage || (lang==='ar'?'قد يكون الرابط غير صحيح أو تم حذف الفاتورة':'The link may be incorrect or the invoice was deleted')"></p>
+          <a href="/reports-sales" class="back-link">
+            <i data-lucide="arrow-right"></i>
+            <span x-text="lang==='ar'?'العودة للتقارير':'Back to Reports'"></span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Invoice Content -->
+      <div class="invoice-container" x-show="!loading && !error" style="display:none;">
+        <div class="invoice-header">
+          <h1>🏥 <span x-text="pharmacyName || (lang==='ar'?'صيدلية':'Pharmacy')"></span></h1>
+          <div class="sub" x-text="pharmacyAddress"></div>
+        </div>
+
+        <div class="invoice-info">
+          <div><span class="label" x-text="lang==='ar'?'فاتورة رقم':'Invoice #'"></span></div>
+          <div class="value">#<span x-text="invoiceNumber"></span></div>
+          <div><span class="label" x-text="lang==='ar'?'التاريخ':'Date'"></span></div>
+          <div class="value" x-text="invoiceDate"></div>
+          <div><span class="label" x-text="lang==='ar'?'الكاشير':'Cashier'"></span></div>
+          <div class="value" x-text="cashierName"></div>
+          <template x-if="customerName">
+            <div class="full-width">
+              <span class="label" x-text="lang==='ar'?'العميل':'Customer'">: </span>
+              <span class="value" x-text="customerName"></span>
+            </div>
+          </template>
+        </div>
+
+        <div class="items-section">
+          <div class="items-header">
+            <span x-text="lang==='ar'?'الدواء':'Medicine'"></span>
+            <span x-text="lang==='ar'?'الكمية':'Qty'"></span>
+            <span x-text="lang==='ar'?'السعر':'Price'"></span>
+            <span style="text-align:left;" x-text="lang==='ar'?'الإجمالي':'Total'"></span>
+          </div>
+          <template x-for="(item, idx) in items" :key="idx">
+            <div class="item-row">
+              <div>
+                <div class="item-name" x-text="item.medicine_name"></div>
+                <div class="item-unit" x-text="item.unit_name || ''"></div>
+              </div>
+              <div x-text="'×'+item.quantity"></div>
+              <div x-text="Number(item.unit_price).toLocaleString(lang==='ar'?'ar-SA':'en-US')"></div>
+              <div class="amount" x-text="Number(item.total_price).toLocaleString(lang==='ar'?'ar-SA':'en-US') + ' ج'"></div>
+            </div>
+          </template>
+        </div>
+
+        <div class="total-section">
+          <div class="total-row">
+            <span class="label" x-text="lang==='ar'?'المجموع الكلي':'Grand Total'"></span>
+            <span class="value" x-text="totalDisplay"></span>
+          </div>
+          <div id="paymentBadge">
+            <span class="payment-badge" :class="paymentClass" x-text="paymentEmoji + ' ' + paymentMethod"></span>
+          </div>
+        </div>
+
+        <div class="invoice-footer">
+          <p x-text="lang==='ar'?'شكراً لثقتكم - دمتم بصحة':'Thank you for your trust — Stay healthy'"></p>
+          <p style="font-size:10px;margin-top:4px;">pharmasud.onrender.com</p>
+        </div>
+
+        <div style="text-align:center;">
+          <button class="print-btn" @click="window.print()">
+            <i data-lucide="printer"></i>
+            <span x-text="lang==='ar'?'طباعة الفاتورة':'Print Invoice'"></span>
+          </button>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
   <script>
-    function logout() { localStorage.clear(); window.location.href='/login'; }
-    document.addEventListener('DOMContentLoaded', function() {
-      const name = localStorage.getItem('userName') || 'المستخدم';
-      const role = localStorage.getItem('role') || 'pharmacist';
-      document.getElementById('user-name').textContent = name;
-      document.getElementById('user-role').textContent = role === 'admin' ? 'مدير' : 'صيدلي';
-      document.getElementById('user-initials').textContent = name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
-      if(role === 'admin') document.getElementById('nav-employees').style.display='flex';
-    });
+    function invoiceApp() {
+      return {
+        // ─── State ───
+        loading: true,
+        error: false,
+        errorMessage: '',
+        lang: localStorage.getItem('lang') || 'ar',
+        isDark: localStorage.getItem('darkMode') === 'true',
+
+        // ─── Invoice Data ───
+        pharmacyName: '',
+        pharmacyAddress: '',
+        invoiceNumber: '-',
+        invoiceDate: '-',
+        cashierName: '-',
+        customerName: '',
+        items: [],
+        totalAmount: 0,
+        paymentMethod: '',
+        paymentClass: '',
+        paymentEmoji: '',
+
+        // ─── User ───
+        userName: localStorage.getItem('userName') || '',
+        isAdmin: localStorage.getItem('role') === 'admin',
+        userInitials: '',
+
+        // ─── Init ───
+        init() {
+          // Apply dark mode
+          if (this.isDark) document.documentElement.classList.add('dark');
+          // Apply language direction
+          this.applyLang();
+          // User initials
+          if (this.userName) {
+            this.userInitials = this.userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+          }
+          // Load invoice
+          this.loadInvoice();
+          // Re-render lucide icons after Alpine processes
+          this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
+        },
+
+        // ─── Dark Mode ───
+        toggleDark() {
+          this.isDark = !this.isDark;
+          localStorage.setItem('darkMode', this.isDark);
+          if (this.isDark) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+          this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
+        },
+
+        // ─── Language ───
+        switchLang(l) {
+          this.lang = l;
+          localStorage.setItem('lang', l);
+          this.applyLang();
+          this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
+        },
+        applyLang() {
+          const html = document.documentElement;
+          if (this.lang === 'ar') {
+            html.setAttribute('lang', 'ar');
+            html.setAttribute('dir', 'rtl');
+          } else {
+            html.setAttribute('lang', 'en');
+            html.setAttribute('dir', 'ltr');
+          }
+        },
+
+        // ─── Computed ───
+        get totalDisplay() {
+          const locale = this.lang === 'ar' ? 'ar-SA' : 'en-US';
+          const currency = this.lang === 'ar' ? ' ج.س' : ' SDG';
+          return Number(this.totalAmount).toLocaleString(locale) + currency;
+        },
+
+        // ─── Load Invoice ───
+        async loadInvoice() {
+          const pathParts = window.location.pathname.split('/');
+          const invoiceNumber = pathParts[pathParts.length - 1];
+
+          try {
+            const response = await fetch('/api/public/invoice/' + invoiceNumber);
+
+            if (!response.ok) {
+              this.loading = false;
+              this.error = true;
+              this.errorMessage = response.status === 404
+                ? (this.lang === 'ar' ? 'الفاتورة غير موجودة' : 'Invoice not found')
+                : (this.lang === 'ar' ? 'حدث خطأ في تحميل الفاتورة' : 'Error loading invoice');
+              return;
+            }
+
+            const data = await response.json();
+
+            if (!data.success) {
+              this.loading = false;
+              this.error = true;
+              return;
+            }
+
+            // Fill in data
+            this.pharmacyName = data.pharmacy_name || (this.lang === 'ar' ? 'صيدلية' : 'Pharmacy');
+            this.pharmacyAddress = [data.pharmacy_address, data.pharmacy_phone].filter(Boolean).join(' - ');
+            this.invoiceNumber = data.invoice_number;
+            this.invoiceDate = data.created_at
+              ? data.created_at.substring(0, 10) + ' ' + data.created_at.substring(11, 16)
+              : '-';
+            this.cashierName = data.cashier_name || (this.lang === 'ar' ? 'غير معروف' : 'Unknown');
+            this.customerName = data.customer_name || '';
+            this.items = data.items || [];
+            this.totalAmount = data.total_amount;
+
+            // Payment method
+            const methodMap = {
+              'نقدي':       { cls: 'payment-cash',      emoji: '💵' },
+              'بنكك':       { cls: 'payment-bankak',    emoji: '📱' },
+              'فوري':       { cls: 'payment-fory',      emoji: '📲' },
+              'تحويل بنكي': { cls: 'payment-transfer',  emoji: '🏦' }
+            };
+            const pm = methodMap[data.payment_method] || { cls: 'payment-cash', emoji: '💵' };
+            this.paymentClass = pm.cls;
+            this.paymentEmoji = pm.emoji;
+            this.paymentMethod = data.payment_method;
+
+            // Done loading
+            this.loading = false;
+
+          } catch (err) {
+            this.loading = false;
+            this.error = true;
+            this.errorMessage = this.lang === 'ar' ? 'حدث خطأ في الاتصال بالخادم' : 'Server connection error';
+          }
+
+          this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
+        },
+
+        // ─── Logout ───
+        logout() {
+          localStorage.clear();
+          window.location.href = '/login';
+        }
+      };
+    }
   </script>
 
-    <div class="invoice-container" id="app">
-        <!-- Loading -->
-        <div class="loading" id="loading">
-            <div class="spinner"></div>
-            <p>جاري تحميل الفاتورة...</p>
-        </div>
-        
-        <!-- Error -->
-        <div class="error-msg" id="error" style="display:none;">
-            <div class="icon">⚠️</div>
-            <h2>الفاتورة غير موجودة</h2>
-            <p style="margin-top:8px;color:var(--text-secondary);" id="errorMessage">قد يكون الرابط غير صحيح أو تم حذف الفاتورة</p>
-        </div>
-        
-        <!-- Invoice Content -->
-        <div id="invoiceContent" style="display:none;">
-            <div class="invoice-header">
-                <h1>🏥 <span id="pharmacyName">-</span></h1>
-                <div class="sub" id="pharmacyAddress"></div>
-            </div>
-            
-            <div class="invoice-info">
-                <div><span class="label">فاتورة رقم</span></div>
-                <div class="value">#<span id="invoiceNumber">-</span></div>
-                <div><span class="label">التاريخ</span></div>
-                <div class="value" id="invoiceDate">-</div>
-                <div><span class="label">الكاشير</span></div>
-                <div class="value" id="cashierName">-</div>
-                <div class="full-width" id="customerRow" style="display:none;">
-                    <span class="label">العميل: </span>
-                    <span class="value" id="customerName"></span>
-                </div>
-            </div>
-            
-            <div class="items-section">
-                <div class="items-header">
-                    <span>الدواء</span>
-                    <span>الكمية</span>
-                    <span>السعر</span>
-                    <span style="text-align:left;">الإجمالي</span>
-                </div>
-                <div id="itemsList"></div>
-            </div>
-            
-            <div class="total-section">
-                <div class="total-row">
-                    <span class="label">المجموع الكلي</span>
-                    <span class="value" id="totalAmount">0 ج.س</span>
-                </div>
-                <div id="paymentBadge"></div>
-            </div>
-            
-            <div class="footer">
-                <p>شكراً لثقتكم - دمتم بصحة</p>
-                <p style="font-size:10px;margin-top:4px;">pharmasud.onrender.com</p>
-            </div>
-        </div>
-    </div>
-    
-    <script>
-        // Get invoice number from URL
-        const pathParts = window.location.pathname.split('/');
-        const invoiceNumber = pathParts[pathParts.length - 1];
-        
-        // Load invoice data
-        async function loadInvoice() {
-            try {
-                const response = await fetch('/api/public/invoice/' + invoiceNumber);
-                
-                if (!response.ok) {
-                    document.getElementById('loading').style.display = 'none';
-                    document.getElementById('error').style.display = 'block';
-                    document.getElementById('errorMessage').textContent = 
-                        response.status === 404 ? 'الفاتورة غير موجودة' : 'حدث خطأ في تحميل الفاتورة';
-                    return;
-                }
-                
-                const data = await response.json();
-                
-                if (!data.success) {
-                    document.getElementById('loading').style.display = 'none';
-                    document.getElementById('error').style.display = 'block';
-                    return;
-                }
-                
-                // Fill in data
-                document.getElementById('pharmacyName').textContent = data.pharmacy_name || 'صيدلية';
-                document.getElementById('pharmacyAddress').textContent = 
-                    [data.pharmacy_address, data.pharmacy_phone].filter(Boolean).join(' - ');
-                document.getElementById('invoiceNumber').textContent = data.invoice_number;
-                document.getElementById('invoiceDate').textContent = data.created_at ? 
-                    data.created_at.substring(0, 10) + ' ' + data.created_at.substring(11, 16) : '-';
-                document.getElementById('cashierName').textContent = data.cashier_name || 'غير معروف';
-                
-                if (data.customer_name) {
-                    document.getElementById('customerRow').style.display = 'block';
-                    document.getElementById('customerName').textContent = data.customer_name;
-                }
-                
-                // Payment method badge
-                const methodMap = {
-                    'نقدي': { cls: 'payment-cash', emoji: '💵' },
-                    'بنكك': { cls: 'payment-bankak', emoji: '📱' },
-                    'فوري': { cls: 'payment-fory', emoji: '📲' },
-                    'تحويل بنكي': { cls: 'payment-transfer', emoji: '🏦' }
-                };
-                const pm = methodMap[data.payment_method] || { cls: 'payment-cash', emoji: '💵' };
-                document.getElementById('paymentBadge').innerHTML = 
-                    '<span class="payment-badge ' + pm.cls + '">' + pm.emoji + ' ' + data.payment_method + '</span>';
-                
-                // Items
-                const itemsList = document.getElementById('itemsList');
-                itemsList.innerHTML = '';
-                
-                (data.items || []).forEach(item => {
-                    const row = document.createElement('div');
-                    row.className = 'item-row';
-                    row.innerHTML = `
-                        <div>
-                            <div class="item-name">${item.medicine_name}</div>
-                            <div class="item-unit">${item.unit_name || ''}</div>
-                        </div>
-                        <div>×${item.quantity}</div>
-                        <div>${Number(item.unit_price).toLocaleString('ar-SA')}</div>
-                        <div class="amount">${Number(item.total_price).toLocaleString('ar-SA')} ج</div>
-                    `;
-                    itemsList.appendChild(row);
-                });
-                
-                // Total
-                document.getElementById('totalAmount').textContent = 
-                    Number(data.total_amount).toLocaleString('ar-SA') + ' ج.س';
-                
-                // Show invoice
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('invoiceContent').style.display = 'block';
-                
-            } catch (err) {
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('error').style.display = 'block';
-                document.getElementById('errorMessage').textContent = 'حدث خطأ في الاتصال بالخادم';
-            }
-        }
-        
-        loadInvoice();
-    </script>
 </body>
 </html>
-<!-- ✅ انتهى - invoice_view.html - المرحلة 5 --><!-- 1781564608 -->
+<!-- Cloud Design v7.2.0 -->

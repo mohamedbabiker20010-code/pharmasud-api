@@ -6,24 +6,29 @@
     <link rel="stylesheet" href="/static/css/theme.css?v7.2.0">
     <title>نقطة البيع - PharmaSUD</title>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <!-- zxing-wasm is loaded DYNAMICALLY (only on iOS/non-Android) -- no upfront CDN -->
+    <style>[x-cloak]{display:none!important}</style>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans Arabic', system-ui, -apple-system, sans-serif;
+            font-family: var(--font-arabic);
             background: var(--background);
             color: var(--text-primary);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
         
-        /* Header */
+        /* Header — Cloud Design Topbar */
         .pos-header {
             background: var(--surface);
-            padding: 12px 16px;
+            padding: 0 20px;
+            height: var(--topbar-height);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -31,55 +36,145 @@
             position: sticky;
             top: 0;
             z-index: 50;
+            box-shadow: var(--shadow-sm);
         }
         .pos-header .logo-section {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 11px;
         }
+        .pos-header .logo-section .brand-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 11px;
+            background: var(--primary-blue);
+            position: relative;
+            flex-shrink: 0;
+        }
+        .pos-header .logo-section .brand-icon::before,
+        .pos-header .logo-section .brand-icon::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            background: #fff;
+            border-radius: 3px;
+        }
+        .pos-header .logo-section .brand-icon::before { width: 18px; height: 5.5px; }
+        .pos-header .logo-section .brand-icon::after { width: 5.5px; height: 18px; }
         .pos-header .logo-section h1 {
-            font-size: 18px;
+            font: 700 18px/1 var(--font-arabic);
+            letter-spacing: -0.02em;
+            color: var(--text-primary);
+        }
+        .pos-header .logo-section h1 span { color: var(--primary-blue); }
+        .pos-header .logo-section .pos-badge {
+            font: 600 11px/1 var(--font-mono);
+            letter-spacing: 0.1em;
             color: var(--primary-blue);
+            background: var(--surface-blue-tint);
+            padding: 4px 10px;
+            border-radius: 6px;
         }
         .pos-header .user-section {
             display: flex;
             align-items: center;
-            gap: 12px;
-            font-size: 13px;
-            color: var(--text-secondary);
+            gap: 14px;
         }
         .pos-header .user-section .name {
-            color: var(--text-primary);
+            font-size: 13.5px;
             font-weight: 600;
+            color: var(--text-primary);
         }
-        .btn-sm {
-            padding: 6px 12px;
+        .pos-header .user-section .pharmacy-name {
             font-size: 12px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .btn-danger-sm {
-            background: #DC2626;
-            color: white;
-        }
-        .btn-danger-sm:hover { background: #B91C1C; }
-        .btn-icon {
-            background: var(--border);
             color: var(--text-secondary);
-            border: none;
+        }
+        .pos-header .user-section .user-avatar {
             width: 36px;
             height: 36px;
-            border-radius: 8px;
+            border-radius: 10px;
+            background: var(--primary-blue);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        .lang-toggle {
+            display: flex;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            overflow: hidden;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .lang-toggle button {
+            padding: 7px 12px;
+            color: var(--text-secondary);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        .lang-toggle button.active {
+            background: var(--primary-blue);
+            color: #fff;
+        }
+        .icon-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 11px;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .icon-btn:hover {
+            background: var(--surface-hover);
+            color: var(--text-primary);
+        }
+        .icon-btn svg { width: 19px; height: 19px; }
+        .btn-sm {
+            padding: 7px 14px;
+            font-size: 13px;
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all var(--transition);
+            font-family: inherit;
+            font-weight: 600;
+        }
+        .btn-danger-sm {
+            background: var(--danger);
+            color: white;
+        }
+        .btn-danger-sm:hover { filter: brightness(1.1); }
+        .btn-icon {
+            background: var(--surface);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+            width: 42px;
+            height: 42px;
+            border-radius: 11px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
         }
-        .btn-icon:hover { background: var(--text-secondary); color: var(--text-primary); }
+        .btn-icon:hover { background: var(--surface-hover); color: var(--text-primary); }
+        .btn-icon svg { width: 19px; height: 19px; }
         
         /* Main Layout */
         .pos-layout {
@@ -100,7 +195,7 @@
         
         /* Search Area */
         .search-area {
-            padding: 12px 16px;
+            padding: 14px 16px;
             background: var(--surface);
             border-bottom: 1px solid var(--border);
         }
@@ -111,31 +206,41 @@
         }
         .search-row input {
             flex: 1;
-            padding: 10px 14px;
-            background: var(--border);
-            border: 2px solid var(--text-secondary);
-            border-radius: 8px;
+            padding: 0 14px;
+            height: 46px;
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
             color: var(--text-primary);
-            font-size: 14px;
-            transition: border-color 0.2s;
+            font-size: 14.5px;
+            font-family: inherit;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
         .search-row input:focus {
             outline: none;
             border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(26, 167, 236, 0.12);
         }
-        .search-row input::placeholder { color: var(--text-secondary); }
+        .search-row input::placeholder { color: var(--text-tertiary); }
         .btn-scan {
             background: var(--primary-blue);
             color: white;
             border: none;
-            padding: 10px 16px;
-            border-radius: 8px;
+            padding: 0 18px;
+            height: 46px;
+            border-radius: var(--radius);
             cursor: pointer;
             font-size: 14px;
+            font-weight: 600;
+            font-family: inherit;
             white-space: nowrap;
-            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            box-shadow: 0 10px 22px -8px rgba(26, 167, 236, 0.55);
         }
-        .btn-scan:hover { background: #1AA7EC; }
+        .btn-scan:hover { filter: brightness(1.05); transform: translateY(-1px); }
         
         /* Quick Medicines */
         .quick-meds {
@@ -145,8 +250,9 @@
         }
         .quick-meds-label {
             font-size: 11px;
-            color: var(--text-secondary);
+            color: var(--text-tertiary);
             margin-bottom: 6px;
+            font-weight: 600;
         }
         .quick-meds-grid {
             display: flex;
@@ -155,22 +261,23 @@
             padding-bottom: 4px;
         }
         .quick-meds-grid::-webkit-scrollbar { height: 3px; }
-        .quick-meds-grid::-webkit-scrollbar-thumb { background: var(--text-secondary); border-radius: 3px; }
+        .quick-meds-grid::-webkit-scrollbar-thumb { background: var(--text-tertiary); border-radius: 3px; }
         .quick-med-btn {
             background: var(--surface);
             border: 1px solid var(--border);
             color: var(--text-primary);
             padding: 6px 14px;
-            border-radius: 20px;
+            border-radius: 999px;
             cursor: pointer;
             font-size: 13px;
             white-space: nowrap;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
             flex-shrink: 0;
         }
         .quick-med-btn:hover {
             background: var(--primary-blue);
             border-color: var(--primary-blue);
+            color: #fff;
         }
         .quick-med-btn .price {
             color: var(--success);
@@ -185,40 +292,43 @@
             padding: 8px 16px;
         }
         .search-results::-webkit-scrollbar { width: 5px; }
-        .search-results::-webkit-scrollbar-thumb { background: var(--text-secondary); border-radius: 3px; }
+        .search-results::-webkit-scrollbar-thumb { background: var(--text-tertiary); border-radius: 3px; }
         .search-empty {
             text-align: center;
             padding: 40px 20px;
-            color: var(--text-secondary);
+            color: var(--text-tertiary);
         }
         .search-empty .icon { font-size: 48px; margin-bottom: 12px; }
         .search-empty p { font-size: 14px; }
         .medicine-card {
             background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: 10px;
+            border-radius: var(--radius);
             padding: 12px 14px;
             margin-bottom: 8px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
             display: flex;
             align-items: center;
             gap: 12px;
+            box-shadow: var(--shadow-sm);
         }
         .medicine-card:hover {
             border-color: var(--primary-blue);
-            background: rgba(26,167,236,0.10);
+            background: var(--surface-blue-tint);
+            box-shadow: var(--shadow-md);
         }
         .medicine-card .med-img {
             width: 40px;
             height: 40px;
-            border-radius: 8px;
-            background: var(--border);
+            border-radius: 10px;
+            background: var(--background);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 20px;
             flex-shrink: 0;
+            color: var(--primary-blue);
         }
         .medicine-card .med-img img {
             width: 40px;
@@ -269,13 +379,14 @@
             justify-content: space-between;
             align-items: center;
         }
-        .cart-header h2 { font-size: 16px; }
+        .cart-header h2 { font-size: 16px; display: flex; align-items: center; gap: 8px; }
         .cart-header .count {
             background: var(--primary-blue);
             color: white;
             padding: 2px 10px;
-            border-radius: 12px;
+            border-radius: 999px;
             font-size: 12px;
+            font-weight: 600;
         }
         .cart-items {
             flex: 1;
@@ -283,19 +394,20 @@
             padding: 8px 12px;
         }
         .cart-items::-webkit-scrollbar { width: 4px; }
-        .cart-items::-webkit-scrollbar-thumb { background: var(--text-secondary); border-radius: 2px; }
+        .cart-items::-webkit-scrollbar-thumb { background: var(--text-tertiary); border-radius: 2px; }
         .cart-empty {
             text-align: center;
             padding: 40px 16px;
-            color: var(--text-secondary);
+            color: var(--text-tertiary);
         }
         .cart-empty .icon { font-size: 36px; margin-bottom: 8px; }
         .cart-empty p { font-size: 13px; }
         .cart-item {
             background: var(--background);
-            border-radius: 8px;
+            border-radius: var(--radius-sm);
             padding: 10px 12px;
             margin-bottom: 8px;
+            border: 1px solid var(--border-light);
         }
         .cart-item .item-header {
             display: flex;
@@ -330,18 +442,18 @@
         .cart-item .qty-btn {
             width: 30px;
             height: 30px;
-            border: 1px solid var(--text-secondary);
+            border: 1px solid var(--border);
             background: var(--surface);
             color: var(--text-primary);
-            border-radius: 6px;
+            border-radius: var(--radius-sm);
             cursor: pointer;
             font-size: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
         }
-        .cart-item .qty-btn:hover { background: var(--border); border-color: var(--primary-blue); }
+        .cart-item .qty-btn:hover { background: var(--surface-hover); border-color: var(--primary-blue); }
         .cart-item .qty-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
         .cart-item .qty-value {
             font-size: 16px;
@@ -376,27 +488,33 @@
             background: var(--primary-blue);
             color: white;
             border: none;
-            border-radius: 10px;
+            border-radius: var(--radius);
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s;
+            font-family: inherit;
+            transition: all 0.2s ease;
+            box-shadow: 0 10px 22px -8px rgba(26, 167, 236, 0.55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
-        .btn-checkout:hover { background: #1AA7EC; }
+        .btn-checkout:hover { filter: brightness(1.05); transform: translateY(-1px); }
         .btn-checkout:disabled {
-            background: var(--text-secondary);
+            background: var(--text-tertiary);
             cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
         }
         
-        /* Modal */
+        /* Modal — Cloud Design */
         .modal-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.7);
-            z-index: 100;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -404,25 +522,27 @@
         }
         .modal {
             background: var(--surface);
-            border-radius: 16px;
+            border-radius: var(--radius-lg);
             padding: 24px;
             width: 100%;
-            max-width: 400px;
+            max-width: 440px;
             max-height: 90vh;
             overflow-y: auto;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            box-shadow: var(--shadow-xl);
+            animation: scaleIn 0.2s var(--ease-smooth);
         }
-        .modal h2 { font-size: 18px; margin-bottom: 20px; text-align: center; }
+        .modal h2 { font-size: 18px; margin-bottom: 20px; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .modal .modal-img {
             width: 60px;
             height: 60px;
-            border-radius: 12px;
-            background: var(--border);
+            border-radius: var(--radius);
+            background: var(--background);
             margin: 0 auto 16px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 30px;
+            color: var(--primary-blue);
         }
         .modal .modal-img img {
             width: 60px;
@@ -443,20 +563,21 @@
             margin-bottom: 16px;
         }
         .unit-btn {
-            background: var(--border);
-            border: 2px solid var(--text-secondary);
+            background: var(--background);
+            border: 2px solid var(--border);
             color: var(--text-primary);
             padding: 12px;
-            border-radius: 8px;
+            border-radius: var(--radius-sm);
             cursor: pointer;
             font-size: 14px;
             text-align: center;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
+            font-family: inherit;
         }
         .unit-btn:hover { border-color: var(--primary-blue); }
         .unit-btn.selected {
             border-color: var(--primary-blue);
-            background: rgba(26,167,236,0.10);
+            background: var(--surface-blue-tint);
         }
         .unit-btn .unit-price {
             display: block;
@@ -479,15 +600,17 @@
             width: 70px;
             padding: 8px;
             background: var(--background);
-            border: 2px solid var(--text-secondary);
-            border-radius: 6px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
             color: var(--text-primary);
             font-size: 16px;
             text-align: center;
+            font-family: inherit;
         }
         .modal .qty-input-area input:focus {
             outline: none;
             border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(26, 167, 236, 0.12);
         }
         .modal .stock-info {
             text-align: center;
@@ -503,22 +626,29 @@
             flex: 1;
             padding: 12px;
             border: none;
-            border-radius: 8px;
+            border-radius: var(--radius-sm);
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
+            font-family: inherit;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
         }
         .btn-confirm {
             background: var(--primary-blue);
             color: white;
+            box-shadow: 0 10px 22px -8px rgba(26, 167, 236, 0.55);
         }
-        .btn-confirm:hover { background: #1AA7EC; }
+        .btn-confirm:hover { filter: brightness(1.05); }
         .btn-cancel {
-            background: var(--border);
+            background: var(--background);
             color: var(--text-secondary);
+            border: 1px solid var(--border);
         }
-        .btn-cancel:hover { background: var(--text-secondary); color: var(--text-primary); }
+        .btn-cancel:hover { background: var(--surface-hover); color: var(--text-primary); }
         
         /* Payment Modal */
         .payment-methods {
@@ -528,20 +658,21 @@
             margin-bottom: 20px;
         }
         .payment-btn {
-            background: var(--border);
-            border: 2px solid var(--text-secondary);
+            background: var(--background);
+            border: 2px solid var(--border);
             color: var(--text-primary);
             padding: 14px;
-            border-radius: 10px;
+            border-radius: var(--radius);
             cursor: pointer;
             font-size: 14px;
             text-align: center;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
+            font-family: inherit;
         }
         .payment-btn:hover { border-color: var(--primary-blue); }
         .payment-btn.selected {
             border-color: var(--success);
-            background: rgba(16, 185, 129, 0.15);
+            background: #ECFDF5;
         }
         .payment-btn .pay-icon { font-size: 24px; display: block; margin-bottom: 4px; }
         .payment-total {
@@ -562,44 +693,48 @@
         }
         .modal .form-group input {
             width: 100%;
-            padding: 10px 14px;
+            padding: 0 14px;
+            height: 46px;
             background: var(--background);
-            border: 2px solid var(--text-secondary);
-            border-radius: 8px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
             color: var(--text-primary);
-            font-size: 14px;
+            font-size: 14.5px;
+            font-family: inherit;
         }
         .modal .form-group input:focus {
             outline: none;
             border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(26, 167, 236, 0.12);
         }
         
-        /* Toast / Alert */
+        /* Toast — Cloud Design */
         .toast {
             position: fixed;
-            top: 70px;
+            top: 80px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 200;
-            padding: 12px 24px;
-            border-radius: 10px;
+            padding: 14px 24px;
+            border-radius: var(--radius);
             font-size: 14px;
             font-weight: 500;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            box-shadow: var(--shadow-lg);
             display: none;
-            max-width: 400px;
+            max-width: 420px;
             text-align: center;
+            backdrop-filter: blur(8px);
         }
-        .toast.show { display: block; animation: slideDown 0.3s ease; }
-        .toast.success { background: #059669; color: white; }
-        .toast.error { background: #DC2626; color: white; }
-        .toast.warning { background: #D97706; color: white; }
-        @keyframes slideDown {
-            from { transform: translateX(-50%) translateY(-20px); opacity: 0; }
+        .toast.show { display: block; animation: fadeDown 0.3s var(--ease-smooth); }
+        .toast.success { background: #065F46; color: #6EE7B7; }
+        .toast.error { background: #7F1D1D; color: #FCA5A5; }
+        .toast.warning { background: #78350F; color: #FCD34D; }
+        @keyframes fadeDown {
+            from { transform: translateX(-50%) translateY(-10px); opacity: 0; }
             to { transform: translateX(-50%) translateY(0); opacity: 1; }
         }
         
-        /* Loading Spinner */
+        /* Loading Spinner — Cloud Design */
         .spinner-overlay {
             position: fixed;
             top: 0;
@@ -607,6 +742,7 @@
             right: 0;
             bottom: 0;
             background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(4px);
             z-index: 300;
             display: flex;
             align-items: center;
@@ -622,7 +758,7 @@
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
-        .spinner-overlay p { color: var(--text-secondary); font-size: 14px; }
+        .spinner-overlay p { color: var(--text-tertiary); font-size: 14px; }
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -637,6 +773,38 @@
                 border-top: 1px solid var(--border);
             }
             .pos-products { height: 50vh; }
+        }
+        
+        /* ============= DARK MODE ============= */
+        [data-theme="dark"] {
+            --background:         #0F172A;
+            --surface:            #1E293B;
+            --surface-hover:      #334155;
+            --surface-blue-tint:  #1E3A5F;
+            --border:             #334155;
+            --border-light:       #1E293B;
+            --text-primary:       #F1F5F9;
+            --text-secondary:     #94A3B8;
+            --text-tertiary:      #64748B;
+            --text-muted:         #475569;
+        }
+        [data-theme="dark"] .pos-header {
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        [data-theme="dark"] .medicine-card:hover {
+            background: var(--surface-blue-tint);
+        }
+        [data-theme="dark"] .quick-med-btn:hover {
+            color: #fff;
+        }
+        [data-theme="dark"] .modal-overlay {
+            background: rgba(0, 0, 0, 0.7);
+        }
+        [data-theme="dark"] .spinner-overlay {
+            background: rgba(15, 23, 42, 0.95);
+        }
+        [data-theme="dark"] #scanner-container {
+            background: rgba(0,0,0,0.98);
         }
         
         /* ============= BARCODE SCANNER (ZXing) ============= */
@@ -772,69 +940,8 @@
         #scanner-status.error { color: var(--danger); }
     </style>
 
-  <style>
-    .sidebar { width:248px; background:#fff; border-left:1px solid #EEF2F6; display:flex; flex-direction:column; padding:22px 16px; position:fixed; right:0; top:0; bottom:0; z-index:100; font-family:'IBM Plex Sans Arabic','IBM Plex Sans',sans-serif; }
-    .sidebar .brand { display:flex; align-items:center; gap:11px; padding:0 8px 22px; }
-    .sidebar .brand .icon { width:38px; height:38px; border-radius:11px; background:#1AA7EC; position:relative; flex-shrink:0; }
-    .sidebar .brand .icon::before,.sidebar .brand .icon::after { content:''; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); background:#fff; border-radius:3px; }
-    .sidebar .brand .icon::before { width:18px; height:5.5px; }
-    .sidebar .brand .icon::after { width:5.5px; height:18px; }
-    .sidebar .brand .name { font:700 18px/1 'IBM Plex Sans Arabic',sans-serif; letter-spacing:-0.02em; }
-    .sidebar .brand .name span { color:#1AA7EC; }
-    .sidebar .nav-section { font:600 11px/1 'IBM Plex Mono',monospace; letter-spacing:0.1em; color:#CBD5E1; padding:14px 10px 10px; }
-    .sidebar .nav-item { display:flex; align-items:center; gap:12px; padding:11px 12px; border-radius:11px; color:#475569; font-size:14px; font-weight:500; text-decoration:none; margin-bottom:4px; transition:all 0.2s ease; }
-    .sidebar .nav-item:hover { background:#F8FAFC; color:#0F172A; }
-    .sidebar .nav-item.active { background:#1AA7EC; color:#fff; box-shadow:0 8px 18px -8px rgba(26,167,236,0.55); }
-    .sidebar .nav-item svg { width:19px; height:19px; flex-shrink:0; }
-    .sidebar .nav-item .badge { margin-right:auto; background:#FEF2F2; color:#DC2626; font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; }
-    .sidebar .user-card { margin-top:auto; display:flex; align-items:center; gap:11px; padding:11px; border:1px solid #EEF2F6; border-radius:13px; cursor:pointer; }
-    .sidebar .user-avatar { width:36px; height:36px; border-radius:10px; background:#1AA7EC; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0; }
-    .sidebar .user-name { font-size:13.5px; font-weight:600; }
-    .sidebar .user-role { font-size:11.5px; color:#94A3B8; }
-    .sidebar .user-card svg { width:16px; height:16px; color:#CBD5E1; flex-shrink:0; margin-right:auto; }
-    .main-wrap { margin-right:248px; min-height:100vh; }
-    @media(max-width:1024px){ .sidebar{display:none;} .main-wrap{margin-right:0;} }
-  </style>
-
 </head>
 <body>
-
-  <!-- Cloud Design Sidebar -->
-  <aside class="sidebar" id="cloud-sidebar">
-    <div class="brand">
-      <div class="icon"></div>
-      <div class="name">Pharma<span>SUD</span></div>
-    </div>
-    <div class="nav-section">MENU</div>
-    <a href="/dashboard" class="nav-item" id="nav-dashboard"><i data-lucide="layout-dashboard"></i><span>لوحة التحكم</span></a>
-    <a href="/pos" class="nav-item active" id="nav-pos"><i data-lucide="scan-barcode"></i><span>نقطة البيع</span></a>
-    <a href="/medicines" class="nav-item" id="nav-medicines"><i data-lucide="pill"></i><span>الأدوية</span></a>
-    <a href="/inventory" class="nav-item" id="nav-inventory"><i data-lucide="package"></i><span>المخزون</span></a>
-    <a href="/batches" class="nav-item" id="nav-batches"><i data-lucide="calendar-clock"></i><span>الدفعات</span></a>
-    <a href="/reports-sales" class="nav-item" id="nav-reports"><i data-lucide="chart-line"></i><span>التقارير</span></a>
-    <a href="/employees" class="nav-item" id="nav-employees" style="display:none"><i data-lucide="users"></i><span>الموظفين</span></a>
-    <a href="/alerts" class="nav-item" id="nav-alerts"><i data-lucide="bell"></i><span>التنبيهات</span><span class="badge">7</span></a>
-    <a href="/settings" class="nav-item" id="nav-settings"><i data-lucide="settings"></i><span>الإعدادات</span></a>
-    <div class="user-card" onclick="logout()">
-      <div class="user-avatar" id="user-initials">U</div>
-      <div style="min-width:0;flex:1">
-        <div class="user-name" id="user-name">المستخدم</div>
-        <div class="user-role" id="user-role">صيدلي</div>
-      </div>
-      <i data-lucide="chevron-left"></i>
-    </div>
-  </aside>
-  <script>
-    function logout() { localStorage.clear(); window.location.href='/login'; }
-    document.addEventListener('DOMContentLoaded', function() {
-      const name = localStorage.getItem('userName') || 'المستخدم';
-      const role = localStorage.getItem('role') || 'pharmacist';
-      document.getElementById('user-name').textContent = name;
-      document.getElementById('user-role').textContent = role === 'admin' ? 'مدير' : 'صيدلي';
-      document.getElementById('user-initials').textContent = name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
-      if(role === 'admin') document.getElementById('nav-employees').style.display='flex';
-    });
-  </script>
 
     <!-- Toast -->
     <div class="toast" id="toast"></div>
@@ -879,15 +986,27 @@
     
     <!-- Main App -->
     <div x-data="posApp()" x-init="init()">
-        <!-- Header -->
+        <!-- Header — Cloud Design Topbar -->
         <div class="pos-header">
             <div class="logo-section">
-                <h1>⚕️ PharmaSUD</h1>
-                <span style="font-size:12px;color:var(--text-secondary);background:var(--border);padding:2px 8px;border-radius:4px;">POS</span>
+                <div class="brand-icon"></div>
+                <h1>Pharma<span>SUD</span></h1>
+                <span class="pos-badge">POS</span>
             </div>
             <div class="user-section">
-                <span><span class="name" x-text="userName"></span></span>
-                <button class="btn-sm btn-danger-sm" @click="logout()">🚪 خروج</button>
+                <div class="lang-toggle">
+                    <button :class="{ active: document.documentElement.dir === 'rtl' }" @click="document.documentElement.dir='rtl'; document.documentElement.lang='ar'">ع</button>
+                    <button :class="{ active: document.documentElement.dir === 'ltr' }" @click="document.documentElement.dir='ltr'; document.documentElement.lang='en'">EN</button>
+                </div>
+                <button class="icon-btn" @click="toggleDarkMode()" title="الوضع الداكن">
+                    <i data-lucide="moon"></i>
+                </button>
+                <span class="pharmacy-name" x-text="pharmacyName"></span>
+                <div class="user-avatar" x-text="userName.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2)"></div>
+                <span class="name" x-text="userName"></span>
+                <button class="icon-btn" @click="logout()" title="خروج">
+                    <i data-lucide="log-out"></i>
+                </button>
             </div>
         </div>
         
@@ -899,14 +1018,14 @@
                 <div class="search-area">
                     <div class="search-row">
                         <input type="text" x-model="searchQuery" @input.debounce="searchMedicines" 
-                               placeholder="🔍 ابحث باسم الدواء..." @keydown.enter="searchMedicines">
-                        <button class="btn-scan" @click="openScanner">📷 مسح</button>
+                               placeholder="ابحث باسم الدواء..." @keydown.enter="searchMedicines">
+                        <button class="btn-scan" @click="openScanner"><i data-lucide="scan-barcode" style="width:18px;height:18px;"></i> مسح</button>
                     </div>
                 </div>
                 
                 <!-- Quick Medicines -->
                 <div class="quick-meds">
-                    <div class="quick-meds-label">⚡ الأدوية السريعة</div>
+                    <div class="quick-meds-label"><i data-lucide="zap" style="width:12px;height:12px;display:inline;vertical-align:middle;"></i> الأدوية السريعة</div>
                     <div class="quick-meds-grid">
                         <template x-for="med in quickMeds" :key="med.medicine_id">
                             <button class="quick-med-btn" @click="addToCart(med)">
@@ -930,7 +1049,7 @@
                                         <img :src="med.image_url" :alt="med.trade_name">
                                     </template>
                                     <template x-if="!med.image_url">
-                                        💊
+                                        <i data-lucide="pill" style="width:20px;height:20px;"></i>
                                     </template>
                                 </div>
                                 <div class="med-info">
@@ -944,15 +1063,15 @@
                     </template>
                     <template x-if="searchResults.length === 0 && searchQuery.length > 0">
                         <div class="search-empty">
-                            <div class="icon">🔍</div>
+                            <div class="icon"><i data-lucide="search" style="width:48px;height:48px;color:var(--text-tertiary);"></i></div>
                             <p>لا توجد نتائج لـ "<span x-text="searchQuery"></span>"</p>
                         </div>
                     </template>
                     <template x-if="searchResults.length === 0 && searchQuery.length === 0">
                         <div class="search-empty">
-                            <div class="icon">🛒</div>
+                            <div class="icon"><i data-lucide="shopping-cart" style="width:48px;height:48px;color:var(--text-tertiary);"></i></div>
                             <p>ابحث عن دواء أو استخدم الباركود</p>
-                            <p style="font-size:12px;margin-top:4px;">أو اختر من الأدوية السريعة أعلاه</p>
+                            <p style="font-size:12px;margin-top:4px;color:var(--text-tertiary);">أو اختر من الأدوية السريعة أعلاه</p>
                         </div>
                     </template>
                 </div>
@@ -961,15 +1080,15 @@
             <!-- Cart Panel -->
             <div class="pos-cart">
                 <div class="cart-header">
-                    <h2>🛒 السلة</h2>
+                    <h2><i data-lucide="shopping-cart" style="width:18px;height:18px;"></i> السلة</h2>
                     <span class="count" x-text="cart.items.length + ' صنف'"></span>
                 </div>
                 <div class="cart-items">
                     <template x-if="cart.items.length === 0">
                         <div class="cart-empty">
-                            <div class="icon">🛒</div>
+                            <div class="icon"><i data-lucide="shopping-cart" style="width:36px;height:36px;color:var(--text-tertiary);"></i></div>
                             <p>السلة فارغة</p>
-                            <p style="font-size:12px;margin-top:4px;">أضف أدوية من القائمة</p>
+                            <p style="font-size:12px;margin-top:4px;color:var(--text-tertiary);">أضف أدوية من القائمة</p>
                         </div>
                     </template>
                     <template x-for="(item, index) in cart.items" :key="item.medicine_id">
@@ -984,7 +1103,7 @@
                             <div class="item-controls">
                                 <div class="qty-controls">
                                     <button class="qty-btn danger" @click="removeFromCart(index)" title="حذف">
-                                        🗑
+                                        <i data-lucide="trash-2" style="width:14px;height:14px;"></i>
                                     </button>
                                     <button class="qty-btn" @click="updateQuantity(index, item.quantity - 1)">−</button>
                                     <span class="qty-value" x-text="item.quantity"></span>
@@ -1015,7 +1134,7 @@
                         <img :src="unitModal.medicine.image_url" :alt="unitModal.medicine.trade_name">
                     </template>
                     <template x-if="!unitModal.medicine || !unitModal.medicine.image_url">
-                        💊
+                        <i data-lucide="pill" style="width:30px;height:30px;"></i>
                     </template>
                 </div>
                 <div class="medicine-name" x-text="unitModal.medicine ? unitModal.medicine.trade_name : ''"></div>

@@ -1,202 +1,762 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔔 التنبيهات - PharmaSUD</title>
-    <link rel="stylesheet" href="/static/css/theme.css?v7.2.0">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        light: { bg: "#F6F8FA", card: "#FFFFFF", border: "#EEF2F6", text: "#0F172A", muted: "#64748B" }
-                    }
-                }
-            }
-        }
-    </script>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/static/css/theme.css?v7.2.0">
+  <title>التنبيهات والإشعارات - PharmaSUD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
   <style>
-    .sidebar { width:248px; background:#fff; border-left:1px solid #EEF2F6; display:flex; flex-direction:column; padding:22px 16px; position:fixed; right:0; top:0; bottom:0; z-index:100; font-family:'IBM Plex Sans Arabic','IBM Plex Sans',sans-serif; }
-    .sidebar .brand { display:flex; align-items:center; gap:11px; padding:0 8px 22px; }
-    .sidebar .brand .icon { width:38px; height:38px; border-radius:11px; background:#1AA7EC; position:relative; flex-shrink:0; }
-    .sidebar .brand .icon::before,.sidebar .brand .icon::after { content:''; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); background:#fff; border-radius:3px; }
-    .sidebar .brand .icon::before { width:18px; height:5.5px; }
-    .sidebar .brand .icon::after { width:5.5px; height:18px; }
-    .sidebar .brand .name { font:700 18px/1 'IBM Plex Sans Arabic',sans-serif; letter-spacing:-0.02em; }
-    .sidebar .brand .name span { color:#1AA7EC; }
-    .sidebar .nav-section { font:600 11px/1 'IBM Plex Mono',monospace; letter-spacing:0.1em; color:#CBD5E1; padding:14px 10px 10px; }
-    .sidebar .nav-item { display:flex; align-items:center; gap:12px; padding:11px 12px; border-radius:11px; color:#475569; font-size:14px; font-weight:500; text-decoration:none; margin-bottom:4px; transition:all 0.2s ease; }
-    .sidebar .nav-item:hover { background:#F8FAFC; color:#0F172A; }
-    .sidebar .nav-item.active { background:#1AA7EC; color:#fff; box-shadow:0 8px 18px -8px rgba(26,167,236,0.55); }
-    .sidebar .nav-item svg { width:19px; height:19px; flex-shrink:0; }
-    .sidebar .nav-item .badge { margin-right:auto; background:#FEF2F2; color:#DC2626; font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; }
-    .sidebar .user-card { margin-top:auto; display:flex; align-items:center; gap:11px; padding:11px; border:1px solid #EEF2F6; border-radius:13px; cursor:pointer; }
-    .sidebar .user-avatar { width:36px; height:36px; border-radius:10px; background:#1AA7EC; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0; }
-    .sidebar .user-name { font-size:13.5px; font-weight:600; }
-    .sidebar .user-role { font-size:11.5px; color:#94A3B8; }
-    .sidebar .user-card svg { width:16px; height:16px; color:#CBD5E1; flex-shrink:0; margin-right:auto; }
-    .main-wrap { margin-right:248px; min-height:100vh; }
-    @media(max-width:1024px){ .sidebar{display:none;} .main-wrap{margin-right:0;} }
+    html, body {
+      margin: 0; padding: 0;
+      min-height: 100vh;
+      font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif;
+      background: #F6F8FA;
+      color: #0F172A;
+      -webkit-font-smoothing: antialiased;
+    }
+    .app-layout { display: flex; min-height: 100vh; }
+
+    /* ─── Sidebar ─── */
+    .sidebar {
+      width: 248px; background: #fff; border-left: 1px solid #EEF2F6;
+      display: flex; flex-direction: column; padding: 22px 16px;
+      position: fixed; right: 0; top: 0; bottom: 0; z-index: 100;
+    }
+    .sidebar .brand {
+      display: flex; align-items: center; gap: 11px;
+      padding: 0 8px 22px;
+    }
+    .sidebar .brand .icon {
+      width: 38px; height: 38px; border-radius: 11px;
+      background: #1AA7EC; position: relative; flex-shrink: 0;
+    }
+    .sidebar .brand .icon::before, .sidebar .brand .icon::after {
+      content: ''; position: absolute; left: 50%; top: 50%;
+      transform: translate(-50%, -50%); background: #fff; border-radius: 3px;
+    }
+    .sidebar .brand .icon::before { width: 18px; height: 5.5px; }
+    .sidebar .brand .icon::after { width: 5.5px; height: 18px; }
+    .sidebar .brand .name {
+      font: 700 18px/1 'IBM Plex Sans Arabic', sans-serif; letter-spacing: -0.02em;
+    }
+    .sidebar .brand .name span { color: #1AA7EC; }
+    .sidebar .nav-section {
+      font: 600 11px/1 'IBM Plex Mono', monospace; letter-spacing: 0.1em;
+      color: #CBD5E1; padding: 14px 10px 10px;
+    }
+    .sidebar .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 12px; border-radius: 11px;
+      color: #475569; font-size: 14px; font-weight: 500;
+      text-decoration: none; margin-bottom: 4px;
+      transition: all 0.2s ease;
+    }
+    .sidebar .nav-item:hover { background: #F8FAFC; color: #0F172A; }
+    .sidebar .nav-item.active {
+      background: #1AA7EC; color: #fff;
+      box-shadow: 0 8px 18px -8px rgba(26,167,236,0.55);
+    }
+    .sidebar .nav-item svg { width: 19px; height: 19px; flex-shrink: 0; }
+    .sidebar .nav-item .badge {
+      margin-right: auto; background: #FEF2F2; color: #DC2626;
+      font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px;
+    }
+    .sidebar .user-card {
+      margin-top: auto; display: flex; align-items: center; gap: 11px;
+      padding: 11px; border: 1px solid #EEF2F6; border-radius: 13px; cursor: pointer;
+    }
+    .sidebar .user-avatar {
+      width: 36px; height: 36px; border-radius: 10px; background: #1AA7EC;
+      color: #fff; display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px; flex-shrink: 0;
+    }
+    .sidebar .user-name { font-size: 13.5px; font-weight: 600; }
+    .sidebar .user-role { font-size: 11.5px; color: #94A3B8; }
+    .sidebar .user-card svg { width: 16px; height: 16px; color: #CBD5E1; flex-shrink: 0; }
+
+    /* ─── Topbar ─── */
+    .topbar {
+      height: 70px; background: #fff; border-bottom: 1px solid #EEF2F6;
+      display: flex; align-items: center; padding: 0 28px; gap: 18px;
+      position: fixed; top: 0; right: 248px; left: 0; z-index: 90;
+    }
+    .topbar .search-box {
+      display: flex; align-items: center; gap: 10px; flex: 1; max-width: 380px;
+      height: 42px; padding: 0 14px; border-radius: 11px; background: #F6F8FA;
+      color: #94A3B8; font-size: 14px;
+    }
+    .topbar .search-box svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .topbar .actions { margin-right: auto; display: flex; align-items: center; gap: 12px; }
+    .topbar .lang-toggle {
+      display: flex; border: 1px solid #E2E8F0; border-radius: 9px;
+      overflow: hidden; font-size: 13px; font-weight: 600;
+    }
+    .topbar .lang-toggle span { padding: 7px 12px; color: #64748B; }
+    .topbar .lang-toggle span.active { background: #1AA7EC; color: #fff; }
+    .topbar .icon-btn {
+      width: 42px; height: 42px; border-radius: 11px; border: 1px solid #E2E8F0;
+      display: flex; align-items: center; justify-content: center;
+      color: #475569; background: transparent; cursor: pointer; position: relative;
+      transition: all 0.2s ease;
+    }
+    .topbar .icon-btn:hover { background: #F8FAFC; }
+    .topbar .icon-btn svg { width: 18px; height: 18px; }
+    .topbar .icon-btn .dot {
+      position: absolute; top: 9px; left: 11px; width: 8px; height: 8px;
+      border-radius: 50%; background: #DC2626; border: 2px solid #fff;
+    }
+
+    /* ─── Main Content ─── */
+    .main-content {
+      margin-right: 248px;
+      padding: calc(70px + 28px) 28px 28px;
+      min-height: 100vh;
+    }
+
+    /* ─── Page Header ─── */
+    .page-header {
+      display: flex; align-items: flex-end; justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .page-header h1 {
+      margin: 0 0 6px; font: 700 26px/1.1 'IBM Plex Sans Arabic', sans-serif;
+      letter-spacing: -0.02em;
+    }
+    .page-header .subtitle {
+      margin: 0; color: #64748B; font-size: 14.5px;
+    }
+    .page-header .header-actions {
+      display: flex; gap: 10px; align-items: center;
+    }
+    .page-header .btn {
+      display: flex; align-items: center; gap: 8px;
+      height: 42px; padding: 0 16px; border-radius: 11px;
+      font-size: 14px; font-weight: 600; cursor: pointer;
+      border: none; transition: all 0.2s ease; font-family: inherit;
+    }
+    .page-header .btn-secondary {
+      background: #fff; color: #334155; border: 1px solid #E2E8F0;
+    }
+    .page-header .btn-secondary:hover { background: #F8FAFC; }
+    .page-header .btn-primary {
+      background: #1AA7EC; color: #fff;
+      box-shadow: 0 10px 20px -8px rgba(26,167,236,0.55);
+    }
+    .page-header .btn-primary:hover { filter: brightness(1.05); }
+    .page-header .btn svg { width: 17px; height: 17px; }
+
+    /* ─── Filter Chips ─── */
+    .filter-chips {
+      display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap;
+    }
+    .filter-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border-radius: 999px;
+      font-size: 13.5px; font-weight: 600;
+      background: #fff; color: #475569; border: 1px solid #E2E8F0;
+      cursor: pointer; transition: all 0.2s ease; font-family: inherit;
+    }
+    .filter-chip:hover { background: #F8FAFC; border-color: #CBD5E1; }
+    .filter-chip.active {
+      background: #1AA7EC; color: #fff; border-color: #1AA7EC;
+    }
+    .filter-chip .chip-count {
+      background: rgba(0,0,0,0.08); padding: 1px 7px; border-radius: 999px;
+      font-size: 11px; font-weight: 700;
+    }
+    .filter-chip.active .chip-count {
+      background: rgba(255,255,255,0.25);
+    }
+
+    /* ─── Section Header ─── */
+    .section-header {
+      font: 600 13px/1 'IBM Plex Mono', monospace;
+      letter-spacing: 0.06em; color: #94A3B8;
+      text-transform: uppercase; margin-bottom: 14px; margin-top: 8px;
+      padding-bottom: 8px; border-bottom: 1px solid #EEF2F6;
+    }
+    .section-header:not(:first-of-type) { margin-top: 28px; }
+
+    /* ─── Alert Card ─── */
+    .alert-card {
+      background: #fff; border-radius: 14px; padding: 18px 20px;
+      margin-bottom: 10px; display: flex; align-items: flex-start; gap: 14px;
+      transition: all 0.2s ease; position: relative;
+      border-right-width: 4px; border-right-style: solid;
+      border-top: 1px solid #EEF2F6; border-bottom: 1px solid #EEF2F6; border-left: 1px solid #EEF2F6;
+    }
+    .alert-card:hover { box-shadow: 0 4px 12px rgba(15,23,42,0.06); }
+    .alert-card.severity-critical { border-right-color: #DC2626; background: #FFFBFB; }
+    .alert-card.severity-warning  { border-right-color: #F59E0B; background: #FFFDFB; }
+    .alert-card.severity-info     { border-right-color: #94A3B8; }
+    .alert-card.severity-low-stock { border-right-color: #D97706; background: #FFFDFB; }
+
+    .alert-icon {
+      width: 42px; height: 42px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .alert-icon svg { width: 20px; height: 20px; }
+    .alert-icon.critical { background: #FEE2E2; color: #DC2626; }
+    .alert-icon.warning  { background: #FEF3C7; color: #D97706; }
+    .alert-icon.info     { background: #F1F5F9; color: #64748B; }
+    .alert-icon.low-stock { background: #FEF3C7; color: #D97706; }
+
+    .alert-body { flex: 1; min-width: 0; }
+    .alert-title {
+      font-size: 14.5px; font-weight: 700; color: #0F172A;
+      margin-bottom: 3px; line-height: 1.4;
+    }
+    .alert-desc {
+      font-size: 13px; color: #64748B; line-height: 1.5;
+      margin-bottom: 8px;
+    }
+    .alert-meta {
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    }
+    .alert-time {
+      font-size: 12px; color: #94A3B8; font-weight: 500;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .alert-time svg { width: 13px; height: 13px; }
+    .alert-severity-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 9px; border-radius: 999px;
+      font-size: 11px; font-weight: 700;
+    }
+    .alert-severity-badge.critical { background: #FEF2F2; color: #DC2626; }
+    .alert-severity-badge.warning  { background: #FFFbeb; color: #B45309; }
+    .alert-severity-badge.info     { background: #F1F5F9; color: #64748B; }
+    .alert-severity-badge.low-stock { background: #FFFbeb; color: #B45309; }
+
+    .alert-actions {
+      display: flex; flex-direction: column; gap: 6px; align-items: flex-end;
+      flex-shrink: 0;
+    }
+    .alert-action-btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 7px 14px; border-radius: 9px;
+      font-size: 12.5px; font-weight: 600; cursor: pointer;
+      border: none; transition: all 0.2s ease; font-family: inherit;
+      white-space: nowrap;
+    }
+    .alert-action-btn.red { background: #FEF2F2; color: #DC2626; }
+    .alert-action-btn.red:hover { background: #FEE2E2; }
+    .alert-action-btn.blue { background: #EFF6FF; color: #1AA7EC; }
+    .alert-action-btn.blue:hover { background: #DBEAFE; }
+    .alert-action-btn.gray { background: #F1F5F9; color: #64748B; }
+    .alert-action-btn.gray:hover { background: #E2E8F0; }
+    .alert-action-btn svg { width: 14px; height: 14px; }
+
+    /* ─── Empty State ─── */
+    .empty-state {
+      text-align: center; padding: 60px 20px;
+      animation: fadeUp 0.4s var(--ease-smooth, cubic-bezier(0.22,1,0.36,1));
+    }
+    .empty-state .empty-icon {
+      width: 72px; height: 72px; border-radius: 20px;
+      background: #ECFDF5; color: #16A34A;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px;
+    }
+    .empty-state .empty-icon svg { width: 32px; height: 32px; }
+    .empty-state h3 {
+      font-size: 18px; font-weight: 700; color: #0F172A; margin-bottom: 8px;
+    }
+    .empty-state p { font-size: 14px; color: #64748B; }
+
+    /* ─── Loading Skeleton ─── */
+    .skeleton-card {
+      background: #fff; border-radius: 14px; padding: 18px 20px;
+      margin-bottom: 10px; display: flex; align-items: flex-start; gap: 14px;
+      border: 1px solid #EEF2F6;
+    }
+    .skeleton-circle {
+      width: 42px; height: 42px; border-radius: 12px;
+      background: linear-gradient(90deg, #EEF2F6 25%, #F8FAFC 50%, #EEF2F6 75%);
+      background-size: 200% 100%; animation: skeleton-loading 1.5s infinite;
+      flex-shrink: 0;
+    }
+    .skeleton-lines { flex: 1; }
+    .skeleton-line {
+      height: 12px; border-radius: 6px; margin-bottom: 8px;
+      background: linear-gradient(90deg, #EEF2F6 25%, #F8FAFC 50%, #EEF2F6 75%);
+      background-size: 200% 100%; animation: skeleton-loading 1.5s infinite;
+    }
+    .skeleton-line:last-child { margin-bottom: 0; width: 60%; }
+    @keyframes skeleton-loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* ─── Toast ─── */
+    .toast {
+      position: fixed; bottom: 28px; left: 28px; z-index: 9999;
+      padding: 14px 20px; border-radius: 11px;
+      font-size: 14px; font-weight: 600; font-family: inherit;
+      display: flex; align-items: center; gap: 10px;
+      box-shadow: 0 10px 25px rgba(15,23,42,0.15);
+      animation: slideInLeft 0.3s cubic-bezier(0.22,1,0.36,1);
+    }
+    .toast.success { background: #065F46; color: #6EE7B7; }
+    .toast.error   { background: #7F1D1D; color: #FCA5A5; }
+    .toast svg { width: 18px; height: 18px; }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 1024px) {
+      .sidebar { display: none; }
+      .topbar { right: 0; }
+      .main-content { margin-right: 0; }
+    }
+    @media (max-width: 640px) {
+      .page-header { flex-direction: column; align-items: flex-start; gap: 14px; }
+      .page-header .header-actions { width: 100%; }
+      .alert-card { flex-direction: column; }
+      .alert-actions { flex-direction: row; align-items: stretch; }
+      .alert-action-btn { flex: 1; justify-content: center; }
+      .filter-chips { gap: 6px; }
+      .filter-chip { padding: 6px 12px; font-size: 12.5px; }
+    }
   </style>
-
 </head>
-<body class="bg-light-bg text-light-text font-sans min-h-screen">
+<body x-data="alertsApp()" @DOMContentLoaded="init()">
 
-  <!-- Cloud Design Sidebar -->
-  <aside class="sidebar" id="cloud-sidebar">
-    <div class="brand">
-      <div class="icon"></div>
-      <div class="name">Pharma<span>SUD</span></div>
-    </div>
-    <div class="nav-section">MENU</div>
-    <a href="/dashboard" class="nav-item" id="nav-dashboard"><i data-lucide="layout-dashboard"></i><span>لوحة التحكم</span></a>
-    <a href="/pos" class="nav-item" id="nav-pos"><i data-lucide="scan-barcode"></i><span>نقطة البيع</span></a>
-    <a href="/medicines" class="nav-item" id="nav-medicines"><i data-lucide="pill"></i><span>الأدوية</span></a>
-    <a href="/inventory" class="nav-item" id="nav-inventory"><i data-lucide="package"></i><span>المخزون</span></a>
-    <a href="/batches" class="nav-item" id="nav-batches"><i data-lucide="calendar-clock"></i><span>الدفعات</span></a>
-    <a href="/reports-sales" class="nav-item" id="nav-reports"><i data-lucide="chart-line"></i><span>التقارير</span></a>
-    <a href="/employees" class="nav-item" id="nav-employees" style="display:none"><i data-lucide="users"></i><span>الموظفين</span></a>
-    <a href="/alerts" class="nav-item active" id="nav-alerts"><i data-lucide="bell"></i><span>التنبيهات</span><span class="badge">7</span></a>
-    <a href="/settings" class="nav-item" id="nav-settings"><i data-lucide="settings"></i><span>الإعدادات</span></a>
-    <div class="user-card" onclick="logout()">
-      <div class="user-avatar" id="user-initials">U</div>
-      <div style="min-width:0;flex:1">
-        <div class="user-name" id="user-name">المستخدم</div>
-        <div class="user-role" id="user-role">صيدلي</div>
+  <div class="app-layout">
+    <!-- ═══════ Sidebar ═══════ -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="icon"></div>
+        <div class="name">Pharma<span>SUD</span></div>
       </div>
-      <i data-lucide="chevron-left"></i>
-    </div>
-  </aside>
-  <script>
-    function logout() { localStorage.clear(); window.location.href='/login'; }
-    document.addEventListener('DOMContentLoaded', function() {
-      const name = localStorage.getItem('userName') || 'المستخدم';
-      const role = localStorage.getItem('role') || 'pharmacist';
-      document.getElementById('user-name').textContent = name;
-      document.getElementById('user-role').textContent = role === 'admin' ? 'مدير' : 'صيدلي';
-      document.getElementById('user-initials').textContent = name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
-      if(role === 'admin') document.getElementById('nav-employees').style.display='flex';
-    });
-  </script>
-
-    <div class="max-w-2xl mx-auto p-4">
-        <!-- Header -->
-        <div class="flex items-center justify-between mb-6">
-            <h1 class="text-2xl font-bold">🔔 التنبيهات</h1>
-            <a href="/dashboard" class="text-[#1AA7EC] hover:text-blue-300 text-sm">← العودة للرئيسية</a>
+      <div class="nav-section">MENU</div>
+      <a href="/dashboard" class="nav-item"><i data-lucide="layout-dashboard"></i><span>لوحة التحكم</span></a>
+      <a href="/pos" class="nav-item"><i data-lucide="scan-barcode"></i><span>نقطة البيع</span></a>
+      <a href="/medicines" class="nav-item"><i data-lucide="pill"></i><span>الأدوية</span></a>
+      <a href="/inventory" class="nav-item"><i data-lucide="package"></i><span>المخزون</span></a>
+      <a href="/batches" class="nav-item"><i data-lucide="calendar-clock"></i><span>الدفعات</span></a>
+      <a href="/reports-sales" class="nav-item"><i data-lucide="chart-line"></i><span>التقارير</span></a>
+      <a href="/employees" class="nav-item" x-show="isAdmin"><i data-lucide="users"></i><span>الموظفين</span></a>
+      <a href="/alerts" class="nav-item active"><i data-lucide="bell"></i><span>التنبيهات</span><span class="badge" x-text="totalCount > 0 ? totalCount : ''"></span></a>
+      <a href="/settings" class="nav-item"><i data-lucide="settings"></i><span>الإعدادات</span></a>
+      <div class="user-card" @click="logout()">
+        <div class="user-avatar" x-text="userInitials"></div>
+        <div style="min-width:0;flex:1">
+          <div class="user-name" x-text="userName || 'المستخدم'"></div>
+          <div class="user-role" x-text="isAdmin ? 'مدير' : 'صيدلي'"></div>
         </div>
+        <i data-lucide="chevron-left"></i>
+      </div>
+    </aside>
 
-        <!-- Loading -->
-        <div id="loading" class="text-center py-12 text-light-muted">جاري تحميل التنبيهات...</div>
+    <!-- ═══════ Topbar ═══════ -->
+    <header class="topbar">
+      <div class="search-box">
+        <i data-lucide="search"></i>
+        <span>البحث في الأدوية، المبيعات، الدفعات...</span>
+      </div>
+      <div class="actions">
+        <div class="lang-toggle">
+          <span>EN</span>
+          <span class="active">ع</span>
+        </div>
+        <button class="icon-btn" @click="toggleDark()">
+          <i data-lucide="moon"></i>
+        </button>
+        <button class="icon-btn" @click="$router.push('/alerts')">
+          <i data-lucide="bell"></i>
+          <span class="dot" x-show="totalCount > 0"></span>
+        </button>
+      </div>
+    </header>
 
-        <!-- Error -->
-        <div id="error" class="hidden bg-red-900/50 border border-red-700 rounded-lg p-4 mb-4 text-center"></div>
+    <!-- ═══════ Main Content ═══════ -->
+    <main class="main-content">
 
-        <!-- Content -->
-        <div id="content" class="hidden space-y-6"></div>
-    </div>
+      <!-- Page Header -->
+      <div class="page-header">
+        <div>
+          <h1>التنبيهات والإشعارات</h1>
+          <p class="subtitle">
+            <span x-text="totalCount"></span> تنبيه يحتاج انتباهك
+          </p>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-secondary" @click="markAllRead()" :disabled="totalCount === 0">
+            <i data-lucide="check-check"></i>
+            تحديد الكل كمقروء
+          </button>
+        </div>
+      </div>
 
-    <script>
-        const token = localStorage.getItem('token');
-        if (!token) { window.location.href = '/login'; }
+      <!-- Filter Chips -->
+      <div class="filter-chips">
+        <button class="filter-chip" :class="{ 'active': activeFilter === 'all' }" @click="setFilter('all')">
+          الكل
+          <span class="chip-count" x-text="totalCount"></span>
+        </button>
+        <button class="filter-chip" :class="{ 'active': activeFilter === 'low_stock' }" @click="setFilter('low_stock')">
+          مخزون منخفض
+          <span class="chip-count" x-text="lowStockCount"></span>
+        </button>
+        <button class="filter-chip" :class="{ 'active': activeFilter === 'expiry' }" @click="setFilter('expiry')">
+          انتهاء الصلاحية
+          <span class="chip-count" x-text="expiryCount"></span>
+        </button>
+        <button class="filter-chip" :class="{ 'active': activeFilter === 'system' }" @click="setFilter('system')">
+          النظام
+          <span class="chip-count">0</span>
+        </button>
+      </div>
 
-        async function loadAlerts() {
-            const loading = document.getElementById('loading');
-            const content = document.getElementById('content');
-            const error = document.getElementById('error');
+      <!-- Loading State -->
+      <template x-if="loading">
+        <div>
+          <div class="skeleton-card"><div class="skeleton-circle"></div><div class="skeleton-lines"><div class="skeleton-line"></div><div class="skeleton-line"></div><div class="skeleton-line"></div></div></div>
+          <div class="skeleton-card"><div class="skeleton-circle"></div><div class="skeleton-lines"><div class="skeleton-line"></div><div class="skeleton-line"></div><div class="skeleton-line"></div></div></div>
+          <div class="skeleton-card"><div class="skeleton-circle"></div><div class="skeleton-lines"><div class="skeleton-line"></div><div class="skeleton-line"></div><div class="skeleton-line"></div></div></div>
+          <div class="skeleton-card"><div class="skeleton-circle"></div><div class="skeleton-lines"><div class="skeleton-line"></div><div class="skeleton-line"></div><div class="skeleton-line"></div></div></div>
+        </div>
+      </template>
 
-            try {
-                const res = await fetch('/api/alerts/', {
-                    headers: { 'Authorization': 'Bearer ' + token }
+      <!-- Error State -->
+      <template x-if="error">
+        <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:14px;padding:24px;text-align:center;color:#DC2626;">
+          <div style="font-size:18px;font-weight:700;margin-bottom:8px;">فشل تحميل التنبيهات</div>
+          <p style="font-size:14px;color:#64748B;margin-bottom:14px;" x-text="errorMsg"></p>
+          <button class="btn btn-secondary" @click="loadAlerts()" style="display:inline-flex;">
+            <i data-lucide="refresh-cw"></i> إعادة المحاولة
+          </button>
+        </div>
+      </template>
+
+      <!-- Content -->
+      <template x-if="!loading && !error">
+        <div>
+          <!-- Empty State -->
+          <template x-if="filteredAlerts.length === 0">
+            <div class="empty-state">
+              <div class="empty-icon">
+                <i data-lucide="check-circle-2"></i>
+              </div>
+              <h3 x-text="activeFilter === 'all' ? 'لا توجد تنبيهات' : 'لا توجد تنبيهات في هذا التصنيف'"></h3>
+              <p x-text="activeFilter === 'all' ? 'كل الأدوية في حالتها الطبيعية' : 'لا توجد تنبيهات تطابق الفلتر المحدد'"></p>
+            </div>
+          </template>
+
+          <!-- Today's Alerts -->
+          <template x-if="todayAlerts.length > 0">
+            <div>
+              <div class="section-header">اليوم</div>
+              <template x-for="alert in todayAlerts" :key="alert.id">
+                <div class="alert-card" :class="'severity-' + alert.severity">
+                  <!-- Icon -->
+                  <div class="alert-icon" :class="alert.iconClass">
+                    <i :data-lucide="alert.icon"></i>
+                  </div>
+                  <!-- Body -->
+                  <div class="alert-body">
+                    <div class="alert-title" x-text="alert.title"></div>
+                    <div class="alert-desc" x-text="alert.description"></div>
+                    <div class="alert-meta">
+                      <span class="alert-time">
+                        <i data-lucide="clock"></i>
+                        <span x-text="alert.time"></span>
+                      </span>
+                      <span class="alert-severity-badge" :class="alert.severity" x-text="alert.severityLabel"></span>
+                    </div>
+                  </div>
+                  <!-- Actions -->
+                  <div class="alert-actions">
+                    <template x-if="alert.actionType === 'view_batch'">
+                      <button class="alert-action-btn red" @click="handleAction(alert, 'view')">
+                        <i data-lucide="eye"></i>
+                        عرض الدفعة
+                      </button>
+                    </template>
+                    <template x-if="alert.actionType === 'reorder'">
+                      <button class="alert-action-btn blue" @click="handleAction(alert, 'reorder')">
+                        <i data-lucide="shopping-cart"></i>
+                        إعادة طلب
+                      </button>
+                    </template>
+                    <button class="alert-action-btn gray" @click="dismissAlert(alert)">
+                      <i data-lucide="x"></i>
+                      تجاهل
+                    </button>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </template>
+
+          <!-- Previous Alerts -->
+          <template x-if="previousAlerts.length > 0">
+            <div>
+              <div class="section-header">سابقاً</div>
+              <template x-for="alert in previousAlerts" :key="alert.id">
+                <div class="alert-card" :class="'severity-' + alert.severity">
+                  <!-- Icon -->
+                  <div class="alert-icon" :class="alert.iconClass">
+                    <i :data-lucide="alert.icon"></i>
+                  </div>
+                  <!-- Body -->
+                  <div class="alert-body">
+                    <div class="alert-title" x-text="alert.title"></div>
+                    <div class="alert-desc" x-text="alert.description"></div>
+                    <div class="alert-meta">
+                      <span class="alert-time">
+                        <i data-lucide="clock"></i>
+                        <span x-text="alert.time"></span>
+                      </span>
+                      <span class="alert-severity-badge" :class="alert.severity" x-text="alert.severityLabel"></span>
+                    </div>
+                  </div>
+                  <!-- Actions -->
+                  <div class="alert-actions">
+                    <template x-if="alert.actionType === 'view_batch'">
+                      <button class="alert-action-btn red" @click="handleAction(alert, 'view')">
+                        <i data-lucide="eye"></i>
+                        عرض الدفعة
+                      </button>
+                    </template>
+                    <template x-if="alert.actionType === 'reorder'">
+                      <button class="alert-action-btn blue" @click="handleAction(alert, 'reorder')">
+                        <i data-lucide="shopping-cart"></i>
+                        إعادة طلب
+                      </button>
+                    </template>
+                    <button class="alert-action-btn gray" @click="dismissAlert(alert)">
+                      <i data-lucide="x"></i>
+                      تجاهل
+                    </button>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </template>
+        </div>
+      </template>
+
+    </main>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast success" x-show="showToast" x-transition style="display:none;" x-cloak>
+    <i data-lucide="check-circle-2"></i>
+    <span x-text="toastMsg"></span>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide) lucide.createIcons();
+    });
+
+    function alertsApp() {
+      return {
+        // Auth
+        userName: localStorage.getItem('userName') || 'المستخدم',
+        isAdmin: localStorage.getItem('role') === 'admin',
+        userInitials: '',
+
+        // State
+        loading: true,
+        error: false,
+        errorMsg: '',
+        activeFilter: 'all',
+        allAlerts: [],
+        showToast: false,
+        toastMsg: '',
+        totalCount: 0,
+
+        // Computed counts
+        get expiryCount() {
+          return this.allAlerts.filter(a => a.type === 'expiry').length;
+        },
+        get lowStockCount() {
+          return this.allAlerts.filter(a => a.type === 'low_stock').length;
+        },
+        get filteredAlerts() {
+          if (this.activeFilter === 'all') return this.allAlerts;
+          if (this.activeFilter === 'expiry') return this.allAlerts.filter(a => a.type === 'expiry');
+          if (this.activeFilter === 'low_stock') return this.allAlerts.filter(a => a.type === 'low_stock');
+          if (this.activeFilter === 'system') return this.allAlerts.filter(a => a.type === 'system');
+          return this.allAlerts;
+        },
+        get todayAlerts() {
+          return this.filteredAlerts.filter(a => a.isToday);
+        },
+        get previousAlerts() {
+          return this.filteredAlerts.filter(a => !a.isToday);
+        },
+
+        init() {
+          const token = localStorage.getItem('token');
+          if (!token) {
+            window.location.href = '/login';
+            return;
+          }
+          const name = this.userName;
+          this.userInitials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+          this.loadAlerts();
+        },
+
+        async loadAlerts() {
+          this.loading = true;
+          this.error = false;
+          const token = localStorage.getItem('token');
+          if (!token) { window.location.href = '/login'; return; }
+
+          try {
+            const res = await fetch('/api/alerts/', {
+              headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const data = await res.json();
+
+            const now = new Date();
+            const alerts = [];
+            let idCounter = 0;
+
+            // Process expiry alerts
+            if (data.expiry_alerts && data.expiry_alerts.length > 0) {
+              data.expiry_alerts.forEach(a => {
+                const isCritical = a.severity === 'critical';
+                const daysLeft = a.days_remaining;
+                const isToday = daysLeft <= 1;
+                const expiryDate = a.expiry_date ? new Date(a.expiry_date) : null;
+                const daysDiff = expiryDate ? Math.floor((now - expiryDate) / (1000*60*60*24)) : 999;
+                const isPrevious = daysDiff > 0;
+
+                alerts.push({
+                  id: 'exp-' + (idCounter++),
+                  type: 'expiry',
+                  severity: isCritical ? 'critical' : 'warning',
+                  iconClass: isCritical ? 'critical' : 'warning',
+                  icon: isCritical ? 'alert-triangle' : 'clock',
+                  title: isCritical
+                    ? 'صلاحية عاجلة: ' + a.trade_name
+                    : 'تنبيه صلاحية: ' + a.trade_name,
+                  description: 'الدفعة ' + a.batch_number + ' — متبقي ' + daysLeft + ' يوم على الانتهاء',
+                  time: isToday ? 'اليوم' : (isPrevious ? 'قبل ' + Math.abs(daysDiff) + ' يوم' : 'متبقي ' + daysLeft + ' يوم'),
+                  isToday: isToday && !isPrevious,
+                  actionType: 'view_batch',
+                  severityLabel: isCritical ? 'عاجل' : 'تحذير',
+                  batchNumber: a.batch_number,
+                  medicineName: a.trade_name,
+                  rawAlert: a
                 });
-                if (!res.ok) { throw new Error('HTTP ' + res.status); }
-                const data = await res.json();
-
-                loading.classList.add('hidden');
-                content.classList.remove('hidden');
-
-                let html = '';
-
-                // Expiry critical alerts
-                const critical = data.expiry_alerts.filter(a => a.severity === 'critical');
-                if (critical.length > 0) {
-                    html += `
-                        <div class="bg-dark-card border border-red-800 rounded-xl p-4">
-                            <h2 class="text-lg font-bold text-red-400 mb-3">🔴 صلاحية عاجلة (${critical.length})</h2>
-                            ${critical.map(a => `
-                                <div class="flex items-center justify-between py-2 border-b border-dark-border last:border-0">
-                                    <div>
-                                        <span class="font-medium">${a.trade_name}</span>
-                                        <span class="text-light-muted text-sm mr-2">${a.batch_number}</span>
-                                    </div>
-                                    <span class="text-red-400 text-sm font-bold" dir="ltr">${a.days_remaining} يوم</span>
-                                </div>
-                            `).join('')}
-                        </div>`;
-                }
-
-                // Expiry warning alerts
-                const warning = data.expiry_alerts.filter(a => a.severity === 'warning');
-                if (warning.length > 0) {
-                    html += `
-                        <div class="bg-dark-card border border-yellow-800 rounded-xl p-4">
-                            <h2 class="text-lg font-bold text-yellow-400 mb-3">🟡 صلاحية تحذير (${warning.length})</h2>
-                            ${warning.map(a => `
-                                <div class="flex items-center justify-between py-2 border-b border-dark-border last:border-0">
-                                    <div>
-                                        <span class="font-medium">${a.trade_name}</span>
-                                        <span class="text-light-muted text-sm mr-2">${a.batch_number}</span>
-                                    </div>
-                                    <span class="text-yellow-400 text-sm font-bold" dir="ltr">${a.days_remaining} يوم</span>
-                                </div>
-                            `).join('')}
-                        </div>`;
-                }
-
-                // Low stock alerts
-                if (data.low_stock_alerts.length > 0) {
-                    html += `
-                        <div class="bg-dark-card border border-orange-800 rounded-xl p-4">
-                            <h2 class="text-lg font-bold text-orange-400 mb-3">📉 مخزون منخفض (${data.low_stock_alerts.length})</h2>
-                            ${data.low_stock_alerts.map(a => `
-                                <div class="flex items-center justify-between py-2 border-b border-dark-border last:border-0">
-                                    <div>
-                                        <span class="font-medium">${a.trade_name}</span>
-                                        <span class="text-light-muted text-sm mr-2">${a.base_unit}</span>
-                                    </div>
-                                    <span class="text-orange-400 text-sm">${a.current_stock} ${a.base_unit} (الحد: ${a.min_stock})</span>
-                                </div>
-                            `).join('')}
-                        </div>`;
-                }
-
-                // No alerts message
-                if (critical.length === 0 && warning.length === 0 && data.low_stock_alerts.length === 0) {
-                    html = `
-                        <div class="bg-dark-card rounded-xl p-8 text-center">
-                            <div class="text-4xl mb-4">✅</div>
-                            <h2 class="text-xl font-bold text-green-400">لا توجد تنبيهات</h2>
-                            <p class="text-light-muted mt-2">كل الأدوية في حالتها الطبيعية</p>
-                        </div>`;
-                }
-
-                content.innerHTML = html;
-
-            } catch (e) {
-                loading.classList.add('hidden');
-                error.classList.remove('hidden');
-                error.textContent = '❌ فشل تحميل التنبيهات: ' + e.message;
+              });
             }
-        }
 
-        loadAlerts();
-    </script>
+            // Process low stock alerts
+            if (data.low_stock_alerts && data.low_stock_alerts.length > 0) {
+              data.low_stock_alerts.forEach(a => {
+                alerts.push({
+                  id: 'stk-' + (idCounter++),
+                  type: 'low_stock',
+                  severity: 'low-stock',
+                  iconClass: 'low-stock',
+                  icon: 'package-open',
+                  title: 'مخزون منخفض: ' + a.trade_name,
+                  description: 'المخزون الحالي ' + a.current_stock + ' ' + (a.base_unit || 'وحدة') + ' — الحد الأدنى: ' + a.min_stock,
+                  time: 'اليوم',
+                  isToday: true,
+                  actionType: 'reorder',
+                  severityLabel: 'منخفض',
+                  medicineName: a.trade_name,
+                  rawAlert: a
+                });
+              });
+            }
+
+            // Sort: critical first, then warning, then low-stock
+            const severityOrder = { critical: 0, warning: 1, 'low-stock': 2, info: 3 };
+            alerts.sort((a, b) => (severityOrder[a.severity] || 99) - (severityOrder[b.severity] || 99));
+
+            this.allAlerts = alerts;
+            this.totalCount = alerts.length;
+            this.loading = false;
+
+            // Re-render Lucide icons after DOM update
+            this.$nextTick(() => {
+              if (window.lucide) lucide.createIcons();
+            });
+
+          } catch (e) {
+            this.loading = false;
+            this.error = true;
+            this.errorMsg = e.message || 'حدث خطأ أثناء تحميل التنبيهات';
+          }
+        },
+
+        setFilter(filter) {
+          this.activeFilter = filter;
+          this.$nextTick(() => {
+            if (window.lucide) lucide.createIcons();
+          });
+        },
+
+        async markAllRead() {
+          const token = localStorage.getItem('token');
+          try {
+            // Try to call mark-read API if available
+            await fetch('/api/alerts/mark-read', {
+              method: 'POST',
+              headers: {
+                'Authorization': 'Bearer ' + token,
+                'Content-Type': 'application/json'
+              }
+            });
+          } catch (e) {
+            // API may not exist yet; still clear locally
+          }
+          this.allAlerts = [];
+          this.totalCount = 0;
+          this.toast('تم تحديد جميع التنبيهات كمقروءة');
+        },
+
+        dismissAlert(alert) {
+          this.allAlerts = this.allAlerts.filter(a => a.id !== alert.id);
+          this.totalCount = this.allAlerts.length;
+          this.$nextTick(() => {
+            if (window.lucide) lucide.createIcons();
+          });
+          this.toast('تم تجاهل التنبيه');
+        },
+
+        handleAction(alert, action) {
+          if (action === 'view' && alert.type === 'expiry') {
+            window.location.href = '/batches?batch=' + encodeURIComponent(alert.batchNumber);
+          } else if (action === 'reorder' && alert.type === 'low_stock') {
+            window.location.href = '/medicines?reorder=' + encodeURIComponent(alert.medicineName);
+          }
+        },
+
+        toggleDark() {
+          document.body.classList.toggle('dark-mode');
+        },
+
+        logout() {
+          localStorage.clear();
+          window.location.href = '/login';
+        },
+
+        toast(msg) {
+          this.toastMsg = msg;
+          this.showToast = true;
+          this.$nextTick(() => {
+            if (window.lucide) lucide.createIcons();
+          });
+          setTimeout(() => { this.showToast = false; }, 3000);
+        }
+      };
+    }
+  </script>
 </body>
 </html>
-<!-- ✅ انتهى - alerts.html - المرحلة 7 --><!-- 1781564608 -->
+<!-- 1781564608 -->

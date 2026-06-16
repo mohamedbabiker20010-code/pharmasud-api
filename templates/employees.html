@@ -3,57 +3,174 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>👥 إدارة الموظفين - PharmaSUD</title>
+    <title>الموظفين - PharmaSUD</title>
     <link rel="stylesheet" href="/static/css/theme.css?v7.2.0">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        light: { bg: "#F6F8FA", card: "#FFFFFF", border: "#EEF2F6", text: "#0F172A", muted: "#64748B" }
-                    }
-                }
-            }
-        }
-    </script>
-
-  <style>
-    .sidebar { width:248px; background:#fff; border-left:1px solid #EEF2F6; display:flex; flex-direction:column; padding:22px 16px; position:fixed; right:0; top:0; bottom:0; z-index:100; font-family:'IBM Plex Sans Arabic','IBM Plex Sans',sans-serif; }
-    .sidebar .brand { display:flex; align-items:center; gap:11px; padding:0 8px 22px; }
-    .sidebar .brand .icon { width:38px; height:38px; border-radius:11px; background:#1AA7EC; position:relative; flex-shrink:0; }
-    .sidebar .brand .icon::before,.sidebar .brand .icon::after { content:''; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); background:#fff; border-radius:3px; }
-    .sidebar .brand .icon::before { width:18px; height:5.5px; }
-    .sidebar .brand .icon::after { width:5.5px; height:18px; }
-    .sidebar .brand .name { font:700 18px/1 'IBM Plex Sans Arabic',sans-serif; letter-spacing:-0.02em; }
-    .sidebar .brand .name span { color:#1AA7EC; }
-    .sidebar .nav-section { font:600 11px/1 'IBM Plex Mono',monospace; letter-spacing:0.1em; color:#CBD5E1; padding:14px 10px 10px; }
-    .sidebar .nav-item { display:flex; align-items:center; gap:12px; padding:11px 12px; border-radius:11px; color:#475569; font-size:14px; font-weight:500; text-decoration:none; margin-bottom:4px; transition:all 0.2s ease; }
-    .sidebar .nav-item:hover { background:#F8FAFC; color:#0F172A; }
-    .sidebar .nav-item.active { background:#1AA7EC; color:#fff; box-shadow:0 8px 18px -8px rgba(26,167,236,0.55); }
-    .sidebar .nav-item svg { width:19px; height:19px; flex-shrink:0; }
-    .sidebar .nav-item .badge { margin-right:auto; background:#FEF2F2; color:#DC2626; font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; }
-    .sidebar .user-card { margin-top:auto; display:flex; align-items:center; gap:11px; padding:11px; border:1px solid #EEF2F6; border-radius:13px; cursor:pointer; }
-    .sidebar .user-avatar { width:36px; height:36px; border-radius:10px; background:#1AA7EC; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0; }
-    .sidebar .user-name { font-size:13.5px; font-weight:600; }
-    .sidebar .user-role { font-size:11.5px; color:#94A3B8; }
-    .sidebar .user-card svg { width:16px; height:16px; color:#CBD5E1; flex-shrink:0; margin-right:auto; }
-    .main-wrap { margin-right:248px; min-height:100vh; }
-    @media(max-width:1024px){ .sidebar{display:none;} .main-wrap{margin-right:0;} }
-  </style>
-
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'IBM Plex Sans Arabic','IBM Plex Sans',sans-serif;background:#F6F8FA;color:#0F172A;min-height:100vh}
+        
+        /* Sidebar */
+        .sidebar{width:248px;background:#fff;border-left:1px solid #eef2f6;display:flex;flex-direction:column;padding:22px 16px;position:fixed;right:0;top:0;bottom:0;z-index:100;font-family:'IBM Plex Sans Arabic','IBM Plex Sans',sans-serif}
+        .sidebar .brand{display:flex;align-items:center;gap:11px;padding:0 8px 22px}
+        .sidebar .brand .icon{width:38px;height:38px;border-radius:11px;background:#1AA7EC;position:relative;flex-shrink:0}
+        .sidebar .brand .icon::before,.sidebar .brand .icon::after{content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#fff;border-radius:3px}
+        .sidebar .brand .icon::before{width:18px;height:5.5px}
+        .sidebar .brand .icon::after{width:5.5px;height:18px}
+        .sidebar .brand .name{font:700 18px/1 'IBM Plex Sans Arabic',sans-serif;letter-spacing:-0.02em}
+        .sidebar .brand .name span{color:#1AA7EC}
+        .sidebar .nav-section{font:600 11px/1 'IBM Plex Mono',monospace;letter-spacing:0.1em;color:#CBD5E1;padding:14px 10px 10px}
+        .sidebar .nav-item{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:11px;color:#475569;font-size:14px;font-weight:500;text-decoration:none;margin-bottom:4px;transition:all 0.2s ease}
+        .sidebar .nav-item:hover{background:#F8FAFC;color:#0F172A}
+        .sidebar .nav-item.active{background:#1AA7EC;color:#fff;box-shadow:0 8px 18px -8px rgba(26,167,236,0.55)}
+        .sidebar .nav-item.active .badge{background:rgba(255,255,255,.22);color:#fff}
+        .sidebar .nav-item svg{width:19px;height:19px;flex-shrink:0}
+        .sidebar .nav-item .badge{margin-right:auto;background:#FEF2F2;color:#DC2626;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px}
+        .sidebar .user-card{margin-top:auto;display:flex;align-items:center;gap:11px;padding:11px;border:1px solid #EEF2F6;border-radius:13px;cursor:pointer}
+        .sidebar .user-avatar{width:36px;height:36px;border-radius:10px;background:#1AA7EC;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
+        .sidebar .user-name{font-size:13.5px;font-weight:600}
+        .sidebar .user-role{font-size:11.5px;color:#94A3B8}
+        .sidebar .user-card svg{width:16px;height:16px;color:#CBD5E1;flex-shrink:0;margin-right:auto}
+        
+        .main-wrap{margin-right:248px;min-height:100vh}
+        @media(max-width:1024px){.sidebar{display:none}.main-wrap{margin-right:0}}
+        
+        /* Topbar */
+        .topbar{height:70px;background:#fff;border-bottom:1px solid #eef2f6;display:flex;align-items:center;padding:0 28px;gap:18px}
+        .page-title{font:700 19px/1 'IBM Plex Sans',sans-serif;letter-spacing:-0.02em}
+        .page-subtitle{font-size:12.5px;color:#94a3b8;margin-top:4px}
+        .topbar-actions{margin-right:auto;display:flex;align-items:center;gap:12px}
+        
+        /* Search */
+        .search-input{display:flex;align-items:center;gap:10px;width:240px;height:42px;padding:0 14px;border-radius:11px;background:#f6f8fa;color:#94a3b8;border:none;font-size:14px;font-family:inherit}
+        .search-input input{flex:1;border:none;background:transparent;outline:none;font-family:inherit;font-size:14px;color:#0F172A}
+        
+        /* Buttons */
+        .btn-primary{display:flex;align-items:center;gap:8px;height:42px;padding:0 18px;border-radius:11px;background:#1aa7ec;color:#fff;font-size:14px;font-weight:600;border:none;cursor:pointer;font-family:inherit;box-shadow:0 10px 20px -8px rgba(26,167,236,.55);transition:all .2s}
+        .btn-primary:hover{filter:brightness(1.05)}
+        .btn-secondary{display:flex;align-items:center;gap:8px;height:42px;padding:0 16px;border-radius:11px;border:1px solid #e2e8f0;background:#fff;font-size:14px;font-weight:600;color:#334155;cursor:pointer;font-family:inherit;transition:all .2s}
+        .btn-secondary:hover{border-color:#1aa7ec}
+        
+        /* Language + Theme */
+        .lang-toggle{display:flex;border:1px solid #e2e8f0;border-radius:9px;overflow:hidden;font-size:13px;font-weight:600}
+        .lang-toggle span{padding:7px 12px;cursor:pointer;transition:all .2s}
+        .lang-toggle .lang-en.active{background:#1aa7ec;color:#fff}
+        .lang-toggle .lang-ar.active{background:#1aa7ec;color:#fff;font-family:'IBM Plex Sans Arabic',sans-serif}
+        .lang-toggle span:not(.active){color:#64748b}
+        .theme-toggle{width:42px;height:42px;border-radius:11px;border:1px solid #e2e8f0;background:#fff;display:flex;align-items:center;justify-content:center;color:#475569;cursor:pointer}
+        .notif-btn{width:42px;height:42px;border-radius:11px;border:1px solid #e2e8f0;background:#fff;display:flex;align-items:center;justify-content:center;color:#475569;cursor:pointer;position:relative}
+        .notif-dot{position:absolute;top:9px;right:11px;width:8px;height:8px;border-radius:50%;background:#dc2626;border:2px solid #fff}
+        
+        /* Page Content */
+        .page-content{padding:24px 28px}
+        
+        /* Filter Chips */
+        .filter-chips{display:flex;gap:9px;margin-bottom:20px;flex-wrap:wrap}
+        .chip{height:34px;padding:0 14px;border-radius:9px;font-size:12.5px;font-weight:600;display:inline-flex;align-items:center;gap:6px;cursor:pointer;transition:all .2s;border:none;font-family:inherit}
+        .chip.active{background:#0f172a;color:#fff}
+        .chip:not(.active){background:#fff;border:1px solid #e2e8f0;color:#475569;font-weight:500}
+        .chip:not(.active):hover{border-color:#1aa7ec}
+        .chip .count{background:rgba(255,255,255,.2);padding:1px 7px;border-radius:999px;font-size:11px}
+        
+        /* Employee Cards Grid */
+        .emp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+        @media(max-width:1200px){.emp-grid{grid-template-columns:repeat(2,1fr)}}
+        @media(max-width:640px){.emp-grid{grid-template-columns:1fr}}
+        
+        .emp-card{background:#fff;border:1px solid #eef2f6;border-radius:16px;padding:20px;transition:all .2s}
+        .emp-card:hover{border-color:#1aa7ec;box-shadow:0 4px 16px -4px rgba(26,167,236,.15)}
+        .emp-header{display:flex;align-items:center;gap:13px;margin-bottom:16px}
+        .emp-avatar{width:48px;height:48px;border-radius:13px;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;flex-shrink:0}
+        .emp-name{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .emp-username{font-size:12px;color:#94a3b8}
+        .emp-status-dot{width:9px;height:9px;border-radius:50%;margin-right:auto;flex-shrink:0}
+        .emp-status-dot.online{background:#16a34a}
+        .emp-status-dot.offline{background:#cbd5e1}
+        .emp-badges{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+        .badge-pill{font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px;display:inline-flex;align-items:center;gap:5px}
+        .badge-admin{color:#7c3aed;background:#f5f3ff}
+        .badge-pharmacist{color:#0284c7;background:#eff6ff}
+        .badge-cashier{color:#d97706;background:#fffbeb}
+        .badge-active{color:#16a34a;background:#ecfdf5}
+        .badge-inactive{color:#64748b;background:#f1f5f9}
+        .emp-footer{display:flex;justify-content:space-between;padding-top:14px;border-top:1px solid #f1f5f9}
+        .emp-footer-label{font-size:11px;color:#94a3b8}
+        .emp-footer-value{font-size:14px;font-weight:700}
+        .emp-footer-time{font-size:13px;font-weight:600}
+        
+        /* Action Buttons in Card */
+        .emp-actions{display:flex;gap:8px;margin-top:12px}
+        .emp-actions button{flex:1;padding:8px;border-radius:9px;font-size:12px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .2s}
+        .btn-toggle-active{background:#fef2f2;color:#dc2626}
+        .btn-toggle-active:hover{background:#fee2e2}
+        .btn-toggle-inactive{background:#ecfdf5;color:#16a34a}
+        .btn-toggle-inactive:hover{background:#dcfce7}
+        .btn-reset{background:#fffbeb;color:#d97706;border:1px solid #fde68a}
+        .btn-reset:hover{background:#fef3c7}
+        
+        /* Modal */
+        .modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.5);display:none;align-items:center;justify-content:center;z-index:200;padding:16px;backdrop-filter:blur(4px)}
+        .modal-overlay.show{display:flex}
+        .modal{background:#fff;border-radius:20px;padding:28px;width:100%;max-width:440px;box-shadow:0 25px 50px -12px rgba(0,0,0,.25)}
+        .modal h2{font-size:18px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:10px}
+        .modal-input{width:100%;height:48px;border:1px solid #e2e8f0;border-radius:11px;padding:0 14px;font-size:14px;font-family:inherit;background:#f6f8fa;color:#0F172A;outline:none;transition:border-color .2s}
+        .modal-input:focus{border-color:#1aa7ec;box-shadow:0 0 0 3px rgba(26,167,236,.12)}
+        .modal-input::placeholder{color:#94a3b8}
+        .modal-actions{display:flex;gap:10px;margin-top:20px}
+        .modal-actions button{flex:1;height:48px;border-radius:11px;font-size:14px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .2s}
+        .modal-save{background:#1aa7ec;color:#fff;box-shadow:0 10px 20px -8px rgba(26,167,236,.55)}
+        .modal-save:hover{filter:brightness(1.05)}
+        .modal-cancel{background:#f1f5f9;color:#64748b}
+        .modal-cancel:hover{background:#e2e8f0}
+        
+        /* Toast */
+        .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);padding:12px 24px;border-radius:12px;font-size:14px;font-weight:600;z-index:300;animation:slideIn .3s ease;box-shadow:0 10px 30px -5px rgba(0,0,0,.2)}
+        .toast-success{background:#ecfdf5;color:#16a34a;border:1px solid #bbf7d0}
+        .toast-error{background:#fef2f2;color:#dc2626;border:1px solid #fecaca}
+        @keyframes slideIn{from{opacity:0;transform:translateX(-50%) translateY(-20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+        
+        /* Loading Skeleton */
+        .skeleton{background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:11px}
+        @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+        .skeleton-card{height:200px;border-radius:16px}
+        
+        /* Empty State */
+        .empty-state{text-align:center;padding:60px 20px}
+        .empty-icon{width:64px;height:64px;border-radius:16px;background:#dbeafe;color:#1aa7ec;display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px}
+        .empty-title{font-size:18px;font-weight:700;margin-bottom:6px}
+        .empty-desc{font-size:14px;color:#94a3b8}
+        
+        /* Dark mode */
+        body.dark-mode{background:#0b1220;color:#e2e8f0}
+        body.dark-mode .sidebar{background:#0f1a2e;border-left-color:#1e293b}
+        body.dark-mode .sidebar .brand .name{color:#fff}
+        body.dark-mode .sidebar .nav-item{color:#94a3b8}
+        body.dark-mode .sidebar .nav-item:hover{background:#111c2e;color:#e2e8f0}
+        body.dark-mode .sidebar .user-card{border-color:#1e293b}
+        body.dark-mode .sidebar .user-name{color:#e2e8f0}
+        body.dark-mode .topbar{background:#0f1a2e;border-bottom-color:#1e293b}
+        body.dark-mode .page-title{color:#fff}
+        body.dark-mode .page-subtitle{color:#64748b}
+        body.dark-mode .search-input{background:#111c2e;color:#64748b}
+        body.dark-mode .search-input input{color:#e2e8f0}
+        body.dark-mode .btn-secondary{background:#111c2e;border-color:#1e293b;color:#e2e8f0}
+        body.dark-mode .theme-toggle,body.dark-mode .notif-btn,body.dark-mode .lang-toggle{border-color:#1e293b;background:#111c2e;color:#94a3b8}
+        body.dark-mode .emp-card{background:#111c2e;border-color:#1e293b}
+        body.dark-mode .emp-card:hover{border-color:#1aa7ec}
+        body.dark-mode .emp-name{color:#e2e8f0}
+        body.dark-mode .modal{background:#0f1a2e}
+        body.dark-mode .modal h2{color:#fff}
+        body.dark-mode .modal-input{background:#111c2e;border-color:#1e293b;color:#e2e8f0}
+    </style>
 </head>
-<body class="bg-light-bg text-light-text font-sans min-h-screen">
+<body class="show">
 
-  <!-- Cloud Design Sidebar -->
-  <aside class="sidebar" id="cloud-sidebar">
-    <div class="brand">
-      <div class="icon"></div>
-      <div class="name">Pharma<span>SUD</span></div>
-    </div>
+<!-- Sidebar -->
+<aside class="sidebar" id="cloud-sidebar">
+    <div class="brand"><div class="icon"></div><div class="name">Pharma<span>SUD</span></div></div>
     <div class="nav-section">MENU</div>
     <a href="/dashboard" class="nav-item" id="nav-dashboard"><i data-lucide="layout-dashboard"></i><span>لوحة التحكم</span></a>
     <a href="/pos" class="nav-item" id="nav-pos"><i data-lucide="scan-barcode"></i><span>نقطة البيع</span></a>
@@ -61,259 +178,337 @@
     <a href="/inventory" class="nav-item" id="nav-inventory"><i data-lucide="package"></i><span>المخزون</span></a>
     <a href="/batches" class="nav-item" id="nav-batches"><i data-lucide="calendar-clock"></i><span>الدفعات</span></a>
     <a href="/reports-sales" class="nav-item" id="nav-reports"><i data-lucide="chart-line"></i><span>التقارير</span></a>
-    <a href="/employees" class="nav-item active" id="nav-employees" style="display:none"><i data-lucide="users"></i><span>الموظفين</span></a>
+    <a href="/employees" class="nav-item active" id="nav-employees"><i data-lucide="users"></i><span>الموظفين</span></a>
     <a href="/alerts" class="nav-item" id="nav-alerts"><i data-lucide="bell"></i><span>التنبيهات</span><span class="badge">7</span></a>
     <a href="/settings" class="nav-item" id="nav-settings"><i data-lucide="settings"></i><span>الإعدادات</span></a>
     <div class="user-card" onclick="logout()">
-      <div class="user-avatar" id="user-initials">U</div>
-      <div style="min-width:0;flex:1">
-        <div class="user-name" id="user-name">المستخدم</div>
-        <div class="user-role" id="user-role">صيدلي</div>
-      </div>
-      <i data-lucide="chevron-left"></i>
+        <div class="user-avatar" id="user-initials">U</div>
+        <div style="min-width:0;flex:1"><div class="user-name" id="user-name">المستخدم</div><div class="user-role" id="user-role">صيدلي</div></div>
+        <i data-lucide="chevron-left"></i>
     </div>
-  </aside>
-  <script>
-    function logout() { localStorage.clear(); window.location.href='/login'; }
-    document.addEventListener('DOMContentLoaded', function() {
-      const name = localStorage.getItem('userName') || 'المستخدم';
-      const role = localStorage.getItem('role') || 'pharmacist';
-      document.getElementById('user-name').textContent = name;
-      document.getElementById('user-role').textContent = role === 'admin' ? 'مدير' : 'صيدلي';
-      document.getElementById('user-initials').textContent = name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
-      if(role === 'admin') document.getElementById('nav-employees').style.display='flex';
-    });
-  </script>
+</aside>
 
-    <div class="max-w-3xl mx-auto p-4">
-        <!-- Header -->
-        <div class="flex items-center justify-between mb-6">
-            <h1 class="text-2xl font-bold">👥 إدارة الموظفين</h1>
-            <a href="/dashboard" class="text-[#1AA7EC] hover:text-blue-300 text-sm">← العودة للرئيسية</a>
+<!-- Main -->
+<div class="main-wrap">
+    <!-- Topbar -->
+    <div class="topbar">
+        <div>
+            <div class="page-title">الموظفين</div>
+            <div class="page-subtitle" id="emp-subtitle">أعضاء الفريق</div>
         </div>
-
-        <!-- Error / Success messages -->
-        <div id="error" class="hidden bg-red-900/50 border border-red-700 rounded-lg p-4 mb-4 text-center"></div>
-        <div id="success" class="hidden bg-green-900/50 border border-green-700 rounded-lg p-4 mb-4 text-center"></div>
-
-        <!-- Add Employee Button -->
-        <button onclick="showAddModal()" class="w-full bg-[#1AA7EC] hover:bg-blue-700 text-[#0F172A] rounded-xl py-3 mb-6 font-bold transition">
-            + إضافة موظف جديد
-        </button>
-
-        <!-- Employees List -->
-        <div id="loading" class="text-center py-12 text-light-muted">جاري تحميل الموظفين...</div>
-        <div id="employees-list" class="space-y-3 hidden"></div>
-    </div>
-
-    <!-- Add Employee Modal -->
-    <div id="addModal" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50 p-4" onclick="closeModal(event)">
-        <div class="bg-dark-card rounded-2xl p-6 w-full max-w-md border border-dark-border" onclick="event.stopPropagation()">
-            <h2 class="text-xl font-bold mb-4">➕ إضافة موظف جديد</h2>
-            <div class="space-y-4">
-                <input id="new-full-name" type="text" placeholder="الاسم الكامل" class="w-full bg-light-bg border border-dark-border rounded-xl p-3 text-right">
-                <input id="new-username" type="text" placeholder="اسم المستخدم" class="w-full bg-light-bg border border-dark-border rounded-xl p-3 text-right">
-                <input id="new-password" type="password" placeholder="كلمة المرور (6 أحرف على الأقل)" class="w-full bg-light-bg border border-dark-border rounded-xl p-3 text-right">
-                <input id="new-phone" type="text" placeholder="رقم الهاتف (اختياري)" class="w-full bg-light-bg border border-dark-border rounded-xl p-3 text-right">
-                <button onclick="addEmployee()" class="w-full bg-green-600 hover:bg-green-700 text-[#0F172A] rounded-xl py-3 font-bold transition">
-                    💾 حفظ
-                </button>
-                <button onclick="hideAddModal()" class="w-full bg-dark-border text-light-muted rounded-xl py-2 transition">
-                    إلغاء
-                </button>
+        <div class="topbar-actions">
+            <div class="lang-toggle" id="langToggle" onclick="toggleLang()">
+                <span class="lang-en active" id="langEn">EN</span>
+                <span class="lang-ar" id="langAr">ع</span>
             </div>
+            <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">
+                <i data-lucide="moon" width="18" height="18" id="themeIcon"></i>
+            </button>
+            <button class="notif-btn" onclick="location.href='/alerts'">
+                <i data-lucide="bell" width="18" height="18"></i>
+                <span class="notif-dot"></span>
+            </button>
+            <div class="search-input">
+                <i data-lucide="search" width="18" height="18"></i>
+                <input type="text" placeholder="بحث عن موظف…" id="searchInput" oninput="filterEmployees()">
+            </div>
+            <button class="btn-primary" onclick="showAddModal()">
+                <i data-lucide="user-plus" width="18" height="18"></i>
+                إضافة موظف
+            </button>
         </div>
     </div>
 
-    <!-- Reset Password Modal -->
-    <div id="resetModal" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50 p-4" onclick="closeModal(event)">
-        <div class="bg-dark-card rounded-2xl p-6 w-full max-w-md border border-dark-border" onclick="event.stopPropagation()">
-            <h2 class="text-xl font-bold mb-4">🔑 إعادة تعيين كلمة المرور</h2>
-            <p id="reset-user-name" class="text-light-muted mb-4"></p>
-            <input id="reset-password" type="password" placeholder="كلمة المرور الجديدة" class="w-full bg-light-bg border border-dark-border rounded-xl p-3 text-right mb-4">
-            <button onclick="resetPassword()" class="w-full bg-[#1AA7EC] hover:bg-blue-700 text-[#0F172A] rounded-xl py-3 font-bold transition">
-                🔄 تأكيد
-            </button>
-            <button onclick="hideResetModal()" class="w-full bg-dark-border text-light-muted rounded-xl py-2 mt-2 transition">
-                إلغاء
-            </button>
+    <!-- Content -->
+    <div class="page-content">
+        <!-- Filter Chips -->
+        <div class="filter-chips">
+            <button class="chip active" data-role="all" onclick="setFilter('all',this)">الكل</button>
+            <button class="chip" data-role="admin" onclick="setFilter('admin',this)">مديرين</button>
+            <button class="chip" data-role="pharmacist" onclick="setFilter('pharmacist',this)">صيادلة</button>
+            <button class="chip" data-role="cashier" onclick="setFilter('cashier',this)">صرّف</button>
+        </div>
+
+        <!-- Loading -->
+        <div id="loading" class="emp-grid">
+            <div class="skeleton skeleton-card"></div>
+            <div class="skeleton skeleton-card"></div>
+            <div class="skeleton skeleton-card"></div>
+        </div>
+
+        <!-- Error -->
+        <div id="error-state" style="display:none" class="empty-state">
+            <div class="empty-icon"><i data-lucide="alert-triangle" width="32" height="32"></i></div>
+            <div class="empty-title">فشل تحميل الموظفين</div>
+            <div class="empty-desc" id="error-msg"></div>
+            <button class="btn-primary" style="margin:16px auto 0" onclick="loadEmployees()"><i data-lucide="refresh-cw" width="16" height="16"></i>إعادة المحاولة</button>
+        </div>
+
+        <!-- Employees Grid -->
+        <div id="emp-grid" class="emp-grid" style="display:none"></div>
+
+        <!-- Empty State -->
+        <div id="empty-state" style="display:none" class="empty-state">
+            <div class="empty-icon"><i data-lucide="users" width="32" height="32"></i></div>
+            <div class="empty-title">لا يوجد موظفون بعد</div>
+            <div class="empty-desc">أضف أول موظف للبدء</div>
         </div>
     </div>
+</div>
 
-    <script>
-        const token = localStorage.getItem('token');
-        if (!token) { window.location.href = '/login'; }
+<!-- Add Employee Modal -->
+<div class="modal-overlay" id="addModal">
+    <div class="modal" onclick="event.stopPropagation()">
+        <h2><i data-lucide="user-plus" width="22" height="22" style="color:#1aa7ec"></i>إضافة موظف جديد</h2>
+        <div style="display:flex;flex-direction:column;gap:14px">
+            <input id="new-full-name" type="text" placeholder="الاسم الكامل" class="modal-input">
+            <input id="new-username" type="text" placeholder="اسم المستخدم" class="modal-input" dir="ltr" style="text-align:right">
+            <input id="new-password" type="password" placeholder="كلمة المرور (6 أحرف على الأقل)" class="modal-input">
+            <input id="new-phone" type="text" placeholder="رقم الهاتف (اختياري)" class="modal-input" dir="ltr" style="text-align:right">
+        </div>
+        <div class="modal-actions">
+            <button class="modal-cancel" onclick="hideAddModal()">إلغاء</button>
+            <button class="modal-save" onclick="addEmployee()">حفظ الموظف</button>
+        </div>
+    </div>
+</div>
 
-        let employees = [];
-        let resetTargetId = null;
+<!-- Reset Password Modal -->
+<div class="modal-overlay" id="resetModal">
+    <div class="modal" onclick="event.stopPropagation()">
+        <h2><i data-lucide="key-round" width="22" height="22" style="color:#d97706"></i>إعادة تعيين كلمة المرور</h2>
+        <p id="reset-user-name" style="color:#64748b;margin-bottom:14px;font-size:14px"></p>
+        <input id="reset-password" type="password" placeholder="كلمة المرور الجديدة (6 أحرف على الأقل)" class="modal-input">
+        <div class="modal-actions">
+            <button class="modal-cancel" onclick="hideResetModal()">إلغاء</button>
+            <button class="modal-save" onclick="resetPassword()">تأكيد</button>
+        </div>
+    </div>
+</div>
 
-        async function loadEmployees() {
-            const loading = document.getElementById('loading');
-            const list = document.getElementById('employees-list');
-            const error = document.getElementById('error');
+<script>
+    // Auth
+    const token = localStorage.getItem('token');
+    if (!token) { window.location.href = '/login'; }
+    function logout() { localStorage.clear(); window.location.href = '/login'; }
 
-            try {
-                const res = await fetch('/api/employees/', {
-                    headers: { 'Authorization': 'Bearer ' + token }
-                });
-                if (!res.ok) { throw new Error('HTTP ' + res.status); }
-                const data = await res.json();
-                employees = data.employees || [];
+    let employees = [];
+    let resetTargetId = null;
+    let currentFilter = 'all';
 
-                loading.classList.add('hidden');
-                list.classList.remove('hidden');
+    // User info in sidebar
+    document.addEventListener('DOMContentLoaded', function() {
+        const name = localStorage.getItem('userName') || 'المستخدم';
+        const role = localStorage.getItem('role') || 'pharmacist';
+        document.getElementById('user-name').textContent = name;
+        document.getElementById('user-role').textContent = role === 'admin' ? 'مدير' : 'صيدلي';
+        document.getElementById('user-initials').textContent = name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+        if (role !== 'admin') {
+            document.getElementById('nav-employees').style.display = 'none';
+        }
+    });
 
-                if (employees.length === 0) {
-                    list.innerHTML = '<div class="text-center text-light-muted py-8">لا يوجد موظفون بعد</div>';
-                    return;
-                }
+    // Language & Theme
+    function toggleLang() {
+        const en = document.getElementById('langEn'), ar = document.getElementById('langAr');
+        if (en.classList.contains('active')) { en.classList.remove('active'); ar.classList.add('active'); }
+        else { ar.classList.remove('active'); en.classList.add('active'); }
+    }
+    function toggleTheme() {
+        document.body.classList.toggle('dark-mode');
+        const icon = document.getElementById('themeIcon');
+        if (document.body.classList.contains('dark-mode')) {
+            icon.setAttribute('data-lucide', 'sun'); localStorage.setItem('theme', 'dark');
+        } else {
+            icon.setAttribute('data-lucide', 'moon'); localStorage.setItem('theme', 'light');
+        }
+        lucide.createIcons();
+    }
+    if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
 
-                list.innerHTML = employees.map(emp => `
-                    <div class="bg-dark-card rounded-xl p-4 border border-dark-border">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <span class="font-bold text-lg">${emp.full_name || emp.username}</span>
-                                <span class="${emp.is_active ? 'text-green-400' : 'text-red-400'} text-sm mr-2">${emp.is_active ? '✅ نشط' : '🔴 معطّل'}</span>
-                            </div>
+    // Toast
+    function showToast(msg, type) {
+        const t = document.createElement('div');
+        t.className = 'toast toast-' + type;
+        t.textContent = msg;
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 3000);
+    }
+
+    // Avatar colors
+    const avatarColors = ['#1AA7EC','#0284c7','#d97706','#7c3aed','#0891b2','#475569','#16a34a','#e11d48'];
+    function getAvatarColor(name) { let h = 0; for(let i=0;i<name.length;i++) h = name.charCodeAt(i)+((h<<5)-h); return avatarColors[Math.abs(h)%avatarColors.length]; }
+    function getInitials(name) { return name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2); }
+
+    // Role badge class
+    function getRoleBadge(role) {
+        if (role === 'admin') return '<span class="badge-pill badge-admin"><span style="width:5px;height:5px;border-radius:50%;background:#7c3aed"></span>مدير</span>';
+        if (role === 'pharmacist') return '<span class="badge-pill badge-pharmacist"><span style="width:5px;height:5px;border-radius:50%;background:#0284c7"></span>صيدلي</span>';
+        return '<span class="badge-pill badge-cashier"><span style="width:5px;height:5px;border-radius:50%;background:#d97706"></span>صرّف</span>';
+    }
+
+    // Filter
+    function setFilter(role, el) {
+        currentFilter = role;
+        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        el.classList.add('active');
+        renderEmployees();
+    }
+    function filterEmployees() { renderEmployees(); }
+
+    // Load
+    async function loadEmployees() {
+        const loading = document.getElementById('loading');
+        const grid = document.getElementById('emp-grid');
+        const errorState = document.getElementById('error-state');
+        const emptyState = document.getElementById('empty-state');
+
+        try {
+            const res = await fetch('/api/employees/', { headers: { 'Authorization': 'Bearer ' + token } });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const data = await res.json();
+            employees = data.employees || [];
+
+            loading.style.display = 'none';
+            const activeCount = employees.filter(e => e.is_active).length;
+            document.getElementById('emp-subtitle').textContent = employees.length + ' أعضاء الفريق · ' + activeCount + ' في المناوبة';
+            renderEmployees();
+        } catch (e) {
+            loading.style.display = 'none';
+            errorState.style.display = 'block';
+            document.getElementById('error-msg').textContent = e.message;
+        }
+    }
+
+    function renderEmployees() {
+        const grid = document.getElementById('emp-grid');
+        const emptyState = document.getElementById('empty-state');
+        const search = document.getElementById('searchInput').value.toLowerCase();
+
+        let filtered = employees;
+        if (currentFilter !== 'all') {
+            filtered = filtered.filter(e => (e.role || 'pharmacist') === currentFilter);
+        }
+        if (search) {
+            filtered = filtered.filter(e => (e.full_name || e.username).toLowerCase().includes(search) || (e.username || '').toLowerCase().includes(search));
+        }
+
+        if (filtered.length === 0) {
+            grid.style.display = 'none';
+            emptyState.style.display = 'block';
+            return;
+        }
+
+        emptyState.style.display = 'none';
+        grid.style.display = 'grid';
+        grid.innerHTML = filtered.map(emp => {
+            const name = emp.full_name || emp.username;
+            const color = getAvatarColor(name);
+            const initials = getInitials(name);
+            const role = emp.role || 'pharmacist';
+            const statusBadge = emp.is_active
+                ? '<span class="badge-pill badge-active"><span style="width:5px;height:5px;border-radius:50%;background:#16a34a"></span>في المناوبة</span>'
+                : '<span class="badge-pill badge-inactive"><span style="width:5px;height:5px;border-radius:50%;background:#94a3b8"></span>خارج المناوبة</span>';
+            const createdAt = emp.created_at ? emp.created_at.slice(0,10) : '—';
+
+            return `
+                <div class="emp-card">
+                    <div class="emp-header">
+                        <div class="emp-avatar" style="background:${color}">${initials}</div>
+                        <div style="flex:1;min-width:0">
+                            <div class="emp-name">${name}</div>
+                            <div class="emp-username">@${emp.username}</div>
                         </div>
-                        <div class="text-light-muted text-sm mt-1 flex gap-4">
-                            <span>👤 ${emp.username}</span>
-                            <span>📞 ${emp.phone || '—'}</span>
-                            <span>🕐 ${emp.created_at ? emp.created_at.slice(0, 10) : ''}</span>
-                        </div>
-                        <div class="flex gap-2 mt-3">
-                            <button onclick="toggleEmployee('${emp.id}')" class="px-4 py-1.5 rounded-lg text-sm font-medium transition ${emp.is_active ? 'bg-red-900/50 text-red-400 hover:bg-red-800' : 'bg-green-900/50 text-green-400 hover:bg-green-800'}">
-                                ${emp.is_active ? 'تعطيل' : 'تفعيل'}
-                            </button>
-                            <button onclick="showResetModal('${emp.id}', '${emp.full_name || emp.username}')" class="px-4 py-1.5 rounded-lg text-sm font-medium bg-yellow-900/50 text-yellow-400 hover:bg-yellow-800 transition">
-                                🔑 إعادة كلمة المرور
-                            </button>
-                        </div>
+                        <div class="emp-status-dot ${emp.is_active?'online':'offline'}"></div>
                     </div>
-                `).join('');
-            } catch (e) {
-                loading.classList.add('hidden');
-                error.classList.remove('hidden');
-                error.textContent = '❌ فشل تحميل الموظفين: ' + e.message;
-            }
-        }
+                    <div class="emp-badges">${getRoleBadge(role)} ${statusBadge}</div>
+                    <div class="emp-footer">
+                        <div><div class="emp-footer-label">تاريخ الانضمام</div><div class="emp-footer-time">${createdAt}</div></div>
+                        <div style="text-align:left"><div class="emp-footer-label">الهاتف</div><div class="emp-footer-time">${emp.phone || '—'}</div></div>
+                    </div>
+                    <div class="emp-actions">
+                        <button class="${emp.is_active ? 'btn-toggle-active' : 'btn-toggle-inactive'}" onclick="toggleEmployee('${emp.id}')">${emp.is_active ? 'تعطيل' : 'تفعيل'}</button>
+                        <button class="btn-reset" onclick="showResetModal('${emp.id}', '${name}')">إعادة كلمة المرور</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
 
-        function showAddModal() {
-            document.getElementById('addModal').classList.remove('hidden');
-            document.getElementById('addModal').classList.add('flex');
-        }
+    // Add Employee
+    function showAddModal() { document.getElementById('addModal').classList.add('show'); }
+    function hideAddModal() { document.getElementById('addModal').classList.remove('show'); }
 
-        function hideAddModal() {
-            document.getElementById('addModal').classList.add('hidden');
-            document.getElementById('addModal').classList.remove('flex');
-        }
+    async function addEmployee() {
+        const fullName = document.getElementById('new-full-name').value.trim();
+        const username = document.getElementById('new-username').value.trim();
+        const password = document.getElementById('new-password').value;
+        const phone = document.getElementById('new-phone').value.trim();
 
-        async function addEmployee() {
-            const fullName = document.getElementById('new-full-name').value.trim();
-            const username = document.getElementById('new-username').value.trim();
-            const password = document.getElementById('new-password').value;
-            const phone = document.getElementById('new-phone').value.trim();
+        if (!fullName || !username || !password) { showToast('الاسم واسم المستخدم وكلمة المرور مطلوبة', 'error'); return; }
+        if (password.length < 6) { showToast('كلمة المرور يجب أن تكون 6 أحرف على الأقل', 'error'); return; }
 
-            if (!fullName || !username || !password) {
-                document.getElementById('error').textContent = '❌ الاسم واسم المستخدم وكلمة المرور مطلوبة';
-                document.getElementById('error').classList.remove('hidden');
-                return;
-            }
-            if (password.length < 6) {
-                document.getElementById('error').textContent = '❌ كلمة المرور يجب أن تكون 6 أحرف على الأقل';
-                document.getElementById('error').classList.remove('hidden');
-                return;
-            }
+        try {
+            const res = await fetch('/api/employees/', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ full_name: fullName, username, password, phone })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.detail || 'فشل الإضافة');
+            hideAddModal();
+            showToast(data.message || 'تم إضافة الموظف بنجاح', 'success');
+            document.getElementById('new-full-name').value = '';
+            document.getElementById('new-username').value = '';
+            document.getElementById('new-password').value = '';
+            document.getElementById('new-phone').value = '';
+            loadEmployees();
+        } catch (e) { showToast(e.message, 'error'); }
+    }
 
-            try {
-                const res = await fetch('/api/employees/', {
-                    method: 'POST',
-                    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ full_name: fullName, username, password, phone })
-                });
-                const data = await res.json();
-                if (!res.ok) { throw new Error(data.detail || 'فشل الإضافة'); }
+    // Toggle Employee
+    async function toggleEmployee(id) {
+        try {
+            const res = await fetch('/api/employees/' + id + '/toggle', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token } });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.detail || 'فشل التبديل');
+            showToast(data.message || 'تم التحديث', 'success');
+            loadEmployees();
+        } catch (e) { showToast(e.message, 'error'); }
+    }
 
-                hideAddModal();
-                document.getElementById('success').textContent = '✅ ' + data.message;
-                document.getElementById('success').classList.remove('hidden');
-                setTimeout(() => document.getElementById('success').classList.add('hidden'), 3000);
-                loadEmployees();
-            } catch (e) {
-                document.getElementById('error').textContent = '❌ ' + e.message;
-                document.getElementById('error').classList.remove('hidden');
-            }
-        }
+    // Reset Password
+    function showResetModal(id, name) {
+        resetTargetId = id;
+        document.getElementById('reset-user-name').textContent = 'الموظف: ' + name;
+        document.getElementById('resetModal').classList.add('show');
+    }
+    function hideResetModal() { resetTargetId = null; document.getElementById('resetModal').classList.remove('show'); }
 
-        function closeModal(e) {
-            if (e.target === e.currentTarget) {
-                hideAddModal();
-                hideResetModal();
-            }
-        }
+    async function resetPassword() {
+        const newPass = document.getElementById('reset-password').value;
+        if (!newPass || newPass.length < 6) { showToast('كلمة المرور يجب أن تكون 6 أحرف على الأقل', 'error'); return; }
+        try {
+            const res = await fetch('/api/employees/' + resetTargetId + '/reset-password', {
+                method: 'PUT',
+                headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ new_password: newPass })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.detail || 'فشل إعادة التعيين');
+            hideResetModal();
+            showToast(data.message || 'تم إعادة تعيين كلمة المرور', 'success');
+            document.getElementById('reset-password').value = '';
+        } catch (e) { showToast(e.message, 'error'); }
+    }
 
-        async function toggleEmployee(id) {
-            try {
-                const res = await fetch('/api/employees/' + id + '/toggle', {
-                    method: 'PUT',
-                    headers: { 'Authorization': 'Bearer ' + token }
-                });
-                const data = await res.json();
-                if (!res.ok) { throw new Error(data.detail || 'فشل التبديل'); }
+    // Close modals on overlay click
+    document.getElementById('addModal').addEventListener('click', function(e) { if (e.target === this) hideAddModal(); });
+    document.getElementById('resetModal').addEventListener('click', function(e) { if (e.target === this) hideResetModal(); });
 
-                document.getElementById('success').textContent = '✅ ' + data.message;
-                document.getElementById('success').classList.remove('hidden');
-                setTimeout(() => document.getElementById('success').classList.add('hidden'), 3000);
-                loadEmployees();
-            } catch (e) {
-                document.getElementById('error').textContent = '❌ ' + e.message;
-                document.getElementById('error').classList.remove('hidden');
-            }
-        }
-
-        function showResetModal(id, name) {
-            resetTargetId = id;
-            document.getElementById('reset-user-name').textContent = 'الموظف: ' + name;
-            document.getElementById('resetModal').classList.remove('hidden');
-            document.getElementById('resetModal').classList.add('flex');
-        }
-
-        function hideResetModal() {
-            resetTargetId = null;
-            document.getElementById('resetModal').classList.add('hidden');
-            document.getElementById('resetModal').classList.remove('flex');
-        }
-
-        async function resetPassword() {
-            const newPass = document.getElementById('reset-password').value;
-            if (!newPass || newPass.length < 6) {
-                document.getElementById('error').textContent = '❌ كلمة المرور الجديدة يجب أن تكون 6 أحرف';
-                document.getElementById('error').classList.remove('hidden');
-                return;
-            }
-
-            try {
-                const res = await fetch('/api/employees/' + resetTargetId + '/reset-password', {
-                    method: 'PUT',
-                    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ new_password: newPass })
-                });
-                const data = await res.json();
-                if (!res.ok) { throw new Error(data.detail || 'فشل إعادة التعيين'); }
-
-                hideResetModal();
-                document.getElementById('success').textContent = '✅ ' + data.message;
-                document.getElementById('success').classList.remove('hidden');
-                setTimeout(() => document.getElementById('success').classList.add('hidden'), 3000);
-                document.getElementById('reset-password').value = '';
-            } catch (e) {
-                document.getElementById('error').textContent = '❌ ' + e.message;
-                document.getElementById('error').classList.remove('hidden');
-            }
-        }
-
-        loadEmployees();
-    </script>
+    // Init
+    loadEmployees();
+    lucide.createIcons();
+</script>
 </body>
 </html>
-<!-- ✅ انتهى - employees.html - المرحلة 7 --><!-- 1781564608 -->

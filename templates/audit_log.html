@@ -1,213 +1,797 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📋 سجل التدقيق - PharmaSUD</title>
-    <link rel="stylesheet" href="/static/css/theme.css?v7.2.0">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        light: { bg: "#F6F8FA", card: "#FFFFFF", border: "#EEF2F6", text: "#0F172A", muted: "#64748B" }
-                    }
-                }
-            }
-        }
-    </script>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/static/css/theme.css?v7.2.0">
+  <title>سجل المراجعة - PharmaSUD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
   <style>
-    .sidebar { width:248px; background:#fff; border-left:1px solid #EEF2F6; display:flex; flex-direction:column; padding:22px 16px; position:fixed; right:0; top:0; bottom:0; z-index:100; font-family:'IBM Plex Sans Arabic','IBM Plex Sans',sans-serif; }
-    .sidebar .brand { display:flex; align-items:center; gap:11px; padding:0 8px 22px; }
-    .sidebar .brand .icon { width:38px; height:38px; border-radius:11px; background:#1AA7EC; position:relative; flex-shrink:0; }
-    .sidebar .brand .icon::before,.sidebar .brand .icon::after { content:''; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); background:#fff; border-radius:3px; }
-    .sidebar .brand .icon::before { width:18px; height:5.5px; }
-    .sidebar .brand .icon::after { width:5.5px; height:18px; }
-    .sidebar .brand .name { font:700 18px/1 'IBM Plex Sans Arabic',sans-serif; letter-spacing:-0.02em; }
-    .sidebar .brand .name span { color:#1AA7EC; }
-    .sidebar .nav-section { font:600 11px/1 'IBM Plex Mono',monospace; letter-spacing:0.1em; color:#CBD5E1; padding:14px 10px 10px; }
-    .sidebar .nav-item { display:flex; align-items:center; gap:12px; padding:11px 12px; border-radius:11px; color:#475569; font-size:14px; font-weight:500; text-decoration:none; margin-bottom:4px; transition:all 0.2s ease; }
-    .sidebar .nav-item:hover { background:#F8FAFC; color:#0F172A; }
-    .sidebar .nav-item.active { background:#1AA7EC; color:#fff; box-shadow:0 8px 18px -8px rgba(26,167,236,0.55); }
-    .sidebar .nav-item svg { width:19px; height:19px; flex-shrink:0; }
-    .sidebar .nav-item .badge { margin-right:auto; background:#FEF2F2; color:#DC2626; font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; }
-    .sidebar .user-card { margin-top:auto; display:flex; align-items:center; gap:11px; padding:11px; border:1px solid #EEF2F6; border-radius:13px; cursor:pointer; }
-    .sidebar .user-avatar { width:36px; height:36px; border-radius:10px; background:#1AA7EC; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0; }
-    .sidebar .user-name { font-size:13.5px; font-weight:600; }
-    .sidebar .user-role { font-size:11.5px; color:#94A3B8; }
-    .sidebar .user-card svg { width:16px; height:16px; color:#CBD5E1; flex-shrink:0; margin-right:auto; }
-    .main-wrap { margin-right:248px; min-height:100vh; }
-    @media(max-width:1024px){ .sidebar{display:none;} .main-wrap{margin-right:0;} }
+    html, body {
+      margin: 0; padding: 0;
+      min-height: 100vh;
+      font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif;
+      background: #F6F8FA;
+      color: #0F172A;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── Dark Mode ─── */
+    html.dark body,
+    html.dark .sidebar { background: #0B1120; color: #E2E8F0; }
+    html.dark .sidebar { border-left-color: #1E293B; }
+    html.dark .sidebar .nav-item { color: #94A3B8; }
+    html.dark .sidebar .nav-item:hover { background: #1E293B; color: #E2E8F0; }
+    html.dark .sidebar .nav-item.active { background: #1AA7EC; color: #fff; box-shadow: 0 8px 18px -8px rgba(26,167,236,0.55); }
+    html.dark .sidebar .nav-item .badge { background: #7F1D1D; color: #FCA5A5; }
+    html.dark .sidebar .nav-section { color: #475569; }
+    html.dark .sidebar .user-card { border-color: #1E293B; }
+    html.dark .sidebar .user-name { color: #E2E8F0; }
+    html.dark .sidebar .user-role { color: #64748B; }
+
+    html.dark .topbar { background: #0B1120; border-bottom-color: #1E293B; }
+    html.dark .topbar .search-box { background: #1E293B; color: #64748B; }
+    html.dark .topbar .icon-btn { border-color: #1E293B; color: #94A3B8; }
+    html.dark .topbar .icon-btn:hover { background: #1E293B; }
+    html.dark .topbar .lang-toggle { border-color: #1E293B; }
+    html.dark .topbar .lang-toggle span { color: #94A3B8; }
+    html.dark .topbar .lang-toggle span.active { background: #1AA7EC; color: #fff; }
+
+    html.dark { background: #0B1120; }
+    html.dark .main-content { background: #0B1120; }
+    html.dark .page-header h1 { color: #F1F5F9; }
+    html.dark .page-header .subtitle { color: #64748B; }
+
+    html.dark .card { background: #111827; border-color: #1E293B; }
+    html.dark .card-header { border-bottom-color: #1E293B; }
+    html.dark .card-title { color: #F1F5F9; }
+
+    html.dark .filter-chip { background: #1E293B; color: #94A3B8; border-color: #334155; }
+    html.dark .filter-chip:hover { background: #1E293B; border-color: #475569; }
+    html.dark .filter-chip.active { background: #1AA7EC; color: #fff; border-color: #1AA7EC; }
+
+    html.dark .audit-entry { background: #111827; border-color: #1E293B; }
+    html.dark .audit-entry:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+    html.dark .audit-user { color: #E2E8F0; }
+    html.dark .audit-time { color: #64748B; }
+    html.dark .audit-desc { color: #CBD5E1; }
+    html.dark .audit-type-badge { border-color: #334155; color: #94A3B8; }
+    html.dark .audit-diff .old-val { color: #F87171; }
+    html.dark .audit-diff .new-val { color: #4ADE80; }
+    html.dark .audit-diff .arrow { color: #64748B; }
+
+    html.dark .form-select { background: #1E293B; border-color: #334155; color: #E2E8F0; }
+    html.dark .form-select:focus { border-color: #1AA7EC; background: #111827; }
+
+    html.dark .empty-state h3 { color: #F1F5F9; }
+    html.dark .empty-state p { color: #64748B; }
+    html.dark .empty-state .empty-icon { background: #1E293B; color: #64748B; }
+
+    html.dark .loading-state { color: #64748B; }
+    html.dark .loading-state .spinner { border-color: #334155; border-top-color: #1AA7EC; }
+
+    html.dark .pagination-btn { background: #1E293B; color: #94A3B8; border-color: #334155; }
+    html.dark .pagination-btn:hover { background: #334155; }
+    html.dark .pagination-info { color: #64748B; }
+
+    html.dark .error-banner { background: #7F1D1D; border-color: #991B1B; color: #FCA5A5; }
+
+    .app-layout { display: flex; min-height: 100vh; }
+
+    /* ─── Sidebar ─── */
+    .sidebar {
+      width: 248px; background: #fff; border-left: 1px solid #EEF2F6;
+      display: flex; flex-direction: column; padding: 22px 16px;
+      position: fixed; right: 0; top: 0; bottom: 0; z-index: 100;
+    }
+    .sidebar .brand {
+      display: flex; align-items: center; gap: 11px;
+      padding: 0 8px 22px;
+    }
+    .sidebar .brand .icon {
+      width: 38px; height: 38px; border-radius: 11px;
+      background: #1AA7EC; position: relative; flex-shrink: 0;
+    }
+    .sidebar .brand .icon::before, .sidebar .brand .icon::after {
+      content: ''; position: absolute; left: 50%; top: 50%;
+      transform: translate(-50%, -50%); background: #fff; border-radius: 3px;
+    }
+    .sidebar .brand .icon::before { width: 18px; height: 5.5px; }
+    .sidebar .brand .icon::after { width: 5.5px; height: 18px; }
+    .sidebar .brand .name {
+      font: 700 18px/1 'IBM Plex Sans Arabic', sans-serif; letter-spacing: -0.02em;
+    }
+    .sidebar .brand .name span { color: #1AA7EC; }
+    .sidebar .nav-section {
+      font: 600 11px/1 'IBM Plex Mono', monospace; letter-spacing: 0.1em;
+      color: #CBD5E1; padding: 14px 10px 10px;
+    }
+    .sidebar .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 12px; border-radius: 11px;
+      color: #475569; font-size: 14px; font-weight: 500;
+      text-decoration: none; margin-bottom: 4px;
+      transition: all 0.2s ease;
+    }
+    .sidebar .nav-item:hover { background: #F8FAFC; color: #0F172A; }
+    .sidebar .nav-item.active {
+      background: #1AA7EC; color: #fff;
+      box-shadow: 0 8px 18px -8px rgba(26,167,236,0.55);
+    }
+    .sidebar .nav-item svg { width: 19px; height: 19px; flex-shrink: 0; }
+    .sidebar .nav-item .badge {
+      margin-right: auto; background: #FEF2F2; color: #DC2626;
+      font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px;
+    }
+    .sidebar .user-card {
+      margin-top: auto; display: flex; align-items: center; gap: 11px;
+      padding: 11px; border: 1px solid #EEF2F6; border-radius: 13px; cursor: pointer;
+    }
+    .sidebar .user-avatar {
+      width: 36px; height: 36px; border-radius: 10px; background: #1AA7EC;
+      color: #fff; display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px; flex-shrink: 0;
+    }
+    .sidebar .user-name { font-size: 13.5px; font-weight: 600; }
+    .sidebar .user-role { font-size: 11.5px; color: #94A3B8; }
+    .sidebar .user-card svg { width: 16px; height: 16px; color: #CBD5E1; flex-shrink: 0; }
+
+    /* ─── Topbar ─── */
+    .topbar {
+      height: 70px; background: #fff; border-bottom: 1px solid #EEF2F6;
+      display: flex; align-items: center; padding: 0 28px; gap: 18px;
+      position: fixed; top: 0; right: 248px; left: 0; z-index: 90;
+    }
+    .topbar .search-box {
+      display: flex; align-items: center; gap: 10px; flex: 1; max-width: 380px;
+      height: 42px; padding: 0 14px; border-radius: 11px; background: #F6F8FA;
+      color: #94A3B8; font-size: 14px;
+    }
+    .topbar .search-box svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .topbar .actions { margin-right: auto; display: flex; align-items: center; gap: 12px; }
+    .topbar .lang-toggle {
+      display: flex; border: 1px solid #E2E8F0; border-radius: 9px;
+      overflow: hidden; font-size: 13px; font-weight: 600;
+    }
+    .topbar .lang-toggle span { padding: 7px 12px; color: #64748B; cursor: pointer; transition: all 0.2s ease; }
+    .topbar .lang-toggle span.active { background: #1AA7EC; color: #fff; }
+    .topbar .lang-toggle span:not(.active):hover { background: #F8FAFC; }
+    .topbar .icon-btn {
+      width: 42px; height: 42px; border-radius: 11px; border: 1px solid #E2E8F0;
+      display: flex; align-items: center; justify-content: center;
+      color: #475569; background: transparent; cursor: pointer; position: relative;
+      transition: all 0.2s ease;
+    }
+    .topbar .icon-btn:hover { background: #F8FAFC; }
+    .topbar .icon-btn svg { width: 18px; height: 18px; }
+    .topbar .icon-btn .dot {
+      position: absolute; top: 9px; left: 11px; width: 8px; height: 8px;
+      border-radius: 50%; background: #DC2626; border: 2px solid #fff;
+    }
+
+    /* ─── Main Content ─── */
+    .main-content {
+      margin-right: 248px;
+      padding: calc(70px + 28px) 28px 28px;
+      min-height: 100vh;
+    }
+
+    /* ─── Page Header ─── */
+    .page-header {
+      display: flex; align-items: flex-end; justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .page-header h1 {
+      margin: 0 0 6px; font: 700 26px/1.1 'IBM Plex Sans Arabic', sans-serif;
+      letter-spacing: -0.02em;
+    }
+    .page-header .subtitle {
+      margin: 0; color: #64748B; font-size: 14.5px;
+    }
+
+    /* ─── Card ─── */
+    .card {
+      background: #fff; border: 1px solid #EEF2F6;
+      border-radius: 16px; padding: 22px 24px;
+      box-shadow: 0 1px 2px rgba(15,23,42,0.04);
+    }
+    .card + .card { margin-top: 18px; }
+    .card-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 20px; padding-bottom: 16px;
+      border-bottom: 1px solid #EEF2F6;
+    }
+    .card-title {
+      font-size: 15px; font-weight: 600; color: #0F172A;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-title svg { width: 18px; height: 18px; color: #1AA7EC; }
+    .card-subtitle {
+      font-size: 12.5px; color: #94A3B8; margin-top: 3px;
+    }
+
+    /* ─── Filter Chips ─── */
+    .filter-chips {
+      display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap;
+    }
+    .filter-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border-radius: 999px;
+      font-size: 13.5px; font-weight: 600;
+      background: #fff; color: #475569; border: 1px solid #E2E8F0;
+      cursor: pointer; transition: all 0.2s ease; font-family: inherit;
+    }
+    .filter-chip:hover { background: #F8FAFC; border-color: #CBD5E1; }
+    .filter-chip.active {
+      background: #1AA7EC; color: #fff; border-color: #1AA7EC;
+    }
+    .filter-chip svg { width: 15px; height: 15px; }
+
+    /* ─── Form Select ─── */
+    .form-select {
+      width: 100%; height: 46px; padding: 0 14px;
+      border: 1px solid #E2E8F0; border-radius: 11px;
+      font-family: inherit; font-size: 14.5px; color: #0F172A;
+      background: #F6F8FA; outline: none; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: left 14px center;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .form-select:focus {
+      border-color: #1AA7EC;
+      box-shadow: 0 0 0 3px rgba(26,167,236,0.12);
+      background-color: #fff;
+    }
+
+    /* ─── Audit Entry ─── */
+    .audit-entry {
+      background: #fff; border: 1px solid #EEF2F6;
+      border-radius: 14px; padding: 16px 20px;
+      margin-bottom: 10px; transition: all 0.2s ease;
+    }
+    .audit-entry:hover { box-shadow: 0 4px 12px rgba(15,23,42,0.06); }
+    .audit-header {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .audit-header-left {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .audit-icon {
+      width: 38px; height: 38px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; font-size: 16px;
+    }
+    .audit-icon.price     { background: #FEF3C7; color: #D97706; }
+    .audit-icon.delete    { background: #FEE2E2; color: #DC2626; }
+    .audit-icon.emp-add   { background: #DBEAFE; color: #1AA7EC; }
+    .audit-icon.emp-toggle { background: #E0F2FE; color: #0284C7; }
+    .audit-icon.emp-reset  { background: #F1F5F9; color: #475569; }
+    .audit-icon.stocktake  { background: #ECFDF5; color: #16A34A; }
+    .audit-icon.default    { background: #F1F5F9; color: #64748B; }
+    .audit-user {
+      font-size: 14px; font-weight: 600; color: #0F172A;
+    }
+    .audit-time {
+      font-size: 12px; color: #94A3B8; font-weight: 500;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .audit-time svg { width: 13px; height: 13px; }
+    .audit-type-badge {
+      font-size: 11.5px; font-weight: 600; color: #64748B;
+      padding: 3px 10px; border-radius: 999px;
+      border: 1px solid #E2E8F0; background: #F8FAFC;
+    }
+    .audit-desc {
+      font-size: 13.5px; color: #334155; margin-top: 8px; line-height: 1.5;
+    }
+    .audit-diff {
+      display: flex; align-items: center; gap: 8px;
+      margin-top: 8px; font-size: 13px; font-weight: 500;
+    }
+    .audit-diff .old-val { color: #DC2626; background: #FEF2F2; padding: 2px 8px; border-radius: 6px; }
+    .audit-diff .new-val { color: #16A34A; background: #ECFDF5; padding: 2px 8px; border-radius: 6px; }
+    .audit-diff .arrow { color: #94A3B8; }
+
+    /* ─── Pagination ─── */
+    .pagination {
+      display: flex; align-items: center; justify-content: center;
+      gap: 10px; margin-top: 24px;
+    }
+    .pagination-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 6px; height: 40px; padding: 0 16px;
+      border: 1px solid #E2E8F0; border-radius: 11px;
+      background: #fff; color: #334155; font-family: inherit;
+      font-size: 13.5px; font-weight: 600; cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .pagination-btn:hover { background: #F8FAFC; border-color: #CBD5E1; }
+    .pagination-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .pagination-btn svg { width: 15px; height: 15px; }
+    .pagination-info {
+      font-size: 13px; color: #64748B; font-weight: 500;
+    }
+
+    /* ─── Loading State ─── */
+    .loading-state {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; padding: 60px 20px; gap: 14px; color: #94A3B8;
+    }
+    .loading-state .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid #E2E8F0; border-top-color: #1AA7EC;
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+
+    /* ─── Skeleton Loading ─── */
+    .skeleton-entry {
+      background: #fff; border: 1px solid #EEF2F6;
+      border-radius: 14px; padding: 16px 20px;
+      margin-bottom: 10px; display: flex; align-items: flex-start; gap: 14px;
+    }
+    .skeleton-circle {
+      width: 38px; height: 38px; border-radius: 10px;
+      background: linear-gradient(90deg, #EEF2F6 25%, #F8FAFC 50%, #EEF2F6 75%);
+      background-size: 200% 100%; animation: skeleton-loading 1.5s infinite;
+      flex-shrink: 0;
+    }
+    .skeleton-lines { flex: 1; }
+    .skeleton-line {
+      height: 12px; border-radius: 6px; margin-bottom: 8px;
+      background: linear-gradient(90deg, #EEF2F6 25%, #F8FAFC 50%, #EEF2F6 75%);
+      background-size: 200% 100%; animation: skeleton-loading 1.5s infinite;
+    }
+    .skeleton-line:last-child { margin-bottom: 0; width: 60%; }
+    @keyframes skeleton-loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* ─── Empty State ─── */
+    .empty-state {
+      text-align: center; padding: 60px 20px;
+    }
+    .empty-state .empty-icon {
+      width: 72px; height: 72px; border-radius: 20px;
+      background: #F1F5F9; color: #94A3B8;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px;
+    }
+    .empty-state .empty-icon svg { width: 32px; height: 32px; }
+    .empty-state h3 {
+      font-size: 18px; font-weight: 700; color: #0F172A; margin-bottom: 8px;
+    }
+    .empty-state p { font-size: 14px; color: #64748B; }
+
+    /* ─── Error Banner ─── */
+    .error-banner {
+      background: #FEF2F2; border: 1px solid #FECACA;
+      border-radius: 14px; padding: 24px; text-align: center;
+      color: #DC2626;
+    }
+    .error-banner h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+    .error-banner p { font-size: 14px; color: #64748B; margin-bottom: 14px; }
+    .error-banner .btn { display: inline-flex; }
+
+    /* ─── Buttons ─── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 8px; padding: 10px 20px; border-radius: 11px;
+      font-family: inherit; font-size: 14px; font-weight: 600;
+      cursor: pointer; border: none; transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background: #1AA7EC; color: #fff;
+      box-shadow: 0 10px 22px -8px rgba(26,167,236,0.55);
+    }
+    .btn-primary:hover { filter: brightness(1.05); transform: translateY(-1px); }
+    .btn-secondary {
+      background: #fff; color: #334155; border: 1px solid #E2E8F0;
+    }
+    .btn-secondary:hover { background: #F8FAFC; }
+    .btn svg { width: 17px; height: 17px; }
+
+    /* ─── Toast ─── */
+    .toast {
+      position: fixed; bottom: 28px; left: 28px; z-index: 9999;
+      padding: 14px 20px; border-radius: 11px;
+      font-size: 14px; font-weight: 600; font-family: inherit;
+      display: flex; align-items: center; gap: 10px;
+      box-shadow: 0 10px 25px rgba(15,23,42,0.15);
+      animation: slideInLeft 0.3s cubic-bezier(0.22,1,0.36,1);
+    }
+    .toast.success { background: #065F46; color: #6EE7B7; }
+    .toast.error   { background: #7F1D1D; color: #FCA5A5; }
+    .toast svg { width: 18px; height: 18px; }
+
+    /* ─── Animations ─── */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    @keyframes slideInLeft {
+      from { opacity: 0; transform: translateX(-20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes skeleton-loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .animate-fade-up { animation: fadeUp 0.4s cubic-bezier(0.22,1,0.36,1) forwards; }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 1024px) {
+      .sidebar { display: none; }
+      .topbar { right: 0; }
+      .main-content { margin-right: 0; }
+    }
+    @media (max-width: 640px) {
+      .page-header { flex-direction: column; align-items: flex-start; gap: 14px; }
+      .filter-chips { gap: 6px; }
+      .filter-chip { padding: 6px 12px; font-size: 12.5px; }
+      .audit-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+      .pagination { flex-wrap: wrap; }
+    }
   </style>
-
 </head>
-<body class="bg-light-bg text-light-text font-sans min-h-screen">
+<body x-data="auditApp()" x-init="init()">
 
-  <!-- Cloud Design Sidebar -->
-  <aside class="sidebar" id="cloud-sidebar">
-    <div class="brand">
-      <div class="icon"></div>
-      <div class="name">Pharma<span>SUD</span></div>
-    </div>
-    <div class="nav-section">MENU</div>
-    <a href="/dashboard" class="nav-item" id="nav-dashboard"><i data-lucide="layout-dashboard"></i><span>لوحة التحكم</span></a>
-    <a href="/pos" class="nav-item" id="nav-pos"><i data-lucide="scan-barcode"></i><span>نقطة البيع</span></a>
-    <a href="/medicines" class="nav-item" id="nav-medicines"><i data-lucide="pill"></i><span>الأدوية</span></a>
-    <a href="/inventory" class="nav-item" id="nav-inventory"><i data-lucide="package"></i><span>المخزون</span></a>
-    <a href="/batches" class="nav-item" id="nav-batches"><i data-lucide="calendar-clock"></i><span>الدفعات</span></a>
-    <a href="/reports-sales" class="nav-item active" id="nav-reports"><i data-lucide="chart-line"></i><span>التقارير</span></a>
-    <a href="/employees" class="nav-item" id="nav-employees" style="display:none"><i data-lucide="users"></i><span>الموظفين</span></a>
-    <a href="/alerts" class="nav-item" id="nav-alerts"><i data-lucide="bell"></i><span>التنبيهات</span><span class="badge">7</span></a>
-    <a href="/settings" class="nav-item" id="nav-settings"><i data-lucide="settings"></i><span>الإعدادات</span></a>
-    <div class="user-card" onclick="logout()">
-      <div class="user-avatar" id="user-initials">U</div>
-      <div style="min-width:0;flex:1">
-        <div class="user-name" id="user-name">المستخدم</div>
-        <div class="user-role" id="user-role">صيدلي</div>
+  <div class="app-layout">
+    <!-- ═══════ Sidebar ═══════ -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="icon"></div>
+        <div class="name">Pharma<span>SUD</span></div>
       </div>
-      <i data-lucide="chevron-left"></i>
-    </div>
-  </aside>
+      <div class="nav-section">MENU</div>
+      <a href="/dashboard" class="nav-item"><i data-lucide="layout-dashboard"></i><span>لوحة التحكم</span></a>
+      <a href="/pos" class="nav-item"><i data-lucide="scan-barcode"></i><span>نقطة البيع</span></a>
+      <a href="/medicines" class="nav-item"><i data-lucide="pill"></i><span>الأدوية</span></a>
+      <a href="/inventory" class="nav-item"><i data-lucide="package"></i><span>المخزون</span></a>
+      <a href="/batches" class="nav-item"><i data-lucide="calendar-clock"></i><span>الدفعات</span></a>
+      <a href="/reports-sales" class="nav-item"><i data-lucide="chart-line"></i><span>التقارير</span></a>
+      <a href="/employees" class="nav-item" x-show="isAdmin"><i data-lucide="users"></i><span>الموظفين</span></a>
+      <a href="/alerts" class="nav-item"><i data-lucide="bell"></i><span>التنبيهات</span><span class="badge">7</span></a>
+      <a href="/settings" class="nav-item active"><i data-lucide="settings"></i><span>الإعدادات</span></a>
+      <div class="user-card" @click="logout()">
+        <div class="user-avatar" x-text="userInitials"></div>
+        <div style="min-width:0;flex:1">
+          <div class="user-name" x-text="userName || 'المستخدم'"></div>
+          <div class="user-role" x-text="isAdmin ? 'مدير' : 'صيدلي'"></div>
+        </div>
+        <i data-lucide="chevron-left"></i>
+      </div>
+    </aside>
+
+    <!-- ═══════ Topbar ═══════ -->
+    <header class="topbar">
+      <div class="search-box">
+        <i data-lucide="search"></i>
+        <span>البحث في الأدوية، المبيعات، الدفعات...</span>
+      </div>
+      <div class="actions">
+        <div class="lang-toggle">
+          <span :class="{ active: lang === 'en' }" @click="switchLang('en')">EN</span>
+          <span :class="{ active: lang === 'ar' }" @click="switchLang('ar')">ع</span>
+        </div>
+        <button class="icon-btn" @click="toggleDark()">
+          <i :data-lucide="isDark ? 'sun' : 'moon'"></i>
+        </button>
+        <button class="icon-btn">
+          <i data-lucide="bell"></i>
+          <span class="dot"></span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ═══════ Main Content ═══════ -->
+    <main class="main-content">
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div>
+          <h1>سجل المراجعة</h1>
+          <p class="subtitle">تتبع جميع العمليات والتغييرات في النظام</p>
+        </div>
+      </div>
+
+      <!-- Filter Chips -->
+      <div class="filter-chips">
+        <button class="filter-chip" :class="{ active: activeFilter === 'all' }" @click="setFilter('all')">
+          <i data-lucide="list-filter"></i>
+          الكل
+        </button>
+        <button class="filter-chip" :class="{ active: activeFilter === 'price_update' }" @click="setFilter('price_update')">
+          <i data-lucide="coins"></i>
+          تعديل سعر
+        </button>
+        <button class="filter-chip" :class="{ active: activeFilter === 'medicine_delete' }" @click="setFilter('medicine_delete')">
+          <i data-lucide="trash-2"></i>
+          حذف دواء
+        </button>
+        <button class="filter-chip" :class="{ active: activeFilter === 'employee_create' }" @click="setFilter('employee_create')">
+          <i data-lucide="user-plus"></i>
+          إضافة موظف
+        </button>
+        <button class="filter-chip" :class="{ active: activeFilter === 'employee_toggle' }" @click="setFilter('employee_toggle')">
+          <i data-lucide="toggle-right"></i>
+          تعطيل/تفعيل
+        </button>
+        <button class="filter-chip" :class="{ active: activeFilter === 'employee_reset_password' }" @click="setFilter('employee_reset_password')">
+          <i data-lucide="key-round"></i>
+          إعادة كلمة مرور
+        </button>
+        <button class="filter-chip" :class="{ active: activeFilter === 'stocktake_adjustment' }" @click="setFilter('stocktake_adjustment')">
+          <i data-lucide="clipboard-check"></i>
+          جرد
+        </button>
+      </div>
+
+      <!-- Loading State -->
+      <div x-show="loading" x-transition>
+        <div class="skeleton-entry"><div class="skeleton-circle"></div><div class="skeleton-lines"><div class="skeleton-line"></div><div class="skeleton-line"></div><div class="skeleton-line"></div></div></div>
+        <div class="skeleton-entry"><div class="skeleton-circle"></div><div class="skeleton-lines"><div class="skeleton-line"></div><div class="skeleton-line"></div><div class="skeleton-line"></div></div></div>
+        <div class="skeleton-entry"><div class="skeleton-circle"></div><div class="skeleton-lines"><div class="skeleton-line"></div><div class="skeleton-line"></div><div class="skeleton-line"></div></div></div>
+        <div class="skeleton-entry"><div class="skeleton-circle"></div><div class="skeleton-lines"><div class="skeleton-line"></div><div class="skeleton-line"></div><div class="skeleton-line"></div></div></div>
+      </div>
+
+      <!-- Error State -->
+      <div x-show="error && !loading" x-transition>
+        <div class="error-banner">
+          <h3>فشل تحميل سجل المراجعة</h3>
+          <p x-text="errorMsg"></p>
+          <button class="btn btn-secondary" @click="loadAudit()">
+            <i data-lucide="refresh-cw"></i>
+            إعادة المحاولة
+          </button>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <template x-if="!loading && !error">
+        <div>
+          <!-- Empty State -->
+          <template x-if="logs.length === 0">
+            <div class="empty-state">
+              <div class="empty-icon">
+                <i data-lucide="file-check-2"></i>
+              </div>
+              <h3 x-text="activeFilter === 'all' ? 'لا توجد عمليات مسجلة' : 'لا توجد عمليات بهذا النوع'"></h3>
+              <p x-text="activeFilter === 'all' ? 'سجل المراجعة فارغ حالياً' : 'لا توجد عمليات تطابق الفلتر المحدد'"></p>
+            </div>
+          </template>
+
+          <!-- Audit Entries -->
+          <template x-for="log in logs" :key="log.id || log.created_at + log.action_type">
+            <div class="audit-entry animate-fade-up">
+              <div class="audit-header">
+                <div class="audit-header-left">
+                  <div class="audit-icon" :class="getIconClass(log.action_type)">
+                    <i :data-lucide="getActionIcon(log.action_type)"></i>
+                  </div>
+                  <div>
+                    <div class="audit-user" x-text="log.user_name"></div>
+                    <div class="audit-time">
+                      <i data-lucide="clock"></i>
+                      <span x-text="formatTime(log.created_at)"></span>
+                    </div>
+                  </div>
+                </div>
+                <div class="audit-type-badge" x-text="getActionLabel(log.action_type)"></div>
+              </div>
+              <div class="audit-desc" x-text="log.description"></div>
+              <template x-if="log.old_value && log.new_value">
+                <div class="audit-diff">
+                  <span class="old-val" x-text="log.old_value"></span>
+                  <span class="arrow">←</span>
+                  <span class="new-val" x-text="log.new_value"></span>
+                </div>
+              </template>
+            </div>
+          </template>
+        </div>
+      </template>
+
+      <!-- Pagination -->
+      <div x-show="!loading && !error && totalPages > 0" class="pagination">
+        <button class="pagination-btn" @click="goPage(currentPage - 1)" :disabled="currentPage <= 1">
+          <i data-lucide="chevron-right"></i>
+          السابق
+        </button>
+        <span class="pagination-info" x-text="currentPage + ' / ' + totalPages"></span>
+        <button class="pagination-btn" @click="goPage(currentPage + 1)" :disabled="currentPage >= totalPages">
+          التالي
+          <i data-lucide="chevron-left"></i>
+        </button>
+      </div>
+
+    </main>
+  </div>
+
   <script>
-    function logout() { localStorage.clear(); window.location.href='/login'; }
-    document.addEventListener('DOMContentLoaded', function() {
-      const name = localStorage.getItem('userName') || 'المستخدم';
-      const role = localStorage.getItem('role') || 'pharmacist';
-      document.getElementById('user-name').textContent = name;
-      document.getElementById('user-role').textContent = role === 'admin' ? 'مدير' : 'صيدلي';
-      document.getElementById('user-initials').textContent = name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
-      if(role === 'admin') document.getElementById('nav-employees').style.display='flex';
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide) lucide.createIcons();
+      // Restore dark mode
+      if (localStorage.getItem('darkMode') === 'true') {
+        document.documentElement.classList.add('dark');
+      }
     });
+
+    function auditApp() {
+      return {
+        // Auth
+        userName: localStorage.getItem('userName') || 'المستخدم',
+        isAdmin: localStorage.getItem('role') === 'admin',
+        userInitials: '',
+        token: localStorage.getItem('token'),
+
+        // Dark Mode
+        isDark: localStorage.getItem('darkMode') === 'true',
+
+        // Language
+        lang: localStorage.getItem('lang') || 'ar',
+
+        // State
+        loading: true,
+        error: false,
+        errorMsg: '',
+        logs: [],
+        activeFilter: 'all',
+        currentPage: 1,
+        totalPages: 1,
+        totalItems: 0,
+
+        init() {
+          if (!this.token) {
+            window.location.href = '/login';
+            return;
+          }
+          const name = this.userName;
+          this.userInitials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+
+          // Apply dark mode
+          if (this.isDark) {
+            document.documentElement.classList.add('dark');
+          }
+
+          this.loadAudit();
+        },
+
+        // ─── Dark Mode Toggle ───
+        toggleDark() {
+          this.isDark = !this.isDark;
+          localStorage.setItem('darkMode', this.isDark);
+          if (this.isDark) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+          this.$nextTick(() => {
+            if (window.lucide) lucide.createIcons();
+          });
+        },
+
+        // ─── Language Toggle ───
+        switchLang(lang) {
+          this.lang = lang;
+          localStorage.setItem('lang', lang);
+          if (lang === 'en') {
+            document.documentElement.setAttribute('dir', 'ltr');
+            document.documentElement.setAttribute('lang', 'en');
+          } else {
+            document.documentElement.setAttribute('dir', 'rtl');
+            document.documentElement.setAttribute('lang', 'ar');
+          }
+          this.$nextTick(() => {
+            if (window.lucide) lucide.createIcons();
+          });
+        },
+
+        // ─── Filter ───
+        setFilter(filter) {
+          this.activeFilter = filter;
+          this.currentPage = 1;
+          this.loadAudit();
+        },
+
+        // ─── Load Audit Log ───
+        async loadAudit() {
+          this.loading = true;
+          this.error = false;
+
+          try {
+            const params = new URLSearchParams({
+              action_type: this.activeFilter,
+              page: this.currentPage
+            });
+            const res = await fetch('/api/audit-log/?' + params.toString(), {
+              headers: { 'Authorization': 'Bearer ' + this.token }
+            });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const data = await res.json();
+
+            this.loading = false;
+            this.logs = data.logs || [];
+            this.totalItems = data.total || 0;
+            this.totalPages = Math.max(1, Math.ceil(this.totalItems / 50));
+
+            this.$nextTick(() => {
+              if (window.lucide) lucide.createIcons();
+            });
+
+          } catch (e) {
+            this.loading = false;
+            this.error = true;
+            this.errorMsg = e.message || 'حدث خطأ أثناء تحميل السجل';
+          }
+        },
+
+        // ─── Pagination ───
+        goPage(page) {
+          this.currentPage = page;
+          this.loadAudit();
+        },
+
+        // ─── Format Time ───
+        formatTime(createdAt) {
+          if (!createdAt) return '';
+          return createdAt.slice(0, 16).replace('T', ' ');
+        },
+
+        // ─── Action Type Helpers ───
+        getActionIcon(actionType) {
+          const icons = {
+            'price_update': 'coins',
+            'medicine_delete': 'trash-2',
+            'employee_create': 'user-plus',
+            'employee_toggle': 'toggle-right',
+            'employee_reset_password': 'key-round',
+            'stocktake_adjustment': 'clipboard-check'
+          };
+          return icons[actionType] || 'file-text';
+        },
+
+        getIconClass(actionType) {
+          const classes = {
+            'price_update': 'price',
+            'medicine_delete': 'delete',
+            'employee_create': 'emp-add',
+            'employee_toggle': 'emp-toggle',
+            'employee_reset_password': 'emp-reset',
+            'stocktake_adjustment': 'stocktake'
+          };
+          return classes[actionType] || 'default';
+        },
+
+        getActionLabel(actionType) {
+          const labels = {
+            'price_update': 'تعديل سعر',
+            'medicine_delete': 'حذف دواء',
+            'employee_create': 'إضافة موظف',
+            'employee_toggle': 'تعطيل/تفعيل',
+            'employee_reset_password': 'إعادة كلمة مرور',
+            'stocktake_adjustment': 'جرد'
+          };
+          return labels[actionType] || actionType;
+        },
+
+        // ─── Logout ───
+        logout() {
+          localStorage.clear();
+          window.location.href = '/login';
+        }
+      }
+    }
   </script>
-
-    <div class="max-w-3xl mx-auto p-4">
-        <!-- Header -->
-        <div class="flex items-center justify-between mb-6">
-            <h1 class="text-2xl font-bold">📋 سجل التدقيق</h1>
-            <a href="/dashboard" class="text-[#1AA7EC] hover:text-blue-300 text-sm">← العودة للرئيسية</a>
-        </div>
-
-        <!-- Filter -->
-        <div class="flex gap-2 mb-4">
-            <select id="action-filter" onchange="loadAudit()" class="bg-dark-card border border-dark-border rounded-xl px-4 py-2 text-light-text flex-1">
-                <option value="all">الكل</option>
-                <option value="price_update">تعديل سعر</option>
-                <option value="medicine_delete">حذف دواء</option>
-                <option value="employee_create">إضافة موظف</option>
-                <option value="employee_toggle">تعطيل/تفعيل موظف</option>
-                <option value="employee_reset_password">إعادة كلمة موظف</option>
-                <option value="stocktake_adjustment">جرد</option>
-            </select>
-        </div>
-
-        <!-- Loading -->
-        <div id="loading" class="text-center py-12 text-light-muted">جاري تحميل سجل التدقيق...</div>
-
-        <!-- Error -->
-        <div id="error" class="hidden bg-red-900/50 border border-red-700 rounded-lg p-4 mb-4 text-center"></div>
-
-        <!-- Content -->
-        <div id="content" class="hidden space-y-2"></div>
-
-        <!-- Pagination -->
-        <div id="pagination" class="hidden flex justify-center gap-2 mt-4"></div>
-    </div>
-
-    <script>
-        const token = localStorage.getItem('token');
-        if (!token) { window.location.href = '/login'; }
-
-        let currentPage = 1;
-
-        async function loadAudit() {
-            const loading = document.getElementById('loading');
-            const content = document.getElementById('content');
-            const error = document.getElementById('error');
-            const pagination = document.getElementById('pagination');
-            const filter = document.getElementById('action-filter').value;
-
-            loading.classList.remove('hidden');
-            content.classList.add('hidden');
-
-            try {
-                const res = await fetch(`/api/audit-log/?action_type=${filter}&page=${currentPage}`, {
-                    headers: { 'Authorization': 'Bearer ' + token }
-                });
-                if (!res.ok) { throw new Error('HTTP ' + res.status); }
-                const data = await res.json();
-
-                loading.classList.add('hidden');
-                content.classList.remove('hidden');
-
-                if (data.logs.length === 0) {
-                    content.innerHTML = '<div class="text-center text-light-muted py-8">لا توجد عمليات مسجلة</div>';
-                    return;
-                }
-
-                content.innerHTML = data.logs.map(log => {
-                    let typeIcon = '📝';
-                    if (log.action_type === 'price_update') typeIcon = '💰';
-                    else if (log.action_type === 'medicine_delete') typeIcon = '🗑️';
-                    else if (log.action_type === 'employee_create') typeIcon = '👤';
-                    else if (log.action_type === 'employee_toggle') typeIcon = '🔄';
-                    else if (log.action_type === 'employee_reset_password') typeIcon = '🔑';
-                    else if (log.action_type === 'stocktake_adjustment') typeIcon = '📊';
-
-                    const time = log.created_at ? log.created_at.slice(0, 16).replace('T', ' ') : '';
-                    const diff = (log.old_value && log.new_value) ? `
-                        <div class="text-light-muted text-sm mt-1">
-                            <span class="text-red-400">${log.old_value}</span>
-                            <span class="mx-1">←</span>
-                            <span class="text-green-400">${log.new_value}</span>
-                        </div>` : '';
-
-                    return `
-                        <div class="bg-dark-card rounded-xl p-4 border border-dark-border">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-2">
-                                    <span>${typeIcon}</span>
-                                    <span class="font-medium">${log.user_name}</span>
-                                    <span class="text-light-muted text-xs">${time}</span>
-                                </div>
-                                <span class="text-xs text-light-muted">${log.action_type}</span>
-                            </div>
-                            <div class="text-light-text mt-1">${log.description}</div>
-                            ${diff}
-                        </div>`;
-                }).join('');
-
-                // Pagination
-                pagination.classList.remove('hidden');
-                const totalPages = Math.ceil(data.total / 50);
-                let pageHtml = '';
-                if (currentPage > 1) {
-                    pageHtml += `<button onclick="goPage(${currentPage - 1})" class="px-3 py-1 bg-dark-card rounded-lg">←</button>`;
-                }
-                pageHtml += `<span class="px-3 py-1 text-light-muted">${currentPage} / ${Math.max(1, totalPages)}</span>`;
-                if (currentPage < totalPages) {
-                    pageHtml += `<button onclick="goPage(${currentPage + 1})" class="px-3 py-1 bg-dark-card rounded-lg">→</button>`;
-                }
-                pagination.innerHTML = pageHtml;
-
-            } catch (e) {
-                loading.classList.add('hidden');
-                error.classList.remove('hidden');
-                error.textContent = '❌ فشل تحميل سجل التدقيق: ' + e.message;
-            }
-        }
-
-        function goPage(page) {
-            currentPage = page;
-            loadAudit();
-        }
-
-        loadAudit();
-    </script>
 </body>
 </html>
-<!-- ✅ انتهى - audit_log.html - المرحلة 7 --><!-- 1781564608 -->

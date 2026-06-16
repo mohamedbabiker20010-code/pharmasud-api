@@ -1,920 +1,1315 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/css/theme.css?v7.2.0">
-    <title>الأدوية بطيئة الحركة - PharmaSUD</title>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans Arabic', system-ui, -apple-system, sans-serif;
-            background: var(--background);
-            color: var(--text-primary);
-            min-height: 100vh;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/static/css/theme.css?v7.2.0">
+  <title>تقرير الأدوية الراكدة - PharmaSUD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif;
+      background: #F6F8FA;
+      color: #0F172A;
+      -webkit-font-smoothing: antialiased;
+    }
 
-        /* ─── Sidebar ─── */
-        .sidebar {
-            width: 220px;
-            background: var(--surface);
-            min-height: 100vh;
-            padding: 24px 0;
-            border-left: 1px solid var(--border);
-            position: fixed;
-            right: 0;
-            top: 0;
-            z-index: 100;
-            display: flex;
-            flex-direction: column;
-        }
-        .sidebar .logo {
-            padding: 0 20px 24px;
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 16px;
-        }
-        .sidebar .logo h1 {
-            font-size: 18px;
-            color: var(--primary-blue);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .sidebar .logo h1 svg { flex-shrink: 0; }
-        .sidebar .logo p {
-            font-size: 11px;
-            color: var(--text-secondary);
-            margin-top: 2px;
-            margin-right: 30px;
-        }
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 20px;
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-size: 14px;
-            transition: all 0.2s;
-            border-right: 3px solid transparent;
-        }
-        .nav-item:hover, .nav-item.active {
-            background: var(--border);
-            color: var(--text-primary);
-            border-right-color: var(--primary-blue);
-        }
-        .nav-item .icon { font-size: 18px; width: 22px; text-align: center; }
-        .nav-item .badge {
-            background: var(--danger);
-            color: white;
-            font-size: 10px;
-            padding: 1px 6px;
-            border-radius: 10px;
-            margin-right: auto;
-        }
-        .sidebar-footer {
-            margin-top: auto;
-            padding: 16px 20px;
-            border-top: 1px solid var(--border);
-        }
-        .sidebar-footer .nav-item {
-            border-right: none;
-            color: var(--danger);
-            padding: 12px 0;
-        }
-        .sidebar-footer .nav-item:hover {
-            background: transparent;
-            color: #FCA5A5;
-        }
+    /* ─── Dark Mode ─── */
+    html.dark body,
+    html.dark .sidebar { background: #0B1120; color: #E2E8F0; }
+    html.dark .sidebar { border-left-color: #1E293B; }
+    html.dark .sidebar .brand .name { color: #E2E8F0; }
+    html.dark .sidebar .nav-item { color: #94A3B8; }
+    html.dark .sidebar .nav-item:hover { background: #1E293B; color: #E2E8F0; }
+    html.dark .sidebar .nav-item.active { background: #1AA7EC; color: #fff; box-shadow: 0 8px 18px -8px rgba(26,167,236,0.55); }
+    html.dark .sidebar .nav-item .badge { background: #7F1D1D; color: #FCA5A5; }
+    html.dark .sidebar .nav-section { color: #475569; }
+    html.dark .sidebar .user-card { border-color: #1E293B; }
+    html.dark .sidebar .user-name { color: #E2E8F0; }
+    html.dark .sidebar .user-role { color: #64748B; }
+    html.dark .sidebar .brand .icon { background: #1AA7EC; }
 
-        /* ─── Mobile toggle ─── */
-        .mobile-toggle {
-            display: none;
-            background: var(--border);
-            border: none;
-            color: var(--text-primary);
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            cursor: pointer;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            margin-left: 12px;
-        }
-        .sidebar-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 99;
-        }
+    html.dark .topbar { background: #0B1120; border-bottom-color: #1E293B; }
+    html.dark .topbar .search-box { background: #1E293B; color: #64748B; }
+    html.dark .topbar .icon-btn { border-color: #1E293B; color: #94A3B8; }
+    html.dark .topbar .icon-btn:hover { background: #1E293B; }
+    html.dark .topbar .lang-toggle { border-color: #1E293B; }
+    html.dark .topbar .lang-toggle span { color: #94A3B8; }
+    html.dark .topbar .lang-toggle span.active { background: #1AA7EC; color: #fff; }
+    html.dark .topbar .page-info h1 { color: #F1F5F9; }
+    html.dark .topbar .page-info .subtitle { color: #64748B; }
 
-        /* ─── Main Content ─── */
-        .main-content {
-            margin-right: 220px;
-            padding: 32px 40px;
-            min-height: 100vh;
-        }
+    html.dark { background: #0B1120; }
+    html.dark .main-content { background: #0B1120; }
+    html.dark .page-header h1 { color: #F1F5F9; }
+    html.dark .page-header .subtitle { color: #64748B; }
 
-        /* ─── Header ─── */
-        .dashboard-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 28px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid var(--border);
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-        .header-right { display: flex; align-items: center; gap: 12px; }
-        .header-right h2 { font-size: 22px; }
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-        .header-left .date { direction: ltr; }
-        .header-left .user-info { text-align: left; }
-        .header-left .user-info .name { color: var(--text-primary); font-weight: 600; }
-        .header-left .user-info .pharmacy { font-size: 12px; color: var(--text-secondary); }
-        .notification-bell {
-            position: relative;
-            background: var(--border);
-            border: none;
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-secondary);
-            transition: all 0.2s;
-        }
-        .notification-bell:hover { background: var(--text-secondary); color: var(--text-primary); }
+    html.dark .metric-card { background: #111827; border-color: #1E293B; }
+    html.dark .metric-card .metric-label { color: #64748B; }
+    html.dark .metric-card .metric-value { color: #F1F5F9; }
+    html.dark .metric-card .metric-badge.success { color: #4ADE80; background: #052e16; }
+    html.dark .metric-card .metric-badge.warning { color: #FCD34D; background: #451a03; }
+    html.dark .metric-card .metric-badge.danger { color: #FCA5A5; background: #450a0a; }
 
-        /* ─── Filter Bar ─── */
-        .filter-bar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            margin-bottom: 24px;
-            flex-wrap: wrap;
-        }
-        .filter-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .filter-group label {
-            font-size: 13px;
-            color: var(--text-secondary);
-            font-weight: 600;
-        }
-        .filter-select {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-family: inherit;
-            cursor: pointer;
-            outline: none;
-            transition: border-color 0.2s;
-            min-width: 100px;
-        }
-        .filter-select:hover, .filter-select:focus { border-color: var(--primary-blue); }
-        .filter-btn {
-            background: var(--primary-blue);
-            color: white;
-            border: none;
-            padding: 8px 20px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-family: inherit;
-            cursor: pointer;
-            transition: background 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .filter-btn:hover { background: #1AA7EC; }
-        .filter-stats {
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-        .filter-stats strong { color: var(--text-primary); }
+    html.dark .panel { background: #111827; border-color: #1E293B; }
+    html.dark .panel .panel-title { color: #F1F5F9; }
+    html.dark .panel .panel-subtitle { color: #64748B; }
+    html.dark .panel .panel-header { border-bottom-color: #1E293B; }
 
-        /* ─── Summary Cards ─── */
-        .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
-            margin-bottom: 28px;
-        }
-        .summary-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 20px;
-            transition: border-color 0.2s;
-        }
-        .summary-card:hover { border-color: var(--text-secondary); }
-        .summary-card .card-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 12px;
-            font-size: 18px;
-        }
-        .summary-card .card-label {
-            font-size: 13px;
-            color: var(--text-secondary);
-            margin-bottom: 4px;
-        }
-        .summary-card .card-value {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--text-primary);
-        }
-        .summary-card .card-sub {
-            font-size: 12px;
-            color: var(--text-secondary);
-            margin-top: 4px;
-        }
-        .card-blue .card-icon { background: rgba(26,167,236,0.15); color: var(--primary-blue); }
-        .card-yellow .card-icon { background: rgba(245,158,11,0.15); color: var(--warning); }
-        .card-red .card-icon { background: rgba(239,68,68,0.15); color: var(--danger); }
-        .card-green .card-icon { background: rgba(34,197,94,0.15); color: var(--success); }
+    html.dark .table th { color: #475569; border-bottom-color: #1E293B; }
+    html.dark .table td { color: #E2E8F0; border-bottom-color: #1E293B; }
+    html.dark .table tr:hover td { background: #1E293B; }
 
-        /* ─── Section Card ─── */
-        .section-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            overflow: hidden;
-            margin-bottom: 28px;
-        }
-        .section-card .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px 20px;
-            border-bottom: 1px solid var(--border);
-        }
-        .section-card .card-header h3 {
-            font-size: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .section-card .card-header .subtitle {
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-        .section-card .card-body { padding: 16px 20px; }
+    html.dark .risk-critical { background: rgba(185,28,28,0.3); color: #FCA5A5; border-color: rgba(185,28,28,0.5); }
+    html.dark .risk-high { background: rgba(239,68,68,0.15); color: #FCA5A5; border-color: rgba(239,68,68,0.4); }
+    html.dark .risk-medium { background: rgba(245,158,11,0.15); color: #FCD34D; border-color: rgba(245,158,11,0.4); }
+    html.dark .risk-low { background: rgba(34,197,94,0.15); color: #4ADE80; border-color: rgba(34,197,94,0.4); }
 
-        /* ─── Slow Moving Table ─── */
-        .report-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .report-table th {
-            font-size: 12px;
-            color: var(--text-secondary);
-            text-align: right;
-            padding: 10px 8px;
-            border-bottom: 1px solid var(--border);
-            font-weight: 600;
-            white-space: nowrap;
-            user-select: none;
-        }
-        .report-table td {
-            font-size: 13px;
-            padding: 12px 8px;
-            border-bottom: 1px solid var(--surface);
-        }
-        .report-table tbody tr {
-            transition: background 0.15s;
-        }
-        .report-table tbody tr:hover { background: rgba(26,167,236,0.04); }
-        .report-table tr:last-child td { border-bottom: none; }
-        .report-table .med-name {
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-        .report-table .stock-val {
-            font-weight: 600;
-            direction: ltr;
-        }
-        .report-table .num {
-            direction: ltr;
-            text-align: right;
-        }
+    html.dark .expiry-urgent { color: #FCA5A5; }
+    html.dark .expiry-warning { color: #FCD34D; }
+    html.dark .expiry-ok { color: #4ADE80; }
+    html.dark .expiry-far { color: #64748B; }
+    html.dark .expiry-none { color: #64748B; }
 
-        /* ─── Risk Badge ─── */
-        .risk-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 3px 10px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-        .risk-critical {
-            background: rgba(185,28,28,0.2);
-            color: #FCA5A5;
-            border: 1px solid rgba(185,28,28,0.35);
-        }
-        .risk-high {
-            background: rgba(239,68,68,0.12);
-            color: #FCA5A5;
-            border: 1px solid rgba(239,68,68,0.25);
-        }
-        .risk-medium {
-            background: rgba(245,158,11,0.12);
-            color: #FDE68A;
-            border: 1px solid rgba(245,158,11,0.25);
-        }
-        .risk-low {
-            background: rgba(34,197,94,0.12);
-            color: #86EFAC;
-            border: 1px solid rgba(34,197,94,0.25);
-        }
+    html.dark .rec-card { background: rgba(26,167,236,0.08); border-color: rgba(26,167,236,0.25); }
+    html.dark .rec-card.rec-critical { background: rgba(185,28,28,0.1); border-color: rgba(185,28,28,0.35); }
+    html.dark .rec-card.rec-high { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.25); }
+    html.dark .rec-card.rec-medium { background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.25); }
+    html.dark .rec-card .rec-title { color: #E2E8F0; }
+    html.dark .rec-card .rec-desc { color: #94A3B8; }
 
-        /* ─── Expiry Warning ─── */
-        .expiry-urgent { color: var(--danger); font-weight: 600; }
-        .expiry-warning { color: var(--warning); font-weight: 600; }
-        .expiry-ok { color: var(--success); }
-        .expiry-far { color: var(--text-secondary); }
-        .expiry-none { color: var(--text-secondary); font-style: italic; }
+    html.dark .filter-select { background: #1E293B; border-color: #334155; color: #E2E8F0; }
+    html.dark .filter-select:focus { border-color: #1AA7EC; }
+    html.dark .btn-primary { background: #1AA7EC; }
+    html.dark .loading-state .spinner { border-color: #334155; border-top-color: #1AA7EC; }
+    html.dark .loading-text { color: #64748B; }
+    html.dark .error-state .err-icon { color: #FCA5A5; }
+    html.dark .error-state .err-msg { color: #FCA5A5; }
+    html.dark .error-state .err-detail { color: #64748B; }
+    html.dark .no-data { color: #64748B; }
+    html.dark .filter-stats { color: #64748B; }
+    html.dark .filter-stats strong { color: #E2E8F0; }
 
-        /* ─── Recommendations ─── */
-        .recommendations-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
-        .rec-card {
-            background: rgba(26,167,236,0.06);
-            border: 1px solid rgba(26,167,236,0.2);
-            border-radius: 10px;
-            padding: 16px;
-            transition: border-color 0.2s;
-        }
-        .rec-card:hover { border-color: rgba(26,167,236,0.4); }
-        .rec-card.rec-critical {
-            background: rgba(185,28,28,0.08);
-            border-color: rgba(185,28,28,0.25);
-        }
-        .rec-card.rec-critical:hover { border-color: rgba(185,28,28,0.45); }
-        .rec-card.rec-high {
-            background: rgba(239,68,68,0.06);
-            border-color: rgba(239,68,68,0.2);
-        }
-        .rec-card.rec-high:hover { border-color: rgba(239,68,68,0.4); }
-        .rec-card.rec-medium {
-            background: rgba(245,158,11,0.06);
-            border-color: rgba(245,158,11,0.2);
-        }
-        .rec-card.rec-medium:hover { border-color: rgba(245,158,11,0.4); }
-        .rec-card .rec-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 8px;
-        }
-        .rec-card .rec-header .rec-icon {
-            font-size: 20px;
-        }
-        .rec-card .rec-header .rec-title {
-            font-size: 14px;
-            font-weight: 600;
-        }
-        .rec-card .rec-desc {
-            font-size: 13px;
-            color: var(--text-secondary);
-            line-height: 1.6;
-        }
+    /* ─── Layout ─── */
+    .app-layout {
+      display: flex;
+      min-height: 100vh;
+    }
 
-        /* ─── Loading & Error States ─── */
-        .loading-state {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 60px 20px;
-            gap: 16px;
-        }
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid var(--border);
-            border-top-color: var(--primary-blue);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .loading-text { color: var(--text-secondary); font-size: 14px; }
+    /* ─── Sidebar ─── */
+    .sidebar {
+      width: 248px;
+      background: #fff;
+      border-left: 1px solid #EEF2F6;
+      display: flex;
+      flex-direction: column;
+      padding: 22px 16px;
+      position: fixed;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      z-index: 100;
+    }
+    .sidebar .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 0 8px 22px;
+    }
+    .sidebar .brand .icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 11px;
+      background: #1AA7EC;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .sidebar .brand .icon::before,
+    .sidebar .brand .icon::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      background: #fff;
+      border-radius: 3px;
+    }
+    .sidebar .brand .icon::before { width: 18px; height: 5.5px; }
+    .sidebar .brand .icon::after { width: 5.5px; height: 18px; }
+    .sidebar .brand .name {
+      font: 700 18px/1 'IBM Plex Sans Arabic', sans-serif;
+      letter-spacing: -0.02em;
+    }
+    .sidebar .brand .name span { color: #1AA7EC; }
+    .sidebar .nav-section {
+      font: 600 11px/1 'IBM Plex Mono', monospace;
+      letter-spacing: 0.1em;
+      color: #CBD5E1;
+      padding: 14px 10px 10px;
+    }
+    .sidebar .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 12px;
+      border-radius: 11px;
+      color: #475569;
+      font-size: 14px;
+      font-weight: 500;
+      text-decoration: none;
+      margin-bottom: 4px;
+      transition: all 0.2s ease;
+    }
+    .sidebar .nav-item:hover {
+      background: #F8FAFC;
+      color: #0F172A;
+    }
+    .sidebar .nav-item.active {
+      background: #1AA7EC;
+      color: #fff;
+      box-shadow: 0 8px 18px -8px rgba(26, 167, 236, 0.55);
+    }
+    .sidebar .nav-item svg {
+      width: 19px;
+      height: 19px;
+      flex-shrink: 0;
+    }
+    .sidebar .nav-item .badge {
+      margin-right: auto;
+      background: #FEF2F2;
+      color: #DC2626;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+    .sidebar .user-card {
+      margin-top: auto;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 11px;
+      border: 1px solid #EEF2F6;
+      border-radius: 13px;
+      cursor: pointer;
+    }
+    .sidebar .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: #1AA7EC;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .sidebar .user-info {
+      min-width: 0;
+      flex: 1;
+    }
+    .sidebar .user-name {
+      font-size: 13.5px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .sidebar .user-role {
+      font-size: 11.5px;
+      color: #94A3B8;
+    }
+    .sidebar .user-card svg {
+      width: 16px;
+      height: 16px;
+      color: #CBD5E1;
+      flex-shrink: 0;
+    }
 
-        .error-state {
-            text-align: center;
-            padding: 60px 20px;
-        }
-        .error-state .err-icon { font-size: 48px; margin-bottom: 12px; }
-        .error-state .err-msg { color: var(--danger); font-size: 16px; margin-bottom: 8px; }
-        .error-state .err-detail { color: var(--text-secondary); font-size: 13px; margin-bottom: 16px; }
-        .retry-btn {
-            background: var(--primary-blue);
-            color: white;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-family: inherit;
-            transition: background 0.2s;
-        }
-        .retry-btn:hover { background: #1AA7EC; }
+    /* ─── Topbar ─── */
+    .topbar {
+      height: 70px;
+      background: #fff;
+      border-bottom: 1px solid #EEF2F6;
+      display: flex;
+      align-items: center;
+      padding: 0 28px;
+      gap: 18px;
+      position: fixed;
+      top: 0;
+      right: 248px;
+      left: 0;
+      z-index: 90;
+    }
+    .topbar .page-info {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .topbar .page-info h1 {
+      margin: 0;
+      font: 700 20px/1.1 'IBM Plex Sans Arabic', sans-serif;
+      letter-spacing: -0.02em;
+      color: #0F172A;
+    }
+    .topbar .page-info .subtitle {
+      margin: 0;
+      color: #64748B;
+      font-size: 13px;
+      margin-top: 3px;
+    }
+    .topbar .topbar-actions {
+      margin-right: auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .topbar .lang-toggle {
+      display: flex;
+      border: 1px solid #E2E8F0;
+      border-radius: 9px;
+      overflow: hidden;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .topbar .lang-toggle span {
+      padding: 7px 12px;
+      color: #64748B;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .topbar .lang-toggle span.active {
+      background: #1AA7EC;
+      color: #fff;
+    }
+    .topbar .icon-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 11px;
+      border: 1px solid #E2E8F0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #475569;
+      background: transparent;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+    .topbar .icon-btn:hover {
+      background: #F8FAFC;
+    }
+    .topbar .icon-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+    .topbar .icon-btn .dot {
+      position: absolute;
+      top: 9px;
+      left: 11px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #DC2626;
+      border: 2px solid #fff;
+    }
 
-        .no-data {
-            text-align: center;
-            padding: 40px 20px;
-            color: var(--text-secondary);
-            font-size: 14px;
-        }
-        .no-data .no-data-icon { font-size: 40px; margin-bottom: 12px; }
-        .no-data .no-data-sub { color: var(--text-secondary); font-size: 13px; margin-top: 4px; }
+    /* ─── Main Content ─── */
+    .main-content {
+      margin-right: 248px;
+      padding: calc(70px + 28px) 28px 28px;
+      min-height: 100vh;
+    }
 
-        /* ─── Responsive ─── */
-        @media (max-width: 1200px) {
-            .cards-grid { grid-template-columns: repeat(2, 1fr); }
-            .recommendations-grid { grid-template-columns: 1fr; }
-        }
-        @media (max-width: 992px) {
-            .main-content { padding: 24px 20px; }
-            .cards-grid { grid-template-columns: repeat(2, 1fr); }
-        }
-        @media (max-width: 768px) {
-            .sidebar { display: none; }
-            .sidebar.mobile-open { display: flex; }
-            .sidebar-overlay.mobile-open { display: block; }
-            .main-content { margin-right: 0; padding: 16px; }
-            .mobile-toggle { display: flex; }
-            .cards-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-            .header-right h2 { font-size: 17px; }
-            .header-left { gap: 8px; }
-            .header-left .date { display: none; }
-            .summary-card { padding: 14px; }
-            .summary-card .card-value { font-size: 18px; }
+    /* ─── Page Header ─── */
+    .page-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .page-header h1 {
+      margin: 0 0 6px;
+      font: 700 26px/1.1 'IBM Plex Sans Arabic', sans-serif;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .page-header h1 svg {
+      width: 28px;
+      height: 28px;
+      color: #1AA7EC;
+    }
+    .page-header .subtitle {
+      margin: 0;
+      color: #64748B;
+      font-size: 14.5px;
+    }
+    .page-header .header-actions {
+      display: flex;
+      gap: 10px;
+    }
+    .page-header .btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 42px;
+      padding: 0 18px;
+      border-radius: 11px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+    .page-header .btn svg { width: 17px; height: 17px; }
+    .btn-primary {
+      background: #1AA7EC;
+      color: #fff;
+      box-shadow: 0 10px 22px -8px rgba(26, 167, 236, 0.55);
+    }
+    .btn-primary:hover {
+      filter: brightness(1.05);
+      transform: translateY(-1px);
+    }
+    .btn-secondary {
+      background: #fff;
+      color: #334155;
+      border: 1px solid #E2E8F0;
+    }
+    .btn-secondary:hover {
+      background: #F8FAFC;
+    }
 
-            .recommendations-grid { grid-template-columns: 1fr; }
+    /* ─── Filter Bar ─── */
+    .filter-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 22px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .filter-label {
+      font-size: 13px;
+      color: #64748B;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .filter-label svg { width: 15px; height: 15px; }
+    .filter-select {
+      height: 38px;
+      padding: 0 12px;
+      border-radius: 10px;
+      border: 1px solid #EEF2F6;
+      background: #fff;
+      color: #0F172A;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s ease;
+      -webkit-appearance: none;
+    }
+    .filter-select:hover { border-color: #CBD5E1; }
+    .filter-select:focus {
+      outline: none;
+      border-color: #1AA7EC;
+      box-shadow: 0 0 0 3px rgba(26, 167, 236, 0.12);
+    }
+    .filter-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      height: 38px;
+      padding: 0 16px;
+      border-radius: 10px;
+      background: #1AA7EC;
+      border: none;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      box-shadow: 0 6px 14px -6px rgba(26, 167, 236, 0.45);
+      transition: all 0.2s ease;
+    }
+    .filter-btn:hover {
+      filter: brightness(1.05);
+      transform: translateY(-1px);
+    }
+    .filter-btn svg { width: 15px; height: 15px; }
+    .filter-stats {
+      font-size: 13px;
+      color: #64748B;
+      margin-right: auto;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .filter-stats strong { color: #0F172A; font-weight: 700; }
 
-            .report-table { font-size: 12px; }
-            .report-table th, .report-table td { padding: 8px 6px; }
-            /* Hide less important columns on mobile */
-            .report-table .col-base-unit,
-            .report-table .col-stock-value { display: none; }
-        }
-        @media (max-width: 480px) {
-            .cards-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
-            .summary-card .card-value { font-size: 16px; }
-            .filter-bar { flex-direction: column; align-items: stretch; }
-            .filter-group { justify-content: center; }
-        }
-    </style>
+    /* ─── Metric Cards ─── */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+    .metric-card {
+      background: #fff;
+      border: 1px solid #EEF2F6;
+      border-radius: 16px;
+      padding: 20px;
+    }
+    .metric-card .metric-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .metric-card .metric-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .metric-card .metric-icon.blue { background: #DBEAFE; color: #1AA7EC; }
+    .metric-card .metric-icon.red { background: #FEE2E2; color: #DC2626; }
+    .metric-card .metric-icon.yellow { background: #FEF3C7; color: #D97706; }
+    .metric-card .metric-icon.green { background: #ECFDF5; color: #16A34A; }
+    .metric-card .metric-icon svg { width: 20px; height: 20px; }
+    .metric-card .metric-badge {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 999px;
+    }
+    .metric-card .metric-badge.danger { color: #DC2626; background: #FEF2F2; }
+    .metric-card .metric-badge.warning { color: #D97706; background: #FFFBeb; }
+    .metric-card .metric-badge.success { color: #16A34A; background: #ECFDF5; }
+    .metric-card .metric-label {
+      font-size: 13px;
+      color: #94A3B8;
+      font-weight: 500;
+      margin-bottom: 5px;
+    }
+    .metric-card .metric-value {
+      font: 700 25px/1 'IBM Plex Sans Arabic', sans-serif;
+      letter-spacing: -0.02em;
+      color: #0F172A;
+    }
+    .metric-card .metric-value .unit {
+      font-size: 14px;
+      color: #94A3B8;
+      font-weight: 600;
+    }
+    .metric-card .metric-sub {
+      font-size: 12px;
+      color: #94A3B8;
+      margin-top: 4px;
+    }
+
+    /* ─── Panel ─── */
+    .panel {
+      background: #fff;
+      border: 1px solid #EEF2F6;
+      border-radius: 16px;
+      padding: 22px 24px;
+      margin-bottom: 22px;
+      overflow: hidden;
+    }
+    .panel .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid #F1F5F9;
+    }
+    .panel .panel-title {
+      font-size: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .panel .panel-title svg { width: 18px; height: 18px; color: #1AA7EC; }
+    .panel .panel-subtitle {
+      font-size: 12.5px;
+      color: #94A3B8;
+      margin-top: 3px;
+    }
+
+    /* ─── Table ─── */
+    .table-container {
+      overflow-x: auto;
+    }
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      min-width: 800px;
+    }
+    .table th {
+      text-align: right;
+      padding: 12px 14px;
+      font: 600 11px 'IBM Plex Mono', monospace;
+      letter-spacing: 0.06em;
+      color: #CBD5E1;
+      text-transform: uppercase;
+      border-bottom: 1px solid #F1F5F9;
+      white-space: nowrap;
+    }
+    .table td {
+      padding: 13px 14px;
+      border-bottom: 1px solid #F6F8FA;
+      color: #0F172A;
+      vertical-align: middle;
+    }
+    .table tr:hover td {
+      background: #F8FAFC;
+    }
+    .table tr:last-child td {
+      border-bottom: none;
+    }
+    .table .med-name {
+      font-weight: 600;
+      color: #0F172A;
+    }
+    .table .num {
+      direction: ltr;
+      text-align: right;
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 600;
+    }
+    .table .stock-val {
+      font-weight: 700;
+      direction: ltr;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+    .table .col-base-unit,
+    .table .col-stock-value { /* shown on desktop */ }
+
+    /* ─── Risk Badge ─── */
+    .risk-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      border: 1px solid transparent;
+    }
+    .risk-critical {
+      background: rgba(185,28,28,0.2);
+      color: #B91C1C;
+      border-color: rgba(185,28,28,0.35);
+    }
+    .risk-high {
+      background: rgba(239,68,68,0.1);
+      color: #DC2626;
+      border-color: rgba(239,68,68,0.2);
+    }
+    .risk-medium {
+      background: rgba(245,158,11,0.1);
+      color: #D97706;
+      border-color: rgba(245,158,11,0.2);
+    }
+    .risk-low {
+      background: rgba(34,197,94,0.1);
+      color: #16A34A;
+      border-color: rgba(34,197,94,0.2);
+    }
+
+    /* ─── Expiry Warning ─── */
+    .expiry-urgent { color: #DC2626; font-weight: 600; }
+    .expiry-warning { color: #D97706; font-weight: 600; }
+    .expiry-ok { color: #16A34A; }
+    .expiry-far { color: #94A3B8; }
+    .expiry-none { color: #94A3B8; font-style: italic; }
+
+    /* ─── Recommendations Grid ─── */
+    .recommendations-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .rec-card {
+      background: rgba(26,167,236,0.04);
+      border: 1px solid rgba(26,167,236,0.15);
+      border-radius: 14px;
+      padding: 18px;
+      transition: border-color 0.2s ease;
+    }
+    .rec-card:hover { border-color: rgba(26,167,236,0.35); }
+    .rec-card.rec-critical {
+      background: rgba(185,28,28,0.06);
+      border-color: rgba(185,28,28,0.2);
+    }
+    .rec-card.rec-critical:hover { border-color: rgba(185,28,28,0.4); }
+    .rec-card.rec-high {
+      background: rgba(239,68,68,0.04);
+      border-color: rgba(239,68,68,0.15);
+    }
+    .rec-card.rec-high:hover { border-color: rgba(239,68,68,0.35); }
+    .rec-card.rec-medium {
+      background: rgba(245,158,11,0.04);
+      border-color: rgba(245,158,11,0.15);
+    }
+    .rec-card.rec-medium:hover { border-color: rgba(245,158,11,0.35); }
+    .rec-card .rec-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .rec-card .rec-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .rec-card .rec-icon svg { width: 17px; height: 17px; }
+    .rec-card.rec-critical .rec-icon { background: #FEE2E2; color: #DC2626; }
+    .rec-card.rec-high .rec-icon { background: #FEE2E2; color: #EF4444; }
+    .rec-card.rec-medium .rec-icon { background: #FEF3C7; color: #D97706; }
+    .rec-card .rec-title {
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .rec-card.rec-critical .rec-title { color: #B91C1C; }
+    .rec-card.rec-high .rec-title { color: #DC2626; }
+    .rec-card.rec-medium .rec-title { color: #D97706; }
+    .rec-card .rec-desc {
+      font-size: 13px;
+      color: #64748B;
+      line-height: 1.7;
+    }
+    .rec-card .rec-desc strong { color: #0F172A; }
+
+    /* ─── Loading & Error States ─── */
+    .loading-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 400px;
+      gap: 16px;
+      color: #94A3B8;
+    }
+    .loading-state .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #E2E8F0;
+      border-top-color: #1AA7EC;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    .loading-text { color: #94A3B8; font-size: 14px; }
+    .error-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 400px;
+      gap: 16px;
+    }
+    .error-state .err-icon { width: 48px; height: 48px; color: #DC2626; }
+    .error-state .err-msg { color: #DC2626; font-size: 16px; font-weight: 600; }
+    .error-state .err-detail { color: #64748B; font-size: 13px; margin-bottom: 8px; }
+    .no-data {
+      text-align: center;
+      padding: 40px 20px;
+      color: #94A3B8;
+      font-size: 14px;
+    }
+    .no-data .no-data-icon { font-size: 40px; margin-bottom: 12px; }
+    .no-data .no-data-sub { color: #94A3B8; font-size: 13px; margin-top: 4px; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 1024px) {
+      .sidebar { display: none; }
+      .topbar { right: 0; }
+      .main-content { margin-right: 0; }
+      .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+      .recommendations-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      .metrics-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .page-header h1 { font-size: 20px; }
+      .page-header .header-actions { width: 100%; }
+      .metric-card { padding: 14px; }
+      .metric-card .metric-value { font-size: 20px; }
+      .table { font-size: 12px; }
+      .table th, .table td { padding: 10px 8px; }
+      .table .col-base-unit,
+      .table .col-stock-value { display: none; }
+      .filter-bar { flex-direction: column; align-items: stretch; }
+    }
+    @media (max-width: 480px) {
+      .metrics-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .metric-card .metric-value { font-size: 18px; }
+    }
+  </style>
 </head>
-<body>
+<body x-data="slowMovingApp()">
 
-<div x-data="slowMovingApp()" x-init="init()">
-    <!-- Sidebar Overlay (mobile) -->
-    <div class="sidebar-overlay"
-         :class="{ 'mobile-open': sidebarOpen }"
-         @click="sidebarOpen = false"></div>
+  <div class="app-layout">
+    <!-- ═══════ Sidebar ═══════ -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="icon"></div>
+        <div class="name">Pharma<span>SUD</span></div>
+      </div>
 
-    <!-- Sidebar -->
-    <aside class="sidebar" :class="{ 'mobile-open': sidebarOpen }">
-        <div class="logo">
-            <h1>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-                </svg>
-                PharmaSUD
-            </h1>
-            <p>نظام إدارة الصيدلية</p>
+      <div class="nav-section">MENU</div>
+      <a href="/dashboard" class="nav-item">
+        <i data-lucide="layout-dashboard"></i>
+        <span>لوحة التحكم</span>
+      </a>
+      <a href="/pos" class="nav-item">
+        <i data-lucide="scan-barcode"></i>
+        <span>نقطة البيع</span>
+      </a>
+      <a href="/medicines" class="nav-item">
+        <i data-lucide="pill"></i>
+        <span>الأدوية</span>
+      </a>
+      <a href="/inventory" class="nav-item">
+        <i data-lucide="package"></i>
+        <span>المخزون</span>
+      </a>
+      <a href="/batch-receive" class="nav-item">
+        <i data-lucide="truck"></i>
+        <span>استلام دفعة</span>
+      </a>
+      <a href="/sales-history" class="nav-item">
+        <i data-lucide="receipt"></i>
+        <span>سجل المبيعات</span>
+      </a>
+      <a href="/reports-sales" class="nav-item active" id="nav-reports">
+        <i data-lucide="chart-line"></i>
+        <span>التقارير</span>
+      </a>
+      <a href="/settings" class="nav-item">
+        <i data-lucide="settings"></i>
+        <span>الإعدادات</span>
+      </a>
+
+      <div class="user-card" @click="logout()">
+        <div class="user-avatar" x-text="userInitials"></div>
+        <div class="user-info">
+          <div class="user-name" x-text="userName || 'المستخدم'"></div>
+          <div class="user-role" x-text="isAdmin ? 'مدير' : 'صيدلي'"></div>
         </div>
-
-        <a href="/dashboard" class="nav-item">
-            <span class="icon">📊</span> لوحة التحكم
-        </a>
-        <a href="/medicines" class="nav-item">
-            <span class="icon">💊</span> الأدوية
-        </a>
-        <a href="/inventory" class="nav-item">
-            <span class="icon">📦</span> المخزون
-        </a>
-        <a href="/batch-receive" class="nav-item">
-            <span class="icon">🚚</span> استلام دفعة
-        </a>
-        <a href="/pos" class="nav-item">
-            <span class="icon">🛒</span> نقطة البيع
-        </a>
-        <a href="/sales-history" class="nav-item">
-            <span class="icon">📋</span> سجل المبيعات
-        </a>
-        <a href="/settings" class="nav-item">
-            <span class="icon">⚙️</span> الإعدادات
-        </a>
-
-        <div class="sidebar-footer">
-            <a href="#" @click.prevent="logout()" class="nav-item">
-                <span class="icon">🚪</span> تسجيل الخروج
-            </a>
-        </div>
+        <i data-lucide="chevron-left"></i>
+      </div>
     </aside>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <!-- Header -->
-        <div class="dashboard-header">
-            <div class="header-right">
-                <button class="mobile-toggle" @click="sidebarOpen = !sidebarOpen" aria-label="القائمة">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="3" y1="6" x2="21" y2="6"/>
-                        <line x1="3" y1="12" x2="21" y2="12"/>
-                        <line x1="3" y1="18" x2="21" y2="18"/>
-                    </svg>
-                </button>
-                <h2>🐢 الأدوية بطيئة الحركة</h2>
-            </div>
-            <div class="header-left">
-                <span class="date" x-text="currentDate"></span>
-                <div class="user-info">
-                    <div class="name" x-text="userName || 'مستخدم'"></div>
-                    <div class="pharmacy" x-text="pharmacyName || 'الصيدلية'"></div>
-                </div>
-                <button class="notification-bell" @click="sidebarOpen = false" title="الإشعارات">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                    </svg>
-                </button>
-            </div>
+    <!-- ═══════ Topbar ═══════ -->
+    <header class="topbar">
+      <div class="page-info">
+        <h1>تقرير الأدوية الراكدة</h1>
+        <div class="subtitle" x-text="pharmacyName + ' · ' + currentDate"></div>
+      </div>
+      <div class="topbar-actions">
+        <div class="lang-toggle">
+          <span :class="{ active: lang === 'en' }" @click="switchLang('en')">EN</span>
+          <span :class="{ active: lang === 'ar' }" @click="switchLang('ar')">ع</span>
         </div>
+        <button class="icon-btn" @click="toggleDark()">
+          <i :data-lucide="isDark ? 'sun' : 'moon'"></i>
+        </button>
+        <button class="icon-btn" onclick="window.location.href='/alerts'">
+          <i data-lucide="bell"></i>
+          <span class="dot"></span>
+        </button>
+      </div>
+    </header>
 
-        <!-- Filter Bar -->
-        <div class="filter-bar">
+    <!-- ═══════ Main Content ═══════ -->
+    <main class="main-content">
+
+      <!-- Loading State -->
+      <template x-if="loading">
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <div class="loading-text">جاري تحميل تقرير الأدوية الراكدة...</div>
+        </div>
+      </template>
+
+      <!-- Error State -->
+      <template x-if="error">
+        <div class="error-state">
+          <div class="err-icon"><i data-lucide="triangle-alert"></i></div>
+          <div class="err-msg">تعذر تحميل التقرير</div>
+          <div class="err-detail" x-text="errorMessage"></div>
+          <button class="btn-primary btn" @click="loadReport()">
+            <i data-lucide="refresh-cw"></i>
+            <span>إعادة المحاولة</span>
+          </button>
+        </div>
+      </template>
+
+      <!-- Report Content -->
+      <template x-if="!loading && !error">
+        <div>
+
+          <!-- Page Header -->
+          <div class="page-header">
+            <div>
+              <h1>
+                <i data-lucide="snail"></i>
+                الأدوية بطيئة الحركة
+              </h1>
+              <p class="subtitle">تحليل الأدوية التي لم تُبَع خلال الفترة المحددة</p>
+            </div>
+            <div class="header-actions">
+              <button class="btn btn-secondary" @click="loadReport()">
+                <i data-lucide="refresh-cw"></i>
+                <span>تحديث</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Filter Bar -->
+          <div class="filter-bar">
             <div class="filter-group">
-                <label>⏱️ لم تُبَع منذ:</label>
-                <select class="filter-select" x-model="selectedDays" @change="loadReport()">
-                    <option value="15">15 يوم</option>
-                    <option value="30" selected>30 يوم</option>
-                    <option value="45">45 يوم</option>
-                    <option value="60">60 يوم</option>
-                    <option value="90">90 يوم</option>
-                    <option value="180">6 أشهر</option>
-                    <option value="365">سنة</option>
-                </select>
-                <button class="filter-btn" @click="loadReport()">
-                    <span>🔄</span> تحديث
-                </button>
+              <span class="filter-label">
+                <i data-lucide="clock"></i>
+                لم تُبَع منذ:
+              </span>
+              <select class="filter-select" x-model="selectedDays" @change="loadReport()">
+                <option value="15">15 يوم</option>
+                <option value="30" selected>30 يوم</option>
+                <option value="45">45 يوم</option>
+                <option value="60">60 يوم</option>
+                <option value="90">90 يوم</option>
+                <option value="180">6 أشهر</option>
+                <option value="365">سنة</option>
+              </select>
+              <button class="filter-btn" @click="loadReport()">
+                <i data-lucide="search"></i>
+                تحديث
+              </button>
             </div>
             <div class="filter-stats" x-show="!loading && !error">
-                <span>إجمالي الأدوية: <strong x-text="medicines.length"></strong></span>
-                <span style="margin-right: 16px;">
-                    القيمة الراكدة: <strong x-text="formatCurrency(totalSlowMovingValue)"></strong>
-                </span>
+              <span>إجمالي الأدوية: <strong x-text="medicines.length"></strong></span>
+              <span>القيمة الراكدة: <strong x-text="formatCurrency(totalSlowMovingValue)"></strong></span>
             </div>
+          </div>
+
+          <!-- Summary Metrics -->
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <div class="metric-header">
+                <div class="metric-icon blue"><i data-lucide="snail"></i></div>
+                <div class="metric-badge warning" x-text="'خلال ' + selectedDays + ' يوم'"></div>
+              </div>
+              <div class="metric-label">أدوية بطيئة الحركة</div>
+              <div class="metric-value" x-text="medicines.length"></div>
+              <div class="metric-sub">خلال آخر <span x-text="selectedDays"></span> يوم</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-header">
+                <div class="metric-icon red"><i data-lucide="alert-octagon"></i></div>
+                <div class="metric-badge danger">إجراء فوري</div>
+              </div>
+              <div class="metric-label">حرجة (راكدة + منتهية)</div>
+              <div class="metric-value" x-text="countByRisk('critical')"></div>
+              <div class="metric-sub">تتطلب إجراء فوري</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-header">
+                <div class="metric-icon yellow"><i data-lucide="alert-triangle"></i></div>
+                <div class="metric-badge warning">مراقبة</div>
+              </div>
+              <div class="metric-label">متوسطة الخطورة</div>
+              <div class="metric-value" x-text="countByRisk('medium')"></div>
+              <div class="metric-sub">مراقبة مطلوبة</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-header">
+                <div class="metric-icon green"><i data-lucide="banknote"></i></div>
+                <div class="metric-badge success">رأس مال</div>
+              </div>
+              <div class="metric-label">القيمة الراكدة الإجمالية</div>
+              <div class="metric-value" x-text="formatCurrency(totalSlowMovingValue)"></div>
+              <div class="metric-sub">رأس مال مقيد في المخزون</div>
+            </div>
+          </div>
+
+          <!-- Main Medicines Table -->
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <div class="panel-title">
+                  <i data-lucide="list"></i>
+                  قائمة الأدوية بطيئة الحركة
+                </div>
+                <div class="panel-subtitle">مرتبة حسب الأقدمية</div>
+              </div>
+            </div>
+            <div class="table-container">
+              <template x-if="medicines.length > 0">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>اسم الدواء</th>
+                      <th>المخزون</th>
+                      <th class="col-base-unit">الوحدة</th>
+                      <th>آخر بيع</th>
+                      <th>أيام منذ البيع</th>
+                      <th>أقرب صلاحية</th>
+                      <th>أيام للصلاحية</th>
+                      <th class="col-stock-value">قيمة المخزون</th>
+                      <th>مستوى الخطر</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <template x-for="(med, index) in medicines" :key="med.medicine_id">
+                      <tr>
+                        <td class="num" x-text="index + 1"></td>
+                        <td class="med-name" x-text="med.trade_name"></td>
+                        <td class="num" x-text="med.total_stock"></td>
+                        <td class="col-base-unit" x-text="med.base_unit"></td>
+                        <td x-text="formatDate(med.last_sale_date)"></td>
+                        <td>
+                          <span x-text="med.days_since_last_sale" :class="med.days_since_last_sale >= 60 ? 'expiry-urgent' : (med.days_since_last_sale >= 30 ? 'expiry-warning' : '')"></span>
+                          <span style="font-size:11px;color:#94A3B8;margin-right:2px;">يوم</span>
+                        </td>
+                        <td x-text="formatDate(med.nearest_expiry)"></td>
+                        <td>
+                          <span x-show="med.days_to_expiry !== null" :class="med.days_to_expiry < 90 ? 'expiry-urgent' : (med.days_to_expiry < 180 ? 'expiry-warning' : (med.days_to_expiry < 365 ? 'expiry-ok' : 'expiry-far'))" x-text="med.days_to_expiry + ' يوم'"></span>
+                          <span x-show="med.days_to_expiry === null" class="expiry-none">غير متاح</span>
+                        </td>
+                        <td class="col-stock-value stock-val" x-text="formatCurrency(med.stock_value)"></td>
+                        <td>
+                          <span class="risk-badge"
+                                :class="'risk-' + med.risk_level"
+                                x-text="riskLabel(med.risk_level)"></span>
+                        </td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </template>
+              <template x-if="medicines.length === 0">
+                <div class="no-data">
+                  <div class="no-data-icon">✅</div>
+                  <div>لا توجد أدوية بطيئة الحركة في هذه الفترة</div>
+                  <div class="no-data-sub">جميع الأدوية تم بيعها خلال آخر <span x-text="selectedDays"></span> يوم</div>
+                </div>
+              </template>
+            </div>
+          </div>
+
+          <!-- Recommendations Section -->
+          <div class="panel" x-show="medicines.length > 0">
+            <div class="panel-header">
+              <div>
+                <div class="panel-title">
+                  <i data-lucide="lightbulb"></i>
+                  التوصيات والحلول المقترحة
+                </div>
+                <div class="panel-subtitle">إجراءات لتحسين دوران المخزون</div>
+              </div>
+            </div>
+            <div class="recommendations-grid">
+              <!-- Critical recommendations -->
+              <div class="rec-card rec-critical" x-show="countByRisk('critical') > 0">
+                <div class="rec-header">
+                  <div class="rec-icon"><i data-lucide="alert-octagon"></i></div>
+                  <span class="rec-title">حرجة — خطر فقدان المخزون</span>
+                </div>
+                <div class="rec-desc">
+                  <strong x-text="countByRisk('critical')"></strong> دواء (أدوية) في المرحلة الحرجة — مزيج من البطء وانتهاء الصلاحية الوشيك.
+                </div>
+                <div class="rec-desc" style="margin-top:8px;">
+                  • خصم عاجل أو بيع بسعر التكلفة لتحريك المخزون قبل انتهاء الصلاحية<br>
+                  • التواصل مع صيدليات أخرى لشراء الدفعة بسعر مخفض<br>
+                  • إرجاع البضاعة للموزع إذا كانت سياسة الإرجاع متاحة
+                </div>
+              </div>
+
+              <!-- High risk recommendations -->
+              <div class="rec-card rec-high" x-show="countByRisk('high') > 0">
+                <div class="rec-header">
+                  <div class="rec-icon"><i data-lucide="alert-circle"></i></div>
+                  <span class="rec-title">عالية — لم تُبَع لأكثر من 60 يوم</span>
+                </div>
+                <div class="rec-desc">
+                  <strong x-text="countByRisk('high')"></strong> دواء (أدوية) لم تُبَع منذ أكثر من 60 يوماً.
+                </div>
+                <div class="rec-desc" style="margin-top:8px;">
+                  • مراجعة سياسة التسعير — خفض السعر لتحفيز الطلب<br>
+                  • عرض ترويجي (اشترِ 2 واحصل على 1 مجاناً)<br>
+                  • تقييم الحاجة للصنف — هل هو موسمي؟
+                </div>
+              </div>
+
+              <!-- Medium risk recommendations -->
+              <div class="rec-card rec-medium" x-show="countByRisk('medium') > 0">
+                <div class="rec-header">
+                  <div class="rec-icon"><i data-lucide="alert-triangle"></i></div>
+                  <span class="rec-title">متوسطة — مراقبة مطلوبة</span>
+                </div>
+                <div class="rec-desc">
+                  <strong x-text="countByRisk('medium')"></strong> دواء (أدوية) بطيئة الحركة — يمكن اتخاذ إجراءات وقائية.
+                </div>
+                <div class="rec-desc" style="margin-top:8px;">
+                  • خفض كميات الطلب المستقبلي لهذه الأصناف<br>
+                  • وضعها في مكان بارز لزيادة فرص البيع<br>
+                  • إعادة ترتيب المخزون — وضع الأصناف بطيئة الحركة أمام الأصناف سريعة الحركة
+                </div>
+              </div>
+
+              <!-- General inventory recommendations -->
+              <div class="rec-card" style="border-color:rgba(26,167,236,0.2);">
+                <div class="rec-header">
+                  <div class="rec-icon" style="background:#DBEAFE;color:#1AA7EC;"><i data-lucide="bar-chart-3"></i></div>
+                  <span class="rec-title" style="color:#1E2F97;">إدارة المخزون العامة</span>
+                </div>
+                <div class="rec-desc">
+                  القيمة الراكدة الإجمالية: <strong x-text="formatCurrency(totalSlowMovingValue)"></strong> — هذا المبلغ مقيد ولا يحقق عائداً.
+                </div>
+                <div class="rec-desc" style="margin-top:8px;">
+                  • إعادة تقييم سياسات الشراء لتجنب تكدس المخزون<br>
+                  • تطبيق تحليل ABC لتصنيف الأدوية حسب قيمتها ودورانها<br>
+                  • اعتماد نظام كمية الطلب الاقتصادية (EOQ) لتحديد أحجام الطلب المثلى
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
-
-        <!-- Loading State -->
-        <template x-if="loading">
-            <div class="loading-state">
-                <div class="spinner"></div>
-                <div class="loading-text">جاري تحميل تقرير الأدوية بطيئة الحركة...</div>
-            </div>
-        </template>
-
-        <!-- Error State -->
-        <template x-if="error">
-            <div class="error-state">
-                <div class="err-icon">⚠️</div>
-                <div class="err-msg">تعذر تحميل التقرير</div>
-                <div class="err-detail" x-text="errorMessage"></div>
-                <button class="retry-btn" @click="loadReport()">إعادة المحاولة</button>
-            </div>
-        </template>
-
-        <!-- Report Content -->
-        <template x-if="!loading && !error">
-            <div>
-                <!-- Summary Cards -->
-                <div class="cards-grid">
-                    <div class="summary-card card-blue">
-                        <div class="card-icon">🐢</div>
-                        <div class="card-label">أدوية بطيئة الحركة</div>
-                        <div class="card-value" x-text="medicines.length"></div>
-                        <div class="card-sub" x-text="'خلال آخر ' + selectedDays + ' يوم'"></div>
-                    </div>
-                    <div class="summary-card card-red">
-                        <div class="card-icon">🔴🔴</div>
-                        <div class="card-label">حرجة (راكدة + منتهية)</div>
-                        <div class="card-value" x-text="countByRisk('critical')"></div>
-                        <div class="card-sub">تتطلب إجراء فوري</div>
-                    </div>
-                    <div class="summary-card card-yellow">
-                        <div class="card-icon">🟡</div>
-                        <div class="card-label">متوسطة الخطورة</div>
-                        <div class="card-value" x-text="countByRisk('medium')"></div>
-                        <div class="card-sub">مراقبة مطلوبة</div>
-                    </div>
-                    <div class="summary-card card-green">
-                        <div class="card-icon">💰</div>
-                        <div class="card-label">القيمة الراكدة الإجمالية</div>
-                        <div class="card-value" x-text="formatCurrency(totalSlowMovingValue)"></div>
-                        <div class="card-sub">رأس مال مقيد في المخزون</div>
-                    </div>
-                </div>
-
-                <!-- Main Medicines Table -->
-                <div class="section-card">
-                    <div class="card-header">
-                        <h3>📋 قائمة الأدوية بطيئة الحركة</h3>
-                        <span class="subtitle" x-text="'مرتبة حسب الأقدمية'"></span>
-                    </div>
-                    <div class="card-body" style="overflow-x: auto;">
-                        <template x-if="medicines.length > 0">
-                            <table class="report-table">
-                                <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>اسم الدواء</th>
-                                        <th>المخزون</th>
-                                        <th class="col-base-unit">الوحدة</th>
-                                        <th>آخر بيع</th>
-                                        <th>أيام منذ البيع</th>
-                                        <th>أقرب صلاحية</th>
-                                        <th>أيام للصلاحية</th>
-                                        <th class="col-stock-value">قيمة المخزون</th>
-                                        <th>مستوى الخطر</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <template x-for="(med, index) in medicines" :key="med.medicine_id">
-                                        <tr>
-                                            <td class="num" x-text="index + 1"></td>
-                                            <td class="med-name" x-text="med.trade_name"></td>
-                                            <td class="num" x-text="med.total_stock"></td>
-                                            <td class="col-base-unit" x-text="med.base_unit"></td>
-                                            <td x-text="formatDate(med.last_sale_date)"></td>
-                                            <td>
-                                                <span x-text="med.days_since_last_sale" :class="med.days_since_last_sale >= 60 ? 'expiry-urgent' : (med.days_since_last_sale >= 30 ? 'expiry-warning' : '')"></span>
-                                                <span style="font-size:11px;color:var(--text-secondary);margin-right:2px;">يوم</span>
-                                            </td>
-                                            <td x-text="formatDate(med.nearest_expiry)"></td>
-                                            <td>
-                                                <span x-show="med.days_to_expiry !== null" :class="med.days_to_expiry < 90 ? 'expiry-urgent' : (med.days_to_expiry < 180 ? 'expiry-warning' : (med.days_to_expiry < 365 ? 'expiry-ok' : 'expiry-far'))" x-text="med.days_to_expiry + ' يوم'"></span>
-                                                <span x-show="med.days_to_expiry === null" class="expiry-none">غير متاح</span>
-                                            </td>
-                                            <td class="col-stock-value stock-val" x-text="formatCurrency(med.stock_value)"></td>
-                                            <td>
-                                                <span class="risk-badge"
-                                                      :class="'risk-' + med.risk_level"
-                                                      x-text="riskLabel(med.risk_level)"></span>
-                                            </td>
-                                        </tr>
-                                    </template>
-                                </tbody>
-                            </table>
-                        </template>
-                        <template x-if="medicines.length === 0">
-                            <div class="no-data">
-                                <div class="no-data-icon">✅</div>
-                                <div>لا توجد أدوية بطيئة الحركة في هذه الفترة</div>
-                                <div class="no-data-sub">جميع الأدوية تم بيعها خلال آخر <span x-text="selectedDays"></span> يوم</div>
-                            </div>
-                        </template>
-                    </div>
-                </div>
-
-                <!-- Recommendations Section -->
-                <div class="section-card" x-show="medicines.length > 0">
-                    <div class="card-header">
-                        <h3>💡 التوصيات والحلول المقترحة</h3>
-                        <span class="subtitle">إجراءات لتحسين دوران المخزون</span>
-                    </div>
-                    <div class="card-body">
-                        <div class="recommendations-grid">
-                            <!-- Critical recommendations -->
-                            <div class="rec-card rec-critical" x-show="countByRisk('critical') > 0">
-                                <div class="rec-header">
-                                    <span class="rec-icon">🔴🔴</span>
-                                    <span class="rec-title" style="color:#FCA5A5;">حرجة — خطر فقدان المخزون</span>
-                                </div>
-                                <div class="rec-desc">
-                                    <strong x-text="countByRisk('critical')"></strong> دواء (أدوية) في المرحلة الحرجة — مزيج من البطء وانتهاء الصلاحية الوشيك.
-                                </div>
-                                <div class="rec-desc" style="margin-top:8px;">
-                                    • خصم عاجل أو بيع بسعر التكلفة لتحريك المخزون قبل انتهاء الصلاحية<br>
-                                    • التواصل مع صيدليات أخرى لشراء الدفعة بسعر مخفض<br>
-                                    • إرجاع البضاعة للموزع إذا كانت سياسة الإرجاع متاحة
-                                </div>
-                            </div>
-
-                            <!-- High risk recommendations -->
-                            <div class="rec-card rec-high" x-show="countByRisk('high') > 0">
-                                <div class="rec-header">
-                                    <span class="rec-icon">🔴</span>
-                                    <span class="rec-title" style="color:#FCA5A5;">عالية — لم تُبَع لأكثر من 60 يوم</span>
-                                </div>
-                                <div class="rec-desc">
-                                    <strong x-text="countByRisk('high')"></strong> دواء (أدوية) لم تُبَع منذ أكثر من 60 يوماً.
-                                </div>
-                                <div class="rec-desc" style="margin-top:8px;">
-                                    • مراجعة سياسة التسعير — خفض السعر لتحفيز الطلب<br>
-                                    • عرض ترويجي (اشترِ 2 واحصل على 1 مجاناً)<br>
-                                    • تقييم الحاجة للصنف — هل هو موسمي؟
-                                </div>
-                            </div>
-
-                            <!-- Medium risk recommendations -->
-                            <div class="rec-card rec-medium" x-show="countByRisk('medium') > 0">
-                                <div class="rec-header">
-                                    <span class="rec-icon">🟡</span>
-                                    <span class="rec-title" style="color:#FDE68A;">متوسطة — مراقبة مطلوبة</span>
-                                </div>
-                                <div class="rec-desc">
-                                    <strong x-text="countByRisk('medium')"></strong> دواء (أدوية) بطيئة الحركة — يمكن اتخاذ إجراءات وقائية.
-                                </div>
-                                <div class="rec-desc" style="margin-top:8px;">
-                                    • خفض كميات الطلب المستقبلي لهذه الأصناف<br>
-                                    • وضعها في مكان بارز لزيادة فرص البيع<br>
-                                    • إعادة ترتيب المخزون — وضع الأصناف بطيئة الحركة أمام الأصناف سريعة الحركة
-                                </div>
-                            </div>
-
-                            <!-- General inventory recommendations -->
-                            <div class="rec-card" style="border-color:rgba(26,167,236,0.25);">
-                                <div class="rec-header">
-                                    <span class="rec-icon">📊</span>
-                                    <span class="rec-title" style="color:#DBEAFE;">إدارة المخزون العامة</span>
-                                </div>
-                                <div class="rec-desc">
-                                    القيمة الراكدة الإجمالية: <strong style="color:var(--text-primary);" x-text="formatCurrency(totalSlowMovingValue)"></strong> — هذا المبلغ مقيد ولا يحقق عائداً.
-                                </div>
-                                <div class="rec-desc" style="margin-top:8px;">
-                                    • إعادة تقييم سياسات الشراء لتجنب تكدس المخزون<br>
-                                    • تطبيق تحليل ABC لتصنيف الأدوية حسب قيمتها ودورانها<br>
-                                    • اعتماد نظام كمية الطلب الاقتصادية (EOQ) لتحديد أحجام الطلب المثلى
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </template>
+      </template>
     </main>
-</div>
+  </div>
 
-<script>
-function slowMovingApp() {
-    return {
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide) lucide.createIcons();
+      // Restore dark mode
+      if (localStorage.getItem('darkMode') === 'true') {
+        document.documentElement.classList.add('dark');
+      }
+    });
+
+    function slowMovingApp() {
+      return {
+        // Auth
         loading: true,
         error: false,
         errorMessage: '',
-        sidebarOpen: false,
+        userName: localStorage.getItem('userName') || 'المستخدم',
+        isAdmin: localStorage.getItem('role') === 'admin',
+        userInitials: '',
+        pharmacyName: localStorage.getItem('pharmacyName') || 'صيدلية الزاريات',
+
+        // Dark Mode
+        isDark: localStorage.getItem('darkMode') === 'true',
+
+        // Language
+        lang: localStorage.getItem('lang') || 'ar',
+
+        // Current Date
         currentDate: '',
-        userName: '',
-        pharmacyName: '',
+
+        // Report Data
         selectedDays: 30,
         medicines: [],
         totalSlowMovingValue: 0,
 
-        init() {
-            this.formatDate();
-            this.loadUserInfo();
-            this.loadReport();
+        async init() {
+          // Auth check
+          const token = localStorage.getItem('token');
+          if (!token) {
+            window.location.href = '/login';
+            return;
+          }
+
+          const name = this.userName;
+          this.userInitials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+
+          // Apply dark mode
+          if (this.isDark) {
+            document.documentElement.classList.add('dark');
+          }
+
+          // Apply saved language
+          if (this.lang === 'en') {
+            document.documentElement.setAttribute('dir', 'ltr');
+            document.documentElement.setAttribute('lang', 'en');
+          }
+
+          // Set date
+          this.formatDate();
+
+          // Load report
+          await this.loadReport();
+
+          // Re-render Lucide icons after Alpine binds
+          this.$nextTick(() => {
+            if (window.lucide) lucide.createIcons();
+          });
+        },
+
+        // ─── Dark Mode Toggle ───
+        toggleDark() {
+          this.isDark = !this.isDark;
+          localStorage.setItem('darkMode', this.isDark);
+          if (this.isDark) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+          this.$nextTick(() => {
+            if (window.lucide) lucide.createIcons();
+          });
+        },
+
+        // ─── Language Toggle ───
+        switchLang(lang) {
+          this.lang = lang;
+          localStorage.setItem('lang', lang);
+          if (lang === 'en') {
+            document.documentElement.setAttribute('dir', 'ltr');
+            document.documentElement.setAttribute('lang', 'en');
+          } else {
+            document.documentElement.setAttribute('dir', 'rtl');
+            document.documentElement.setAttribute('lang', 'ar');
+          }
+          this.$nextTick(() => {
+            if (window.lucide) lucide.createIcons();
+          });
         },
 
         formatDate() {
-            const now = new Date();
-            const options = {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            };
-            this.currentDate = now.toLocaleDateString('ar-SA', options);
-        },
-
-        loadUserInfo() {
-            try {
-                const token = localStorage.getItem('token');
-                if (token) {
-                    const payload = JSON.parse(atob(token.split('.')[1]));
-                    this.userName = payload.username || payload.sub || 'مستخدم';
-                    this.pharmacyName = payload.pharmacy_name || 'صيدلية الزاريات';
-                } else {
-                    this.userName = 'مستخدم';
-                    this.pharmacyName = 'صيدلية الزاريات';
-                }
-            } catch (e) {
-                this.userName = 'مستخدم';
-                this.pharmacyName = 'صيدلية الزاريات';
-            }
+          const now = new Date();
+          const options = {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          };
+          this.currentDate = now.toLocaleDateString('ar-SA', options);
         },
 
         async loadReport() {
-            this.loading = true;
-            this.error = false;
-            this.errorMessage = '';
-            try {
-                const token = localStorage.getItem('token');
-                const response = await fetch('/api/reports/slow-moving?days=' + this.selectedDays, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': 'Bearer ' + (token || ''),
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    }
-                });
-                if (!response.ok) {
-                    if (response.status === 401) {
-                        window.location.href = '/login';
-                        return;
-                    }
-                    throw new Error('فشل تحميل التقرير (' + response.status + ')');
-                }
-                const result = await response.json();
-                this.medicines = result.medicines || [];
-                this.totalSlowMovingValue = result.total_slow_moving_value || 0;
-            } catch (e) {
-                this.error = true;
-                this.errorMessage = e.message || 'حدث خطأ غير متوقع';
-            } finally {
-                this.loading = false;
+          this.loading = true;
+          this.error = false;
+          this.errorMessage = '';
+          try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('/api/reports/slow-moving?days=' + this.selectedDays, {
+              method: 'GET',
+              headers: {
+                'Authorization': 'Bearer ' + (token || ''),
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              }
+            });
+            if (!response.ok) {
+              if (response.status === 401) {
+                window.location.href = '/login';
+                return;
+              }
+              throw new Error('فشل تحميل التقرير (' + response.status + ')');
             }
+            const result = await response.json();
+            this.medicines = result.medicines || [];
+            this.totalSlowMovingValue = result.total_slow_moving_value || 0;
+          } catch (e) {
+            this.error = true;
+            this.errorMessage = e.message || 'حدث خطأ غير متوقع';
+          } finally {
+            this.loading = false;
+            this.$nextTick(() => {
+              if (window.lucide) lucide.createIcons();
+            });
+          }
         },
 
         countByRisk(level) {
-            return this.medicines.filter(m => m.risk_level === level).length;
+          return this.medicines.filter(m => m.risk_level === level).length;
         },
 
         riskLabel(level) {
-            const labels = {
-                'critical': '🔴🔴 حرج',
-                'high': '🔴 عالي',
-                'medium': '🟡 متوسط',
-                'low': '🟢 منخفض'
-            };
-            return labels[level] || level;
+          const labels = {
+            'critical': '🔴 حرج',
+            'high': '🔴 عالي',
+            'medium': '🟡 متوسط',
+            'low': '🟢 منخفض'
+          };
+          return labels[level] || level;
         },
 
         formatCurrency(value) {
-            if (value === null || value === undefined) return '0.00 ج.م';
-            const num = typeof value === 'number' ? value : parseFloat(value);
-            return num.toLocaleString('ar-EG', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            }) + ' ج.م';
+          if (value === null || value === undefined) return '0.00 ج.م';
+          const num = typeof value === 'number' ? value : parseFloat(value);
+          return num.toLocaleString('ar-EG', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          }) + ' ج.م';
         },
 
         formatDate(dateStr) {
-            if (!dateStr) return '—';
-            try {
-                const d = new Date(dateStr);
-                if (isNaN(d.getTime())) return dateStr;
-                return d.toLocaleDateString('ar-SA', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
-                });
-            } catch (e) {
-                return dateStr;
-            }
+          if (!dateStr) return '—';
+          try {
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return dateStr;
+            return d.toLocaleDateString('ar-SA', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric'
+            });
+          } catch (e) {
+            return dateStr;
+          }
         },
 
         logout() {
-            localStorage.removeItem('token');
-            localStorage.removeItem('role');
-            window.location.href = '/login';
+          localStorage.removeItem('token');
+          localStorage.removeItem('role');
+          window.location.href = '/login';
         }
-    };
-}
-</script>
+      };
+    }
+  </script>
 
 </body>
 </html><!-- 1781564609 -->

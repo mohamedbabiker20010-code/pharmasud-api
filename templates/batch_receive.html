@@ -1,682 +1,930 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/css/theme.css?v7.2.0">
-    <title>استلام شحنة جديدة - صيدلية الزاريات</title>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans Arabic', system-ui, -apple-system, sans-serif;
-            background: var(--background);
-            color: var(--text-primary);
-            min-height: 100vh;
-        }
-        .container { max-width: 700px; margin: 0 auto; padding: 24px 20px; }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid var(--border);
-        }
-        .header h1 { font-size: 20px; display: flex; align-items: center; gap: 8px; }
-        .back-link {
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .back-link:hover { color: var(--primary-blue); }
-
-        /* Search / Barcode */
-        .search-section {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        .search-section h2 { font-size: 14px; color: var(--text-secondary); margin-bottom: 12px; }
-        .search-row {
-            display: flex;
-            gap: 8px;
-        }
-        .search-row input {
-            flex: 1;
-            background: var(--background);
-            border: 1px solid var(--border);
-            padding: 10px 14px;
-            border-radius: 8px;
-            color: var(--text-primary);
-            font-size: 14px;
-            font-family: inherit;
-        }
-        .search-row input:focus { outline: none; border-color: var(--primary-blue); }
-        .search-row button {
-            background: var(--primary-blue);
-            border: none;
-            color: white;
-            padding: 10px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            white-space: nowrap;
-        }
-        .search-row button:hover { background: #1AA7EC; }
-        .search-row button.secondary {
-            background: var(--border);
-        }
-        .search-row button.secondary:hover { background: var(--text-secondary); }
-
-        /* Medicine Preview */
-        .medicine-preview {
-            background: var(--surface);
-            border: 1px solid var(--primary-blue);
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-        .medicine-preview img {
-            width: 64px;
-            height: 64px;
-            border-radius: 8px;
-            object-fit: cover;
-            background: var(--background);
-        }
-        .medicine-preview .info h3 { font-size: 16px; }
-        .medicine-preview .info p { font-size: 13px; color: var(--text-secondary); }
-        .medicine-preview .info .category {
-            display: inline-block;
-            background: rgba(26,167,236,0.10);
-            color: #4ADEDE;
-            font-size: 11px;
-            padding: 2px 8px;
-            border-radius: 4px;
-            margin-top: 4px;
-        }
-
-        /* Form */
-        .form-section {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 24px;
-        }
-        .form-section h2 { font-size: 14px; color: var(--text-secondary); margin-bottom: 16px; }
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
-        .form-group { display: flex; flex-direction: column; gap: 4px; }
-        .form-group.full { grid-column: 1 / -1; }
-        .form-group label {
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-        .form-group label .required { color: var(--danger); }
-        .form-group input, .form-group select {
-            background: var(--background);
-            border: 1px solid var(--border);
-            padding: 10px 12px;
-            border-radius: 8px;
-            color: var(--text-primary);
-            font-size: 14px;
-            font-family: inherit;
-        }
-        .form-group input:focus, .form-group select:focus {
-            outline: none;
-            border-color: var(--primary-blue);
-        }
-        .form-group select option { background: var(--surface); color: var(--text-primary); }
-        .form-group .hint { font-size: 11px; color: var(--text-secondary); }
-
-        .submit-btn {
-            width: 100%;
-            margin-top: 20px;
-            background: #059669;
-            border: none;
-            color: white;
-            padding: 14px;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: inherit;
-        }
-        .submit-btn:hover { background: #047857; }
-        .submit-btn:disabled {
-            background: var(--border);
-            color: var(--text-secondary);
-            cursor: not-allowed;
-        }
-        .submit-btn.loading {
-            background: #1AA7EC;
-            pointer-events: none;
-        }
-
-        /* Messages */
-        .alert {
-            padding: 14px 16px;
-            border-radius: 10px;
-            margin-bottom: 16px;
-            font-size: 14px;
-        }
-        .alert-success { background: rgba(16,185,129,0.15); color: #6EE7B7; border: 1px solid #047857; }
-        .alert-error { background: rgba(239,68,68,0.15); color: #FCA5A5; border: 1px solid #DC2626; }
-        .alert-warning { background: rgba(245,158,11,0.15); color: #FCD34D; border: 1px solid #D97706; }
-        .alert-info { background: rgba(26,167,236,0.10); color: #DBEAFE; border: 1px solid var(--primary-blue); }
-
-        /* Confirmation Dialog */
-        .confirm-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.6);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-        }
-        .confirm-dialog {
-            background: var(--surface);
-            border: 1px solid #DC2626;
-            border-radius: 14px;
-            padding: 28px;
-            max-width: 420px;
-            width: 90%;
-            text-align: center;
-        }
-        .confirm-dialog h3 { color: #FCA5A5; margin-bottom: 12px; font-size: 16px; }
-        .confirm-dialog p { color: var(--text-secondary); font-size: 14px; margin-bottom: 20px; line-height: 1.6; }
-        .confirm-dialog .btn-row { display: flex; gap: 12px; justify-content: center; }
-        .confirm-dialog .btn-confirm {
-            background: #DC2626;
-            border: none;
-            color: white;
-            padding: 10px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-family: inherit;
-        }
-        .confirm-dialog .btn-confirm:hover { background: #B91C1C; }
-        .confirm-dialog .btn-cancel {
-            background: var(--border);
-            border: none;
-            color: var(--text-secondary);
-            padding: 10px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-family: inherit;
-        }
-        .confirm-dialog .btn-cancel:hover { background: var(--text-secondary); }
-
-        /* Result Box */
-        .result-box {
-            background: var(--surface);
-            border: 1px solid #047857;
-            border-radius: 12px;
-            padding: 20px;
-            margin-top: 20px;
-            text-align: center;
-        }
-        .result-box .success-icon { font-size: 48px; margin-bottom: 12px; }
-        .result-box h3 { color: #6EE7B7; margin-bottom: 8px; }
-        .result-box .detail { color: var(--text-secondary); font-size: 14px; }
-        .result-box .detail span { color: var(--text-primary); font-weight: 600; }
-        .result-box .new-btn {
-            display: inline-block;
-            margin-top: 16px;
-            background: var(--primary-blue);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-family: inherit;
-            font-size: 14px;
-        }
-
-        @media (max-width: 600px) {
-            .form-grid { grid-template-columns: 1fr; }
-            .search-row { flex-direction: column; }
-        }
-    </style>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/static/css/theme.css?v7.2.0">
+  <title>استلام شحنة - PharmaSUD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
   <style>
-    .sidebar { width:248px; background:#fff; border-left:1px solid #EEF2F6; display:flex; flex-direction:column; padding:22px 16px; position:fixed; right:0; top:0; bottom:0; z-index:100; font-family:'IBM Plex Sans Arabic','IBM Plex Sans',sans-serif; }
-    .sidebar .brand { display:flex; align-items:center; gap:11px; padding:0 8px 22px; }
-    .sidebar .brand .icon { width:38px; height:38px; border-radius:11px; background:#1AA7EC; position:relative; flex-shrink:0; }
-    .sidebar .brand .icon::before,.sidebar .brand .icon::after { content:''; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); background:#fff; border-radius:3px; }
-    .sidebar .brand .icon::before { width:18px; height:5.5px; }
-    .sidebar .brand .icon::after { width:5.5px; height:18px; }
-    .sidebar .brand .name { font:700 18px/1 'IBM Plex Sans Arabic',sans-serif; letter-spacing:-0.02em; }
-    .sidebar .brand .name span { color:#1AA7EC; }
-    .sidebar .nav-section { font:600 11px/1 'IBM Plex Mono',monospace; letter-spacing:0.1em; color:#CBD5E1; padding:14px 10px 10px; }
-    .sidebar .nav-item { display:flex; align-items:center; gap:12px; padding:11px 12px; border-radius:11px; color:#475569; font-size:14px; font-weight:500; text-decoration:none; margin-bottom:4px; transition:all 0.2s ease; }
-    .sidebar .nav-item:hover { background:#F8FAFC; color:#0F172A; }
-    .sidebar .nav-item.active { background:#1AA7EC; color:#fff; box-shadow:0 8px 18px -8px rgba(26,167,236,0.55); }
-    .sidebar .nav-item svg { width:19px; height:19px; flex-shrink:0; }
-    .sidebar .nav-item .badge { margin-right:auto; background:#FEF2F2; color:#DC2626; font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; }
-    .sidebar .user-card { margin-top:auto; display:flex; align-items:center; gap:11px; padding:11px; border:1px solid #EEF2F6; border-radius:13px; cursor:pointer; }
-    .sidebar .user-avatar { width:36px; height:36px; border-radius:10px; background:#1AA7EC; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0; }
-    .sidebar .user-name { font-size:13.5px; font-weight:600; }
-    .sidebar .user-role { font-size:11.5px; color:#94A3B8; }
-    .sidebar .user-card svg { width:16px; height:16px; color:#CBD5E1; flex-shrink:0; margin-right:auto; }
-    .main-wrap { margin-right:248px; min-height:100vh; }
-    @media(max-width:1024px){ .sidebar{display:none;} .main-wrap{margin-right:0;} }
+    html, body {
+      margin: 0; padding: 0;
+      min-height: 100vh;
+      font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif;
+      background: #F6F8FA;
+      color: #0F172A;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── Layout ─── */
+    .app-layout { display: flex; min-height: 100vh; }
+
+    /* ─── Sidebar ─── */
+    .sidebar {
+      width: 248px; background: #fff; border-left: 1px solid #EEF2F6;
+      display: flex; flex-direction: column; padding: 22px 16px;
+      position: fixed; right: 0; top: 0; bottom: 0; z-index: 100;
+    }
+    .sidebar .brand { display: flex; align-items: center; gap: 11px; padding: 0 8px 22px; }
+    .sidebar .brand .icon {
+      width: 38px; height: 38px; border-radius: 11px;
+      background: #1AA7EC; position: relative; flex-shrink: 0;
+    }
+    .sidebar .brand .icon::before, .sidebar .brand .icon::after {
+      content: ''; position: absolute; left: 50%; top: 50%;
+      transform: translate(-50%, -50%); background: #fff; border-radius: 3px;
+    }
+    .sidebar .brand .icon::before { width: 18px; height: 5.5px; }
+    .sidebar .brand .icon::after { width: 5.5px; height: 18px; }
+    .sidebar .brand .name {
+      font: 700 18px/1 'IBM Plex Sans Arabic', sans-serif; letter-spacing: -0.02em;
+    }
+    .sidebar .brand .name span { color: #1AA7EC; }
+    .sidebar .nav-section {
+      font: 600 11px/1 'IBM Plex Mono', monospace; letter-spacing: 0.1em;
+      color: #CBD5E1; padding: 14px 10px 10px;
+    }
+    .sidebar .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 12px; border-radius: 11px;
+      color: #475569; font-size: 14px; font-weight: 500;
+      text-decoration: none; margin-bottom: 4px;
+      transition: all 0.2s ease;
+    }
+    .sidebar .nav-item:hover { background: #F8FAFC; color: #0F172A; }
+    .sidebar .nav-item.active {
+      background: #1AA7EC; color: #fff;
+      box-shadow: 0 8px 18px -8px rgba(26, 167, 236, 0.55);
+    }
+    .sidebar .nav-item svg { width: 19px; height: 19px; flex-shrink: 0; }
+    .sidebar .nav-item .badge {
+      margin-right: auto; background: #FEF2F2; color: #DC2626;
+      font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px;
+    }
+    .sidebar .user-card {
+      margin-top: auto; display: flex; align-items: center; gap: 11px;
+      padding: 11px; border: 1px solid #EEF2F6; border-radius: 13px; cursor: pointer;
+    }
+    .sidebar .user-avatar {
+      width: 36px; height: 36px; border-radius: 10px; background: #1AA7EC;
+      color: #fff; display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px; flex-shrink: 0;
+    }
+    .sidebar .user-info { min-width: 0; flex: 1; }
+    .sidebar .user-name { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar .user-role { font-size: 11.5px; color: #94A3B8; }
+    .sidebar .user-card svg { width: 16px; height: 16px; color: #CBD5E1; flex-shrink: 0; }
+
+    /* ─── Topbar ─── */
+    .topbar {
+      height: 70px; background: #fff; border-bottom: 1px solid #EEF2F6;
+      display: flex; align-items: center; padding: 0 28px; gap: 18px;
+      position: fixed; top: 0; right: 248px; left: 0; z-index: 90;
+    }
+    .topbar .page-info h1 {
+      font: 700 20px/1 'IBM Plex Sans Arabic', sans-serif; letter-spacing: -0.02em;
+      margin: 0;
+    }
+    .topbar .page-info .subtitle {
+      font-size: 12.5px; color: #64748B; margin-top: 3px;
+    }
+    .topbar .actions { margin-right: auto; display: flex; align-items: center; gap: 12px; }
+    .topbar .lang-toggle {
+      display: flex; border: 1px solid #E2E8F0; border-radius: 9px;
+      overflow: hidden; font-size: 13px; font-weight: 600;
+    }
+    .topbar .lang-toggle span { padding: 7px 12px; color: #64748B; }
+    .topbar .lang-toggle span.active { background: #1AA7EC; color: #fff; }
+    .topbar .icon-btn {
+      width: 42px; height: 42px; border-radius: 11px; border: 1px solid #E2E8F0;
+      display: flex; align-items: center; justify-content: center;
+      color: #475569; background: transparent; cursor: pointer; position: relative;
+      transition: all 0.2s ease;
+    }
+    .topbar .icon-btn:hover { background: #F8FAFC; }
+    .topbar .icon-btn svg { width: 18px; height: 18px; }
+    .topbar .icon-btn .dot {
+      position: absolute; top: 9px; left: 11px; width: 8px; height: 8px;
+      border-radius: 50%; background: #DC2626; border: 2px solid #fff;
+    }
+
+    /* ─── Main Content ─── */
+    .main-content {
+      margin-right: 248px; padding: calc(70px + 28px) 28px 28px; min-height: 100vh;
+    }
+
+    /* ─── Page Header ─── */
+    .page-header {
+      display: flex; align-items: flex-end; justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .page-header h1 {
+      margin: 0 0 6px;
+      font: 700 26px/1.1 'IBM Plex Sans Arabic', sans-serif;
+      letter-spacing: -0.02em;
+    }
+    .page-header .subtitle {
+      margin: 0; color: #64748B; font-size: 14.5px;
+    }
+
+    /* ─── Step Badge ─── */
+    .step-flow {
+      display: flex; flex-direction: column; gap: 20px; max-width: 780px;
+    }
+    .step-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 12px; font-weight: 700; letter-spacing: 0.04em;
+      color: #1AA7EC; background: #DBEAFE; padding: 5px 14px;
+      border-radius: 999px; margin-bottom: 4px; width: fit-content;
+    }
+    .step-badge svg { width: 14px; height: 14px; }
+
+    /* ─── Card ─── */
+    .card {
+      background: #fff; border: 1px solid #EEF2F6; border-radius: 16px;
+      padding: 24px; transition: all 0.25s ease;
+    }
+    .card:hover { border-color: #E2E8F0; }
+    .card .card-title {
+      font: 600 15px/1 'IBM Plex Sans Arabic', sans-serif; color: #0F172A;
+      margin-bottom: 18px; display: flex; align-items: center; gap: 10px;
+    }
+    .card .card-title svg { width: 18px; height: 18px; color: #1AA7EC; }
+
+    /* ─── Search Input ─── */
+    .search-row {
+      display: flex; gap: 10px;
+    }
+    .search-row input {
+      flex: 1; height: 46px; padding: 0 16px;
+      border: 1px solid #E2E8F0; border-radius: 11px;
+      background: #F6F8FA; font-family: inherit; font-size: 14px;
+      color: #0F172A; outline: none; transition: all 0.2s ease;
+    }
+    .search-row input::placeholder { color: #94A3B8; }
+    .search-row input:focus { border-color: #1AA7EC; background: #fff; box-shadow: 0 0 0 3px rgba(26,167,236,0.10); }
+    .search-row .btn-search {
+      display: flex; align-items: center; gap: 8px;
+      height: 46px; padding: 0 20px; border-radius: 11px;
+      background: #1AA7EC; color: #fff; border: none; cursor: pointer;
+      font-family: inherit; font-size: 14px; font-weight: 600;
+      box-shadow: 0 10px 22px -8px rgba(26, 167, 236, 0.55);
+      transition: all 0.2s ease; white-space: nowrap;
+    }
+    .search-row .btn-search:hover { filter: brightness(1.05); }
+    .search-row .btn-search svg { width: 17px; height: 17px; }
+
+    /* ─── Medicine Preview ─── */
+    .medicine-preview {
+      display: flex; align-items: center; gap: 18px;
+      padding: 18px; border-radius: 13px;
+      background: #F0F9FF; border: 1px solid #BAE6FD;
+    }
+    .medicine-preview .med-img {
+      width: 68px; height: 68px; border-radius: 12px;
+      background: #fff; object-fit: cover; flex-shrink: 0;
+      border: 1px solid #E2E8F0;
+    }
+    .medicine-preview .med-img-placeholder {
+      width: 68px; height: 68px; border-radius: 12px;
+      background: #DBEAFE; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; color: #1AA7EC;
+    }
+    .medicine-preview .med-img-placeholder svg { width: 28px; height: 28px; }
+    .medicine-preview .med-info { flex: 1; min-width: 0; }
+    .medicine-preview .med-name {
+      font: 700 16px/1.3 'IBM Plex Sans Arabic', sans-serif; color: #0F172A;
+      margin-bottom: 4px;
+    }
+    .medicine-preview .med-scientific {
+      font-size: 13px; color: #64748B; margin-bottom: 8px;
+    }
+    .medicine-preview .med-category {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: #DBEAFE; color: #1AA7EC; font-size: 11.5px;
+      font-weight: 600; padding: 4px 10px; border-radius: 999px;
+    }
+    .medicine-preview .med-category svg { width: 12px; height: 12px; }
+
+    /* ─── Form Grid ─── */
+    .form-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
+    }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-group label {
+      font-size: 13px; font-weight: 500; color: #475569;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .form-group label .required { color: #DC2626; font-size: 14px; }
+    .form-group input, .form-group select {
+      height: 44px; padding: 0 14px;
+      border: 1px solid #E2E8F0; border-radius: 11px;
+      background: #F6F8FA; font-family: inherit; font-size: 14px;
+      color: #0F172A; outline: none; transition: all 0.2s ease;
+      -webkit-appearance: none;
+    }
+    .form-group input::placeholder { color: #94A3B8; }
+    .form-group input:focus, .form-group select:focus {
+      border-color: #1AA7EC; background: #fff;
+      box-shadow: 0 0 0 3px rgba(26,167,236,0.10);
+    }
+    .form-group select { cursor: pointer; }
+    .form-group select option { background: #fff; color: #0F172A; }
+    .form-group .hint {
+      font-size: 11.5px; color: #94A3B8; margin-top: 2px;
+    }
+
+    /* ─── Unit Conversion Info ─── */
+    .conversion-info {
+      display: flex; align-items: center; gap: 10px;
+      margin-top: 16px; padding: 12px 16px; border-radius: 11px;
+      background: #F0F9FF; border: 1px solid #BAE6FD;
+      font-size: 13px; color: #0284C7;
+    }
+    .conversion-info svg { width: 16px; height: 16px; flex-shrink: 0; color: #1AA7EC; }
+
+    /* ─── Submit Button ─── */
+    .submit-btn {
+      width: 100%; margin-top: 22px;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      height: 50px; border-radius: 13px; border: none;
+      background: #059669; color: #fff; cursor: pointer;
+      font-family: inherit; font-size: 16px; font-weight: 700;
+      box-shadow: 0 10px 22px -8px rgba(5, 150, 105, 0.55);
+      transition: all 0.2s ease;
+    }
+    .submit-btn:hover { background: #047857; transform: translateY(-1px); }
+    .submit-btn:disabled {
+      background: #E2E8F0; color: #94A3B8; cursor: not-allowed;
+      box-shadow: none; transform: none;
+    }
+    .submit-btn.loading { background: #1AA7EC; pointer-events: none; }
+    .submit-btn svg { width: 19px; height: 19px; }
+
+    /* ─── Result Card ─── */
+    .result-card {
+      background: #fff; border: 1px solid #BBF7D0; border-radius: 16px;
+      padding: 32px; text-align: center;
+    }
+    .result-card .result-icon {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: #ECFDF5; display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 18px; color: #16A34A;
+    }
+    .result-card .result-icon svg { width: 36px; height: 36px; }
+    .result-card h3 {
+      font: 700 20px/1.3 'IBM Plex Sans Arabic', sans-serif; color: #059669;
+      margin-bottom: 10px;
+    }
+    .result-card .detail {
+      font-size: 14px; color: #64748B; margin-bottom: 6px;
+    }
+    .result-card .detail span { color: #0F172A; font-weight: 700; }
+    .result-card .expiry-warn {
+      display: inline-flex; align-items: center; gap: 6px;
+      margin-top: 10px; padding: 8px 16px; border-radius: 999px;
+      background: #FEF3C7; color: #D97706; font-size: 13px; font-weight: 600;
+    }
+    .result-card .expiry-warn svg { width: 15px; height: 15px; }
+    .result-card .btn-new {
+      display: inline-flex; align-items: center; gap: 8px;
+      margin-top: 22px; height: 44px; padding: 0 24px;
+      border-radius: 11px; background: #1AA7EC; color: #fff;
+      border: none; cursor: pointer; font-family: inherit;
+      font-size: 14px; font-weight: 600;
+      box-shadow: 0 10px 22px -8px rgba(26, 167, 236, 0.55);
+      transition: all 0.2s ease;
+    }
+    .result-card .btn-new:hover { filter: brightness(1.05); }
+    .result-card .btn-new svg { width: 16px; height: 16px; }
+
+    /* ─── Confirmation Dialog ─── */
+    .confirm-overlay {
+      position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 200;
+    }
+    .confirm-dialog {
+      background: #fff; border: 1px solid #FCA5A5; border-radius: 18px;
+      padding: 32px; max-width: 440px; width: 92%; text-align: center;
+      box-shadow: 0 20px 60px -12px rgba(0,0,0,0.25);
+    }
+    .confirm-dialog .warn-icon {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: #FEF2F2; display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px; color: #DC2626;
+    }
+    .confirm-dialog .warn-icon svg { width: 28px; height: 28px; }
+    .confirm-dialog h3 {
+      font: 700 17px/1.3 'IBM Plex Sans Arabic', sans-serif; color: #DC2626;
+      margin-bottom: 10px;
+    }
+    .confirm-dialog p {
+      color: #64748B; font-size: 14px; margin-bottom: 24px; line-height: 1.7;
+    }
+    .confirm-dialog .btn-row { display: flex; gap: 12px; justify-content: center; }
+    .confirm-dialog .btn-confirm {
+      display: flex; align-items: center; gap: 8px;
+      height: 42px; padding: 0 24px; border-radius: 11px;
+      background: #DC2626; color: #fff; border: none; cursor: pointer;
+      font-family: inherit; font-size: 14px; font-weight: 600;
+      box-shadow: 0 8px 18px -6px rgba(220, 38, 38, 0.5);
+      transition: all 0.2s ease;
+    }
+    .confirm-dialog .btn-confirm:hover { background: #B91C1C; }
+    .confirm-dialog .btn-confirm svg { width: 16px; height: 16px; }
+    .confirm-dialog .btn-cancel {
+      display: flex; align-items: center; gap: 8px;
+      height: 42px; padding: 0 24px; border-radius: 11px;
+      background: #fff; color: #475569; border: 1px solid #E2E8F0;
+      cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    .confirm-dialog .btn-cancel:hover { background: #F8FAFC; }
+    .confirm-dialog .btn-cancel svg { width: 16px; height: 16px; }
+
+    /* ─── Toast ─── */
+    .toast {
+      position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
+      z-index: 300; min-width: 320px; max-width: 480px;
+      padding: 14px 20px; border-radius: 13px;
+      font-size: 14px; font-weight: 500;
+      display: flex; align-items: center; gap: 10px;
+      box-shadow: 0 12px 30px -8px rgba(0,0,0,0.18);
+      animation: slideDown 0.3s ease;
+    }
+    .toast svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .toast-success { background: #ECFDF5; color: #059669; border: 1px solid #BBF7D0; }
+    .toast-error { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; }
+    .toast-warning { background: #FFFBEB; color: #D97706; border: 1px solid #FDE68A; }
+    .toast-info { background: #F0F9FF; color: #0284C7; border: 1px solid #BAE6FD; }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translate(-50%, -12px); }
+      to { opacity: 1; transform: translate(-50%, 0); }
+    }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 1024px) {
+      .sidebar { display: none; }
+      .topbar { right: 0; }
+      .main-content { margin-right: 0; }
+    }
+    @media (max-width: 640px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .search-row { flex-direction: column; }
+      .search-row .btn-search { width: 100%; justify-content: center; }
+      .topbar { padding: 0 16px; gap: 10px; }
+      .main-content { padding: calc(70px + 16px) 16px 16px; }
+      .step-flow { gap: 16px; }
+    }
+
+    /* ─── Dark Mode ─── */
+    html.dark body, html.dark .main-content { background: #0F172A; color: #E2E8F0; }
+    html.dark .sidebar { background: #1E293B; border-color: #334155; }
+    html.dark .sidebar .nav-item { color: #94A3B8; }
+    html.dark .sidebar .nav-item:hover { background: #334155; color: #E2E8F0; }
+    html.dark .sidebar .user-card { border-color: #334155; }
+    html.dark .sidebar .user-role { color: #64748B; }
+    html.dark .topbar { background: #1E293B; border-color: #334155; }
+    html.dark .topbar .icon-btn { border-color: #334155; color: #94A3B8; }
+    html.dark .topbar .icon-btn:hover { background: #334155; }
+    html.dark .topbar .lang-toggle { border-color: #334155; }
+    html.dark .topbar .lang-toggle span { color: #94A3B8; }
+    html.dark .card { background: #1E293B; border-color: #334155; }
+    html.dark .card:hover { border-color: #475569; }
+    html.dark .card .card-title { color: #E2E8F0; }
+    html.dark .search-row input { background: #334155; border-color: #475569; color: #E2E8F0; }
+    html.dark .search-row input::placeholder { color: #64748B; }
+    html.dark .search-row input:focus { background: #1E293B; border-color: #1AA7EC; }
+    html.dark .medicine-preview { background: rgba(26,167,236,0.08); border-color: #334155; }
+    html.dark .medicine-preview .med-name { color: #E2E8F0; }
+    html.dark .medicine-preview .med-scientific { color: #94A3B8; }
+    html.dark .form-group label { color: #CBD5E1; }
+    html.dark .form-group input, html.dark .form-group select { background: #334155; border-color: #475569; color: #E2E8F0; }
+    html.dark .form-group input::placeholder { color: #64748B; }
+    html.dark .form-group input:focus, html.dark .form-group select:focus { background: #1E293B; border-color: #1AA7EC; }
+    html.dark .conversion-info { background: rgba(26,167,236,0.08); border-color: #334155; color: #7DD3FC; }
+    html.dark .result-card { background: #1E293B; border-color: #065F46; }
+    html.dark .confirm-dialog { background: #1E293B; border-color: #7F1D1D; }
+    html.dark .confirm-dialog p { color: #94A3B8; }
   </style>
-
 </head>
-<body>
+<body x-data="batchReceiveApp()">
 
-  <!-- Cloud Design Sidebar -->
-  <aside class="sidebar" id="cloud-sidebar">
-    <div class="brand">
-      <div class="icon"></div>
-      <div class="name">Pharma<span>SUD</span></div>
-    </div>
-    <div class="nav-section">MENU</div>
-    <a href="/dashboard" class="nav-item" id="nav-dashboard"><i data-lucide="layout-dashboard"></i><span>لوحة التحكم</span></a>
-    <a href="/pos" class="nav-item" id="nav-pos"><i data-lucide="scan-barcode"></i><span>نقطة البيع</span></a>
-    <a href="/medicines" class="nav-item" id="nav-medicines"><i data-lucide="pill"></i><span>الأدوية</span></a>
-    <a href="/inventory" class="nav-item" id="nav-inventory"><i data-lucide="package"></i><span>المخزون</span></a>
-    <a href="/batches" class="nav-item active" id="nav-batches"><i data-lucide="calendar-clock"></i><span>الدفعات</span></a>
-    <a href="/reports-sales" class="nav-item" id="nav-reports"><i data-lucide="chart-line"></i><span>التقارير</span></a>
-    <a href="/employees" class="nav-item" id="nav-employees" style="display:none"><i data-lucide="users"></i><span>الموظفين</span></a>
-    <a href="/alerts" class="nav-item" id="nav-alerts"><i data-lucide="bell"></i><span>التنبيهات</span><span class="badge">7</span></a>
-    <a href="/settings" class="nav-item" id="nav-settings"><i data-lucide="settings"></i><span>الإعدادات</span></a>
-    <div class="user-card" onclick="logout()">
-      <div class="user-avatar" id="user-initials">U</div>
-      <div style="min-width:0;flex:1">
-        <div class="user-name" id="user-name">المستخدم</div>
-        <div class="user-role" id="user-role">صيدلي</div>
+  <div class="app-layout">
+
+    <!-- ═══════ Sidebar ═══════ -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="icon"></div>
+        <div class="name">Pharma<span>SUD</span></div>
       </div>
-      <i data-lucide="chevron-left"></i>
-    </div>
-  </aside>
-  <script>
-    function logout() { localStorage.clear(); window.location.href='/login'; }
-    document.addEventListener('DOMContentLoaded', function() {
-      const name = localStorage.getItem('userName') || 'المستخدم';
-      const role = localStorage.getItem('role') || 'pharmacist';
-      document.getElementById('user-name').textContent = name;
-      document.getElementById('user-role').textContent = role === 'admin' ? 'مدير' : 'صيدلي';
-      document.getElementById('user-initials').textContent = name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
-      if(role === 'admin') document.getElementById('nav-employees').style.display='flex';
-    });
-  </script>
-
-    <div class="container" x-data="batchReceiveApp()">
-        <!-- Header -->
-        <div class="header">
-            <h1>📥 استلام شحنة جديدة</h1>
-            <a href="/dashboard" class="back-link">← الرجوع</a>
+      <div class="nav-section">MENU</div>
+      <a href="/dashboard" class="nav-item" id="nav-dashboard">
+        <i data-lucide="layout-dashboard"></i><span>لوحة التحكم</span>
+      </a>
+      <a href="/pos" class="nav-item" id="nav-pos">
+        <i data-lucide="scan-barcode"></i><span>نقطة البيع</span>
+      </a>
+      <a href="/medicines" class="nav-item" id="nav-medicines">
+        <i data-lucide="pill"></i><span>الأدوية</span>
+      </a>
+      <a href="/inventory" class="nav-item" id="nav-inventory">
+        <i data-lucide="package"></i><span>المخزون</span>
+      </a>
+      <a href="/batches" class="nav-item active" id="nav-batches">
+        <i data-lucide="calendar-clock"></i><span>الدفعات</span>
+      </a>
+      <a href="/reports-sales" class="nav-item" id="nav-reports">
+        <i data-lucide="chart-line"></i><span>التقارير</span>
+      </a>
+      <a href="/employees" class="nav-item" id="nav-employees" x-show="isAdmin">
+        <i data-lucide="users"></i><span>الموظفين</span>
+      </a>
+      <a href="/alerts" class="nav-item" id="nav-alerts">
+        <i data-lucide="bell"></i><span>التنبيهات</span><span class="badge">7</span>
+      </a>
+      <a href="/settings" class="nav-item" id="nav-settings">
+        <i data-lucide="settings"></i><span>الإعدادات</span>
+      </a>
+      <div class="user-card" @click="logout()">
+        <div class="user-avatar" x-text="userInitials"></div>
+        <div class="user-info">
+          <div class="user-name" x-text="userName || 'المستخدم'"></div>
+          <div class="user-role" x-text="isAdmin ? 'مدير' : 'صيدلي'"></div>
         </div>
+        <i data-lucide="chevron-left"></i>
+      </div>
+    </aside>
 
-        <!-- Messages -->
-        <div x-show="message.text" x-transition>
-            <div :class="'alert alert-' + message.type" x-text="message.text"></div>
+    <!-- ═══════ Topbar ═══════ -->
+    <header class="topbar">
+      <div class="page-info">
+        <h1>استلام شحنة</h1>
+        <div class="subtitle">استلام دفعة دواء جديدة</div>
+      </div>
+      <div class="actions">
+        <div class="lang-toggle">
+          <span>EN</span>
+          <span class="active">ع</span>
+        </div>
+        <button class="icon-btn" @click="toggleDarkMode()" title="الوضع الداكن">
+          <i data-lucide="moon"></i>
+        </button>
+        <button class="icon-btn" @click="window.location.href='/alerts'" title="التنبيهات">
+          <i data-lucide="bell"></i>
+          <span class="dot"></span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ═══════ Main Content ═══════ -->
+    <main class="main-content" x-init="initUser()">
+
+      <div class="step-flow">
+
+        <!-- Toast Message -->
+        <div x-show="message.text" x-transition class="toast" :class="'toast-' + message.type">
+          <i data-lucide="check-circle" x-show="message.type === 'success'"></i>
+          <i data-lucide="x-circle" x-show="message.type === 'error'"></i>
+          <i data-lucide="alert-triangle" x-show="message.type === 'warning'"></i>
+          <i data-lucide="info" x-show="message.type === 'info'"></i>
+          <span x-text="message.text"></span>
         </div>
 
         <!-- Step 1: Search Medicine -->
-        <div class="search-section">
-            <h2>🔍 الخطوة 1: ابحث عن الدواء</h2>
-            <div class="search-row">
-                <input type="text" 
-                       x-model="searchQuery" 
-                       @keyup.enter="searchMedicine()"
-                       placeholder="امسح الباركود أو اكتب اسم الدواء...">
-                <button @click="searchMedicine()">🔍 بحث</button>
+        <div>
+          <div class="step-badge">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            الخطوة 1
+          </div>
+          <div class="card">
+            <div class="card-title">
+              <i data-lucide="search"></i>
+              ابحث عن الدواء
             </div>
+            <div class="search-row">
+              <input type="text"
+                     x-model="searchQuery"
+                     @keyup.enter="searchMedicine()"
+                     placeholder="امسح الباركود أو اكتب اسم الدواء...">
+              <button class="btn-search" @click="searchMedicine()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                بحث
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- Medicine Preview -->
         <div x-show="selectedMedicine" x-transition>
-            <div class="medicine-preview">
-                <img :src="selectedMedicine.image_url" alt="">
-                <div class="info">
-                    <h3 x-text="selectedMedicine.trade_name"></h3>
-                    <p x-text="selectedMedicine.scientific_name || ''"></p>
-                    <span class="category" x-text="selectedMedicine.category"></span>
-                </div>
+          <div class="medicine-preview">
+            <img x-show="selectedMedicine.image_url" :src="selectedMedicine.image_url" alt="" class="med-img"
+                 @error="$event.target.style.display='none'; $event.target.nextElementSibling.style.display='flex'">
+            <div class="med-img-placeholder" :style="selectedMedicine.image_url ? 'display:none' : 'display:flex'">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg>
             </div>
+            <div class="med-info">
+              <div class="med-name" x-text="selectedMedicine.trade_name"></div>
+              <div class="med-scientific" x-text="selectedMedicine.scientific_name || ''"></div>
+              <span class="med-category">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M2 12h20"/></svg>
+                <span x-text="selectedMedicine.category"></span>
+              </span>
+            </div>
+          </div>
         </div>
 
         <!-- Step 2: Batch Form -->
         <div x-show="selectedMedicine" x-transition>
-            <div class="form-section">
-                <h2>📋 الخطوة 2: بيانات الشحنة</h2>
-                <div class="form-grid">
-                    <div class="form-group full">
-                        <label>رقم الشحنة <span class="required">*</span></label>
-                        <input type="text" x-model="form.batch_number" placeholder="مثال: BATCH-2026-001">
-                        <span class="hint">أدخل رقماً مميزاً للشحنة</span>
-                    </div>
-
-                    <div class="form-group">
-                        <label>الكمية <span class="required">*</span></label>
-                        <input type="number" x-model="form.quantity" min="1" placeholder="5">
-                    </div>
-
-                    <div class="form-group">
-                        <label>الوحدة <span class="required">*</span></label>
-                        <select x-model="form.unit_name">
-                            <option value="">اختر الوحدة</option>
-                            <template x-for="unit in selectedMedicine.units" :key="unit.id">
-                                <option :value="unit.unit_name" x-text="unit.unit_name"></option>
-                            </template>
-                            <option :value="selectedMedicine.base_unit" x-text="selectedMedicine.base_unit"></option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>تاريخ الانتهاء <span class="required">*</span></label>
-                        <input type="date" x-model="form.expiry_date">
-                    </div>
-
-                    <div class="form-group">
-                        <label>سعر الشراء (للعلبة) <span class="required">*</span></label>
-                        <input type="number" x-model="form.purchase_price" step="0.01" min="0" placeholder="280.00">
-                    </div>
-
-                    <div class="form-group">
-                        <label>رقم فاتورة المورد</label>
-                        <input type="text" x-model="form.supplier_invoice" placeholder="INV-2026-4455">
-                    </div>
-
-                    <div class="form-group full">
-                        <label>اسم المورد</label>
-                        <input type="text" x-model="form.supplier_name" placeholder="شركة الدواء السودانية">
-                    </div>
-                </div>
-
-                <!-- Unit conversion info -->
-                <div x-show="form.quantity && form.unit_name && form.unit_name !== selectedMedicine.base_unit" 
-                     style="margin-top: 12px; padding: 10px; background: var(--background); border-radius: 8px; font-size: 13px; color: var(--text-secondary);">
-                    <span>⚡ سيتم تحويل <span x-text="form.quantity"></span> <span x-text="form.unit_name"></span>
-                    إلى الوحدة الأساسية (عند الإرسال)</span>
-                </div>
-
-                <button class="submit-btn" 
-                        @click="submitBatch()"
-                        :disabled="!canSubmit"
-                        :class="{ loading: submitting }">
-                    <span x-show="!submitting">📦 استلام الشحنة</span>
-                    <span x-show="submitting">جاري الاستلام...</span>
-                </button>
+          <div class="step-badge">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="m9 15 3-3 3 3"/></svg>
+            الخطوة 2
+          </div>
+          <div class="card">
+            <div class="card-title">
+              <i data-lucide="package-plus"></i>
+              بيانات الشحنة
             </div>
+            <div class="form-grid">
+              <div class="form-group full">
+                <label>رقم الشحنة <span class="required">*</span></label>
+                <input type="text" x-model="form.batch_number" placeholder="مثال: BATCH-2026-001">
+                <span class="hint">أدخل رقماً مميزاً للشحنة</span>
+              </div>
+
+              <div class="form-group">
+                <label>الكمية <span class="required">*</span></label>
+                <input type="number" x-model="form.quantity" min="1" placeholder="5">
+              </div>
+
+              <div class="form-group">
+                <label>الوحدة <span class="required">*</span></label>
+                <select x-model="form.unit_name">
+                  <option value="">اختر الوحدة</option>
+                  <template x-for="unit in selectedMedicine?.units" :key="unit.id">
+                    <option :value="unit.unit_name" x-text="unit.unit_name"></option>
+                  </template>
+                  <option :value="selectedMedicine.base_unit" x-text="selectedMedicine.base_unit"></option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>تاريخ الانتهاء <span class="required">*</span></label>
+                <input type="date" x-model="form.expiry_date">
+              </div>
+
+              <div class="form-group">
+                <label>سعر الشراء (للعلبة) <span class="required">*</span></label>
+                <input type="number" x-model="form.purchase_price" step="0.01" min="0" placeholder="280.00">
+              </div>
+
+              <div class="form-group">
+                <label>رقم فاتورة المورد</label>
+                <input type="text" x-model="form.supplier_invoice" placeholder="INV-2026-4455">
+              </div>
+
+              <div class="form-group">
+                <label>اسم المورد</label>
+                <input type="text" x-model="form.supplier_name" placeholder="شركة الدواء السودانية">
+              </div>
+            </div>
+
+            <!-- Unit conversion info -->
+            <div x-show="form.quantity && form.unit_name && selectedMedicine && form.unit_name !== selectedMedicine.base_unit"
+                 class="conversion-info">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+              <span>سيتم تحويل <strong x-text="form.quantity"></strong> <strong x-text="form.unit_name"></strong> إلى الوحدة الأساسية (عند الإرسال)</span>
+            </div>
+
+            <button class="submit-btn"
+                    @click="submitBatch()"
+                    :disabled="!canSubmit"
+                    :class="{ loading: submitting }">
+              <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+              <span x-show="!submitting">استلام الشحنة</span>
+              <span x-show="submitting">جاري الاستلام...</span>
+            </button>
+          </div>
         </div>
 
-        <!-- Result -->
+        <!-- Success Result -->
         <div x-show="result.show" x-transition>
-            <div class="result-box">
-                <div class="success-icon">✅</div>
-                <h3 x-text="result.message"></h3>
-                <div class="detail" x-show="result.quantity_stored">
-                    الكمية المخزنة: <span x-text="result.quantity_stored + ' ' + result.unit_converted"></span>
-                </div>
-                <div class="detail" x-show="result.expiry_warning" style="color: #FCD34D; margin-top: 8px;" x-text="result.expiry_warning"></div>
-                <button class="new-btn" @click="resetForm()">➕ استلام شحنة أخرى</button>
+          <div class="result-card">
+            <div class="result-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
             </div>
+            <h3 x-text="result.message"></h3>
+            <div class="detail" x-show="result.quantity_stored">
+              الكمية المخزنة: <span x-text="result.quantity_stored + ' ' + result.unit_converted"></span>
+            </div>
+            <div x-show="result.expiry_warning" class="expiry-warn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+              <span x-text="result.expiry_warning"></span>
+            </div>
+            <button class="btn-new" @click="resetForm()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+              استلام شحنة أخرى
+            </button>
+          </div>
         </div>
 
-        <!-- Confirmation Dialog for Short Expiry -->
-        <div x-show="showConfirm" class="confirm-overlay" x-transition>
-            <div class="confirm-dialog">
-                <h3>⚠️ تحذير: صلاحية قصيرة</h3>
-                <p x-text="confirmMessage"></p>
-                <div class="btn-row">
-                    <button class="btn-cancel" @click="cancelConfirm()">إلغاء</button>
-                    <button class="btn-confirm" @click="confirmSubmit()">تأكيد الاستلام</button>
-                </div>
-            </div>
-        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Confirmation Dialog for Short Expiry -->
+  <div x-show="showConfirm" class="confirm-overlay" x-transition>
+    <div class="confirm-dialog">
+      <div class="warn-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+      </div>
+      <h3>تحذير: صلاحية قصيرة</h3>
+      <p x-text="confirmMessage"></p>
+      <div class="btn-row">
+        <button class="btn-cancel" @click="cancelConfirm()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          إلغاء
+        </button>
+        <button class="btn-confirm" @click="confirmSubmit()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
+          تأكيد الاستلام
+        </button>
+      </div>
     </div>
+  </div>
 
-    <script>
-        function batchReceiveApp() {
-            return {
-                // State
-                searchQuery: '',
-                selectedMedicine: null,
-                submitting: false,
-                showConfirm: false,
-                confirmMessage: '',
-                pendingConfirmData: null,
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide) lucide.createIcons();
+    });
 
-                message: { text: '', type: '' },
+    function batchReceiveApp() {
+      return {
+        // User state
+        userName: '',
+        userInitials: '',
+        isAdmin: false,
 
-                form: {
-                    batch_number: '',
-                    quantity: '',
-                    unit_name: '',
-                    expiry_date: '',
-                    purchase_price: '',
-                    supplier_invoice: '',
-                    supplier_name: ''
-                },
+        // App state
+        searchQuery: '',
+        selectedMedicine: null,
+        submitting: false,
+        showConfirm: false,
+        confirmMessage: '',
+        pendingConfirmData: null,
 
-                result: {
-                    show: false,
-                    message: '',
-                    quantity_stored: null,
-                    unit_converted: '',
-                    expiry_warning: null
-                },
+        message: { text: '', type: '' },
 
-                // Computed
-                get canSubmit() {
-                    return this.selectedMedicine &&
-                           this.form.batch_number &&
-                           this.form.quantity > 0 &&
-                           this.form.unit_name &&
-                           this.form.expiry_date &&
-                           this.form.purchase_price > 0;
-                },
+        form: {
+          batch_number: '',
+          quantity: '',
+          unit_name: '',
+          expiry_date: '',
+          purchase_price: '',
+          supplier_invoice: '',
+          supplier_name: ''
+        },
 
-                // Methods
-                showMessage(text, type = 'success') {
-                    this.message = { text, type };
-                    setTimeout(() => { this.message = { text: '', type: '' }; }, 5000);
-                },
+        result: {
+          show: false,
+          message: '',
+          quantity_stored: null,
+          unit_converted: '',
+          expiry_warning: null
+        },
 
-                // البحث عن الدواء
-                async searchMedicine() {
-                    const query = this.searchQuery.trim();
-                    if (!query) return;
+        // Computed
+        get canSubmit() {
+          return this.selectedMedicine &&
+                 this.form.batch_number &&
+                 this.form.quantity > 0 &&
+                 this.form.unit_name &&
+                 this.form.expiry_date &&
+                 this.form.purchase_price > 0;
+        },
 
-                    // First try barcode search
-                    try {
-                        const token = localStorage.getItem('token');
-                        if (!token) {
-                            window.location.href = '/login';
-                            return;
-                        }
+        // Init user
+        initUser() {
+          const name = localStorage.getItem('userName') || 'المستخدم';
+          const role = localStorage.getItem('role') || 'pharmacist';
+          this.userName = name;
+          this.isAdmin = role === 'admin';
+          this.userInitials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+        },
 
-                        // Try barcode first
-                        let response = await fetch(`/api/medicines/barcode/${encodeURIComponent(query)}`, {
-                            headers: { 'Authorization': 'Bearer ' + token }
-                        });
+        // Dark mode toggle
+        toggleDarkMode() {
+          document.documentElement.classList.toggle('dark');
+          localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+        },
 
-                        if (response.ok) {
-                            const data = await response.json();
-                            if (data.found && data.medicine) {
-                                this.selectMedicine(data.medicine);
-                                return;
-                            }
-                        }
+        // Logout
+        logout() {
+          localStorage.clear();
+          window.location.href = '/login';
+        },
 
-                        // If not found by barcode, search by name
-                        response = await fetch(`/api/medicines/?search=${encodeURIComponent(query)}`, {
-                            headers: { 'Authorization': 'Bearer ' + token }
-                        });
+        // Methods
+        showMessage(text, type = 'success') {
+          this.message = { text, type };
+          setTimeout(() => { this.message = { text: '', type: '' }; }, 5000);
+        },
 
-                        if (response.ok) {
-                            const data = await response.json();
-                            const medicines = data.medicines || [];
-                            if (medicines.length === 1) {
-                                this.selectMedicine(medicines[0]);
-                            } else if (medicines.length > 1) {
-                                // Show first result (or we could show a dropdown)
-                                this.selectMedicine(medicines[0]);
-                                this.showMessage(`تم العثور على ${medicines.length} نتائج. تم اختيار أولها.`, 'info');
-                            } else {
-                                this.showMessage('لم يتم العثور على الدواء', 'error');
-                            }
-                        }
-                    } catch (err) {
-                        this.showMessage('فشل الاتصال: ' + err.message, 'error');
-                    }
-                },
+        // البحث عن الدواء
+        async searchMedicine() {
+          const query = this.searchQuery.trim();
+          if (!query) return;
 
-                // اختيار دواء
-                selectMedicine(medicine) {
-                    this.selectedMedicine = medicine;
-                    this.message = { text: '', type: '' };
-                    this.result.show = false;
-                    // Auto-fill batch number suggestion
-                    const today = new Date();
-                    const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
-                    this.form.batch_number = `BATCH-${dateStr}-`;
-                },
+          // First try barcode search
+          try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+              window.location.href = '/login';
+              return;
+            }
 
-                // إرسال الشحنة
-                async submitBatch() {
-                    if (!this.canSubmit || this.submitting) return;
-                    this.submitting = true;
+            // Try barcode first
+            let response = await fetch(`/api/medicines/barcode/${encodeURIComponent(query)}`, {
+              headers: { 'Authorization': 'Bearer ' + token }
+            });
 
-                    try {
-                        const token = localStorage.getItem('token');
-                        if (!token) {
-                            window.location.href = '/login';
-                            return;
-                        }
+            if (response.ok) {
+              const data = await response.json();
+              if (data.found && data.medicine) {
+                this.selectMedicine(data.medicine);
+                return;
+              }
+            }
 
-                        const body = {
-                            medicine_id: this.selectedMedicine.id,
-                            batch_number: this.form.batch_number,
-                            quantity: parseFloat(this.form.quantity),
-                            unit_name: this.form.unit_name,
-                            expiry_date: this.form.expiry_date,
-                            purchase_price: parseFloat(this.form.purchase_price),
-                            supplier_invoice: this.form.supplier_invoice || null,
-                            supplier_name: this.form.supplier_name || null
-                        };
+            // If not found by barcode, search by name
+            response = await fetch(`/api/medicines/?search=${encodeURIComponent(query)}`, {
+              headers: { 'Authorization': 'Bearer ' + token }
+            });
 
-                        const response = await fetch('/api/batches/receive', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': 'Bearer ' + token
-                            },
-                            body: JSON.stringify(body)
-                        });
+            if (response.ok) {
+              const data = await response.json();
+              const medicines = data.medicines || [];
+              if (medicines.length === 1) {
+                this.selectMedicine(medicines[0]);
+              } else if (medicines.length > 1) {
+                // Show first result (or we could show a dropdown)
+                this.selectMedicine(medicines[0]);
+                this.showMessage(`تم العثور على ${medicines.length} نتائج. تم اختيار أولها.`, 'info');
+              } else {
+                this.showMessage('لم يتم العثور على الدواء', 'error');
+              }
+            }
+          } catch (err) {
+            this.showMessage('فشل الاتصال: ' + err.message, 'error');
+          }
+        },
 
-                        const data = await response.json();
+        // اختيار دواء
+        selectMedicine(medicine) {
+          this.selectedMedicine = medicine;
+          this.message = { text: '', type: '' };
+          this.result.show = false;
+          // Auto-fill batch number suggestion
+          const today = new Date();
+          const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
+          this.form.batch_number = `BATCH-${dateStr}-`;
+        },
 
-                        if (response.ok && data.success) {
-                            // Check if there's a DANGER warning (less than 30 days)
-                            if (data.expiry_warning && data.expiry_warning.includes('خطر')) {
-                                // Show confirmation dialog
-                                this.showConfirm = true;
-                                this.confirmMessage = data.expiry_warning;
-                                this.pendingConfirmData = body;
-                                this.submitting = false;
-                                return;
-                            }
+        // إرسال الشحنة
+        async submitBatch() {
+          if (!this.canSubmit || this.submitting) return;
+          this.submitting = true;
 
-                            // Success!
-                            this.showResult(data);
-                        } else {
-                            this.showMessage(data.detail || data.message || 'فشل في استلام الشحنة', 'error');
-                        }
-                    } catch (err) {
-                        this.showMessage('فشل الاتصال: ' + err.message, 'error');
-                    } finally {
-                        this.submitting = false;
-                    }
-                },
+          try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+              window.location.href = '/login';
+              return;
+            }
 
-                // تأكيد الاستلام بعد تحذير
-                async confirmSubmit() {
-                    this.showConfirm = false;
-                    this.submitting = true;
-
-                    try {
-                        const token = localStorage.getItem('token');
-                        const response = await fetch('/api/batches/receive/confirm-short-expiry', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': 'Bearer ' + token
-                            },
-                            body: JSON.stringify({
-                                batch_data: this.pendingConfirmData,
-                                confirmed: true
-                            })
-                        });
-
-                        const data = await response.json();
-                        if (response.ok && data.success) {
-                            this.showResult(data);
-                        } else {
-                            this.showMessage(data.detail || data.message || 'فشل في استلام الشحنة', 'error');
-                        }
-                    } catch (err) {
-                        this.showMessage('فشل الاتصال: ' + err.message, 'error');
-                    } finally {
-                        this.submitting = false;
-                    }
-                },
-
-                // إلغاء التأكيد
-                cancelConfirm() {
-                    this.showConfirm = false;
-                    this.pendingConfirmData = null;
-                    this.showMessage('تم إلغاء استلام الشحنة', 'warning');
-                },
-
-                // عرض النتيجة
-                showResult(data) {
-                    this.result = {
-                        show: true,
-                        message: data.message || 'تم استلام الشحنة بنجاح',
-                        quantity_stored: data.quantity_stored,
-                        unit_converted: data.unit_converted,
-                        expiry_warning: data.expiry_warning
-                    };
-                    this.showMessage('', '');
-                },
-
-                // إعادة تعيين النموذج
-                resetForm() {
-                    this.form = {
-                        batch_number: '',
-                        quantity: '',
-                        unit_name: '',
-                        expiry_date: '',
-                        purchase_price: '',
-                        supplier_invoice: '',
-                        supplier_name: ''
-                    };
-                    this.result = { show: false, message: '', quantity_stored: null, unit_converted: '', expiry_warning: null };
-                    this.searchQuery = '';
-                    this.selectedMedicine = null;
-                    this.message = { text: '', type: '' };
-                }
+            const body = {
+              medicine_id: this.selectedMedicine.id,
+              batch_number: this.form.batch_number,
+              quantity: parseFloat(this.form.quantity),
+              unit_name: this.form.unit_name,
+              expiry_date: this.form.expiry_date,
+              purchase_price: parseFloat(this.form.purchase_price),
+              supplier_invoice: this.form.supplier_invoice || null,
+              supplier_name: this.form.supplier_name || null
             };
+
+            const response = await fetch('/api/batches/receive', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+              },
+              body: JSON.stringify(body)
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+              // Check if there's a DANGER warning (less than 30 days)
+              if (data.expiry_warning && data.expiry_warning.includes('خطر')) {
+                // Show confirmation dialog
+                this.showConfirm = true;
+                this.confirmMessage = data.expiry_warning;
+                this.pendingConfirmData = body;
+                this.submitting = false;
+                return;
+              }
+
+              // Success!
+              this.showResult(data);
+            } else {
+              this.showMessage(data.detail || data.message || 'فشل في استلام الشحنة', 'error');
+            }
+          } catch (err) {
+            this.showMessage('فشل الاتصال: ' + err.message, 'error');
+          } finally {
+            this.submitting = false;
+          }
+        },
+
+        // تأكيد الاستلام بعد تحذير
+        async confirmSubmit() {
+          this.showConfirm = false;
+          this.submitting = true;
+
+          try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('/api/batches/receive/confirm-short-expiry', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+              },
+              body: JSON.stringify({
+                batch_data: this.pendingConfirmData,
+                confirmed: true
+              })
+            });
+
+            const data = await response.json();
+            if (response.ok && data.success) {
+              this.showResult(data);
+            } else {
+              this.showMessage(data.detail || data.message || 'فشل في استلام الشحنة', 'error');
+            }
+          } catch (err) {
+            this.showMessage('فشل الاتصال: ' + err.message, 'error');
+          } finally {
+            this.submitting = false;
+          }
+        },
+
+        // إلغاء التأكيد
+        cancelConfirm() {
+          this.showConfirm = false;
+          this.pendingConfirmData = null;
+          this.showMessage('تم إلغاء استلام الشحنة', 'warning');
+        },
+
+        // عرض النتيجة
+        showResult(data) {
+          this.result = {
+            show: true,
+            message: data.message || 'تم استلام الشحنة بنجاح',
+            quantity_stored: data.quantity_stored,
+            unit_converted: data.unit_converted,
+            expiry_warning: data.expiry_warning
+          };
+          this.showMessage('', '');
+        },
+
+        // إعادة تعيين النموذج
+        resetForm() {
+          this.form = {
+            batch_number: '',
+            quantity: '',
+            unit_name: '',
+            expiry_date: '',
+            purchase_price: '',
+            supplier_invoice: '',
+            supplier_name: ''
+          };
+          this.result = { show: false, message: '', quantity_stored: null, unit_converted: '', expiry_warning: null };
+          this.searchQuery = '';
+          this.selectedMedicine = null;
+          this.message = { text: '', type: '' };
         }
-    </script>
+      };
+    }
+  </script>
+
 </body>
 </html><!-- 1781564608 -->

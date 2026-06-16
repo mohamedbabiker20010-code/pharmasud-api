@@ -1,598 +1,953 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/css/theme.css?v7.2.0">
-    <title>سجل المبيعات - PharmaSUD</title>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans Arabic', system-ui, -apple-system, sans-serif;
-            background: var(--background);
-            color: var(--text-primary);
-            min-height: 100vh;
-        }
-        .sidebar {
-            width: 220px;
-            background: var(--surface);
-            min-height: 100vh;
-            padding: 24px 0;
-            border-left: 1px solid var(--border);
-            position: fixed;
-            right: 0;
-            top: 0;
-        }
-        .sidebar .logo {
-            padding: 0 20px 24px;
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 16px;
-        }
-        .sidebar .logo h1 { font-size: 18px; color: var(--primary-blue); }
-        .sidebar .logo p { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 20px;
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-size: 14px;
-            transition: all 0.2s;
-            border-right: 3px solid transparent;
-        }
-        .nav-item:hover, .nav-item.active {
-            background: var(--border);
-            color: var(--text-primary);
-            border-right-color: var(--primary-blue);
-        }
-        .nav-item .icon { font-size: 18px; }
-        .sidebar-footer {
-            position: absolute;
-            bottom: 0;
-            width: 220px;
-            padding: 16px 20px;
-            border-top: 1px solid var(--border);
-        }
-        .main-content {
-            margin-right: 220px;
-            padding: 32px 40px;
-            min-height: 100vh;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 28px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid var(--border);
-        }
-        .header h2 { font-size: 22px; }
-        .header-left { text-align: left; }
-        .header-left .name { font-weight: 600; }
-        .header-left .pharmacy { font-size: 13px; color: var(--text-secondary); }
-        .logout-btn {
-            background: #DC2626;
-            border: none;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 13px;
-            transition: background 0.2s;
-        }
-        .logout-btn:hover { background: #B91C1C; }
-        
-        /* Filters */
-        .filters {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-        .filter-btn {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            color: var(--text-secondary);
-            padding: 8px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 13px;
-            transition: all 0.2s;
-        }
-        .filter-btn:hover { border-color: var(--primary-blue); color: var(--text-primary); }
-        .filter-btn.active {
-            background: var(--primary-blue);
-            border-color: var(--primary-blue);
-            color: white;
-        }
-        .filter-select {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 13px;
-            cursor: pointer;
-        }
-        .filter-select:focus { outline: none; border-color: var(--primary-blue); }
-        
-        /* Stats Bar */
-        .stats-bar {
-            display: flex;
-            gap: 16px;
-            margin-bottom: 20px;
-        }
-        .stat-box {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 14px 20px;
-            flex: 1;
-        }
-        .stat-box .stat-label { font-size: 12px; color: var(--text-secondary); }
-        .stat-box .stat-value { font-size: 22px; font-weight: 700; color: var(--primary-blue); margin-top: 4px; }
-        .stat-box .stat-value.green { color: var(--success); }
-        
-        /* Sales List */
-        .sale-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 16px 20px;
-            margin-bottom: 10px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .sale-card:hover { border-color: var(--primary-blue); }
-        .sale-card .sale-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-        .sale-card .sale-number {
-            font-size: 15px;
-            font-weight: 700;
-            color: var(--primary-blue);
-        }
-        .sale-card .sale-date {
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-        .sale-card .sale-body {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .sale-card .sale-info {
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-        .sale-card .sale-info .cashier { color: var(--text-primary); }
-        .sale-card .sale-amount {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--success);
-        }
-        .sale-card .sale-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 8px;
-        }
-        .sale-card .sale-actions button {
-            background: var(--border);
-            border: none;
-            color: var(--text-secondary);
-            padding: 6px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: all 0.2s;
-        }
-        .sale-card .sale-actions button:hover { background: var(--text-secondary); color: var(--text-primary); }
-        
-        .payment-badge {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-        .pay-cash { background: rgba(16,185,129,0.15); color: #6EE7B7; }
-        .pay-bankak { background: rgba(26,167,236,0.10); color: #4ADEDE; }
-        .pay-fory { background: #5B21B6; color: #A78BFA; }
-        .pay-transfer { background: rgba(245,158,11,0.15); color: #FBBF24; }
-        
-        /* Detail Modal */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.7);
-            z-index: 100;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        .modal {
-            background: var(--surface);
-            border-radius: 16px;
-            padding: 24px;
-            width: 100%;
-            max-width: 500px;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-        .modal h2 { font-size: 18px; margin-bottom: 16px; }
-        .modal .close-btn {
-            float: left;
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            font-size: 20px;
-            cursor: pointer;
-        }
-        .modal .detail-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-bottom: 16px;
-            padding: 12px;
-            background: var(--background);
-            border-radius: 8px;
-            font-size: 13px;
-        }
-        .modal .detail-grid .label { color: var(--text-secondary); }
-        .modal .detail-grid .value { text-align: left; }
-        
-        .modal .detail-items {
-            margin-bottom: 16px;
-        }
-        .modal .detail-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid var(--border);
-            font-size: 13px;
-        }
-        .modal .detail-item:last-child { border-bottom: none; }
-        
-        .pagination {
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            margin-top: 20px;
-        }
-        .pagination button {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-            padding: 8px 14px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-        }
-        .pagination button:hover { border-color: var(--primary-blue); }
-        .pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
-        
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--text-secondary);
-        }
-        .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
-        
-        @media (max-width: 768px) {
-            .sidebar { display: none; }
-            .main-content { margin-right: 0; padding: 20px; }
-            .filters { flex-wrap: wrap; }
-            .stats-bar { flex-direction: column; }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/static/css/theme.css?v7.2.0">
+  <title>سجل المبيعات - PharmaSUD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    html, body {
+      margin: 0; padding: 0;
+      min-height: 100vh;
+      font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif;
+      background: #F6F8FA;
+      color: #0F172A;
+      -webkit-font-smoothing: antialiased;
+    }
+    .app-layout { display: flex; min-height: 100vh; }
+
+    /* ─── Sidebar ─── */
+    .sidebar {
+      width: 248px; background: #fff; border-left: 1px solid #EEF2F6;
+      display: flex; flex-direction: column; padding: 22px 16px;
+      position: fixed; right: 0; top: 0; bottom: 0; z-index: 100;
+    }
+    .sidebar .brand {
+      display: flex; align-items: center; gap: 11px;
+      padding: 0 8px 22px;
+    }
+    .sidebar .brand .icon {
+      width: 38px; height: 38px; border-radius: 11px;
+      background: #1AA7EC; position: relative; flex-shrink: 0;
+    }
+    .sidebar .brand .icon::before, .sidebar .brand .icon::after {
+      content: ''; position: absolute; left: 50%; top: 50%;
+      transform: translate(-50%, -50%); background: #fff; border-radius: 3px;
+    }
+    .sidebar .brand .icon::before { width: 18px; height: 5.5px; }
+    .sidebar .brand .icon::after { width: 5.5px; height: 18px; }
+    .sidebar .brand .name {
+      font: 700 18px/1 'IBM Plex Sans Arabic', sans-serif; letter-spacing: -0.02em;
+    }
+    .sidebar .brand .name span { color: #1AA7EC; }
+    .sidebar .nav-section {
+      font: 600 11px/1 'IBM Plex Mono', monospace; letter-spacing: 0.1em;
+      color: #CBD5E1; padding: 14px 10px 10px;
+    }
+    .sidebar .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 12px; border-radius: 11px;
+      color: #475569; font-size: 14px; font-weight: 500;
+      text-decoration: none; margin-bottom: 4px;
+      transition: all 0.2s ease;
+    }
+    .sidebar .nav-item:hover { background: #F8FAFC; color: #0F172A; }
+    .sidebar .nav-item.active {
+      background: #1AA7EC; color: #fff;
+      box-shadow: 0 8px 18px -8px rgba(26,167,236,0.55);
+    }
+    .sidebar .nav-item svg { width: 19px; height: 19px; flex-shrink: 0; }
+    .sidebar .nav-item .badge {
+      margin-right: auto; background: #FEF2F2; color: #DC2626;
+      font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px;
+    }
+    .sidebar .user-card {
+      margin-top: auto; display: flex; align-items: center; gap: 11px;
+      padding: 11px; border: 1px solid #EEF2F6; border-radius: 13px; cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .sidebar .user-card:hover { background: #F8FAFC; }
+    .sidebar .user-avatar {
+      width: 36px; height: 36px; border-radius: 10px; background: #1AA7EC;
+      color: #fff; display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px; flex-shrink: 0;
+    }
+    .sidebar .user-name { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar .user-role { font-size: 11.5px; color: #94A3B8; }
+    .sidebar .user-card svg { width: 16px; height: 16px; color: #CBD5E1; flex-shrink: 0; }
+
+    /* ─── Topbar ─── */
+    .topbar {
+      height: 70px; background: #fff; border-bottom: 1px solid #EEF2F6;
+      display: flex; align-items: center; padding: 0 28px; gap: 18px;
+      position: fixed; top: 0; right: 248px; left: 0; z-index: 90;
+    }
+    .topbar .topbar-title h1 {
+      margin: 0; font: 700 20px/1 'IBM Plex Sans Arabic', sans-serif;
+      letter-spacing: -0.02em;
+    }
+    .topbar .topbar-title .subtitle {
+      margin: 4px 0 0; color: #64748B; font-size: 13px;
+    }
+    .topbar .search-box {
+      display: flex; align-items: center; gap: 10px; flex: 1; max-width: 380px;
+      height: 42px; padding: 0 14px; border-radius: 11px; background: #F6F8FA;
+      color: #94A3B8; font-size: 14px; margin-right: auto;
+    }
+    .topbar .search-box svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .topbar .actions { display: flex; align-items: center; gap: 12px; }
+    .topbar .lang-toggle {
+      display: flex; border: 1px solid #E2E8F0; border-radius: 9px;
+      overflow: hidden; font-size: 13px; font-weight: 600;
+    }
+    .topbar .lang-toggle span { padding: 7px 12px; color: #64748B; cursor: pointer; transition: all 0.2s; }
+    .topbar .lang-toggle span.active { background: #1AA7EC; color: #fff; }
+    .topbar .icon-btn {
+      width: 42px; height: 42px; border-radius: 11px; border: 1px solid #E2E8F0;
+      display: flex; align-items: center; justify-content: center;
+      color: #475569; background: transparent; cursor: pointer; position: relative;
+      transition: all 0.2s ease;
+    }
+    .topbar .icon-btn:hover { background: #F8FAFC; }
+    .topbar .icon-btn svg { width: 18px; height: 18px; }
+    .topbar .icon-btn .dot {
+      position: absolute; top: 9px; left: 11px; width: 8px; height: 8px;
+      border-radius: 50%; background: #DC2626; border: 2px solid #fff;
+    }
+
+    /* ─── Main Content ─── */
+    .main-content {
+      margin-right: 248px;
+      padding: calc(70px + 28px) 28px 28px;
+      min-height: 100vh;
+    }
+
+    /* ─── Page Header ─── */
+    .page-header {
+      display: flex; align-items: flex-end; justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .page-header h1 {
+      margin: 0 0 6px; font: 700 26px/1.1 'IBM Plex Sans Arabic', sans-serif;
+      letter-spacing: -0.02em;
+    }
+    .page-header .subtitle { margin: 0; color: #64748B; font-size: 14.5px; }
+
+    /* ─── Metric Cards ─── */
+    .metrics-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px; margin-bottom: 24px;
+    }
+    .metric-card {
+      background: #fff; border: 1px solid #EEF2F6;
+      border-radius: 16px; padding: 20px;
+      box-shadow: 0 1px 2px rgba(15,23,42,0.04);
+      transition: all 0.2s ease;
+    }
+    .metric-card:hover { box-shadow: 0 4px 6px -1px rgba(15,23,42,0.06); }
+    .metric-card .metric-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .metric-card .metric-icon {
+      width: 38px; height: 38px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .metric-card .metric-icon.blue { background: #DBEAFE; color: #1AA7EC; }
+    .metric-card .metric-icon.green { background: #ECFDF5; color: #16A34A; }
+    .metric-card .metric-icon.cyan { background: #E0F2FE; color: #0284C7; }
+    .metric-card .metric-icon.yellow { background: #FEF3C7; color: #D97706; }
+    .metric-card .metric-icon svg { width: 20px; height: 20px; }
+    .metric-card .metric-label {
+      font-size: 13px; color: #94A3B8; font-weight: 500; margin-bottom: 5px;
+    }
+    .metric-card .metric-value {
+      font: 700 25px/1 'IBM Plex Sans Arabic', sans-serif;
+      letter-spacing: -0.02em; color: #0F172A;
+    }
+    .metric-card .metric-value .unit {
+      font-size: 14px; color: #94A3B8; font-weight: 600;
+    }
+
+    /* ─── Filter Chips ─── */
+    .filter-chips {
+      display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap;
+      align-items: center;
+    }
+    .filter-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border-radius: 999px;
+      font-size: 13.5px; font-weight: 600;
+      background: #fff; color: #475569; border: 1px solid #E2E8F0;
+      cursor: pointer; transition: all 0.2s ease; font-family: inherit;
+    }
+    .filter-chip:hover { background: #F8FAFC; border-color: #CBD5E1; }
+    .filter-chip.active {
+      background: #1AA7EC; color: #fff; border-color: #1AA7EC;
+    }
+    .filter-chip svg { width: 15px; height: 15px; }
+
+    .filter-select {
+      padding: 8px 14px; border-radius: 999px;
+      font-family: inherit; font-size: 13.5px; font-weight: 600;
+      background: #fff; color: #475569; border: 1px solid #E2E8F0;
+      cursor: pointer; outline: none; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: left 12px center;
+      padding-left: 32px;
+      transition: all 0.2s ease;
+    }
+    .filter-select:focus { border-color: #1AA7EC; box-shadow: 0 0 0 3px rgba(26,167,236,0.12); }
+
+    /* ─── Card ─── */
+    .card {
+      background: #fff; border: 1px solid #EEF2F6;
+      border-radius: 16px; padding: 22px 24px;
+      box-shadow: 0 1px 2px rgba(15,23,42,0.04);
+      transition: all 0.2s ease;
+    }
+    .card:hover { box-shadow: 0 4px 6px -1px rgba(15,23,42,0.06); }
+    .card-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 20px; padding-bottom: 16px;
+      border-bottom: 1px solid #EEF2F6;
+    }
+    .card-title {
+      font-size: 15px; font-weight: 600; color: #0F172A;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-title svg { width: 18px; height: 18px; color: #1AA7EC; }
+    .card-subtitle { font-size: 12.5px; color: #94A3B8; margin-top: 3px; }
+
+    /* ─── Sale Row ─── */
+    .sale-list { display: flex; flex-direction: column; gap: 8px; }
+    .sale-row {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 16px; background: #F6F8FA;
+      border-radius: 11px; transition: all 0.2s ease; cursor: pointer;
+    }
+    .sale-row:hover { background: #EFF6FF; }
+    .sale-row .sale-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; font-size: 18px;
+    }
+    .sale-row .sale-icon.cash { background: #ECFDF5; color: #16A34A; }
+    .sale-row .sale-icon.bankak { background: #DBEAFE; color: #1AA7EC; }
+    .sale-row .sale-icon.fory { background: #EDE9FE; color: #7C3AED; }
+    .sale-row .sale-icon.transfer { background: #FEF3C7; color: #D97706; }
+    .sale-row .sale-info { flex: 1; min-width: 0; }
+    .sale-row .sale-number {
+      font-size: 14px; font-weight: 600; color: #0F172A;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .sale-row .sale-meta {
+      font-size: 12px; color: #64748B; margin-top: 2px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .sale-row .sale-amount {
+      font: 700 17px/1 'IBM Plex Sans Arabic', sans-serif;
+      color: #16A34A; white-space: nowrap;
+    }
+    .sale-row .sale-amount .unit { font-size: 12px; color: #94A3B8; font-weight: 600; }
+    .sale-row .sale-action-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 5px; padding: 6px 12px; border-radius: 8px;
+      font-size: 12px; font-weight: 600; cursor: pointer;
+      border: none; font-family: inherit; transition: all 0.2s ease;
+      background: #DBEAFE; color: #1AA7EC; flex-shrink: 0;
+    }
+    .sale-row .sale-action-btn:hover { background: #BFDBFE; }
+
+    /* Payment Badges */
+    .payment-badge {
+      display: inline-flex; align-items: center; gap: 3px;
+      padding: 2px 8px; border-radius: 999px;
+      font-size: 11px; font-weight: 700;
+    }
+    .pay-cash { background: #ECFDF5; color: #16A34A; }
+    .pay-bankak { background: #DBEAFE; color: #1AA7EC; }
+    .pay-fory { background: #EDE9FE; color: #7C3AED; }
+    .pay-transfer { background: #FEF3C7; color: #D97706; }
+
+    /* ─── Pagination ─── */
+    .pagination {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      margin-top: 20px; padding-top: 16px;
+    }
+    .pagination button {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border-radius: 11px;
+      font-family: inherit; font-size: 13px; font-weight: 600;
+      background: #fff; color: #475569; border: 1px solid #E2E8F0;
+      cursor: pointer; transition: all 0.2s ease;
+    }
+    .pagination button:hover { background: #F8FAFC; border-color: #CBD5E1; }
+    .pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .pagination button svg { width: 15px; height: 15px; }
+    .pagination .page-info {
+      font-size: 13px; color: #94A3B8; padding: 0 8px;
+    }
+
+    /* ─── Empty State ─── */
+    .empty-state { text-align: center; padding: 60px 20px; }
+    .empty-state .empty-icon {
+      width: 56px; height: 56px; border-radius: 14px;
+      background: #F1F5F9; color: #94A3B8;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 14px;
+    }
+    .empty-state .empty-icon svg { width: 24px; height: 24px; }
+    .empty-state h3 { font-size: 15px; font-weight: 600; color: #334155; margin-bottom: 4px; }
+    .empty-state p { font-size: 13px; color: #94A3B8; }
+
+    /* ─── Modal / Detail ─── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(15,23,42,0.5);
+      backdrop-filter: blur(4px);
+      z-index: 1000; display: flex;
+      align-items: center; justify-content: center;
+      animation: fadeIn 0.2s ease;
+    }
+    .modal {
+      background: #fff; border-radius: 16px;
+      box-shadow: 0 10px 15px -3px rgba(15,23,42,0.06), 0 4px 6px -4px rgba(15,23,42,0.04);
+      width: 100%; max-width: 520px; margin: 20px;
+      animation: scaleIn 0.2s cubic-bezier(0.22,1,0.36,1);
+      overflow: hidden;
+    }
+    .modal-top {
+      padding: 22px 24px 0; display: flex; align-items: flex-start;
+      justify-content: space-between;
+    }
+    .modal-top h2 {
+      font: 700 18px/1.2 'IBM Plex Sans Arabic', sans-serif;
+      color: #0F172A; margin: 0;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .modal-top h2 svg { width: 20px; height: 20px; color: #1AA7EC; }
+    .modal-close {
+      width: 34px; height: 34px; border-radius: 9px; border: 1px solid #EEF2F6;
+      display: flex; align-items: center; justify-content: center;
+      background: transparent; color: #94A3B8; cursor: pointer;
+      transition: all 0.2s ease; flex-shrink: 0;
+    }
+    .modal-close:hover { background: #F8FAFC; color: #0F172A; }
+    .modal-close svg { width: 16px; height: 16px; }
+    .modal-body { padding: 18px 24px; }
+
+    .detail-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+      margin-bottom: 18px; padding: 14px;
+      background: #F6F8FA; border-radius: 11px;
+    }
+    .detail-grid .detail-item { font-size: 13px; }
+    .detail-grid .detail-label { color: #94A3B8; font-size: 11.5px; font-weight: 500; margin-bottom: 2px; }
+    .detail-grid .detail-value { color: #0F172A; font-weight: 600; }
+
+    .detail-items { margin-bottom: 16px; }
+    .detail-line {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      padding: 10px 0; border-bottom: 1px solid #F6F8FA; font-size: 13px;
+    }
+    .detail-line:last-child { border-bottom: none; }
+    .detail-line .item-name { font-weight: 600; color: #0F172A; }
+    .detail-line .item-batch { font-size: 11px; color: #94A3B8; margin-top: 1px; }
+    .detail-line .item-calc { text-align: left; }
+    .detail-line .item-price { color: #64748B; }
+    .detail-line .item-total { color: #16A34A; font-weight: 700; }
+
+    .detail-total {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 0 0; border-top: 1px solid #EEF2F6;
+      margin-top: 8px;
+    }
+    .detail-total .label { font-size: 14px; color: #64748B; font-weight: 500; }
+    .detail-total .value {
+      font: 700 20px/1 'IBM Plex Sans Arabic', sans-serif; color: #16A34A;
+    }
+    .detail-total .value .unit { font-size: 13px; color: #94A3B8; font-weight: 600; }
+
+    .modal-actions {
+      display: flex; gap: 0; border-top: 1px solid #EEF2F6;
+    }
+    .modal-actions button {
+      flex: 1; padding: 14px; border: none;
+      font-family: inherit; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: all 0.2s ease; background: transparent;
+      color: #64748B;
+    }
+    .modal-actions button:hover { background: #F8FAFC; }
+
+    /* ─── Loading ─── */
+    .loading-state {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; padding: 60px 20px; gap: 12px; color: #94A3B8;
+    }
+    .loading-state .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid #E2E8F0; border-top-color: #1AA7EC;
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+
+    /* ─── Dark Mode ─── */
+    body.dark-mode {
+      background: #0F172A;
+      color: #E2E8F0;
+    }
+    body.dark-mode .sidebar { background: #1E293B; border-color: #334155; }
+    body.dark-mode .sidebar .brand .name { color: #E2E8F0; }
+    body.dark-mode .sidebar .nav-item { color: #94A3B8; }
+    body.dark-mode .sidebar .nav-item:hover { background: #334155; color: #E2E8F0; }
+    body.dark-mode .sidebar .nav-item.active { background: #1AA7EC; color: #fff; }
+    body.dark-mode .sidebar .user-card { border-color: #334155; }
+    body.dark-mode .sidebar .user-card:hover { background: #334155; }
+    body.dark-mode .sidebar .user-name { color: #E2E8F0; }
+    body.dark-mode .topbar { background: #1E293B; border-color: #334155; }
+    body.dark-mode .topbar .topbar-title h1 { color: #E2E8F0; }
+    body.dark-mode .topbar .search-box { background: #334155; color: #64748B; }
+    body.dark-mode .topbar .icon-btn { border-color: #334155; color: #94A3B8; }
+    body.dark-mode .topbar .icon-btn:hover { background: #334155; }
+    body.dark-mode .topbar .lang-toggle { border-color: #334155; }
+    body.dark-mode .topbar .lang-toggle span { color: #94A3B8; }
+    body.dark-mode .metric-card { background: #1E293B; border-color: #334155; }
+    body.dark-mode .metric-card .metric-value { color: #E2E8F0; }
+    body.dark-mode .card { background: #1E293B; border-color: #334155; }
+    body.dark-mode .card-title { color: #E2E8F0; }
+    body.dark-mode .sale-row { background: #1E293B; }
+    body.dark-mode .sale-row:hover { background: #334155; }
+    body.dark-mode .sale-row .sale-number { color: #E2E8F0; }
+    body.dark-mode .sale-row .sale-amount { color: #4ADE80; }
+    body.dark-mode .filter-chip { background: #1E293B; border-color: #334155; color: #94A3B8; }
+    body.dark-mode .filter-chip:hover { background: #334155; border-color: #475569; }
+    body.dark-mode .filter-chip.active { background: #1AA7EC; color: #fff; border-color: #1AA7EC; }
+    body.dark-mode .filter-select { background: #1E293B; border-color: #334155; color: #94A3B8; }
+    body.dark-mode .modal { background: #1E293B; }
+    body.dark-mode .modal-top h2 { color: #E2E8F0; }
+    body.dark-mode .modal-close { border-color: #334155; color: #94A3B8; }
+    body.dark-mode .modal-close:hover { background: #334155; color: #E2E8F0; }
+    body.dark-mode .detail-grid { background: #0F172A; }
+    body.dark-mode .detail-grid .detail-value { color: #E2E8F0; }
+    body.dark-mode .detail-line { border-color: #334155; }
+    body.dark-mode .detail-line .item-name { color: #E2E8F0; }
+    body.dark-mode .detail-line .item-total { color: #4ADE80; }
+    body.dark-mode .detail-total .label { color: #94A3B8; }
+    body.dark-mode .detail-total .value { color: #4ADE80; }
+    body.dark-mode .modal-actions button { color: #94A3B8; }
+    body.dark-mode .modal-actions button:hover { background: #334155; }
+    body.dark-mode .pagination button { background: #1E293B; border-color: #334155; color: #94A3B8; }
+    body.dark-mode .pagination button:hover { background: #334155; }
+    body.dark-mode .empty-state h3 { color: #E2E8F0; }
+
+    /* ─── Animations ─── */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideInLeft {
+      from { opacity: 0; transform: translateX(-20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    .animate-fade-up { animation: fadeUp 0.4s cubic-bezier(0.22,1,0.36,1) forwards; }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 1024px) {
+      .sidebar { display: none; }
+      .topbar { right: 0; }
+      .main-content { margin-right: 0; }
+    }
+    @media (max-width: 640px) {
+      .page-header { flex-direction: column; align-items: flex-start; gap: 14px; }
+      .metrics-grid { grid-template-columns: 1fr; }
+      .filter-chips { gap: 6px; }
+      .filter-chip { padding: 6px 12px; font-size: 12.5px; }
+      .sale-row { flex-wrap: wrap; }
+      .sale-row .sale-action-btn { width: 100%; justify-content: center; }
+    }
+  </style>
 </head>
-<body>
-    <div x-data="salesApp()" x-init="init()">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="logo">
-                <h1>⚕️ PharmaSUD</h1>
-                <p>صيدلية الزاريات</p>
-            </div>
-            <a href="/dashboard" class="nav-item">
-                <span class="icon">📊</span> لوحة التحكم
-            </a>
-            <a href="/medicines" class="nav-item">
-                <span class="icon">💊</span> الأدوية
-            </a>
-            <a href="/inventory" class="nav-item">
-                <span class="icon">📦</span> المخزون
-            </a>
-            <a href="/batch-receive" class="nav-item">
-                <span class="icon">📥</span> استلام شحنة
-            </a>
-            <a href="/pos" class="nav-item">
-                <span class="icon">🛒</span> نقطة البيع
-            </a>
-            <a href="/sales-history" class="nav-item">
-                <span class="icon">📋</span> سجل المبيعات
-            </a>
-            <a href="/settings" class="nav-item">
-                <span class="icon">⚙️</span> الإعدادات
-            </a>
-            <div class="sidebar-footer">
-                <button class="logout-btn" @click="logout()" style="width:100%;">🚪 تسجيل الخروج</button>
-            </div>
+<body x-data="salesApp()" x-init="init()">
+
+  <div class="app-layout">
+    <!-- ═══════ Sidebar ═══════ -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="icon"></div>
+        <div class="name">Pharma<span>SUD</span></div>
+      </div>
+
+      <div class="nav-section">MENU</div>
+      <a href="/dashboard" class="nav-item" id="nav-dashboard">
+        <i data-lucide="layout-dashboard"></i>
+        <span>لوحة التحكم</span>
+      </a>
+      <a href="/pos" class="nav-item" id="nav-pos">
+        <i data-lucide="scan-barcode"></i>
+        <span>نقطة البيع</span>
+      </a>
+      <a href="/medicines" class="nav-item" id="nav-medicines">
+        <i data-lucide="pill"></i>
+        <span>الأدوية</span>
+      </a>
+      <a href="/inventory" class="nav-item" id="nav-inventory">
+        <i data-lucide="package"></i>
+        <span>المخزون</span>
+      </a>
+      <a href="/batches" class="nav-item" id="nav-batches">
+        <i data-lucide="calendar-clock"></i>
+        <span>الدفعات</span>
+      </a>
+      <a href="/reports-sales" class="nav-item active" id="nav-reports">
+        <i data-lucide="chart-line"></i>
+        <span>التقارير</span>
+      </a>
+      <a href="/employees" class="nav-item" id="nav-employees" x-show="isAdmin">
+        <i data-lucide="users"></i>
+        <span>الموظفين</span>
+      </a>
+      <a href="/alerts" class="nav-item" id="nav-alerts">
+        <i data-lucide="bell"></i>
+        <span>التنبيهات</span>
+        <span class="badge" x-show="alertCount > 0" x-text="alertCount"></span>
+      </a>
+      <a href="/settings" class="nav-item" id="nav-settings">
+        <i data-lucide="settings"></i>
+        <span>الإعدادات</span>
+      </a>
+
+      <div class="user-card" @click="logout()">
+        <div class="user-avatar" x-text="userInitials"></div>
+        <div style="min-width:0;flex:1">
+          <div class="user-name" x-text="userName || 'المستخدم'"></div>
+          <div class="user-role" x-text="isAdmin ? 'مدير' : 'صيدلي'"></div>
         </div>
-        
-        <!-- Main Content -->
-        <div class="main-content">
-            <div class="header">
-                <h2>📋 سجل المبيعات</h2>
-                <div class="header-left">
-                    <div class="name" x-text="userName"></div>
-                    <div class="pharmacy" x-text="pharmacyName"></div>
-                </div>
-            </div>
-            
-            <!-- Stats -->
-            <div class="stats-bar">
-                <div class="stat-box">
-                    <div class="stat-label">إجمالي الفواتير</div>
-                    <div class="stat-value" x-text="totalSales"></div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">إجمالي المبيعات</div>
-                    <div class="stat-value green" x-text="formatCurrency(totalAmount) + ' ج.س'"></div>
-                </div>
-            </div>
-            
-            <!-- Filters -->
-            <div class="filters">
-                <button class="filter-btn" :class="{ 'active': filter.date === 'today' }" @click="setFilter('date', 'today')">
-                    📅 اليوم
-                </button>
-                <button class="filter-btn" :class="{ 'active': filter.date === 'week' }" @click="setFilter('date', 'week')">
-                    📅 هذا الأسبوع
-                </button>
-                <button class="filter-btn" :class="{ 'active': filter.date === 'month' }" @click="setFilter('date', 'month')">
-                    📅 هذا الشهر
-                </button>
-                <button class="filter-btn" :class="{ 'active': !filter.date }" @click="setFilter('date', '')">
-                    📅 الكل
-                </button>
-                
-                <select class="filter-select" x-model="filter.payment" @change="loadSales(1)">
-                    <option value="">💳 كل طرق الدفع</option>
-                    <option value="cash">💵 نقدي</option>
-                    <option value="bankak">📱 بنكك</option>
-                    <option value="fory">📲 فوري</option>
-                    <option value="transfer">🏦 تحويل بنكي</option>
-                </select>
-            </div>
-            
-            <!-- Sales List -->
-            <div id="salesList">
-                <template x-if="sales.length === 0">
-                    <div class="empty-state">
-                        <div class="icon">📋</div>
-                        <p>لا توجد مبيعات</p>
-                        <p style="font-size:13px;margin-top:4px;">ابدأ بأول عملية بيع من صفحة POS</p>
-                    </div>
-                </template>
-                
-                <template x-for="sale in sales" :key="sale.sale_id">
-                    <div class="sale-card">
-                        <div class="sale-header">
-                            <div class="sale-number">فاتورة #<span x-text="sale.invoice_number"></span></div>
-                            <div class="sale-date" x-text="sale.created_at ? sale.created_at.substring(0, 16) : ''"></div>
-                        </div>
-                        <div class="sale-body">
-                            <div class="sale-info">
-                                <span class="cashier" x-text="sale.cashier_name"></span>
-                                <span> · </span>
-                                <span x-text="sale.items_count + ' صنف'"></span>
-                                <span> · </span>
-                                <span class="payment-badge" :class="'pay-' + getPaymentClass(sale.payment_method)" x-text="sale.payment_method"></span>
-                            </div>
-                            <div class="sale-amount" x-text="formatCurrency(sale.total_amount) + ' ج'"></div>
-                        </div>
-                        <div class="sale-actions">
-                            <button @click="viewDetail(sale.sale_id)">🔍 عرض</button>
-                        </div>
-                    </div>
-                </template>
-            </div>
-            
-            <!-- Pagination -->
-            <div class="pagination" x-show="sales.length > 0">
-                <button :disabled="page <= 1" @click="loadSales(page - 1)">السابق</button>
-                <span style="font-size:13px;color:var(--text-secondary);padding:8px 12px;">صفحة <span x-text="page"></span></span>
-                <button :disabled="sales.length < perPage" @click="loadSales(page + 1)">التالي</button>
-            </div>
+        <i data-lucide="chevron-left"></i>
+      </div>
+    </aside>
+
+    <!-- ═══════ Topbar ═══════ -->
+    <header class="topbar">
+      <div class="topbar-title">
+        <h1>سجل المبيعات</h1>
+        <p class="subtitle">عرض وإدارة الفواتير والمبيعات</p>
+      </div>
+
+      <div class="search-box">
+        <i data-lucide="search"></i>
+        <span>البحث في المبيعات والفواتير...</span>
+      </div>
+
+      <div class="actions">
+        <div class="lang-toggle">
+          <span :class="{ active: lang === 'en' }" @click="setLang('en')">EN</span>
+          <span :class="{ active: lang === 'ar' }" @click="setLang('ar')">ع</span>
         </div>
-        
-        <!-- Detail Modal -->
-        <div class="modal-overlay" x-show="detailModal.show" x-cloak style="display:none;" @click.self="detailModal.show = false">
-            <div class="modal">
-                <button class="close-btn" @click="detailModal.show = false">✕</button>
-                <h2>📄 فاتورة #<span x-text="detailModal.invoice_number"></span></h2>
-                
-                <div class="detail-grid">
-                    <div><span class="label">التاريخ:</span></div>
-                    <div class="value" x-text="detailModal.date"></div>
-                    <div><span class="label">الكاشير:</span></div>
-                    <div class="value" x-text="detailModal.cashier"></div>
-                    <div><span class="label">طريقة الدفع:</span></div>
-                    <div class="value" x-text="detailModal.payment"></div>
-                    <div x-show="detailModal.customer">
-                        <span class="label">العميل:</span>
-                    </div>
-                    <div class="value" x-show="detailModal.customer" x-text="detailModal.customer"></div>
-                </div>
-                
-                <div class="detail-items">
-                    <template x-for="item in detailModal.items" :key="item.id">
-                        <div class="detail-item">
-                            <div>
-                                <div x-text="item.medicine_name"></div>
-                                <div style="font-size:11px;color:var(--text-secondary);" x-text="item.batch_number ? 'شحنة: ' + item.batch_number : ''"></div>
-                            </div>
-                            <div style="text-align:left;">
-                                <div x-text="item.quantity + ' × ' + formatCurrency(item.unit_price)"></div>
-                                <div style="color:var(--success);" x-text="formatCurrency(item.total_price) + ' ج'"></div>
-                            </div>
-                        </div>
-                    </template>
-                </div>
-                
-                <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:700;padding:12px 0;border-top:1px solid var(--border);">
-                    <span style="color:var(--text-secondary);">الإجمالي</span>
-                    <span style="color:var(--success);" x-text="formatCurrency(detailModal.total) + ' ج.س'"></span>
-                </div>
-                
-                <div style="margin-top:12px;">
-                    <button @click="detailModal.show = false" style="width:100%;padding:10px;background:var(--border);color:var(--text-primary);border:none;border-radius:8px;cursor:pointer;">
-                        إغلاق
-                    </button>
-                </div>
+        <button class="icon-btn" @click="toggleTheme()" title="الوضع الداكن">
+          <i data-lucide="moon"></i>
+        </button>
+        <button class="icon-btn" @click="window.location.href='/alerts'">
+          <i data-lucide="bell"></i>
+          <span class="dot" x-show="alertCount > 0"></span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ═══════ Main Content ═══════ -->
+    <main class="main-content">
+
+      <!-- Metrics -->
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-header">
+            <div class="metric-icon blue">
+              <i data-lucide="receipt"></i>
             </div>
+          </div>
+          <div class="metric-label">إجمالي الفواتير</div>
+          <div class="metric-value" x-text="totalSales"></div>
         </div>
+        <div class="metric-card">
+          <div class="metric-header">
+            <div class="metric-icon green">
+              <i data-lucide="banknote"></i>
+            </div>
+          </div>
+          <div class="metric-label">إجمالي المبيعات</div>
+          <div class="metric-value">
+            <span x-text="formatCurrency(totalAmount)"></span>
+            <span class="unit">ج.س</span>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-header">
+            <div class="metric-icon cyan">
+              <i data-lucide="trending-up"></i>
+            </div>
+          </div>
+          <div class="metric-label">متوسط الفاتورة</div>
+          <div class="metric-value">
+            <span x-text="totalSales > 0 ? formatCurrency(totalAmount / totalSales) : '0'"></span>
+            <span class="unit">ج.س</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filter-chips">
+        <button class="filter-chip" :class="{ active: filter.date === 'today' }" @click="setFilter('date', 'today')">
+          <i data-lucide="calendar"></i>
+          اليوم
+        </button>
+        <button class="filter-chip" :class="{ active: filter.date === 'week' }" @click="setFilter('date', 'week')">
+          <i data-lucide="calendar-days"></i>
+          هذا الأسبوع
+        </button>
+        <button class="filter-chip" :class="{ active: filter.date === 'month' }" @click="setFilter('date', 'month')">
+          <i data-lucide="calendar-range"></i>
+          هذا الشهر
+        </button>
+        <button class="filter-chip" :class="{ active: !filter.date }" @click="setFilter('date', '')">
+          <i data-lucide="list"></i>
+          الكل
+        </button>
+
+        <select class="filter-select" x-model="filter.payment" @change="loadSales(1)">
+          <option value="">💳 كل طرق الدفع</option>
+          <option value="cash">💵 نقدي</option>
+          <option value="bankak">📱 بنكك</option>
+          <option value="fory">📲 فوري</option>
+          <option value="transfer">🏦 تحويل بنكي</option>
+        </select>
+      </div>
+
+      <!-- Sales List Card -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">
+              <i data-lucide="scroll-text"></i>
+              سجل الفواتير
+            </div>
+            <div class="card-subtitle" x-show="sales.length > 0" x-text="totalSales + ' فاتورة'"></div>
+          </div>
+        </div>
+
+        <!-- Loading -->
+        <div class="loading-state" x-show="loading">
+          <div class="spinner"></div>
+          <p>جاري تحميل المبيعات...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" x-show="!loading && sales.length === 0">
+          <div class="empty-icon">
+            <i data-lucide="receipt"></i>
+          </div>
+          <h3>لا توجد مبيعات</h3>
+          <p>ابدأ بأول عملية بيع من صفحة نقطة البيع</p>
+        </div>
+
+        <!-- Sales List -->
+        <div class="sale-list" x-show="!loading && sales.length > 0">
+          <template x-for="sale in sales" :key="sale.sale_id">
+            <div class="sale-row" @click="viewDetail(sale.sale_id)">
+              <div class="sale-icon" :class="getPaymentClass(sale.payment_method)">
+                <i data-lucide="receipt"></i>
+              </div>
+              <div class="sale-info">
+                <div class="sale-number">
+                  فاتورة #<span x-text="sale.invoice_number"></span>
+                  <span class="payment-badge" :class="'pay-' + getPaymentClass(sale.payment_method)" x-text="sale.payment_method"></span>
+                </div>
+                <div class="sale-meta">
+                  <span x-text="sale.cashier_name"></span>
+                  <span>·</span>
+                  <span x-text="sale.items_count + ' صنف'"></span>
+                  <span>·</span>
+                  <span x-text="sale.created_at ? sale.created_at.substring(0, 16) : ''"></span>
+                </div>
+              </div>
+              <div class="sale-amount">
+                <span x-text="formatCurrency(sale.total_amount)"></span>
+                <span class="unit">ج</span>
+              </div>
+              <button class="sale-action-btn" @click.stop="viewDetail(sale.sale_id)">
+                <i data-lucide="eye" style="width:13px;height:13px;"></i>
+                عرض
+              </button>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination" x-show="!loading && sales.length > 0">
+        <button :disabled="page <= 1" @click="loadSales(page - 1)">
+          <i data-lucide="chevron-right"></i>
+          السابق
+        </button>
+        <span class="page-info">صفحة <span x-text="page"></span></span>
+        <button :disabled="sales.length < perPage" @click="loadSales(page + 1)">
+          التالي
+          <i data-lucide="chevron-left"></i>
+        </button>
+      </div>
+    </main>
+  </div>
+
+  <!-- ═══════ Detail Modal ═══════ -->
+  <div class="modal-overlay" x-show="detailModal.show" x-cloak style="display:none;" @click.self="detailModal.show = false">
+    <div class="modal" @click.stop>
+      <div class="modal-top">
+        <h2>
+          <i data-lucide="file-text"></i>
+          فاتورة #<span x-text="detailModal.invoice_number"></span>
+        </h2>
+        <button class="modal-close" @click="detailModal.show = false">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="detail-grid">
+          <div class="detail-item">
+            <div class="detail-label">التاريخ</div>
+            <div class="detail-value" x-text="detailModal.date"></div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">الكاشير</div>
+            <div class="detail-value" x-text="detailModal.cashier"></div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">طريقة الدفع</div>
+            <div class="detail-value">
+              <span class="payment-badge" :class="'pay-' + getPaymentClass(detailModal.payment)" x-text="detailModal.payment"></span>
+            </div>
+          </div>
+          <div class="detail-item" x-show="detailModal.customer">
+            <div class="detail-label">العميل</div>
+            <div class="detail-value" x-text="detailModal.customer"></div>
+          </div>
+        </div>
+
+        <div class="detail-items">
+          <template x-for="item in detailModal.items" :key="item.id">
+            <div class="detail-line">
+              <div>
+                <div class="item-name" x-text="item.medicine_name"></div>
+                <div class="item-batch" x-text="item.batch_number ? 'شحنة: ' + item.batch_number : ''"></div>
+              </div>
+              <div class="item-calc">
+                <div class="item-price" x-text="item.quantity + ' × ' + formatCurrency(item.unit_price)"></div>
+                <div class="item-total" x-text="formatCurrency(item.total_price) + ' ج'"></div>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <div class="detail-total">
+          <span class="label">الإجمالي</span>
+          <span class="value">
+            <span x-text="formatCurrency(detailModal.total)"></span>
+            <span class="unit">ج.س</span>
+          </span>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button @click="detailModal.show = false">إغلاق</button>
+      </div>
     </div>
-    
-    <script>
-        function salesApp() {
-            return {
-                // User
-                token: '',
-                userName: '',
-                pharmacyName: '',
-                
-                // Data
-                sales: [],
-                totalSales: 0,
-                totalAmount: 0,
-                page: 1,
-                perPage: 50,
-                
-                // Filters
-                filter: {
-                    date: '',
-                    payment: ''
-                },
-                
-                // Detail Modal
-                detailModal: {
-                    show: false,
-                    invoice_number: '',
-                    date: '',
-                    cashier: '',
-                    payment: '',
-                    customer: '',
-                    items: [],
-                    total: 0
-                },
-                
-                init() {
-                    this.token = localStorage.getItem('token');
-                    this.userName = localStorage.getItem('full_name') || 'مستخدم';
-                    this.pharmacyName = localStorage.getItem('pharmacy_name') || '';
-                    
-                    if (!this.token) {
-                        window.location.href = '/login';
-                        return;
-                    }
-                    
-                    // Verify token
-                    fetch('/api/auth/me', {
-                        headers: { 'Authorization': 'Bearer ' + this.token }
-                    }).then(r => {
-                        if (!r.ok) { localStorage.clear(); window.location.href = '/login'; }
-                    }).catch(() => {});
-                    
-                    this.loadSales(1);
-                },
-                
-                loadSales(page) {
-                    this.page = page;
-                    
-                    let url = '/api/sales/?page=' + page + '&per_page=' + this.perPage;
-                    if (this.filter.date) url += '&date_filter=' + this.filter.date;
-                    if (this.filter.payment) url += '&payment=' + this.filter.payment;
-                    
-                    fetch(url, {
-                        headers: { 'Authorization': 'Bearer ' + this.token }
-                    })
-                    .then(r => r.json())
-                    .then(data => {
-                        this.sales = data.sales || [];
-                        this.totalSales = data.total_sales || 0;
-                        this.totalAmount = data.total_amount || 0;
-                    })
-                    .catch(err => {
-                        console.error('Failed to load sales:', err);
-                    });
-                },
-                
-                setFilter(type, value) {
-                    if (type === 'date') {
-                        this.filter.date = value;
-                    }
-                    this.loadSales(1);
-                },
-                
-                viewDetail(saleId) {
-                    fetch('/api/sales/' + saleId, {
-                        headers: { 'Authorization': 'Bearer ' + this.token }
-                    })
-                    .then(r => r.json())
-                    .then(data => {
-                        if (data.success) {
-                            this.detailModal = {
-                                show: true,
-                                invoice_number: data.invoice_number || '',
-                                date: data.created_at ? data.created_at.substring(0, 16) : '',
-                                cashier: data.cashier_name || '',
-                                payment: data.payment_method || '',
-                                customer: data.customer_name || '',
-                                items: data.items || [],
-                                total: data.total_amount || 0
-                            };
-                        }
-                    })
-                    .catch(err => {
-                        console.error('Failed to load sale detail:', err);
-                    });
-                },
-                
-                getPaymentClass(method) {
-                    const map = {
-                        'نقدي': 'cash',
-                        'بنكك': 'bankak',
-                        'فوري': 'fory',
-                        'تحويل بنكي': 'transfer'
-                    };
-                    return map[method] || 'cash';
-                },
-                
-                formatCurrency(value) {
-                    const num = Number(value);
-                    if (isNaN(num)) return '0';
-                    return num.toLocaleString('ar-SA');
-                },
-                
-                logout() {
-                    localStorage.clear();
-                    window.location.href = '/login';
-                }
-            };
+  </div>
+
+  <script>
+    function salesApp() {
+      return {
+        // User
+        token: '',
+        userName: '',
+        pharmacyName: '',
+        isAdmin: false,
+        userInitials: 'U',
+        alertCount: 0,
+        lang: 'ar',
+        isDark: false,
+
+        // Data
+        sales: [],
+        totalSales: 0,
+        totalAmount: 0,
+        page: 1,
+        perPage: 50,
+        loading: false,
+
+        // Filters
+        filter: {
+          date: '',
+          payment: ''
+        },
+
+        // Detail Modal
+        detailModal: {
+          show: false,
+          invoice_number: '',
+          date: '',
+          cashier: '',
+          payment: '',
+          customer: '',
+          items: [],
+          total: 0
+        },
+
+        init() {
+          this.token = localStorage.getItem('token');
+          this.userName = localStorage.getItem('full_name') || 'مستخدم';
+          this.pharmacyName = localStorage.getItem('pharmacy_name') || '';
+          this.isAdmin = localStorage.getItem('role') === 'admin';
+
+          // User initials
+          const name = this.userName || 'مستخدم';
+          this.userInitials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+
+          // Theme
+          if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-mode');
+            this.isDark = true;
+          }
+
+          // Lang
+          this.lang = localStorage.getItem('lang') || 'ar';
+
+          if (!this.token) {
+            window.location.href = '/login';
+            return;
+          }
+
+          // Verify token
+          fetch('/api/auth/me', {
+            headers: { 'Authorization': 'Bearer ' + this.token }
+          }).then(r => {
+            if (!r.ok) { localStorage.clear(); window.location.href = '/login'; }
+          }).catch(() => {});
+
+          // Load alert count
+          fetch('/api/alerts/count', {
+            headers: { 'Authorization': 'Bearer ' + this.token }
+          }).then(r => r.json()).then(data => {
+            this.alertCount = data.count || 0;
+          }).catch(() => {});
+
+          this.loadSales(1);
+
+          // Init Lucide icons
+          this.$nextTick(() => { lucide.createIcons(); });
+        },
+
+        loadSales(page) {
+          this.page = page;
+          this.loading = true;
+
+          let url = '/api/sales/?page=' + page + '&per_page=' + this.perPage;
+          if (this.filter.date) url += '&date_filter=' + this.filter.date;
+          if (this.filter.payment) url += '&payment=' + this.filter.payment;
+
+          fetch(url, {
+            headers: { 'Authorization': 'Bearer ' + this.token }
+          })
+          .then(r => r.json())
+          .then(data => {
+            this.sales = data.sales || [];
+            this.totalSales = data.total_sales || 0;
+            this.totalAmount = data.total_amount || 0;
+            this.loading = false;
+            this.$nextTick(() => { lucide.createIcons(); });
+          })
+          .catch(err => {
+            console.error('Failed to load sales:', err);
+            this.loading = false;
+          });
+        },
+
+        setFilter(type, value) {
+          if (type === 'date') {
+            this.filter.date = value;
+          }
+          this.loadSales(1);
+        },
+
+        viewDetail(saleId) {
+          fetch('/api/sales/' + saleId, {
+            headers: { 'Authorization': 'Bearer ' + this.token }
+          })
+          .then(r => r.json())
+          .then(data => {
+            if (data.success) {
+              this.detailModal = {
+                show: true,
+                invoice_number: data.invoice_number || '',
+                date: data.created_at ? data.created_at.substring(0, 16) : '',
+                cashier: data.cashier_name || '',
+                payment: data.payment_method || '',
+                customer: data.customer_name || '',
+                items: data.items || [],
+                total: data.total_amount || 0
+              };
+              this.$nextTick(() => { lucide.createIcons(); });
+            }
+          })
+          .catch(err => {
+            console.error('Failed to load sale detail:', err);
+          });
+        },
+
+        getPaymentClass(method) {
+          const map = {
+            'نقدي': 'cash',
+            'بنكك': 'bankak',
+            'فوري': 'fory',
+            'تحويل بنكي': 'transfer'
+          };
+          return map[method] || 'cash';
+        },
+
+        formatCurrency(value) {
+          const num = Number(value);
+          if (isNaN(num)) return '0';
+          return num.toLocaleString('ar-SA');
+        },
+
+        toggleTheme() {
+          document.body.classList.toggle('dark-mode');
+          this.isDark = document.body.classList.contains('dark-mode');
+          localStorage.setItem('theme', this.isDark ? 'dark' : 'light');
+        },
+
+        setLang(l) {
+          this.lang = l;
+          localStorage.setItem('lang', l);
+          if (l === 'en') {
+            document.documentElement.dir = 'ltr';
+            document.documentElement.lang = 'en';
+          } else {
+            document.documentElement.dir = 'rtl';
+            document.documentElement.lang = 'ar';
+          }
+        },
+
+        logout() {
+          localStorage.clear();
+          window.location.href = '/login';
         }
-    </script>
+      };
+    }
+  </script>
 </body>
 </html>
-<!-- ✅ انتهى - sales_history.html - المرحلة 5 --><!-- 1781564609 -->
+<!-- Cloud Design v7.2.0 -->
