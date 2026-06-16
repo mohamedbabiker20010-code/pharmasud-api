@@ -889,7 +889,7 @@
           var ctx = canvas.getContext('2d', { willReadFrequently: true });
           var self = this;
 
-          function scanLoop() {
+          async function scanLoop() {
             if (!self.scannerRunning) return;
             if (video.readyState < 2 || video.videoWidth === 0) {
               requestAnimationFrame(scanLoop);
@@ -1007,7 +1007,7 @@
           }
         }
       
-        async loadNotifications() {
+        ,async loadNotifications() {
           this.notificationsLoading = true;
           try {
             const token = localStorage.getItem('token');
