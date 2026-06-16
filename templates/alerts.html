@@ -790,9 +790,7 @@
           });
           setTimeout(() => { this.showToast = false; }, 3000);
         }
-      };
-    }
-
+      
         async loadNotifications() {
           this.notificationsLoading = true;
           try {
@@ -827,7 +825,10 @@
             }
           } catch (e) { /* silent */ }
           this.notificationsLoading = false;
-        },
+        },};
+    }
+
+        
   </script>
 </body>
 </html>

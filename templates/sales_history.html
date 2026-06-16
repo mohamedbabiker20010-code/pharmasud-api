@@ -977,8 +977,7 @@
           localStorage.clear();
           window.location.href = '/login';
         }
-      };
-    }
+      
         async loadNotifications() {
           this.notificationsLoading = true;
           try {
@@ -1010,7 +1009,9 @@
             }
           } catch (e) { /* silent */ }
           this.notificationsLoading = false;
-        },
+        },};
+    }
+        
   </script>
 </body>
 </html>

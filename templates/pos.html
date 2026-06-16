@@ -1868,7 +1868,39 @@
                     localStorage.clear();
                     window.location.href = '/login';
                 }
-            };
+            
+        async loadNotifications() {
+          this.notificationsLoading = true;
+          try {
+            const token = localStorage.getItem('token');
+            const r = await fetch('/api/alerts/count', {
+              headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (r.ok) {
+              const data = await r.json();
+              this.notifications = [];
+              if (data.total_count > 0 || data.expiry_count > 0 || data.low_stock_count > 0) {
+                if (data.expiry_count > 0) {
+                  this.notifications.push({
+                    id: 'expiry', type: 'expiry',
+                    title: 'تنبيهات الصلاحية',
+                    message: data.expiry_count + ' دووان قاربت على الانتهاء',
+                    time: 'الآن', href: '/alerts'
+                  });
+                }
+                if (data.low_stock_count > 0) {
+                  this.notifications.push({
+                    id: 'stock', type: 'low_stock',
+                    title: 'تنبيهات المخزون',
+                    message: data.low_stock_count + ' دووان مخزونها منخفض',
+                    time: 'الآن', href: '/medicines'
+                  });
+                }
+              }
+            }
+          } catch (e) { /* silent */ }
+          this.notificationsLoading = false;
+        },};
         }
         
         // ── scanner: tested dual-engine (BarcodeDetector → zxing-wasm) ──
@@ -2051,38 +2083,7 @@
 
         window.startBarcodeScanner = startScanner;
   
-        async loadNotifications() {
-          this.notificationsLoading = true;
-          try {
-            const token = localStorage.getItem('token');
-            const r = await fetch('/api/alerts/count', {
-              headers: { 'Authorization': 'Bearer ' + token }
-            });
-            if (r.ok) {
-              const data = await r.json();
-              this.notifications = [];
-              if (data.total_count > 0 || data.expiry_count > 0 || data.low_stock_count > 0) {
-                if (data.expiry_count > 0) {
-                  this.notifications.push({
-                    id: 'expiry', type: 'expiry',
-                    title: 'تنبيهات الصلاحية',
-                    message: data.expiry_count + ' دووان قاربت على الانتهاء',
-                    time: 'الآن', href: '/alerts'
-                  });
-                }
-                if (data.low_stock_count > 0) {
-                  this.notifications.push({
-                    id: 'stock', type: 'low_stock',
-                    title: 'تنبيهات المخزون',
-                    message: data.low_stock_count + ' دووان مخزونها منخفض',
-                    time: 'الآن', href: '/medicines'
-                  });
-                }
-              }
-            }
-          } catch (e) { /* silent */ }
-          this.notificationsLoading = false;
-        },
+        
   </script>
 </body>
 </html>

@@ -277,9 +277,7 @@
           this.$nextTick(() => { if(window.lucide) lucide.createIcons(); });
         },
         logout() { localStorage.clear(); window.location.href = '/login'; }
-      }
-    }
-
+      
         async loadNotifications() {
           this.notificationsLoading = true;
           try {
@@ -314,7 +312,10 @@
             }
           } catch (e) { /* silent */ }
           this.notificationsLoading = false;
-        },
+        },}
+    }
+
+        
   </script>
 </body>
 </html>

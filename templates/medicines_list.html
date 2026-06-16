@@ -639,18 +639,7 @@
           localStorage.clear();
           window.location.href = '/login';
         }
-      }
-    }
-
-    // Initialize Lucide icons
-    document.addEventListener('DOMContentLoaded', () => {
-      if (window.lucide) lucide.createIcons();
-      // Restore dark mode preference
-      if (localStorage.getItem('darkMode') === 'true') {
-        document.body.classList.add('dark-mode');
-      }
-    });
-
+      
         async loadNotifications() {
           this.notificationsLoading = true;
           try {
@@ -685,7 +674,19 @@
             }
           } catch (e) { /* silent */ }
           this.notificationsLoading = false;
-        },
+        },}
+    }
+
+    // Initialize Lucide icons
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide) lucide.createIcons();
+      // Restore dark mode preference
+      if (localStorage.getItem('darkMode') === 'true') {
+        document.body.classList.add('dark-mode');
+      }
+    });
+
+        
   </script>
 
 </body>
