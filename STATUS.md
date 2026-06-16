@@ -11,7 +11,6 @@
 ## ⚠️ IMPORTANT: Render Environment Variables Required
 
 After deploying, add these Environment Variables in Render Dashboard:
-- `SECRET_KEY`: 9a3c8dd4d2178235674aea2828bfdd8019fd3e7bdb693aa80e800d9a8523b563
 - `DATABASE_URL`: (already exists from PostgreSQL)
 
 ⚠️ `.env` file removed from Git tracking! Add secrets via Render Dashboard only.
