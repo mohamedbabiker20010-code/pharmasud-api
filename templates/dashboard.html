@@ -750,6 +750,30 @@
           <i data-lucide="bell"></i>
           <span class="dot"></span>
         </button>
+        <!-- Notification Dropdown -->
+        <div x-show="showNotifications" x-cloak
+             style="position:absolute;top:60px;left:28px;width:340px;background:#fff;border:1px solid #EEF2F6;border-radius:12px;box-shadow:0 10px 25px -5px rgba(15,23,42,0.1);z-index:200;">
+          <div style="padding:14px 16px;border-bottom:1px solid #EEF2F6;display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-weight:700;font-size:15px;">التنبيهات</span>
+            <button @click="showNotifications=false" style="background:none;border:none;cursor:pointer;color:#94A3B8;font-size:18px;">×</button>
+          </div>
+          <div x-show="notifications.length === 0" style="padding:40px 20px;text-align:center;color:#94A3B8;">
+            <i data-lucide="bell-off" style="width:32px;height:32px;margin-bottom:8px;opacity:.5"></i>
+            <p style="font-size:13px;">لا توجد تنبيهات جديدة</p>
+          </div>
+          <template x-for="n in notifications" :key="n.id">
+            <div style="padding:12px 16px;border-bottom:1px solid #F1F5F9;cursor:pointer;transition:background .15s;"
+                 @mouseenter="this.style.background='#F8FAFC'" @mouseleave="this.style.background='#fff'">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                <span x-show="n.type==='expiry'" style="width:8px;height:8px;border-radius:50%;background:#F59E0B;flex-shrink:0;"></span>
+                <span x-show="n.type==='low_stock'" style="width:8px;height:8px;border-radius:50%;background:#DC2626;flex-shrink:0;"></span>
+                <span x-show="n.type==='system'" style="width:8px;height:8px;border-radius:50%;background:#1AA7EC;flex-shrink:0;"></span>
+                <span style="font-weight:600;font-size:13px;" x-text="n.title"></span>
+              </div>
+              <p style="font-size:12.5px;color:#64748B;margin:0;" x-text="n.message"></p>
+            </div>
+          </template>
+        </div>
       </div>
     </header>
 
@@ -940,6 +964,8 @@
         userInitials: '',
         pharmacyName: '',
         isAdmin: false,
+        isDark: localStorage.getItem('darkMode') === 'true',
+        showNotifications: false,
         weeklyTotal: '1.42M',
         data: {
           today: { revenue: '0.00', invoices_count: 0, profit: '0.00', top_medicines: [] },
@@ -987,6 +1013,9 @@
           this.isAdmin = localStorage.getItem('role') === 'admin';
           this.userInitials = this.userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 
+          // Dark mode init
+          if(this.isDark) document.body.classList.add('dark-mode');
+
           // Set date
           const now = new Date();
           const days = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
@@ -1023,8 +1052,10 @@
         },
 
         toggleTheme() {
-          // Dark mode toggle placeholder
-        }
+          this.isDark = !this.isDark;
+          localStorage.setItem("darkMode", this.isDark);
+          document.body.classList.toggle("dark-mode", this.isDark);
+        },
       }
     }
   </script>

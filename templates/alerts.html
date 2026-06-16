@@ -572,6 +572,7 @@
         showToast: false,
         toastMsg: '',
         totalCount: 0,
+        isDark: localStorage.getItem('darkMode') === 'true',
 
         // Computed counts
         get expiryCount() {
@@ -600,6 +601,7 @@
             window.location.href = '/login';
             return;
           }
+          if (this.isDark) document.body.classList.add('dark-mode');
           const name = this.userName;
           this.userInitials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
           this.loadAlerts();
@@ -738,7 +740,9 @@
         },
 
         toggleDark() {
-          document.body.classList.toggle('dark-mode');
+          this.isDark = !this.isDark;
+          localStorage.setItem('darkMode', this.isDark);
+          document.body.classList.toggle('dark-mode', this.isDark);
         },
 
         logout() {

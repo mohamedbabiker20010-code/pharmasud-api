@@ -514,8 +514,8 @@
           <span>EN</span>
           <span class="active">ع</span>
         </div>
-        <button class="icon-btn">
-          <i data-lucide="moon"></i>
+        <button class="icon-btn" @click="toggleDark()" :title="isDark ? 'الوضع الفاتح' : 'الوضع الداكن'">
+          <i :data-lucide="isDark ? 'sun' : 'moon'"></i>
         </button>
         <button class="icon-btn">
           <i data-lucide="bell"></i>
@@ -860,6 +860,7 @@
         empForm: { full_name: '', username: '', password: '', role: 'employee' },
         showConfirm: false,
         deleteTarget: null,
+        isDark: localStorage.getItem('darkMode') === 'true',
 
         // Password
         passForm: { current: '', new_pass: '', confirm: '' },
@@ -885,6 +886,7 @@
             return;
           }
           this.currentUserId = localStorage.getItem('user_id') || '';
+          if (this.isDark) document.body.classList.add('dark-mode');
           await this.loadEmployees();
           // Re-render Lucide after Alpine has rendered dynamic content
           this.$nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); });

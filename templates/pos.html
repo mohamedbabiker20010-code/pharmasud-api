@@ -776,7 +776,7 @@
         }
         
         /* ============= DARK MODE ============= */
-        [data-theme="dark"] {
+        body.dark-mode {
             --background:         #0F172A;
             --surface:            #1E293B;
             --surface-hover:      #334155;
@@ -788,22 +788,22 @@
             --text-tertiary:      #64748B;
             --text-muted:         #475569;
         }
-        [data-theme="dark"] .pos-header {
+        body.dark-mode .pos-header {
             box-shadow: 0 1px 3px rgba(0,0,0,0.3);
         }
-        [data-theme="dark"] .medicine-card:hover {
+        body.dark-mode .medicine-card:hover {
             background: var(--surface-blue-tint);
         }
-        [data-theme="dark"] .quick-med-btn:hover {
+        body.dark-mode .quick-med-btn:hover {
             color: #fff;
         }
-        [data-theme="dark"] .modal-overlay {
+        body.dark-mode .modal-overlay {
             background: rgba(0, 0, 0, 0.7);
         }
-        [data-theme="dark"] .spinner-overlay {
+        body.dark-mode .spinner-overlay {
             background: rgba(15, 23, 42, 0.95);
         }
-        [data-theme="dark"] #scanner-container {
+        body.dark-mode #scanner-container {
             background: rgba(0,0,0,0.98);
         }
         
@@ -1281,8 +1281,12 @@
                     // Load quick medicines
                     this.loadQuickMedicines();
                     
-                    // Ping every 10 minutes to keep Render alive
+                    // Pin
                     setInterval(() => { fetch('/ping').catch(() => {}); }, 600000);
+                    
+                    // Dark mode
+                    this.isDark = localStorage.getItem('darkMode') === 'true';
+                    if (this.isDark) document.body.classList.add('dark-mode');
                 },
                 
                 // ============================================================
@@ -1790,6 +1794,12 @@
                     }, 3000);
                 },
                 
+                toggleDarkMode() {
+                    this.isDark = !this.isDark;
+                    localStorage.setItem('darkMode', this.isDark);
+                    document.body.classList.toggle('dark-mode', this.isDark);
+                },
+
                 logout() {
                     localStorage.clear();
                     window.location.href = '/login';

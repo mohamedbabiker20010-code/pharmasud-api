@@ -1745,7 +1745,9 @@ function salesReportApp() {
     },
 
     toggleTheme() {
-      // Dark mode toggle placeholder
+      this.isDark = !this.isDark;
+      localStorage.setItem("darkMode", this.isDark);
+      document.body.classList.toggle("dark-mode", this.isDark);
     },
 
     logout() {

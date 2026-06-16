@@ -386,34 +386,34 @@
     }
 
     /* ─── Dark Mode ─── */
-    html.dark body, html.dark .main-content { background: #0F172A; color: #E2E8F0; }
-    html.dark .sidebar { background: #1E293B; border-color: #334155; }
-    html.dark .sidebar .nav-item { color: #94A3B8; }
-    html.dark .sidebar .nav-item:hover { background: #334155; color: #E2E8F0; }
-    html.dark .sidebar .user-card { border-color: #334155; }
-    html.dark .sidebar .user-role { color: #64748B; }
-    html.dark .topbar { background: #1E293B; border-color: #334155; }
-    html.dark .topbar .icon-btn { border-color: #334155; color: #94A3B8; }
-    html.dark .topbar .icon-btn:hover { background: #334155; }
-    html.dark .topbar .lang-toggle { border-color: #334155; }
-    html.dark .topbar .lang-toggle span { color: #94A3B8; }
-    html.dark .card { background: #1E293B; border-color: #334155; }
-    html.dark .card:hover { border-color: #475569; }
-    html.dark .card .card-title { color: #E2E8F0; }
-    html.dark .search-row input { background: #334155; border-color: #475569; color: #E2E8F0; }
-    html.dark .search-row input::placeholder { color: #64748B; }
-    html.dark .search-row input:focus { background: #1E293B; border-color: #1AA7EC; }
-    html.dark .medicine-preview { background: rgba(26,167,236,0.08); border-color: #334155; }
-    html.dark .medicine-preview .med-name { color: #E2E8F0; }
-    html.dark .medicine-preview .med-scientific { color: #94A3B8; }
-    html.dark .form-group label { color: #CBD5E1; }
-    html.dark .form-group input, html.dark .form-group select { background: #334155; border-color: #475569; color: #E2E8F0; }
-    html.dark .form-group input::placeholder { color: #64748B; }
-    html.dark .form-group input:focus, html.dark .form-group select:focus { background: #1E293B; border-color: #1AA7EC; }
-    html.dark .conversion-info { background: rgba(26,167,236,0.08); border-color: #334155; color: #7DD3FC; }
-    html.dark .result-card { background: #1E293B; border-color: #065F46; }
-    html.dark .confirm-dialog { background: #1E293B; border-color: #7F1D1D; }
-    html.dark .confirm-dialog p { color: #94A3B8; }
+    body.dark-mode body, body.dark-mode .main-content { background: #0F172A; color: #E2E8F0; }
+    body.dark-mode .sidebar { background: #1E293B; border-color: #334155; }
+    body.dark-mode .sidebar .nav-item { color: #94A3B8; }
+    body.dark-mode .sidebar .nav-item:hover { background: #334155; color: #E2E8F0; }
+    body.dark-mode .sidebar .user-card { border-color: #334155; }
+    body.dark-mode .sidebar .user-role { color: #64748B; }
+    body.dark-mode .topbar { background: #1E293B; border-color: #334155; }
+    body.dark-mode .topbar .icon-btn { border-color: #334155; color: #94A3B8; }
+    body.dark-mode .topbar .icon-btn:hover { background: #334155; }
+    body.dark-mode .topbar .lang-toggle { border-color: #334155; }
+    body.dark-mode .topbar .lang-toggle span { color: #94A3B8; }
+    body.dark-mode .card { background: #1E293B; border-color: #334155; }
+    body.dark-mode .card:hover { border-color: #475569; }
+    body.dark-mode .card .card-title { color: #E2E8F0; }
+    body.dark-mode .search-row input { background: #334155; border-color: #475569; color: #E2E8F0; }
+    body.dark-mode .search-row input::placeholder { color: #64748B; }
+    body.dark-mode .search-row input:focus { background: #1E293B; border-color: #1AA7EC; }
+    body.dark-mode .medicine-preview { background: rgba(26,167,236,0.08); border-color: #334155; }
+    body.dark-mode .medicine-preview .med-name { color: #E2E8F0; }
+    body.dark-mode .medicine-preview .med-scientific { color: #94A3B8; }
+    body.dark-mode .form-group label { color: #CBD5E1; }
+    body.dark-mode .form-group input, body.dark-mode .form-group select { background: #334155; border-color: #475569; color: #E2E8F0; }
+    body.dark-mode .form-group input::placeholder { color: #64748B; }
+    body.dark-mode .form-group input:focus, body.dark-mode .form-group select:focus { background: #1E293B; border-color: #1AA7EC; }
+    body.dark-mode .conversion-info { background: rgba(26,167,236,0.08); border-color: #334155; color: #7DD3FC; }
+    body.dark-mode .result-card { background: #1E293B; border-color: #065F46; }
+    body.dark-mode .confirm-dialog { background: #1E293B; border-color: #7F1D1D; }
+    body.dark-mode .confirm-dialog p { color: #94A3B8; }
   </style>
 </head>
 <body x-data="batchReceiveApp()">
@@ -723,7 +723,7 @@
         // Dark mode toggle
         toggleDarkMode() {
           document.documentElement.classList.toggle('dark');
-          localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+          localStorage.setItem('darkMode', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
         },
 
         // Logout

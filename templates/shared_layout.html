@@ -113,19 +113,19 @@
       .topbar { right: 0; }
       .main-content { margin-right: 0; }
     }
-    html.dark, html.dark body { background: #0b1220; color: #e2e8f0; }
-    html.dark .sidebar { background: #0f1a2e; border-left-color: #1e293b; }
-    html.dark .sidebar .brand .name { color: #fff; }
-    html.dark .sidebar .nav-item { color: #94a3b8; }
-    html.dark .sidebar .nav-item:hover { background: #111c2e; color: #e2e8f0; }
-    html.dark .sidebar .user-card { border-color: #1e293b; }
-    html.dark .sidebar .user-name { color: #e2e8f0; }
-    html.dark .topbar { background: #0f1a2e; border-bottom-color: #1e293b; }
-    html.dark .topbar .search-box { background: #1e293b; color: #94a3b8; }
-    html.dark .icon-btn { border-color: #1e293b; color: #94a3b8; }
-    html.dark .lang-toggle { border-color: #1e293b; }
-    html.dark .lang-toggle span:not(.active) { color: #94a3b8; }
-    html.dark .main-content { background: #0b1220; }
+    body.dark-mode, body.dark-mode body { background: #0b1220; color: #e2e8f0; }
+    body.dark-mode .sidebar { background: #0f1a2e; border-left-color: #1e293b; }
+    body.dark-mode .sidebar .brand .name { color: #fff; }
+    body.dark-mode .sidebar .nav-item { color: #94a3b8; }
+    body.dark-mode .sidebar .nav-item:hover { background: #111c2e; color: #e2e8f0; }
+    body.dark-mode .sidebar .user-card { border-color: #1e293b; }
+    body.dark-mode .sidebar .user-name { color: #e2e8f0; }
+    body.dark-mode .topbar { background: #0f1a2e; border-bottom-color: #1e293b; }
+    body.dark-mode .topbar .search-box { background: #1e293b; color: #94a3b8; }
+    body.dark-mode .icon-btn { border-color: #1e293b; color: #94a3b8; }
+    body.dark-mode .lang-toggle { border-color: #1e293b; }
+    body.dark-mode .lang-toggle span:not(.active) { color: #94a3b8; }
+    body.dark-mode .main-content { background: #0b1220; }
   </style>
 </head>
 <body x-data="pageApp()">
@@ -194,7 +194,7 @@
           const name = this.userName;
           this.userInitials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
           if(!localStorage.getItem('token')) window.location.href = '/login';
-          if(this.isDark) document.documentElement.classList.add('dark');
+          if(this.isDark) document.body.classList.add('dark-mode');
           this.$nextTick(() => { if(window.lucide) lucide.createIcons(); });
         },
         switchLang(l) {
@@ -206,7 +206,7 @@
         toggleDark() {
           this.isDark = !this.isDark;
           localStorage.setItem('darkMode', this.isDark);
-          document.documentElement.classList.toggle('dark', this.isDark);
+          document.body.classList.toggle('dark-mode', this.isDark);
           this.$nextTick(() => { if(window.lucide) lucide.createIcons(); });
         },
         logout() { localStorage.clear(); window.location.href = '/login'; }
