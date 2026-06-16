@@ -456,7 +456,7 @@
 
   </style>
 </head>
-<body x-data="batchReceiveApp()">
+<body x-data="batchReceiveApp()" x-init="init()">
 
   <div class="app-layout">
 
@@ -526,7 +526,7 @@
     </header>
 
     <!-- ═══════ Main Content ═══════ -->
-    <main class="main-content" x-init="initUser()">
+    <main class="main-content">
 
       <div class="step-flow">
 
@@ -720,6 +720,8 @@
         showConfirm: false,
         confirmMessage: '',
         pendingConfirmData: null,
+        notifications: [],
+        notificationsLoading: false,
 
         message: { text: '', type: '' },
 
@@ -749,6 +751,11 @@
                  this.form.unit_name &&
                  this.form.expiry_date &&
                  this.form.purchase_price > 0;
+        },
+
+        // Auto-init (Alpine calls this automatically)
+        async init() {
+          this.initUser();
         },
 
         // Init user
@@ -961,9 +968,9 @@
           this.searchQuery = '';
           this.selectedMedicine = null;
           this.message = { text: '', type: '' };
-        }
-      
-        ,async loadNotifications() {
+        },
+
+        async loadNotifications() {
           this.notificationsLoading = true;
           try {
             const token = localStorage.getItem('token');
