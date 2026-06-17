@@ -1016,9 +1016,9 @@
         },
 
         toggleMobileSidebar() {
-          const sidebar = document.querySelector('.sidebar');
-          const overlay = document.querySelector('.sidebar-overlay');
-          const btn = document.querySelector('.mobile-menu-btn');
+          const sidebar = document.queryselector('.sidebar');
+          const overlay = document.queryselector('.sidebar-overlay');
+          const btn = document.queryselector('.mobile-menu-btn');
 
           if (!sidebar) return;
 
@@ -1031,27 +1031,37 @@
             newOverlay.addEventListener('click', () => this.closeMobileSidebar());
           }
 
-          const finalOverlay = document.querySelector('.sidebar-overlay');
+          const finalOverlay = document.queryselector('.sidebar-overlay');
           if (isOpen) {
             finalOverlay.classList.add('visible');
             if (btn) btn.classList.add('active');
             document.body.style.overflow = 'hidden';
+            this._escHandler = this._escHandler || this.handleEscKey.bind(this);
+            document.addEventListener('keydown', this._escHandler);
           } else {
             finalOverlay.classList.remove('visible');
             if (btn) btn.classList.remove('active');
             document.body.style.overflow = '';
+            if (this._escHandler) document.removeEventListener('keydown', this._escHandler);
+          }
+        },
+
+        handleEscKey(e) {
+          if (e.key === 'Escape') {
+            this.closeMobileSidebar();
           }
         },
 
         closeMobileSidebar() {
-          const sidebar = document.querySelector('.sidebar');
-          const overlay = document.querySelector('.sidebar-overlay');
-          const btn = document.querySelector('.mobile-menu-btn');
+          const sidebar = document.queryselector('.sidebar');
+          const overlay = document.queryselector('.sidebar-overlay');
+          const btn = document.queryselector('.mobile-menu-btn');
 
           if (sidebar) sidebar.classList.remove('open');
           if (overlay) overlay.classList.remove('visible');
           if (btn) btn.classList.remove('active');
           document.body.style.overflow = '';
+          if (this._escHandler) document.removeEventListener('keydown', this._escHandler);
         },
       };
     }

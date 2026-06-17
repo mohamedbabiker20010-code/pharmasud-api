@@ -694,14 +694,28 @@ html[dir="rtl"] body {
 @media (max-width: 1024px) {
   .sidebar {
     transform: translateX(100%);
+    -webkit-transform: translateX(100%);
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: -8px 0 30px rgba(15, 23, 42, 0.15);
     z-index: 200;
-    background: var(--surface) !important;
-    border-right: 1px solid var(--border);
+    background: #FFFFFF !important;
+    border-right: 1px solid #E2E8F0 !important;
   }
   .sidebar.open {
     transform: translateX(0);
+    -webkit-transform: translateX(0);
+    background: #FFFFFF !important;
+    border-right: 1px solid #E2E8F0 !important;
+  }
+
+  /* Dark mode sidebar overrides INSIDE mobile media query to beat !important */
+  body.dark-mode .sidebar {
+    background: #0F1A2E !important;
+    border-right-color: #1E293B !important;
+  }
+  body.dark-mode .sidebar.open {
+    background: #0F1A2E !important;
+    border-right-color: #1E293B !important;
   }
   .topbar {
     left: 0;
@@ -802,7 +816,8 @@ html[dir="rtl"] body {
     position: fixed;
     inset: 0;
     background: rgba(15, 23, 42, 0.4);
-    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
     z-index: 150;
     opacity: 0;
     transition: opacity 0.2s ease;
@@ -843,6 +858,8 @@ body.dark-mode * {
   border-color: #1E293B !important;
 }
 body.dark-mode .sidebar {
+  /* Mobile overrides handled in @media (max-width: 1024px) above */
+  /* Desktop styles below */
   background: #0F1A2E;
   border-right-color: #1E293B;
 }

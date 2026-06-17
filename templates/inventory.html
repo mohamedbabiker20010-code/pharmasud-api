@@ -1246,10 +1246,19 @@
             finalOverlay.classList.add('visible');
             if (btn) btn.classList.add('active');
             document.body.style.overflow = 'hidden';
+            this._escHandler = this._escHandler || this.handleEscKey.bind(this);
+            document.addEventListener('keydown', this._escHandler);
           } else {
             finalOverlay.classList.remove('visible');
             if (btn) btn.classList.remove('active');
             document.body.style.overflow = '';
+            if (this._escHandler) document.removeEventListener('keydown', this._escHandler);
+          }
+        },
+
+        handleEscKey(e) {
+          if (e.key === 'Escape') {
+            this.closeMobileSidebar();
           }
         },
 
@@ -1262,6 +1271,7 @@
           if (overlay) overlay.classList.remove('visible');
           if (btn) btn.classList.remove('active');
           document.body.style.overflow = '';
+          if (this._escHandler) document.removeEventListener('keydown', this._escHandler);
         },
       };
     }
