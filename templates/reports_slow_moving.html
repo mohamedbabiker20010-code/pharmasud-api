@@ -885,6 +885,10 @@
         <div class="subtitle" x-text="pharmacyName + ' · ' + currentDate"></div>
       </div>
       <div class="topbar-actions">
+        <!-- Mobile Menu Button -->
+        <button class="mobile-menu-btn" @click="toggleMobileSidebar()" aria-label="فتح القائمة" title="القائمة">
+          <i data-lucide="menu"></i>
+        </button>
         <div class="lang-toggle">
           <span :class="{ active: lang === 'en' }" @click="switchLang('en')">EN</span>
           <span :class="{ active: lang === 'ar' }" @click="switchLang('ar')">ع</span>
@@ -1347,8 +1351,57 @@
           localStorage.removeItem('token');
           localStorage.removeItem('role');
           window.location.href = '/login';
-        }
-      
+        },
+
+        // ─── Mobile Sidebar ───
+        toggleMobileSidebar() {
+          const sidebar = document.querySelector('.sidebar');
+          const overlay = document.querySelector('.sidebar-overlay');
+          const btn = document.querySelector('.mobile-menu-btn');
+
+          if (!sidebar) return;
+
+          const isOpen = sidebar.classList.toggle('open');
+
+          if (!overlay) {
+            const newOverlay = document.createElement('div');
+            newOverlay.className = 'sidebar-overlay';
+            document.body.appendChild(newOverlay);
+            newOverlay.addEventListener('click', () => this.closeMobileSidebar());
+          }
+
+          const finalOverlay = document.querySelector('.sidebar-overlay');
+          if (isOpen) {
+            finalOverlay.classList.add('visible');
+            if (btn) btn.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            document.addEventListener('keydown', this.handleEscKey);
+          } else {
+            finalOverlay.classList.remove('visible');
+            if (btn) btn.classList.remove('active');
+            document.body.style.overflow = '';
+            document.removeEventListener('keydown', this.handleEscKey);
+          }
+        },
+
+        handleEscKey(e) {
+          if (e.key === 'Escape') {
+            this.closeMobileSidebar();
+          }
+        },
+
+        closeMobileSidebar() {
+          const sidebar = document.querySelector('.sidebar');
+          const overlay = document.querySelector('.sidebar-overlay');
+          const btn = document.querySelector('.mobile-menu-btn');
+
+          if (sidebar) sidebar.classList.remove('open');
+          if (overlay) overlay.classList.remove('visible');
+          if (btn) btn.classList.remove('active');
+          document.body.style.overflow = '';
+          document.removeEventListener('keydown', this.handleEscKey);
+        },
+
         ,async loadNotifications() {
           this.notificationsLoading = true;
           try {

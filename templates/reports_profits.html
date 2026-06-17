@@ -1086,6 +1086,10 @@
       <p class="subtitle">تحليل الربحية والأداء المالي</p>
     </div>
     <div class="topbar-actions">
+      <!-- Mobile Menu Button -->
+      <button class="mobile-menu-btn" @click="toggleMobileSidebar()" aria-label="فتح القائمة" title="القائمة">
+        <i data-lucide="menu"></i>
+      </button>
       <button class="date-range-btn" @click="toggleCustomPeriod">
         <i data-lucide="calendar"></i>
         <span x-text="getPeriodLabel()"></span>

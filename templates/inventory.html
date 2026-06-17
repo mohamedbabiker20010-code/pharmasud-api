@@ -818,6 +818,10 @@
       </select>
 
       <div class="actions">
+        <!-- Mobile Menu Button -->
+        <button class="mobile-menu-btn" @click="toggleMobileSidebar()" aria-label="فتح القائمة" title="القائمة">
+          <i data-lucide="menu"></i>
+        </button>
         <div class="lang-toggle">
           <span>EN</span>
           <span class="active">ع</span>
@@ -1219,6 +1223,45 @@
             }
           } catch (e) { /* silent */ }
           this.notificationsLoading = false;
+        },
+
+        toggleMobileSidebar() {
+          const sidebar = document.querySelector('.sidebar');
+          const overlay = document.querySelector('.sidebar-overlay');
+          const btn = document.querySelector('.mobile-menu-btn');
+
+          if (!sidebar) return;
+
+          const isOpen = sidebar.classList.toggle('open');
+
+          if (!overlay) {
+            const newOverlay = document.createElement('div');
+            newOverlay.className = 'sidebar-overlay';
+            document.body.appendChild(newOverlay);
+            newOverlay.addEventListener('click', () => this.closeMobileSidebar());
+          }
+
+          const finalOverlay = document.querySelector('.sidebar-overlay');
+          if (isOpen) {
+            finalOverlay.classList.add('visible');
+            if (btn) btn.classList.add('active');
+            document.body.style.overflow = 'hidden';
+          } else {
+            finalOverlay.classList.remove('visible');
+            if (btn) btn.classList.remove('active');
+            document.body.style.overflow = '';
+          }
+        },
+
+        closeMobileSidebar() {
+          const sidebar = document.querySelector('.sidebar');
+          const overlay = document.querySelector('.sidebar-overlay');
+          const btn = document.querySelector('.mobile-menu-btn');
+
+          if (sidebar) sidebar.classList.remove('open');
+          if (overlay) overlay.classList.remove('visible');
+          if (btn) btn.classList.remove('active');
+          document.body.style.overflow = '';
         },
       };
     }
