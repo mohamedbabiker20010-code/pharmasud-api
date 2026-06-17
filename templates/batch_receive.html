@@ -712,6 +712,7 @@
         userName: '',
         userInitials: '',
         isAdmin: false,
+        isDark: localStorage.getItem('darkMode') === 'true',
 
         // App state
         searchQuery: '',
@@ -756,6 +757,7 @@
         // Auto-init (Alpine calls this automatically)
         init() {
           this.initUser();
+          if (this.isDark) document.body.classList.add('dark-mode');
         },
 
         // Init user
@@ -769,8 +771,9 @@
 
         // Dark mode toggle
         toggleDarkMode() {
-          document.documentElement.classList.toggle('dark');
-          localStorage.setItem('darkMode', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+          this.isDark = !this.isDark;
+          localStorage.setItem('darkMode', this.isDark);
+          document.body.classList.toggle('dark-mode', this.isDark);
         },
 
         // Logout
