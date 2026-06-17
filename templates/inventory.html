@@ -799,6 +799,10 @@
 
     <!-- Topbar -->
     <header class="topbar">
+      <!-- Mobile Menu Button - FIRST (RTL: rightmost) -->
+      <button class="mobile-menu-btn" @click="toggleMobileSidebar()" aria-label="فتح القائمة" title="القائمة">
+        <i data-lucide="menu"></i>
+      </button>
       <div class="topbar-title">
         <h1>المخزون</h1>
         <p class="subtitle">إدارة المخزون والشحنات</p>
@@ -818,10 +822,6 @@
       </select>
 
       <div class="actions">
-        <!-- Mobile Menu Button -->
-        <button class="mobile-menu-btn" @click="toggleMobileSidebar()" aria-label="فتح القائمة" title="القائمة">
-          <i data-lucide="menu"></i>
-        </button>
         <div class="lang-toggle">
           <span>EN</span>
           <span class="active">ع</span>

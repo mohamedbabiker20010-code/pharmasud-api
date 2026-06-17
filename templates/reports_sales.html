@@ -1058,15 +1058,15 @@
 
   <!-- Topbar -->
   <header class="topbar">
+    <!-- Mobile Menu Button - FIRST (RTL: rightmost) -->
+    <button class="mobile-menu-btn" @click="toggleMobileSidebar()" aria-label="فتح القائمة" title="القائمة">
+      <i data-lucide="menu"></i>
+    </button>
     <div class="page-info">
       <h1>التقارير والتحليلات</h1>
       <p class="subtitle">نظرة عامة على الأداء</p>
     </div>
     <div class="topbar-actions">
-      <!-- Mobile Menu Button -->
-      <button class="mobile-menu-btn" @click="toggleMobileSidebar()" aria-label="فتح القائمة" title="القائمة">
-        <i data-lucide="menu"></i>
-      </button>
       <button class="date-range-btn" @click="filters.showCustom = !filters.showCustom">
         <i data-lucide="calendar"></i>
         <span x-text="getDateRangeLabel()"></span>

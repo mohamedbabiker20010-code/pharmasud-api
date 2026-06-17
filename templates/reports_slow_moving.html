@@ -880,15 +880,15 @@
 
     <!-- ═══════ Topbar ═══════ -->
     <header class="topbar">
+      <!-- Mobile Menu Button - FIRST (RTL: rightmost) -->
+      <button class="mobile-menu-btn" @click="toggleMobileSidebar()" aria-label="فتح القائمة" title="القائمة">
+        <i data-lucide="menu"></i>
+      </button>
       <div class="page-info">
         <h1>تقرير الأدوية الراكدة</h1>
         <div class="subtitle" x-text="pharmacyName + ' · ' + currentDate"></div>
       </div>
       <div class="topbar-actions">
-        <!-- Mobile Menu Button -->
-        <button class="mobile-menu-btn" @click="toggleMobileSidebar()" aria-label="فتح القائمة" title="القائمة">
-          <i data-lucide="menu"></i>
-        </button>
         <div class="lang-toggle">
           <span :class="{ active: lang === 'en' }" @click="switchLang('en')">EN</span>
           <span :class="{ active: lang === 'ar' }" @click="switchLang('ar')">ع</span>

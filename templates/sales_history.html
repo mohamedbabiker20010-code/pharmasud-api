@@ -566,6 +566,10 @@
 
     <!-- ═══════ Topbar ═══════ -->
     <header class="topbar">
+      <!-- Mobile Menu Button - FIRST (RTL: rightmost) -->
+      <button class="mobile-menu-btn" @click="toggleMobileSidebar()" aria-label="فتح القائمة" title="القائمة">
+        <i data-lucide="menu"></i>
+      </button>
       <div class="topbar-title">
         <h1>سجل المبيعات</h1>
         <p class="subtitle">عرض وإدارة الفواتير والمبيعات</p>
@@ -577,10 +581,6 @@
       </div>
 
       <div class="actions">
-        <!-- Mobile Menu Button -->
-        <button class="mobile-menu-btn" @click="toggleMobileSidebar()" aria-label="فتح القائمة" title="القائمة">
-          <i data-lucide="menu"></i>
-        </button>
         <div class="lang-toggle">
           <span :class="{ active: lang === 'en' }" @click="setLang('en')">EN</span>
           <span :class="{ active: lang === 'ar' }" @click="setLang('ar')">ع</span>

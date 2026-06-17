@@ -414,6 +414,10 @@
 
     <!-- ═══════ Topbar ═══════ -->
     <header class="topbar">
+      <!-- Mobile Menu Button - FIRST (RTL: rightmost) -->
+      <button class="mobile-menu-btn" @click="toggleMobileSidebar()" aria-label="فتح القائمة" title="القائمة">
+        <i data-lucide="menu"></i>
+      </button>
       <div class="page-info">
         <h1>الأدوية</h1>
         <div class="subtitle">إدارة وتتبع أدوية الصيدلية</div>
@@ -424,10 +428,6 @@
         <kbd>/</kbd>
       </div>
       <div class="actions">
-        <!-- Mobile Menu Button -->
-        <button class="mobile-menu-btn" @click="toggleMobileSidebar()" aria-label="فتح القائمة" title="القائمة">
-          <i data-lucide="menu"></i>
-        </button>
         <div class="lang-toggle">
           <span>EN</span>
           <span class="active">ع</span>

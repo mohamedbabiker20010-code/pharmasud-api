@@ -387,15 +387,15 @@
 
     <!-- ═══════ Topbar ═══════ -->
     <header class="topbar">
+      <!-- Mobile Menu Button - FIRST (RTL: rightmost) -->
+      <button class="mobile-menu-btn" @click="toggleMobileSidebar()" aria-label="فتح القائمة" title="القائمة">
+        <i data-lucide="menu"></i>
+      </button>
       <div class="search-box">
         <i data-lucide="search"></i>
         <span>البحث في الأدوية، المبيعات، الدفعات...</span>
       </div>
       <div class="actions">
-        <!-- Mobile Menu Button -->
-        <button class="mobile-menu-btn" @click="toggleMobileSidebar()" aria-label="فتح القائمة" title="القائمة">
-          <i data-lucide="menu"></i>
-        </button>
         <div class="lang-toggle">
           <span>EN</span>
           <span class="active">ع</span>

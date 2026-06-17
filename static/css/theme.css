@@ -697,6 +697,8 @@ html[dir="rtl"] body {
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: -8px 0 30px rgba(15, 23, 42, 0.15);
     z-index: 200;
+    background: var(--surface) !important;
+    border-right: 1px solid var(--border);
   }
   .sidebar.open {
     transform: translateX(0);
@@ -704,13 +706,15 @@ html[dir="rtl"] body {
   .topbar {
     left: 0;
     right: 0;
+    padding: 0 12px;
+    gap: 8px;
   }
   .main-content {
     margin-left: 0;
     margin-right: 0;
   }
 
-  /* Mobile hamburger button */
+  /* Mobile hamburger button - FIRST child (RTL: rightmost) */
   .mobile-menu-btn {
     display: flex !important;
     width: 42px;
@@ -738,6 +742,55 @@ html[dir="rtl"] body {
     transform: rotate(90deg);
   }
 
+  /* Search box - flexible width */
+  .topbar .search-box {
+    flex: 1;
+    max-width: none;
+    height: 40px;
+    padding: 0 12px;
+    min-width: 0;
+  }
+  .topbar .search-box span {
+    display: none;
+  }
+  .topbar .search-box::after {
+    content: "ابحث";
+    color: var(--text-tertiary);
+    font-size: 14px;
+  }
+  .topbar .search-box kbd {
+    display: none;
+  }
+  .topbar .search-box i[data-lucide="search"] {
+    flex-shrink: 0;
+  }
+
+  /* Actions container */
+  .topbar .actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 0;
+    flex-shrink: 0;
+  }
+
+  /* Hide language toggle on mobile */
+  .topbar .lang-toggle {
+    display: none !important;
+  }
+
+  /* Icon buttons - compact */
+  .topbar .icon-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    flex-shrink: 0;
+  }
+  .topbar .icon-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
   /* Sidebar overlay */
   .sidebar-overlay {
     display: none;
@@ -756,12 +809,21 @@ html[dir="rtl"] body {
 }
 
 @media (max-width: 640px) {
-  .topbar .search-box {
-    max-width: none;
-    flex: 1;
+  .topbar {
+    padding: 0 8px;
+    gap: 6px;
   }
-  .topbar .actions {
-    gap: 8px;
+  .topbar .search-box {
+    height: 38px;
+    padding: 0 10px;
+  }
+  .topbar .icon-btn {
+    width: 38px;
+    height: 38px;
+  }
+  .mobile-menu-btn {
+    width: 38px;
+    height: 38px;
   }
 }
 
