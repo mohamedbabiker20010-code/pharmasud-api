@@ -714,6 +714,11 @@ html[dir="rtl"] body {
     margin-right: 0;
   }
 
+  .main-content {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
   /* Mobile hamburger button - FIRST child (RTL: rightmost) */
   .mobile-menu-btn {
     display: flex !important;
