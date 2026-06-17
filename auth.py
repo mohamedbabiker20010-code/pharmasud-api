@@ -29,6 +29,14 @@ load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY:
     raise ValueError("⚠️ SECRET_KEY غير موجود! حدده في متغيرات البيئة (Environment Variables) على Render")
+
+# Validate SECRET_KEY strength (production hardening)
+if SECRET_KEY in ("change-this-to-a-random-secret-key", "your-secret-key-here", "secret", "test"):
+    raise ValueError("⚠️ SECRET_KEY ضعيف أو افتراضي! غيّره إلى مفتاح عشوائي قوي (openssl rand -hex 32)")
+
+if len(SECRET_KEY) < 32:
+    raise ValueError("⚠️ SECRET_KEY قصير جداً! يجب أن يكون 32 حرفاً على الأقل (openssl rand -hex 32)")
+
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_HOURS = 24
 

@@ -15,6 +15,11 @@ import base64
 import io
 import logging
 
+# Rate limiting
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+
 from database import engine, get_db, test_connection, get_tables_count, Base
 from models import (
     ProductKeyActivate, AdminCreate, UserLogin, 
@@ -133,14 +138,24 @@ async def create_tables():
     except Exception as e:
         print(f"⚠️ Could not create stocktake_items table: {e}")
 
-# CORS
+# CORS - Production hardened
+# Allow only specific production origins; credentials require explicit origins (no wildcard)
+PRODUCTION_ORIGINS = os.getenv("ALLOWED_ORIGINS", "https://pharmasud-api.onrender.com").split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=PRODUCTION_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept"],
+    expose_headers=["X-Request-ID"],
 )
+
+# Rate Limiter - Production hardened
+# Key function uses client IP; apply strict limits to auth endpoints
+limiter = Limiter(key_func=get_remote_address, default_limits=["200/minute"])
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Templates
 templates = Jinja2Templates(directory="templates")
@@ -249,13 +264,15 @@ async def pos_page(request: Request):
     return templates.TemplateResponse("pos.html", {"request": request})
 
 # ═══════════════════════════════════════════════════════════════
-# BARCODE DIAGNOSTIC (no JWT — temporary test page)
+# BARCODE DIAGNOSTIC (disabled in production)
 # ═══════════════════════════════════════════════════════════════
 
-@app.get("/scanner-debug", response_class=HTMLResponse)
-async def scanner_debug_page(request: Request, current_user: dict = Depends(get_current_user)):
-    """Barcode scanner diagnostic page."""
-    return templates.TemplateResponse("scanner_debug.html", {"request": request})
+if os.getenv("ENVIRONMENT", "development") != "production":
+
+    @app.get("/scanner-debug", response_class=HTMLResponse)
+    async def scanner_debug_page(request: Request, current_user: dict = Depends(get_current_user)):
+        """Barcode scanner diagnostic page (dev only)."""
+        return templates.TemplateResponse("scanner_debug.html", {"request": request})
 
 # ═══════════════════════════════════════════════════════════════
 # STAGE 7 PAGES
@@ -319,17 +336,20 @@ async def purchase_forecast_page(request: Request):
 # ================================================================
 
 @app.post("/api/auth/activate", response_model=dict)
-def api_activate(data: ProductKeyActivate, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def api_activate(request: Request, data: ProductKeyActivate, db: Session = Depends(get_db)):
     """Activate product key (Stage 2)."""
     return activate_product_key(db, data)
 
 @app.post("/api/auth/setup", response_model=dict)
-def api_setup(data: AdminCreate, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def api_setup(request: Request, data: AdminCreate, db: Session = Depends(get_db)):
     """Create admin user (Stage 2)."""
     return create_admin_user(db, data)
 
 @app.post("/api/auth/login", response_model=TokenResponse)
-def api_login(data: UserLogin, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def api_login(request: Request, data: UserLogin, db: Session = Depends(get_db)):
     """User login (Stage 2)."""
     return authenticate_user(data.username, data.password, db)
 
@@ -352,104 +372,107 @@ def api_status(db: Session = Depends(get_db)):
     return check_system_status(db)
 
 # ================================================================
-# TEST DATA GENERATOR (Stage 6)
+# TEST DATA GENERATOR (disabled in production)
 # ================================================================
 
-@app.get("/api/test/generate-sales-data")
-def generate_test_sales(current_user: UserResponse = Depends(require_admin), db: Session = Depends(get_db)):
-    """Generate 30 days of test sales data (Admin only)."""
-    from datetime import datetime, timedelta
-    import random
-    
-    today = datetime.now().date()
-    pharmacy_id = str(current_user["pharmacy_id"])
-    user_id = str(current_user["user_id"])
-    
-    # Get all medicines with their batches
-    meds = db.execute(text("""
-        SELECT m.id, m.trade_name, m.sale_price, m.base_unit, m.min_stock,
-               m.purchase_price, m.scientific_name
-        FROM medicines m WHERE m.pharmacy_id = :pid
-    """), {"pid": pharmacy_id}).fetchall()
-    
-    if not meds:
-        return {"success": False, "message": "لا توجد أدوية. أضف أدوية أولاً."}
-    
-    med_map = {}
-    for m in meds:
-        med_map[str(m[0])] = {
-            "sale_price": float(m[2]),
-            "base_unit": m[3],
-            "min_stock": float(m[4]) if m[4] else 0,
-            "purchase_price": float(m[5]) if m[5] else 0,
-            "scientific_name": m[6]
-        }
-    
-    # Get batches
-    all_batches = db.execute(text("""
-        SELECT b.id, b.medicine_id, b.quantity, b.expiry_date
-        FROM batches b
-        JOIN medicines m ON m.id = b.medicine_id
-        WHERE m.pharmacy_id = :pid AND b.is_active = true
-    """), {"pid": pharmacy_id}).fetchall()
-    
-    # Group batches by medicine
-    med_batches = {}
-    for b in all_batches:
-        mid = str(b[1])
-        if mid not in med_batches:
-            med_batches[mid] = []
-        med_batches[mid].append({"id": str(b[0]), "qty": float(b[2]), "exp": b[3]})
-    
-    sales_created = 0
-    
-    for day_offset in range(30, 0, -1):
-        sale_date = today - timedelta(days=day_offset)
-        daily_count = random.randint(3, 8)
+if os.getenv("ENVIRONMENT", "development") != "production":
+
+    @app.get("/api/test/generate-sales-data")
+    @limiter.limit("2/minute")
+    def generate_test_sales(request: Request, current_user: UserResponse = Depends(require_admin), db: Session = Depends(get_db)):
+        """Generate 30 days of test sales data (Admin only, dev only)."""
+        from datetime import datetime, timedelta
+        import random
         
-        for _ in range(daily_count):
-            available = [m for m in med_map if m in med_batches]
-            if not available:
-                continue
-            med_id = random.choice(available)
-            mdata = med_map[med_id]
-            batch_list = med_batches[med_id]
-            if not batch_list:
-                continue
-            batch = random.choice(batch_list)
+        today = datetime.now().date()
+        pharmacy_id = str(current_user["pharmacy_id"])
+        user_id = str(current_user["user_id"])
+        
+        # Get all medicines with their batches
+        meds = db.execute(text("""
+            SELECT m.id, m.trade_name, m.sale_price, m.base_unit, m.min_stock,
+                   m.purchase_price, m.scientific_name
+            FROM medicines m WHERE m.pharmacy_id = :pid
+        """), {"pid": pharmacy_id}).fetchall()
+        
+        if not meds:
+            return {"success": False, "message": "لا توجد أدوية. أضف أدوية أولاً."}
+        
+        med_map = {}
+        for m in meds:
+            med_map[str(m[0])] = {
+                "sale_price": float(m[2]),
+                "base_unit": m[3],
+                "min_stock": float(m[4]) if m[4] else 0,
+                "purchase_price": float(m[5]) if m[5] else 0,
+                "scientific_name": m[6]
+            }
+        
+        # Get batches
+        all_batches = db.execute(text("""
+            SELECT b.id, b.medicine_id, b.quantity, b.expiry_date
+            FROM batches b
+            JOIN medicines m ON m.id = b.medicine_id
+            WHERE m.pharmacy_id = :pid AND b.is_active = true
+        """), {"pid": pharmacy_id}).fetchall()
+        
+        # Group batches by medicine
+        med_batches = {}
+        for b in all_batches:
+            mid = str(b[1])
+            if mid not in med_batches:
+                med_batches[mid] = []
+            med_batches[mid].append({"id": str(b[0]), "qty": float(b[2]), "exp": b[3]})
+        
+        sales_created = 0
+        
+        for day_offset in range(30, 0, -1):
+            sale_date = today - timedelta(days=day_offset)
+            daily_count = random.randint(3, 8)
             
-            pm = random.choices(["cash", "bankak", "fory", "transfer"], weights=[60, 25, 10, 5], k=1)[0]
-            qty = random.randint(1, 5)
-            unit_price = mdata["sale_price"]
-            total_price = round(qty * unit_price, 2)
-            
-            sale_time = datetime.combine(sale_date, datetime.min.time()) + timedelta(
-                hours=random.randint(8, 20), minutes=random.randint(0, 59))
-            
-            customer = random.choice(["أحمد", "محمد", "خالد", "فاطمة", "مريم", None, None])
-            
-            result = db.execute(text("""
-                INSERT INTO sales (pharmacy_id, user_id, customer_name, total_amount, payment_method, created_at)
-                VALUES (:pid, :uid, :customer, :amount, :pm, :created)
-                RETURNING id, invoice_number
-            """), {"pid": pharmacy_id, "uid": user_id, "customer": customer, "amount": total_price, "pm": pm, "created": sale_time}).first()
-            
-            sale_id = str(result[0])
-            
-            db.execute(text("""
-                INSERT INTO sale_items (sale_id, medicine_id, batch_id, quantity, unit_price, total_price, unit_name)
-                VALUES (:sid, :mid, :bid, :qty, :price, :total, :unit)
-            """), {"sid": sale_id, "mid": med_id, "bid": batch["id"], "qty": qty, "price": unit_price, "total": total_price, "unit": mdata["base_unit"]})
-            
-            sales_created += 1
-    
-    # Set one batch to expire soon
-    if all_batches:
-        import uuid as uuid_mod
-        target_batch = all_batches[0]
-        near_expiry = today + timedelta(days=20)
-        db.execute(text("UPDATE batches SET expiry_date = :exp WHERE id = :bid"), 
-                   {"exp": near_expiry, "bid": target_batch[0]})
-    
-    db.commit()
-    return {"success": True, "sales_created": sales_created, "message": f"✅ تم إنشاء {sales_created} مبيعة تجريبية! راجع الداشبورد."}
+            for _ in range(daily_count):
+                available = [m for m in med_map if m in med_batches]
+                if not available:
+                    continue
+                med_id = random.choice(available)
+                mdata = med_map[med_id]
+                batch_list = med_batches[med_id]
+                if not batch_list:
+                    continue
+                batch = random.choice(batch_list)
+                
+                pm = random.choices(["cash", "bankak", "fory", "transfer"], weights=[60, 25, 10, 5], k=1)[0]
+                qty = random.randint(1, 5)
+                unit_price = mdata["sale_price"]
+                total_price = round(qty * unit_price, 2)
+                
+                sale_time = datetime.combine(sale_date, datetime.min.time()) + timedelta(
+                    hours=random.randint(8, 20), minutes=random.randint(0, 59))
+                
+                customer = random.choice(["أحمد", "محمد", "خالد", "فاطمة", "مريم", None, None])
+                
+                result = db.execute(text("""
+                    INSERT INTO sales (pharmacy_id, user_id, customer_name, total_amount, payment_method, created_at)
+                    VALUES (:pid, :uid, :customer, :amount, :pm, :created)
+                    RETURNING id, invoice_number
+                """), {"pid": pharmacy_id, "uid": user_id, "customer": customer, "amount": total_price, "pm": pm, "created": sale_time}).first()
+                
+                sale_id = str(result[0])
+                
+                db.execute(text("""
+                    INSERT INTO sale_items (sale_id, medicine_id, batch_id, quantity, unit_price, total_price, unit_name)
+                    VALUES (:sid, :mid, :bid, :qty, :price, :total, :unit)
+                """), {"sid": sale_id, "mid": med_id, "bid": batch["id"], "qty": qty, "price": unit_price, "total": total_price, "unit": mdata["base_unit"]})
+                
+                sales_created += 1
+        
+        # Set one batch to expire soon
+        if all_batches:
+            import uuid as uuid_mod
+            target_batch = all_batches[0]
+            near_expiry = today + timedelta(days=20)
+            db.execute(text("UPDATE batches SET expiry_date = :exp WHERE id = :bid"), 
+                       {"exp": near_expiry, "bid": target_batch[0]})
+        
+        db.commit()
+        return {"success": True, "sales_created": sales_created, "message": f"✅ تم إنشاء {sales_created} مبيعة تجريبية! راجع الداشبورد."}

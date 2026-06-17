@@ -10,7 +10,12 @@ services:
       - key: PYTHON_VERSION
         value: 3.11.9
       - key: SECRET_KEY
-        generateValue: true
+        # SECURITY: Do NOT use generateValue: true in production!
+        # This creates a new key on each deploy, invalidating all user sessions.
+        # Generate once: openssl rand -hex 32
+        # Then set as a fixed value in Render Dashboard > Environment Variables
+        # Example: "a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456"
+        sync: false
       - key: ENVIRONMENT
         value: production
       - key: DEBUG
