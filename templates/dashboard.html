@@ -1150,10 +1150,18 @@
             finalOverlay.classList.add('visible');
             if (btn) btn.classList.add('active');
             document.body.style.overflow = 'hidden';
+            document.addEventListener('keydown', this.handleEscKey);
           } else {
             finalOverlay.classList.remove('visible');
             if (btn) btn.classList.remove('active');
             document.body.style.overflow = '';
+            document.removeEventListener('keydown', this.handleEscKey);
+          }
+        },
+
+        handleEscKey(e) {
+          if (e.key === 'Escape') {
+            this.closeMobileSidebar();
           }
         },
 
