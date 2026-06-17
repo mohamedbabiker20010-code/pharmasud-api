@@ -196,12 +196,12 @@ async def create_sale(
                     quantity_needed=quantity_needed,
                     db=db
                 )
-            except Exception as e:
+            except Exception:
                 db.rollback()
                 return SaleResponse(
                     success=False,
                     error_type="fefo_error",
-                    message=str(e)
+                    message="فشل في تخصيص المخزون (FEFO)"
                 )
             
             # إنشاء سجلات sale_items وخصم الكميات
@@ -270,12 +270,13 @@ async def create_sale(
         
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         db.rollback()
         import traceback
+        traceback.print_exc()  # Log to server logs for debugging
         return SaleResponse(
             success=False,
-            message=f"حدث خطأ أثناء معالجة البيع: {str(e)}"
+            message="حدث خطأ أثناء معالجة البيع"
         )
 
 

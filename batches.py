@@ -233,11 +233,11 @@ async def receive_batch(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         db.rollback()
         raise HTTPException(
             status_code=500,
-            detail=f"فشل في استلام الشحنة: {str(e)}"
+            detail="فشل في استلام الشحنة"
         )
 
 
@@ -319,11 +319,11 @@ async def confirm_short_expiry_batch(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         db.rollback()
         raise HTTPException(
             status_code=500,
-            detail=f"فشل في استلام الشحنة: {str(e)}"
+            detail="فشل في استلام الشحنة"
         )
 
 
@@ -488,7 +488,7 @@ async def test_fefo(
             "message": f"تم تخصيص {total_allocated} من {quantity} بنجاح"
         }
 
-    except Exception as e:
+    except Exception:
         # المخزون غير كافٍ
         total_available = sum(
             b.quantity for b in db.query(Batch).filter(
@@ -504,7 +504,7 @@ async def test_fefo(
             "trade_name": medicine.trade_name,
             "quantity_needed": quantity,
             "total_available": total_available,
-            "message": str(e)
+            "message": "المخزون غير كافٍ"
         }
 
 

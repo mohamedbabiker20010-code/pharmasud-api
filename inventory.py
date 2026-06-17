@@ -378,9 +378,9 @@ async def submit_stocktake(
                     if batch.quantity <= 0:
                         batch.is_active = False
 
-                action_desc = f"تم خصم {qty_to_remove} من المخزون"
-            except Exception as e:
-                action_desc = f"فشل الخصم: {str(e)}"
+                action_desc = "تم خصم من المخزون"
+            except Exception:
+                action_desc = "فشل الخصم"
 
         elif difference > 0:
             # 4. الفرق موجب (زيادة): أضف شحنة تسوية

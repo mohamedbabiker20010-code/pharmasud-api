@@ -241,8 +241,8 @@ async def health():
             "tables": tables,
             "timestamp": datetime.now().isoformat()
         }
-    except Exception as e:
-        return {"status": "unhealthy", "error": str(e)}
+    except Exception:
+        return {"status": "unhealthy", "error": "database connection failed"}
 
 @app.get("/ping")
 async def ping():
