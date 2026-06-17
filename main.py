@@ -217,8 +217,8 @@ logger = logging.getLogger(__name__)
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
-    """Serve login page directly (v7.2.0 Light + Blue theme)."""
-    return templates.TemplateResponse("login.html", {"request": request})
+    """Serve splash screen (v7.2.0 Cloud Design)."""
+    return templates.TemplateResponse("splash.html", {"request": request})
 
 @app.get("/api")
 async def api_info():
