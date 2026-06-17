@@ -151,6 +151,40 @@ app.add_middleware(
     expose_headers=["X-Request-ID"],
 )
 
+# Security Headers Middleware - Production hardened
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    
+    # Prevent clickjacking
+    response.headers["X-Frame-Options"] = "DENY"
+    
+    # Prevent MIME type sniffing
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    
+    # Control referrer information
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    
+    # Restrict browser features
+    response.headers["Permissions-Policy"] = "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
+    
+    # Content Security Policy - REPORT ONLY
+    # Note: Using reportOnly to monitor violations before enforcement
+    csp_directives = [
+        "default-src 'self'",
+        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com",
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+        "font-src 'self' https://fonts.gstatic.com data:",
+        "img-src 'self' data: blob: https:",
+        "connect-src 'self'",
+        "frame-ancestors 'none'",
+        "base-uri 'self'",
+        "form-action 'self'",
+    ]
+    response.headers["Content-Security-Policy-Report-Only"] = "; ".join(csp_directives)
+    
+    return response
+
 # Rate Limiter - Production hardened
 # Key function uses client IP; apply strict limits to auth endpoints
 limiter = Limiter(key_func=get_remote_address, default_limits=["200/minute"])
