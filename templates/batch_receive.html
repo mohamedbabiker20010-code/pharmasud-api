@@ -27,7 +27,10 @@
     .sidebar {
       width: 248px; background: #fff; border-left: 1px solid #EEF2F6;
       display: flex; flex-direction: column; padding: 22px 16px;
-      position: fixed; right: 0; top: 0; bottom: 0; z-index: 100;
+      position: fixed; right: 0; top: 0; bottom: 0;
+    }
+    @media (min-width: 1025px) {
+      .sidebar { z-index: 100; }
     }
     .sidebar .brand { display: flex; align-items: center; gap: 11px; padding: 0 8px 22px; }
     .sidebar .brand .icon {
