@@ -31,13 +31,25 @@ from models import (
 from auth import get_current_user, require_admin
 from audit import log_action
 
+import base64
+import io
+import magic  # python-magic for MIME/magic byte detection
+
 # Create router
 router = APIRouter(prefix="/api/medicines", tags=["medicines"])
 
-# Image settings
+# Upload settings
 UPLOAD_DIR = "static/medicines/images"
 MAX_IMAGE_SIZE = 2 * 1024 * 1024  # 2MB
 ALLOWED_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.webp'}
+# MIME types that are actually allowed (not just extensions)
+ALLOWED_MIME_TYPES = {'image/jpeg', 'image/png', 'image/webp'}
+# Magic byte signatures for validation
+MAGIC_SIGNATURES = {
+    b'\xff\xd8\xff': 'image/jpeg',      # JPEG
+    b'\x89PNG\r\n\x1a\n': 'image/png',  # PNG
+    b'RIFF': 'image/webp',               # WebP (starts with RIFF, need to check further)
+}
 DEFAULT_IMAGE_SIZE = (300, 300)
 
 # Ensure upload directory exists
@@ -67,25 +79,93 @@ def get_stock_status(total_stock: int, min_stock: int) -> str:
         return "available"  # 🟢 متوفر
 
 
-import base64
-import io
-
-def process_image(image_file: UploadFile, medicine_id: str) -> str:
-    """Process image and return Base64 data URL (persists across deploys)."""
-    import tempfile
+def validate_image_file(file: UploadFile) -> bytes:
+    """
+    Comprehensive image file validation:
+    1. Extension whitelist
+    2. MIME type from python-magic (magic bytes)
+    3. Magic byte signature verification
+    Returns file content if valid.
+    """
+    # 1. Check file size
+    file.file.seek(0, 2)  # Seek to end
+    file_size = file.file.tell()
+    file.file.seek(0)  # Reset to beginning
     
-    # Validate extension
-    ext = os.path.splitext(image_file.filename)[1].lower()
+    if file_size > MAX_IMAGE_SIZE:
+        raise HTTPException(
+            status_code=400,
+            detail=f"حجم الملف كبير جداً. الحد الأقصى {MAX_IMAGE_SIZE // (1024*1024)}MB"
+        )
+    
+    if file_size == 0:
+        raise HTTPException(
+            status_code=400,
+            detail="الملف فارغ"
+        )
+    
+    # Read file content for magic byte detection
+    file_content = file.file.read()
+    file.file.seek(0)  # Reset for later processing
+    
+    # 2. Validate extension
+    ext = os.path.splitext(file.filename or "")[1].lower()
     if ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(
             status_code=400,
-            detail="يجب أن تكون الصورة بصيغة: JPG, PNG, أو WEBP"
+            detail="يجب أن تكون الصورة بصيغة: JPG, PNG، أو WEBP"
         )
     
-    # Process directly from upload file to Base64
-    
+    # 3. Validate magic bytes / MIME type using python-magic
     try:
-        with Image.open(image_file.file) as img:
+        mime_type = magic.from_buffer(file_content, mime=True)
+    except Exception:
+        raise HTTPException(
+            status_code=400,
+            detail="لا يمكن تحديد نوع الملف"
+        )
+    
+    if mime_type not in ALLOWED_MIME_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"نوع الملف غير مدعوم: {mime_type}. الأنواع المسموحة: JPEG, PNG, WEBP"
+        )
+    
+    # 4. Validate magic byte signatures (additional layer)
+    valid_signature = False
+    for signature, expected_mime in MAGIC_SIGNATURES.items():
+        if file_content.startswith(signature):
+            valid_signature = True
+            if expected_mime != mime_type:
+                raise HTTPException(
+                    status_code=400,
+                    detail="توقيع الملف لا يطابق محتواه"
+                )
+            break
+    
+    # Special handling for WebP (RIFF container + WEBP marker)
+    if not valid_signature and file_content.startswith(b'RIFF'):
+        if b'WEBP' in file_content[:12]:
+            valid_signature = True
+            if 'image/webp' != mime_type:
+                raise HTTPException(
+                    status_code=400,
+                    detail="توقيع WebP غير صالح"
+                )
+    
+    if not valid_signature:
+        raise HTTPException(
+            status_code=400,
+            detail="ملف صورة غير صالح أو تالف (توقيع سحري غير معروف)"
+        )
+    
+    return file_content
+
+
+def process_image(image_content: bytes, medicine_id: str) -> str:
+    """Process validated image content and return Base64 data URL."""
+    try:
+        with Image.open(io.BytesIO(image_content)) as img:
             # Convert to RGB if necessary
             if img.mode in ('RGBA', 'P'):
                 img = img.convert('RGB')
@@ -99,10 +179,11 @@ def process_image(image_file: UploadFile, medicine_id: str) -> str:
             img_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
             
             return f"data:image/jpeg;base64,{img_base64}"
-    except Exception as e:
+    except Exception:
+        # Don't leak internal error details
         raise HTTPException(
             status_code=400,
-            detail=f"فشل في معالجة الصورة: {str(e)}"
+            detail="فشل في معالجة الصورة: ملف غير صالح أو تالف"
         )
 
 
@@ -153,29 +234,22 @@ def format_medicine_response(medicine: Medicine, db: Session, is_admin: bool = F
 # Image Upload Endpoint
 # ═══════════════════════════════════════════════════════════
 
-@router.post("/upload-image")
+@router.post("/upload-image", dependencies=[Depends(require_admin)])
 async def upload_medicine_image(
     file: UploadFile = File(...),
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Upload and process medicine image."""
-    # Check file size
-    file.file.seek(0, 2)  # Seek to end
-    file_size = file.file.tell()
-    file.file.seek(0)  # Reset to beginning
-    
-    if file_size > MAX_IMAGE_SIZE:
-        raise HTTPException(
-            status_code=400,
-            detail="حجم الصورة كبير جداً. الحد الأقصى 2MB"
-        )
-    
+    """Upload and process medicine image (Admin only)."""
     # Generate temporary medicine ID for image naming
     temp_id = str(uuid.uuid4())[:8]
     
     try:
-        image_path = process_image(file, temp_id)
+        # Comprehensive validation (size, extension, MIME, magic bytes)
+        file_content = validate_image_file(file)
+        
+        # Process validated image
+        image_path = process_image(file_content, temp_id)
         return {
             "success": True,
             "image_url": image_path,
@@ -183,10 +257,11 @@ async def upload_medicine_image(
         }
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
+        # Don't leak internal error details
         raise HTTPException(
             status_code=500,
-            detail=f"فشل في رفع الصورة: {str(e)}"
+            detail="فشل في رفع الصورة"
         )
 
 
