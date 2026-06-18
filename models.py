@@ -98,6 +98,52 @@ class SystemStatus(BaseModel):
 
 
 # ═══════════════════════════════════════════════════════════
+# Pydantic Models for RBAC (Phase 1)
+# ═══════════════════════════════════════════════════════════
+
+class RoleResponse(BaseModel):
+    """Schema for role in response."""
+    id: str
+    name: str
+    display_name: str
+    description: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class PermissionResponse(BaseModel):
+    """Schema for permission in response."""
+    id: str
+    code: str
+    category: str
+    description: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class UserPermissionsResponse(BaseModel):
+    """Schema for current user's effective permissions."""
+    user_id: str
+    username: str
+    role: str
+    role_id: str
+    role_display_name: str
+    permissions: list[str]  # List of permission codes
+
+
+class RbacMeResponse(BaseModel):
+    """Schema for /api/rbac/me endpoint."""
+    user_id: str
+    username: str
+    role: str
+    role_id: str
+    role_display_name: str
+    permissions: list[str]
+
+
+# ═══════════════════════════════════════════════════════════
 # Pydantic Models for Medicines (Stage 3)
 # ═══════════════════════════════════════════════════════════
 
@@ -548,13 +594,14 @@ class User(Base):
     pharmacy_id = Column(UUID(as_uuid=True), ForeignKey("pharmacies.id"), nullable=False)
     username = Column(String(50), unique=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
-    role = Column(String(20), nullable=False)
+    role = Column(String(20), nullable=False)  # Legacy: 'admin' or 'employee' (kept for compatibility)
+    role_id = Column(UUID(as_uuid=True), ForeignKey("roles.id"), nullable=True)  # New RBAC
     full_name = Column(String(100))
     phone = Column(String(20))
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, server_default=text("NOW()"))
 
-    # Enforce valid roles
+    # Enforce valid legacy roles (will be removed in future version)
     __table_args__ = (
         CheckConstraint("role IN ('admin', 'employee')", name="check_user_role"),
     )
@@ -562,6 +609,44 @@ class User(Base):
     # Relationships
     pharmacy = relationship("Pharmacy", back_populates="users")
     sales = relationship("Sale", back_populates="user")
+    role_obj = relationship("Role", back_populates="users")
+
+
+class Role(Base):
+    """RBAC Role entity - fixed roles: owner, manager, pharmacist, cashier, store_keeper"""
+    __tablename__ = "roles"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String(30), unique=True, nullable=False)
+    display_name = Column(String(50), nullable=False)
+    description = Column(Text)
+    created_at = Column(DateTime, server_default=text("NOW()"))
+
+    # Relationships
+    users = relationship("User", back_populates="role_obj")
+    permissions = relationship("Permission", secondary="role_permissions", back_populates="roles")
+
+
+class Permission(Base):
+    """RBAC Permission entity - fine-grained permissions"""
+    __tablename__ = "permissions"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    code = Column(String(50), unique=True, nullable=False)
+    category = Column(String(30), nullable=False)
+    description = Column(Text)
+    created_at = Column(DateTime, server_default=text("NOW()"))
+
+    # Relationships
+    roles = relationship("Role", secondary="role_permissions", back_populates="permissions")
+
+
+class RolePermission(Base):
+    """Role-Permission many-to-many association"""
+    __tablename__ = "role_permissions"
+
+    role_id = Column(UUID(as_uuid=True), ForeignKey("roles.id", ondelete="CASCADE"), primary_key=True)
+    permission_id = Column(UUID(as_uuid=True), ForeignKey("permissions.id", ondelete="CASCADE"), primary_key=True)
 
 
 class Medicine(Base):

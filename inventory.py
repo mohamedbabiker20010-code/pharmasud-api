@@ -24,7 +24,7 @@ from models import (
     BatchDetailResponse, BatchResponse,
     ExpiredItem, ExpiredReportResponse,
 )
-from auth import get_current_user, require_admin
+from auth import get_current_user, require_admin, require_permission
 from batches import format_batch_response, calculate_days_remaining, get_expiry_status, get_fefo_batches
 from audit import log_action
 
@@ -251,7 +251,7 @@ async def get_expired_report(
 # GET /api/inventory/stocktake/start
 # ═══════════════════════════════════════════════════════════
 
-@router.get("/stocktake/start")
+@router.get("/stocktake/start", dependencies=[Depends(require_permission("inventory.adjust"))])
 async def start_stocktake(
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -283,7 +283,7 @@ async def start_stocktake(
 # POST /api/inventory/stocktake/submit
 # ═══════════════════════════════════════════════════════════
 
-@router.post("/stocktake/submit")
+@router.post("/stocktake/submit", dependencies=[Depends(require_permission("inventory.adjust"))])
 async def submit_stocktake(
     data: StocktakeSubmitRequest,
     current_user: dict = Depends(get_current_user),

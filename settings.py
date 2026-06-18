@@ -21,7 +21,8 @@ from models import (
     PasswordChange, PharmacyUpdate, PharmacySettingsResponse,
     EmployeeStatusToggle,
 )
-from auth import get_current_user, require_admin, get_password_hash, verify_password
+from auth import get_current_user, require_admin, get_password_hash, verify_password, require_permission
+from audit import log_action
 
 # Create router
 router = APIRouter(prefix="/api/settings", tags=["settings"])
@@ -48,9 +49,9 @@ def format_employee(user: User) -> dict:
 # GET /api/settings/employees
 # ═══════════════════════════════════════════════════════════
 
-@router.get("/employees")
+@router.get("/employees", dependencies=[Depends(require_permission("employees.view"))])
 async def list_employees(
-    current_user: dict = Depends(require_admin),
+    current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """عرض كل الموظفين في الصيدلية."""
@@ -71,10 +72,10 @@ async def list_employees(
 # POST /api/settings/employees
 # ═══════════════════════════════════════════════════════════
 
-@router.post("/employees")
+@router.post("/employees", dependencies=[Depends(require_permission("employees.manage"))])
 async def create_employee(
     data: EmployeeCreate,
-    current_user: dict = Depends(require_admin),
+    current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """إضافة موظف جديد (أدمن فقط)."""
@@ -104,6 +105,17 @@ async def create_employee(
     db.commit()
     db.refresh(new_user)
 
+    # سجل في audit_log
+    log_action(
+        db=db,
+        pharmacy_id=current_user["pharmacy_id"],
+        user_id=current_user["user_id"],
+        user_name=current_user.get("full_name", current_user["username"]),
+        action_type="employee_create",
+        description=f"إضافة موظف: {data.full_name}",
+        new_value=data.username
+    )
+
     return {
         "success": True,
         "message": f"تم إضافة {data.full_name} بنجاح",
@@ -116,10 +128,10 @@ async def create_employee(
 # DELETE /api/settings/employees/{employee_id}
 # ═══════════════════════════════════════════════════════════
 
-@router.delete("/employees/{employee_id}")
+@router.delete("/employees/{employee_id}", dependencies=[Depends(require_permission("employees.manage"))])
 async def delete_employee(
     employee_id: str,
-    current_user: dict = Depends(require_admin),
+    current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """حذف موظف (أدمن فقط - لا يمكن حذف نفسك)."""
@@ -147,6 +159,17 @@ async def delete_employee(
     db.delete(employee)
     db.commit()
 
+    # سجل في audit_log
+    log_action(
+        db=db,
+        pharmacy_id=current_user["pharmacy_id"],
+        user_id=current_user["user_id"],
+        user_name=current_user.get("full_name", current_user["username"]),
+        action_type="employee_deleted",
+        description=f"حذف موظف: {name}",
+        old_value=name
+    )
+
     return {
         "success": True,
         "message": f"تم حذف {name} بنجاح"
@@ -158,11 +181,11 @@ async def delete_employee(
 # PATCH /api/settings/employees/{employee_id}/toggle
 # ═══════════════════════════════════════════════════════════
 
-@router.patch("/employees/{employee_id}/toggle")
+@router.patch("/employees/{employee_id}/toggle", dependencies=[Depends(require_permission("employees.manage"))])
 async def toggle_employee_status(
     employee_id: str,
     data: EmployeeStatusToggle,
-    current_user: dict = Depends(require_admin),
+    current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """تعطيل أو تفعيل موظف (أدمن فقط - لا يمكن تعطيل نفسك)."""
@@ -190,6 +213,17 @@ async def toggle_employee_status(
 
     status_text = "تفعيل" if data.is_active else "تعطيل"
     name = employee.full_name or employee.username
+
+    # سجل في audit_log
+    action_type = "employee_enabled" if data.is_active else "employee_disabled"
+    log_action(
+        db=db,
+        pharmacy_id=current_user["pharmacy_id"],
+        user_id=current_user["user_id"],
+        user_name=current_user.get("full_name", current_user["username"]),
+        action_type=action_type,
+        description=f"{status_text} حساب موظف: {name}"
+    )
 
     return {
         "success": True,
@@ -235,7 +269,7 @@ async def change_password(
 # GET /api/settings/pharmacy
 # ═══════════════════════════════════════════════════════════
 
-@router.get("/pharmacy")
+@router.get("/pharmacy", dependencies=[Depends(require_permission("settings.view"))])
 async def get_pharmacy_settings(
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -263,10 +297,10 @@ async def get_pharmacy_settings(
 # PUT /api/settings/pharmacy
 # ═══════════════════════════════════════════════════════════
 
-@router.put("/pharmacy")
+@router.put("/pharmacy", dependencies=[Depends(require_permission("settings.manage"))])
 async def update_pharmacy_settings(
     data: PharmacyUpdate,
-    current_user: dict = Depends(require_admin),
+    current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """تعديل إعدادات الصيدلية (أدمن فقط)."""

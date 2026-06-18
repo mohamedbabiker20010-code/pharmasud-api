@@ -28,7 +28,7 @@ from models import (
     MedicineListResponse, BarcodeSearchResponse, MedicineDeleteResponse,
     MEDICINE_CATEGORIES
 )
-from auth import get_current_user, require_admin
+from auth import get_current_user, require_admin, require_permission
 from audit import log_action
 
 import base64
@@ -269,10 +269,10 @@ async def upload_medicine_image(
 # Medicine CRUD Endpoints
 # ═══════════════════════════════════════════════════════════
 
-@router.post("/")
+@router.post("/", dependencies=[Depends(require_permission("medicines.create"))])
 async def create_medicine(
     data: MedicineCreate,
-    current_user: dict = Depends(require_admin),
+    current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Create a new medicine (Admin only)."""
@@ -424,11 +424,11 @@ async def get_medicine(
     return format_medicine_response(medicine, db, is_admin)
 
 
-@router.put("/{medicine_id}")
+@router.put("/{medicine_id}", dependencies=[Depends(require_permission("medicines.edit"))])
 async def update_medicine(
     medicine_id: str,
     data: MedicineUpdate,
-    current_user: dict = Depends(require_admin),
+    current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Update a medicine (Admin only)."""
@@ -533,10 +533,10 @@ async def update_medicine(
     }
 
 
-@router.delete("/{medicine_id}", response_model=MedicineDeleteResponse)
+@router.delete("/{medicine_id}", response_model=MedicineDeleteResponse, dependencies=[Depends(require_permission("medicines.delete"))])
 async def delete_medicine(
     medicine_id: str,
-    current_user: dict = Depends(require_admin),
+    current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Delete a medicine (Admin only). Checks for associated sales."""

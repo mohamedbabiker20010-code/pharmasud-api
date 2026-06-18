@@ -19,7 +19,7 @@ from sqlalchemy import text
 
 from database import get_db
 from models import DashboardResponse, SalesReportResponse, ProfitReportResponse, SlowMovingResponse, PurchaseForecastResponse
-from auth import get_current_user, require_admin
+from auth import get_current_user, require_admin, require_permission
 
 # Create router for reports API
 router = APIRouter(prefix="/api/reports", tags=["reports"])
@@ -434,7 +434,7 @@ async def get_sales_report(
 # GET /api/reports/profits
 # ═══════════════════════════════════════════════════════════
 
-@router.get("/profits")
+@router.get("/profits", dependencies=[Depends(require_permission("profit.view"))])
 async def get_profit_report(
     period: str = Query("month", description="today|yesterday|week|month|custom"),
     start_date: Optional[str] = Query(None, description="تاريخ البداية YYYY-MM-DD"),
@@ -442,14 +442,8 @@ async def get_profit_report(
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """تقرير الأرباح — للمدير فقط (Admin). يحصل Employee على 403."""
-    # تقرير الأرباح للمدير فقط
-    if current_user.get("role") != "admin":
-        raise HTTPException(
-            status_code=403,
-            detail="تقرير الأرباح للمدير فقط"
-        )
-    
+    """تقرير الأرباح — يتطلب صلاحية profit.view."""
+
     pharmacy_id = current_user["pharmacy_id"]
     start_date_obj, end_date_obj = parse_date_range(period, start_date, end_date)
     params = {"pid": pharmacy_id, "start_date": start_date_obj, "end_date": end_date_obj}

@@ -21,7 +21,7 @@ import uuid
 from dotenv import load_dotenv
 
 from database import get_db
-from models import Pharmacy, User
+from models import Pharmacy, User, Role, Permission
 
 # Load environment variables
 load_dotenv()
@@ -112,13 +112,73 @@ async def get_current_user(
     if user is None:
         raise credentials_exception
     
+    # Get effective permissions from role
+    permissions = []
+    role_display_name = ""
+    role_id_str = ""
+    
+    if user.role_id:
+        role_obj = db.query(Role).filter(Role.id == user.role_id).first()
+        if role_obj:
+            role_display_name = role_obj.display_name
+            role_id_str = str(role_obj.id)
+            # Get permissions from role
+            perms = db.query(Permission).join(Role.permissions).filter(Role.id == role_obj.id).all()
+            permissions = [p.code for p in perms]
+    
+    # Fallback for legacy users without role_id (map admin/employee to basic permissions)
+    if not permissions:
+        if user.role == "admin":
+            permissions = [
+                "medicines.view", "medicines.create", "medicines.edit", "medicines.delete",
+                "inventory.view", "inventory.receive", "inventory.adjust", "inventory.view_expired",
+                "sales.pos", "sales.view_history", "sales.void",
+                "reports.sales", "reports.slow_moving", "reports.forecast",
+                "profit.view",
+                "employees.view", "employees.manage",
+                "settings.view", "settings.manage",
+                "purchase.view",
+            ]
+            role_display_name = "المدير"
+        elif user.role == "employee":
+            permissions = [
+                "medicines.view",
+                "inventory.view", "inventory.view_expired",
+                "sales.pos",
+            ]
+            role_display_name = "صيدلي"
+        role_id_str = str(user.role_id) if user.role_id else ""
+    
     return {
         "user_id": user_id,
         "pharmacy_id": pharmacy_id,
-        "role": role,
+        "role": role,  # Legacy role string
+        "role_id": role_id_str,  # New RBAC role UUID
+        "role_display_name": role_display_name,
+        "permissions": permissions,
         "username": user.username,
-        "full_name": user.full_name
+        "full_name": user.full_name,
     }
+
+
+def require_permission(permission_code: str):
+    """
+    FastAPI dependency factory for permission-based access control.
+    
+    Usage:
+        @app.post("/api/medicines/", dependencies=[Depends(require_permission("medicines.create"))])
+        def create_medicine(...):
+            ...
+    """
+    async def checker(current_user: Dict[str, Any] = Depends(get_current_user)) -> Dict[str, Any]:
+        user_permissions = current_user.get("permissions", [])
+        if permission_code not in user_permissions:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"ليس لديك صلاحية لهذا الإجراء: {permission_code}"
+            )
+        return current_user
+    return checker
 
 
 async def require_admin(

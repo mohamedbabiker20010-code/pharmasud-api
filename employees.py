@@ -16,7 +16,7 @@ from sqlalchemy import text
 
 from database import get_db
 from models import User
-from auth import get_current_user, require_admin, get_password_hash, verify_password
+from auth import get_current_user, require_admin, get_password_hash, verify_password, require_permission
 from audit import log_action
 
 router = APIRouter(prefix="/api/employees", tags=["employees"])
@@ -33,9 +33,9 @@ class ResetPasswordSchema(BaseModel):
     new_password: str = Field(..., min_length=6, max_length=100)
 
 
-@router.get("/")
+@router.get("/", dependencies=[Depends(require_permission("employees.view"))])
 async def list_employees(
-    current_user: dict = Depends(require_admin),
+    current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """قائمة الموظفين (Admin فقط)."""
@@ -60,10 +60,10 @@ async def list_employees(
     return {"employees": result}
 
 
-@router.post("/")
+@router.post("/", dependencies=[Depends(require_permission("employees.manage"))])
 async def create_employee(
     data: EmployeeCreateSchema,
-    current_user: dict = Depends(require_admin),
+    current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """إنشاء موظف جديد (Admin فقط - role='employee' دائماً)."""
@@ -108,10 +108,10 @@ async def create_employee(
     }
 
 
-@router.put("/{employee_id}/toggle")
+@router.put("/{employee_id}/toggle", dependencies=[Depends(require_permission("employees.manage"))])
 async def toggle_employee(
     employee_id: str,
-    current_user: dict = Depends(require_admin),
+    current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """تعطيل/تفعيل موظف (Admin فقط - لا يمكن تعطيل النفس)."""
@@ -157,11 +157,11 @@ async def toggle_employee(
     }
 
 
-@router.put("/{employee_id}/reset-password")
+@router.put("/{employee_id}/reset-password", dependencies=[Depends(require_permission("employees.manage"))])
 async def reset_employee_password(
     employee_id: str,
     data: ResetPasswordSchema,
-    current_user: dict = Depends(require_admin),
+    current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """إعادة تعيين كلمة مرور موظف (Admin فقط)."""

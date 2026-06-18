@@ -25,10 +25,12 @@ from models import (
     ProductKeyActivate, AdminCreate, UserLogin, 
     TokenResponse, UserResponse, SystemStatus,
     Pharmacy,
+    RoleResponse, PermissionResponse, RbacMeResponse,
 )
 from auth import (
     activate_product_key, create_admin_user, authenticate_user,
-    get_current_user, require_admin, check_system_status
+    get_current_user, require_admin, check_system_status,
+    require_permission,
 )
 from medicines import router as medicines_router
 from batches import router as batches_router
@@ -504,6 +506,19 @@ def api_me(current_user: UserResponse = Depends(get_current_user)):
         "pharmacy_id": current_user["pharmacy_id"],
         "pharmacy_name": current_user.get("pharmacy_name", ""),
         "owner_name": current_user.get("owner_name", "")
+    }
+
+
+@app.get("/api/rbac/me", response_model=RbacMeResponse)
+def api_rbac_me(current_user: UserResponse = Depends(get_current_user)):
+    """Get current user's RBAC info: role, permissions, etc."""
+    return {
+        "user_id": current_user["user_id"],
+        "username": current_user["username"],
+        "role": current_user["role"],
+        "role_id": current_user.get("role_id", ""),
+        "role_display_name": current_user.get("role_display_name", ""),
+        "permissions": current_user.get("permissions", []),
     }
 
 @app.get("/api/system/status", response_model=SystemStatus)
