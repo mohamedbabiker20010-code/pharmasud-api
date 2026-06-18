@@ -470,6 +470,23 @@ def api_create_pharmacy(request: Request, data: dict, db: Session = Depends(get_
         "type": pharmacy_type
     }
 
+# Temporary endpoint for validation - seed demo pharmacy
+@app.post("/api/auth/seed-demo", response_model=dict)
+@limiter.limit("2/minute")
+def api_seed_demo(request: Request, data: dict, db: Session = Depends(get_db)):
+    """Seed demo pharmacy with test data (for validation only)."""
+    from demo.seed_demo_pharmacy import seed_demo_pharmacy
+    
+    pharmacy_id = data.get("pharmacy_id")
+    if not pharmacy_id:
+        return {"success": False, "message": "pharmacy_id is required"}
+    
+    try:
+        result = seed_demo_pharmacy(pharmacy_id)
+        return result
+    except Exception as e:
+        return {"success": False, "message": f"Seeding failed: {str(e)}"}
+
 @app.post("/api/auth/login", response_model=TokenResponse)
 @limiter.limit("10/minute")
 def api_login(request: Request, data: UserLogin, db: Session = Depends(get_db)):
