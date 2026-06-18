@@ -24,6 +24,7 @@ from database import engine, get_db, test_connection, get_tables_count, Base
 from models import (
     ProductKeyActivate, AdminCreate, UserLogin, 
     TokenResponse, UserResponse, SystemStatus,
+    Pharmacy,
 )
 from auth import (
     activate_product_key, create_admin_user, authenticate_user,
@@ -426,6 +427,48 @@ def api_setup(request: Request, data: AdminCreate, db: Session = Depends(get_db)
         confirm_password=data.confirm_password,
         db=db
     )
+
+# Temporary endpoint for validation - creates pharmacy with product key
+@app.post("/api/auth/create-pharmacy", response_model=dict)
+@limiter.limit("5/minute")
+def api_create_pharmacy(request: Request, data: dict, db: Session = Depends(get_db)):
+    """Create pharmacy with product key (for validation only)."""
+    import uuid as uuid_module
+    from auth import get_password_hash
+    
+    product_key = data.get("product_key")
+    pharmacy_name = data.get("pharmacy_name", "Demo Pharmacy")
+    owner_name = data.get("owner_name", "Demo Owner")
+    pharmacy_type = data.get("pharmacy_type", "demo")
+    
+    if not product_key:
+        return {"success": False, "message": "product_key is required"}
+    
+    # Check if key already exists
+    existing = db.query(Pharmacy).filter(Pharmacy.product_key == product_key).first()
+    if existing:
+        return {"success": False, "message": "Product key already exists"}
+    
+    # Create pharmacy
+    pharmacy_id = uuid_module.uuid4()
+    new_pharmacy = Pharmacy(
+        id=pharmacy_id,
+        product_key=product_key,
+        name=pharmacy_name,
+        owner_name=owner_name,
+        is_active=False,
+        type=pharmacy_type
+    )
+    db.add(new_pharmacy)
+    db.commit()
+    
+    return {
+        "success": True,
+        "pharmacy_id": str(pharmacy_id),
+        "product_key": product_key,
+        "name": pharmacy_name,
+        "type": pharmacy_type
+    }
 
 @app.post("/api/auth/login", response_model=TokenResponse)
 @limiter.limit("10/minute")
