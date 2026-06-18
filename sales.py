@@ -108,17 +108,19 @@ async def create_sale(
         for item in data.items:
             med_uuid = uuid.UUID(item.medicine_id)
             
-            # إجمالي المخزون المتاح (غير منتهي)
+            # إجمالي المخزون المتاح (غير منتهي) - مع فلترة الصيدلية
             stock_result = db.execute(
                 text("""
-                    SELECT COALESCE(SUM(quantity), 0) 
-                    FROM batches 
-                    WHERE medicine_id = :mid 
-                    AND is_active = true 
-                    AND quantity > 0 
-                    AND expiry_date > :today
+                    SELECT COALESCE(SUM(b.quantity), 0) 
+                    FROM batches b
+                    JOIN medicines m ON b.medicine_id = m.id
+                    WHERE b.medicine_id = :mid 
+                    AND m.pharmacy_id = :pid
+                    AND b.is_active = true 
+                    AND b.quantity > 0 
+                    AND b.expiry_date > :today
                 """),
-                {"mid": med_uuid, "today": today}
+                {"mid": med_uuid, "pid": pharmacy_id, "today": today}
             )
             available = stock_result.scalar()
             
@@ -177,23 +179,27 @@ async def create_sale(
         
         for item in data.items:
             med_uuid = uuid.UUID(item.medicine_id)
-            medicine = db.query(Medicine).filter(Medicine.id == med_uuid).first()
-            
+            medicine = db.query(Medicine).filter(
+                Medicine.id == med_uuid,
+                Medicine.pharmacy_id == uuid.UUID(pharmacy_id)
+            ).first()
+
             if not medicine:
                 db.rollback()
                 return SaleResponse(
                     success=False,
-                    message=f"الدواء {item.medicine_id} غير موجود"
+                    message="مرجع دواء غير صالح"
                 )
-            
+
             # الكمية المطلوبة بالوحدة الأساسية
             quantity_needed = item.quantity
-            
+
             # تطبيق FEFO
             try:
                 fefo_allocation = get_fefo_batches(
                     medicine_id=str(med_uuid),
                     quantity_needed=quantity_needed,
+                    pharmacy_id=pharmacy_id,
                     db=db
                 )
             except Exception:

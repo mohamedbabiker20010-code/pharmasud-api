@@ -380,10 +380,10 @@ async def get_available_batches(
 # تُستخدم من مرحلة البيع (Stage 5)
 # ═══════════════════════════════════════════════════════════
 
-def get_fefo_batches(medicine_id: str, quantity_needed: int, db: Session) -> list[dict]:
+def get_fefo_batches(medicine_id: str, quantity_needed: int, pharmacy_id: str, db: Session) -> list[dict]:
     """
     دالة FEFO الأساسية.
-    تأخذ معرف الدواء والكمية المطلوبة.
+    تأخذ معرف الدواء، الكمية المطلوبة، ومعرف الصيدلية.
     ترجع قائمة الشحنات المخصصة بالترتيب الصحيح (الأقرب للانتهاء أولاً).
 
     مثال:
@@ -395,6 +395,7 @@ def get_fefo_batches(medicine_id: str, quantity_needed: int, db: Session) -> lis
     Parameters:
         medicine_id: معرف الدواء (نص)
         quantity_needed: الكمية المطلوبة بالوحدة الأساسية
+        pharmacy_id: معرف الصيدلية (للعمارة)
         db: جلسة قاعدة البيانات
 
     Returns:
@@ -406,8 +407,10 @@ def get_fefo_batches(medicine_id: str, quantity_needed: int, db: Session) -> lis
     today = date.today()
 
     # نجيب الشحنات المتاحة مرتبة: الأقرب للانتهاء أولاً
-    batches = db.query(Batch).filter(
+    # مع التحقق من ملكية الصيدلية عبر JOIN مع جدول medicines
+    batches = db.query(Batch).join(Medicine, Batch.medicine_id == Medicine.id).filter(
         Batch.medicine_id == medicine_id,
+        Medicine.pharmacy_id == uuid.UUID(pharmacy_id),
         Batch.quantity > 0,
         Batch.is_active == True,
         Batch.expiry_date > today
@@ -473,7 +476,7 @@ async def test_fefo(
 
     try:
         # نجرب دالة FEFO
-        allocation = get_fefo_batches(str(med_uuid), quantity, db)
+        allocation = get_fefo_batches(str(med_uuid), quantity, current_user["pharmacy_id"], db)
 
         total_allocated = sum(a["quantity"] for a in allocation)
 
