@@ -178,7 +178,7 @@ def seed_sales(
 
         # Get FEFO allocation
         try:
-            allocation = get_fefo_batches(str(med_id), qty, db)
+            allocation = get_fefo_batches(str(med_id), qty, str(pharmacy_id), db)
         except Exception:
             continue  # Skip if insufficient stock
 
