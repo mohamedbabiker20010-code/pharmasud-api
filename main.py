@@ -99,6 +99,27 @@ async def create_tables():
     except Exception as e:
         print(f"⚠️ Could not add type column: {e}")
 
+    # Create demo pharmacy if none exists (for validation)
+    try:
+        with engine.connect() as conn:
+            # Check if any pharmacy exists
+            pharmacy_count = conn.execute(text("SELECT count(*) FROM pharmacies")).scalar()
+            if pharmacy_count == 0:
+                # Create demo pharmacy with known product key
+                import uuid as uuid_module
+                demo_pharmacy_id = uuid_module.uuid4()
+                demo_product_key = "PHARM-DEMO-2026-VALIDATION"
+                conn.execute(text("""
+                    INSERT INTO pharmacies (id, product_key, name, owner_name, is_active, type, created_at)
+                    VALUES (:id, :key, :name, :owner, false, 'demo', NOW())
+                """), {"id": demo_pharmacy_id, "key": demo_product_key, "name": "PharmaSUD Demo Pharmacy", "owner": "Demo Owner"})
+                conn.commit()
+                print(f"✅ Created demo pharmacy with key: {demo_product_key}")
+            else:
+                print(f"✅ Found {pharmacy_count} existing pharmacy(ies)")
+    except Exception as e:
+        print(f"⚠️ Could not create demo pharmacy: {e}")
+
     # Stage 7: Create new tables
     try:
         with engine.connect() as conn:
