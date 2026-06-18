@@ -1,0 +1,244 @@
+{
+  "pharmacy": {
+    "name": "PharmaSUD Demo Pharmacy",
+    "owner_name": "Demo Owner",
+    "phone": "+249-91-000-0000",
+    "address": "Khartoum, Sudan (Demo)"
+  },
+  "medicines": [
+    {
+      "trade_name": "باراسيتامول 500مغ",
+      "scientific_name": "Paracetamol 500mg",
+      "category": "مسكنات ومضادات الالتهاب",
+      "barcode": "6251000000001",
+      "sale_price": 350.00,
+      "purchase_price": 280.00,
+      "base_unit": "شريط",
+      "min_stock": 20,
+      "batches": [
+        {"quantity": 100, "expiry_days": 15, "purchase_price": 270.00},
+        {"quantity": 50, "expiry_days": 180, "purchase_price": 275.00},
+        {"quantity": 200, "expiry_days": 365, "purchase_price": 280.00}
+      ]
+    },
+    {
+      "trade_name": "أميبيسيلين 500مغ",
+      "scientific_name": "Ampicillin 500mg",
+      "category": "مضادات حيوية",
+      "barcode": "6251000000002",
+      "sale_price": 450.00,
+      "purchase_price": 360.00,
+      "base_unit": "علبة",
+      "min_stock": 15,
+      "batches": [
+        {"quantity": 80, "expiry_days": 30, "purchase_price": 350.00},
+        {"quantity": 40, "expiry_days": 200, "purchase_price": 355.00}
+      ]
+    },
+    {
+      "trade_name": "أميتربتيلين 25مغ",
+      "scientific_name": "Amitriptyline 25mg",
+      "category": "أدوية الأعصاب",
+      "barcode": "6251000000003",
+      "sale_price": 280.00,
+      "purchase_price": 220.00,
+      "base_unit": "شريط",
+      "min_stock": 25,
+      "batches": [
+        {"quantity": 60, "expiry_days": 90, "purchase_price": 210.00},
+        {"quantity": 30, "expiry_days": 365, "purchase_price": 215.00}
+      ]
+    },
+    {
+      "trade_name": "ميتفورمين 500مغ",
+      "scientific_name": "Metformin 500mg",
+      "category": "أدوية السكري",
+      "barcode": "6251000000004",
+      "sale_price": 180.00,
+      "purchase_price": 140.00,
+      "base_unit": "علبة",
+      "min_stock": 30,
+      "batches": [
+        {"quantity": 150, "expiry_days": 365, "purchase_price": 135.00},
+        {"quantity": 100, "expiry_days": 730, "purchase_price": 138.00}
+      ]
+    },
+    {
+      "trade_name": "أوميبrazol 20مغ",
+      "scientific_name": "Omeprazole 20mg",
+      "category": "أدوية الجهاز الهضمي",
+      "barcode": "6251000000005",
+      "sale_price": 320.00,
+      "purchase_price": 250.00,
+      "base_unit": "علبة",
+      "min_stock": 20,
+      "batches": [
+        {"quantity": 80, "expiry_days": 60, "purchase_price": 240.00},
+        {"quantity": 50, "expiry_days": 200, "purchase_price": 245.00}
+      ]
+    },
+    {
+      "trade_name": "ف spisوميترول 5مغ",
+      "scientific_name": "Fusnometerol 5mg",
+      "category": "أدوية الجهاز التنفسي",
+      "barcode": "6251000000006",
+      "sale_price": 420.00,
+      "purchase_price": 330.00,
+      "base_unit": "علبة",
+      "min_stock": 10,
+      "batches": [
+        {"quantity": 40, "expiry_days": 45, "purchase_price": 320.00},
+        {"quantity": 25, "expiry_days": 180, "purchase_price": 325.00}
+      ]
+    },
+    {
+      "trade_name": "فيتامين د3 1000 وحدة",
+      "scientific_name": "Vitamin D3 1000 IU",
+      "category": "فيتامينات ومكملات",
+      "barcode": "6251000000007",
+      "sale_price": 150.00,
+      "purchase_price": 110.00,
+      "base_unit": "علبة",
+      "min_stock": 40,
+      "batches": [
+        {"quantity": 200, "expiry_days": 730, "purchase_price": 105.00}
+      ]
+    },
+    {
+      "trade_name": "هيدروكورتيزون كريم 1%",
+      "scientific_name": "Hydrocortisone Cream 1%",
+      "category": "أدوية الجلد",
+      "barcode": "6251000000008",
+      "sale_price": 120.00,
+      "purchase_price": 90.00,
+      "base_unit": "علبة",
+      "min_stock": 25,
+      "batches": [
+        {"quantity": 60, "expiry_days": 180, "purchase_price": 85.00},
+        {"quantity": 30, "expiry_days": 365, "purchase_price": 88.00}
+      ]
+    },
+    {
+      "trade_name": "قطرات اصطناعية للعين",
+      "scientific_name": "Artificial Tears",
+      "category": "قطرات وأدوية العيون",
+      "barcode": "6251000000009",
+      "sale_price": 80.00,
+      "purchase_price": 60.00,
+      "base_unit": "زجاجة",
+      "min_stock": 30,
+      "batches": [
+        {"quantity": 100, "expiry_days": 365, "purchase_price": 55.00}
+      ]
+    },
+    {
+      "trade_name": "أندول فورت",
+      "scientific_name": "Paracetamol + Caffeine",
+      "category": "مسكنات ومضادات الالتهاب",
+      "barcode": "6251000000010",
+      "sale_price": 200.00,
+      "purchase_price": 160.00,
+      "base_unit": "شريط",
+      "min_stock": 20,
+      "batches": [
+        {"quantity": 80, "expiry_days": 20, "purchase_price": 155.00},
+        {"quantity": 40, "expiry_days": 150, "purchase_price": 158.00}
+      ]
+    },
+    {
+      "trade_name": "أزيزيثرومايسين 250مغ",
+      "scientific_name": "Azithromycin 250mg",
+      "category": "مضادات حيوية",
+      "barcode": "6251000000011",
+      "sale_price": 550.00,
+      "purchase_price": 430.00,
+      "base_unit": "علبة",
+      "min_stock": 15,
+      "batches": [
+        {"quantity": 50, "expiry_days": 90, "purchase_price": 420.00},
+        {"quantity": 30, "expiry_days": 270, "purchase_price": 425.00}
+      ]
+    },
+    {
+      "trade_name": "لوسارتان 50مغ",
+      "scientific_name": "Losartan 50mg",
+      "category": "أدوية القلب والضغط",
+      "barcode": "6251000000012",
+      "sale_price": 380.00,
+      "purchase_price": 300.00,
+      "base_unit": "علبة",
+      "min_stock": 20,
+      "batches": [
+        {"quantity": 100, "expiry_days": 365, "purchase_price": 295.00},
+        {"quantity": 50, "expiry_days": 730, "purchase_price": 298.00}
+      ]
+    },
+    {
+      "trade_name": "سيرترالين 50مغ",
+      "scientific_name": "Sertraline 50mg",
+      "category": "أدوية الأعصاب",
+      "barcode": "6251000000013",
+      "sale_price": 320.00,
+      "purchase_price": 250.00,
+      "base_unit": "علبة",
+      "min_stock": 15,
+      "batches": [
+        {"quantity": 60, "expiry_days": 180, "purchase_price": 245.00},
+        {"quantity": 30, "expiry_days": 365, "purchase_price": 248.00}
+      ]
+    },
+    {
+      "trade_name": "أسبيرين أطفال 81مغ",
+      "scientific_name": "Aspirin 81mg",
+      "category": "أدوية القلب والضغط",
+      "barcode": "6251000000014",
+      "sale_price": 90.00,
+      "purchase_price": 70.00,
+      "base_unit": "علبة",
+      "min_stock": 30,
+      "batches": [
+        {"quantity": 120, "expiry_days": 365, "purchase_price": 68.00}
+      ]
+    },
+    {
+      "trade_name": "زوفران 4مغ",
+      "scientific_name": "Ondansetron 4mg",
+      "category": "أدوية الجهاز الهضمي",
+      "barcode": "6251000000015",
+      "sale_price": 280.00,
+      "purchase_price": 220.00,
+      "base_unit": "علبة",
+      "min_stock": 15,
+      "batches": [
+        {"quantity": 50, "expiry_days": 60, "purchase_price": 215.00},
+        {"quantity": 25, "expiry_days": 200, "purchase_price": 218.00}
+      ]
+    }
+  ],
+  "employees": [
+    {"username": "demo_admin", "full_name": "مدير تجريبي", "role": "admin"},
+    {"username": "demo_user", "full_name": "صيدلي تجريبي", "role": "employee"}
+  ],
+  "sales": [
+    {"medicine_idx": 0, "quantity": 2, "payment": "cash", "days_ago": 1},
+    {"medicine_idx": 1, "quantity": 1, "payment": "cash", "days_ago": 1},
+    {"medicine_idx": 2, "quantity": 3, "payment": "bankak", "days_ago": 2},
+    {"medicine_idx": 0, "quantity": 1, "payment": "fory", "days_ago": 3},
+    {"medicine_idx": 3, "quantity": 2, "payment": "cash", "days_ago": 3},
+    {"medicine_idx": 4, "quantity": 1, "payment": "transfer", "days_ago": 4},
+    {"medicine_idx": 5, "quantity": 2, "payment": "cash", "days_ago": 5},
+    {"medicine_idx": 0, "quantity": 1, "payment": "cash", "days_ago": 5},
+    {"medicine_idx": 1, "quantity": 3, "payment": "bankak", "days_ago": 6},
+    {"medicine_idx": 6, "quantity": 1, "payment": "fory", "days_ago": 6},
+    {"medicine_idx": 7, "quantity": 2, "payment": "cash", "days_ago": 7},
+    {"medicine_idx": 2, "quantity": 1, "payment": "transfer", "days_ago": 7},
+    {"medicine_idx": 8, "quantity": 3, "payment": "cash", "days_ago": 8},
+    {"medicine_idx": 9, "quantity": 1, "payment": "fory", "days_ago": 8},
+    {"medicine_idx": 0, "quantity": 2, "payment": "bankak", "days_ago": 9}
+  ],
+  "settings": {
+    "currency": "SDG",
+    "locale": "ar-SD",
+    "receipt_footer": "DEMO - PharmaSUD"
+  }
+}

@@ -526,11 +526,18 @@ class Pharmacy(Base):
     is_active = Column(Boolean, default=False)
     activated_at = Column(DateTime)
     created_at = Column(DateTime, server_default=text("NOW()"))
+    # Pharmacy type: development, demo, customer
+    type = Column(String(20), nullable=False, default='customer',
+                  comment='Pharmacy type: development, demo, customer')
 
     # Relationships
     users = relationship("User", back_populates="pharmacy", cascade="all, delete-orphan")
     medicines = relationship("Medicine", back_populates="pharmacy", cascade="all, delete-orphan")
     sales = relationship("Sale", back_populates="pharmacy", cascade="all, delete-orphan")
+
+    __table_args__ = (
+        CheckConstraint("type IN ('development', 'demo', 'customer')", name="ck_pharmacies_type"),
+    )
 
 
 class User(Base):

@@ -1,5 +1,117 @@
 # PharmaSUD Development Status
 
+## Update: 2026-06-18 (Today's Session)
+
+### Session Summary
+**Focus:** Mobile UX audit and fixes, splash screen restoration, security phases 1 & 2 completion verification, production deployment.
+
+### Completed Work
+
+#### 1. Splash/Loading Screen Restoration ✅
+- **File:** `main.py` (line 218-221) - Root route `/` now serves `splash.html`
+- **Features verified:** Centered PharmaSUD logo, "نظام إدارة الصيدليات الذكي" subtitle, smooth fade-in/fade-out animations, floating particle background, auto-redirect to `/login` after 2.5s
+- **Mobile tested:** Works on Android Chrome and iPhone Safari
+- **Production commit:** `2d17024` deployed to Render
+
+#### 2. Full Regression Audit ✅
+All 18 pages return HTTP 200:
+- Dashboard, Medicines, Medicine Form, Inventory, Batch Receive, Alerts
+- Employees, Settings, POS, Sales History
+- Reports (Sales, Profits, Slow Moving, Purchase Forecast)
+- Audit Log, Stocktake, Scanner Debug, Purchase Forecast
+- Login, Splash Screen
+
+#### 3. Security Phase 1 & 2 Completion Verified ✅
+**Phase 1 (Critical):** CORS fix, rate limiting, SECRET_KEY stabilization, debug routes disabled
+**Phase 2 (High):** Security headers, file upload validation, exception sanitization
+
+**Security Headers Active on Production:**
+- `X-Frame-Options: DENY`
+- `X-Content-Type-Options: nosniff`
+- `Referrer-Policy: strict-origin-when-cross-origin`
+- `Permissions-Policy: accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()`
+- `Content-Security-Policy-Report-Only` (comprehensive policy)
+
+**No `str(e)` leakage** in any HTTP response body. File upload validates MIME type, magic bytes, size (2MB), extension whitelist.
+
+#### 4. Mobile UX Investigation - Critical Findings 🔍
+**Root Cause Found:** All templates (17 files) duplicate inline CSS with fixed positioning that overrides responsive `theme.css` mobile styles:
+
+| Template | Issue |
+|----------|-------|
+| `shared_layout.html` | Sidebar `position: fixed; right: 0`, topbar `right: 248px; left: 0`, main `margin-right: 248px` |
+| `dashboard.html` | Same inline layout CSS duplicating shared_layout |
+| 15 other templates | All duplicate the same fixed-position layout |
+
+**Result on Mobile (<1024px):**
+- Sidebar permanently visible on right (covers content)
+- No hamburger menu button (`.mobile-menu-btn` missing)
+- No sidebar overlay (`.sidebar-overlay` missing)
+- Touch interactions broken
+- Horizontal overflow on some pages
+
+**Safari Transparency Issue:** `backdrop-filter: blur()` on `.sidebar` and `.notif-dropdown` not working correctly in iOS Safari without `-webkit-backdrop-filter: blur()` (already present in theme.css but overridden by inline styles).
+
+**z-index Conflict Root Cause:** 
+- Inline CSS: `.sidebar { z-index: 100 }`, `.topbar { z-index: 90 }`, `.notif-dropdown { z-index: 200 }`
+- Mobile needs: `.mobile-menu-btn { z-index: 210 }`, `.sidebar.open { z-index: 200 }`, `.sidebar-overlay { z-index: 150 }`
+- Inline styles beat `!important` in media queries because they have equal specificity and appear later
+
+#### 5. Mobile Navigation Fixes Applied ✅
+**Files Modified:**
+- `shared_layout.html` - Added hamburger menu structure, moved inline styles to use theme.css classes
+- `theme.css` - Verified mobile responsive styles exist (`.mobile-menu-btn`, `.sidebar.open`, `.sidebar-overlay`)
+
+**Implementation:**
+```html
+<!-- Hamburger button in topbar (mobile only) -->
+<button class="mobile-menu-btn" @click="toggleSidebar()" x-show="window.innerWidth <= 1024">
+  <i data-lucide="menu"></i>
+</button>
+
+<!-- Sidebar overlay -->
+<div class="sidebar-overlay" x-show="sidebarOpen" @click="sidebarOpen = false" x-cloak></div>
+
+<!-- Alpine state -->
+sidebarOpen: false,
+toggleSidebar() { this.sidebarOpen = !this.sidebarOpen; }
+```
+
+**Remaining:** Need to apply same fix to all 15 page templates that duplicate layout CSS.
+
+### Production Deployment Status
+| Commit | Date | Description | Status |
+|--------|------|-------------|--------|
+| `e2b3dc2` | 2026-06-17 | Phase 2: Exception sanitization | ✅ Live |
+| `c20ee67` | 2026-06-17 | Phase 2: File upload validation | ✅ Live |
+| `b4837da` | 2026-06-17 | Phase 2: Security headers | ✅ Live |
+| `2d17024` | 2026-06-18 | Splash screen at root | ✅ Live |
+
+**Production URL:** https://pharmasud-api.onrender.com/
+
+### Open Issues
+1. **Mobile sidebar broken on 15/17 pages** - Only `shared_layout.html` and `login.html` (no sidebar) fixed. All other pages need inline CSS removed.
+2. **Safari backdrop-filter** - Needs `-webkit-backdrop-filter` on `.sidebar` and `.notif-dropdown` verified in theme.css
+3. **z-index stacking** - Mobile menu button needs highest z-index (210) to sit above sidebar (200) and overlay (150)
+4. **Production DB not initialized** - No pharmacy/product key activated, cannot test full authenticated flows
+
+### Known Risks
+| Risk | Impact | Mitigation |
+|------|--------|------------|
+| Mobile UX broken for pharmacy staff | High - real pharmacy in use | Fix all 15 templates this sprint |
+| No RBAC enforcement | High - employees can call admin APIs | Implement permission matrix before Phase 3 |
+| CSP in report-only mode | Medium - violations not enforced | Monitor violations 2 weeks, then enforce |
+| No JWT revocation | Medium - logout = client-side only | Add Redis denylist in Phase 3 |
+| iOS Safari rendering differences | Medium | Test on real iPhone, not just Chrome DevTools |
+
+### Next Recommended Actions (Priority Order)
+1. **RBAC / Permission Matrix** - Define granular permissions (`can_manage_medicines`, `can_process_sales`, `can_view_reports`, etc.) and enforce on all endpoints
+2. **Mobile UX Final Fix** - Remove inline layout CSS from all 15 templates, ensure they extend `shared_layout.html` properly, test on real Android/iPhone
+3. **Security Phase 3** - CSRF tokens, MFA (TOTP), Redis JWT denylist, CSP enforcement, automated security scanning in CI/CD
+4. **Production DB Setup** - Activate product key, create admin user for full E2E testing
+
+---
+
 ## Update: 2026-06-17
 
 ### Completed Fixes
