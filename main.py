@@ -373,13 +373,20 @@ async def purchase_forecast_page(request: Request):
 @limiter.limit("10/minute")
 def api_activate(request: Request, data: ProductKeyActivate, db: Session = Depends(get_db)):
     """Activate product key (Stage 2)."""
-    return activate_product_key(db, data)
+    return activate_product_key(data.product_key, db)
 
 @app.post("/api/auth/setup", response_model=dict)
 @limiter.limit("5/minute")
 def api_setup(request: Request, data: AdminCreate, db: Session = Depends(get_db)):
     """Create admin user (Stage 2)."""
-    return create_admin_user(db, data)
+    return create_admin_user(
+        pharmacy_id=data.pharmacy_id,
+        full_name=data.full_name,
+        username=data.username,
+        password=data.password,
+        confirm_password=data.confirm_password,
+        db=db
+    )
 
 @app.post("/api/auth/login", response_model=TokenResponse)
 @limiter.limit("10/minute")
