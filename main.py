@@ -163,22 +163,71 @@ async def create_tables():
 
     try:
         with engine.connect() as conn:
-            conn.execute(text("""
-                CREATE TABLE IF NOT EXISTS stocktake_items (
-                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                    session_id UUID REFERENCES stocktake_sessions(id),
-                    medicine_id UUID REFERENCES medicines(id),
-                    medicine_name VARCHAR(100),
-                    system_quantity INTEGER,
-                    actual_quantity INTEGER,
-                    difference INTEGER,
-                    created_at TIMESTAMP DEFAULT NOW()
-                )
+            conn.execute(text("""\
+                CREATE TABLE IF NOT EXISTS stocktake_items (\
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\
+                    session_id UUID REFERENCES stocktake_sessions(id),\
+                    medicine_id UUID REFERENCES medicines(id),\
+                    medicine_name VARCHAR(100),\
+                    system_quantity INTEGER,\
+                    actual_quantity INTEGER,\
+                    difference INTEGER,\
+                    created_at TIMESTAMP DEFAULT NOW()\
+                )\
             """))
             conn.commit()
             print("✅ Created stocktake_items table")
     except Exception as e:
         print(f"⚠️ Could not create stocktake_items table: {e}")
+
+    # RBAC Phase 1: Create roles, permissions, role_permissions tables
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("""\
+                CREATE TABLE IF NOT EXISTS roles (\
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\
+                    name VARCHAR(30) UNIQUE NOT NULL,\
+                    display_name VARCHAR(50) NOT NULL,\
+                    description TEXT,\
+                    created_at TIMESTAMP DEFAULT NOW()\
+                )\
+            """))
+            conn.execute(text("""\
+                CREATE TABLE IF NOT EXISTS permissions (\
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\
+                    code VARCHAR(50) UNIQUE NOT NULL,\
+                    category VARCHAR(30) NOT NULL,\
+                    description TEXT,\
+                    created_at TIMESTAMP DEFAULT NOW()\
+                )\
+            """))
+            conn.execute(text("""\
+                CREATE TABLE IF NOT EXISTS role_permissions (\
+                    role_id UUID REFERENCES roles(id) ON DELETE CASCADE,\
+                    permission_id UUID REFERENCES permissions(id) ON DELETE CASCADE,\
+                    PRIMARY KEY (role_id, permission_id)\
+                )\
+            """))
+            conn.commit()
+            print("✅ Created RBAC tables: roles, permissions, role_permissions")
+    except Exception as e:
+        print(f"⚠️ Could not create RBAC tables: {e}")
+
+    # RBAC Phase 1: Add role_id column to users if missing
+    try:
+        with engine.connect() as conn:
+            result = conn.execute(text("""\
+                SELECT column_name FROM information_schema.columns \
+                WHERE table_name = 'users' AND column_name = 'role_id'\
+            """)).fetchone()
+            if not result:
+                conn.execute(text("ALTER TABLE users ADD COLUMN role_id UUID REFERENCES roles(id)"))
+                conn.commit()
+                print("✅ Added role_id column to users table")
+            else:
+                print("✅ role_id column already exists in users table")
+    except Exception as e:
+        print(f"⚠️ Could not add role_id column: {e}")
 
 # CORS - Production hardened
 # Allow only specific production origins; credentials require explicit origins (no wildcard)
