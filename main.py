@@ -81,6 +81,24 @@ async def create_tables():
     except Exception as e:
         print(f"⚠️ Could not change image_path column: {e}")
 
+    # Add pharmacy type column if missing (Phase 1 Lite)
+    try:
+        with engine.connect() as conn:
+            # Check if column exists first
+            result = conn.execute(text("""
+                SELECT column_name FROM information_schema.columns 
+                WHERE table_name = 'pharmacies' AND column_name = 'type'
+            """)).fetchone()
+            if not result:
+                conn.execute(text("ALTER TABLE pharmacies ADD COLUMN type VARCHAR(20) NOT NULL DEFAULT 'customer'"))
+                conn.execute(text("ALTER TABLE pharmacies ADD CONSTRAINT ck_pharmacies_type CHECK (type IN ('development', 'demo', 'customer'))"))
+                conn.commit()
+                print("✅ Added type column to pharmacies table")
+            else:
+                print("✅ type column already exists in pharmacies table")
+    except Exception as e:
+        print(f"⚠️ Could not add type column: {e}")
+
     # Stage 7: Create new tables
     try:
         with engine.connect() as conn:
