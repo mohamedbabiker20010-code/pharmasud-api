@@ -1,0 +1,659 @@
+# PharmaSUD — Permanent Project Memory (BACKUP COPY)
+*Identical to PROJECT_MEMORY.md — created for redundancy*
+
+**Last Updated**: 2026-06-19
+**Git Commit**: `c6b89f7` (HEAD)
+**Source**: /home/lenovo/pharmasud/PROJECT_MEMORY.md
+
+---
+
+## 1. PROJECT IDENTITY
+
+| Property | Value |
+|----------|-------|
+| **Project Name** | PharmaSUD — Pharmacy POS & Inventory Management |
+| **Target Market** | Sudanese pharmacies (primary) |
+| **Currency** | Sudanese Pound (SDG) |
+| **Business Model** | One-time license (250,000 SDG standard) with full code ownership transfer |
+| **Repository** | https://github.com/mohamedbabiker20010-code/pharmasud-api (PUBLIC) |
+| **Production URL** | https://pharmasud-api.onrender.com |
+| **Stack** | FastAPI 0.109 + PostgreSQL 15 + SQLAlchemy 2.0 + Alpine.js 3 + Jinja2 |
+| **Hosting** | Render.com (Free tier Web Service + PostgreSQL) |
+| **Branch** | `master` (Render watches `master`, NOT `main`) |
+| **Admin Contact** | Mohamed (sales) / David (builds) |
+| **Demo Credentials** | D. Abeer / abeer2026 (from live testing) |
+
+---
+
+## 2. CURRENT VERSION
+
+| Metric | Value |
+|--------|-------|
+| **Semantic Version** | 7.2.0 "Light + Blue Theme" |
+| **Theme** | IBM Plex Sans Arabic, Primary Blue `#1AA7EC`, Light backgrounds |
+| **Design System** | CSS Variables centralized in `static/css/theme.css` |
+| **Templates Updated** | 16/16 templates migrated to v7.2.0 design |
+| **Mobile Fix Status** | 2/17 templates fixed (`shared_layout.html`, `login.html`) |
+| **RBAC Phase** | Phase 1 complete (tables seeded, enforcement partial) |
+| **Security Phase** | Phase 2 complete, Phase 3 NOT started |
+| **Alembic Status** | 2 migrations exist, NOT used in deploy (startup uses DDL) |
+
+---
+
+## 3. ARCHITECTURE DECISIONS (Immutable Unless Explicitly Revisited)
+
+| Decision | Rationale | Revisit Trigger |
+|----------|-----------|-----------------|
+| Render PostgreSQL (Free Tier) | Managed, zero-ops, production-ready | Scale beyond free tier limits |
+| JWT in localStorage (not HttpOnly cookie) | SPA simplicity; no CSRF needed | XSS found → migrate to cookie + CSRF |
+| 24h Access Token, No Refresh | User convenience | Token theft risk → add refresh + Redis denylist |
+| Base64 Images in PostgreSQL | Persists across Render deploys (no persistent disk) | DB > 1GB → move to S3/R2 |
+| FEFO Mandatory at Sale | Sudan regulatory requirement (SMCA) | Never — hard constraint |
+| 4 Payment Methods | Sudan market: cash (90%), bankak, fory, transfer | New method added |
+| Pharmacy Types: dev/demo/customer | Validation, isolation, pricing tiers | New type needed |
+| Single Role Per User (RBAC) | Simplicity | User needs multiple roles → add user_roles M2M |
+| Arabic-First, Masculine Voice (مذكر عام) | Sudan UX standard | Never |
+| Direct Push to Master (No CI/CD) | Speed early dev | Team grows → add GitHub Actions |
+| Raw SQL for Analytics, ORM for CRUD | Complex report queries need raw SQL control | If ORM performance sufficient |
+| Multi-Tenant Shared DB (Row-Level) | Cost efficiency on free tier | If tenant isolation fails → RLS or separate DBs |
+
+---
+
+## 4. DATABASE SCHEMA (Current — Verified Against models.py)
+
+```sql
+-- CORE TABLES (7 original + Stage 7 additions)
+pharmacies (
+    id UUID PK DEFAULT gen_random_uuid(),
+    product_key VARCHAR(50) UNIQUE NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    owner_name VARCHAR(100),
+    phone VARCHAR(20),
+    address TEXT,
+    is_active BOOLEAN DEFAULT false,
+    type VARCHAR(20) CHECK (type IN ('development','demo','customer')) DEFAULT 'customer',
+    created_at TIMESTAMP DEFAULT NOW()
+)
+
+users (
+    id UUID PK DEFAULT gen_random_uuid(),
+    pharmacy_id UUID FK→pharmacies(id) ON DELETE CASCADE,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(20) CHECK (role IN ('admin','employee')),  -- LEGACY, kept for compat
+    role_id UUID FK→roles(id),                              -- NEW RBAC
+    full_name VARCHAR(100),
+    phone VARCHAR(20),
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT NOW()
+)
+
+roles (
+    id UUID PK DEFAULT gen_random_uuid(),
+    name VARCHAR(30) UNIQUE NOT NULL,           -- owner, manager, pharmacist, cashier, store_keeper
+    display_name VARCHAR(50) NOT NULL,          -- Arabic display
+    description TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+)
+
+permissions (
+    id UUID PK DEFAULT gen_random_uuid(),
+    code VARCHAR(50) UNIQUE NOT NULL,           -- e.g., medicines.create
+    category VARCHAR(30) NOT NULL,              -- medicines, inventory, sales, etc.
+    description TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+)
+
+role_permissions (
+    role_id UUID FK→roles(id) ON DELETE CASCADE,
+    permission_id UUID FK→permissions(id) ON DELETE CASCADE,
+    PK (role_id, permission_id)
+)
+
+medicines (
+    id UUID PK DEFAULT gen_random_uuid(),
+    pharmacy_id UUID FK→pharmacies(id) ON DELETE CASCADE,
+    barcode VARCHAR(50),
+    trade_name VARCHAR(100) NOT NULL,
+    scientific_name VARCHAR(100),
+    category VARCHAR(50),                        -- 14 fixed categories
+    sale_price DECIMAL(10,2) NOT NULL,
+    purchase_price DECIMAL(10,2),
+    base_unit VARCHAR(20) DEFAULT 'strip',
+    min_stock INTEGER DEFAULT 10,
+    image_path TEXT,                             -- Base64 encoded image
+    created_at TIMESTAMP DEFAULT NOW()
+)
+
+units (
+    id UUID PK DEFAULT gen_random_uuid(),
+    medicine_id UUID FK→medicines(id) ON DELETE CASCADE,
+    unit_name VARCHAR(20) NOT NULL,             -- box, strip, tablet, etc.
+    conversion_factor DECIMAL(10,3) NOT NULL,   -- to base_unit
+    sale_price DECIMAL(10,2)
+)
+
+batches (
+    id UUID PK DEFAULT gen_random_uuid(),
+    medicine_id UUID FK→medicines(id) ON DELETE CASCADE,
+    batch_number VARCHAR(50),
+    quantity INTEGER NOT NULL DEFAULT 0,        -- stored in BASE units
+    expiry_date DATE NOT NULL,
+    purchase_price DECIMAL(10,2),
+    supplier_invoice VARCHAR(50),
+    supplier_name VARCHAR(100),
+    received_at TIMESTAMP DEFAULT NOW(),
+    is_active BOOLEAN DEFAULT true
+)
+
+sales (
+    id UUID PK DEFAULT gen_random_uuid(),
+    pharmacy_id UUID FK→pharmacies(id) ON DELETE CASCADE,
+    user_id UUID FK→users(id) ON DELETE SET NULL,
+    invoice_number SERIAL,                       -- per-pharmacy sequence
+    customer_name VARCHAR(100),
+    total_amount DECIMAL(10,2) NOT NULL,
+    payment_method VARCHAR(20) CHECK (payment_method IN ('cash','bankak','fory','transfer')),
+    created_at TIMESTAMP DEFAULT NOW()
+)
+
+sale_items (
+    id UUID PK DEFAULT gen_random_uuid(),
+    sale_id UUID FK→sales(id) ON DELETE CASCADE,
+    medicine_id UUID FK→medicines(id) ON DELETE SET NULL,
+    batch_id UUID FK→batches(id) ON DELETE SET NULL,  -- FEFO: which batch sold from
+    quantity INTEGER NOT NULL,
+    unit_name VARCHAR(20),                      -- unit at time of sale
+    unit_price DECIMAL(10,2) NOT NULL,
+    total_price DECIMAL(10,2) NOT NULL
+)
+
+audit_log (
+    id UUID PK DEFAULT gen_random_uuid(),
+    pharmacy_id UUID FK→pharmacies(id),
+    user_id UUID FK→users(id),
+    user_name VARCHAR(100),
+    action_type VARCHAR(50),
+    description TEXT NOT NULL,
+    old_value TEXT,
+    new_value TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+)
+
+stocktake_sessions (
+    id UUID PK DEFAULT gen_random_uuid(),
+    pharmacy_id UUID FK→pharmacies(id),
+    user_id UUID FK→users(id),
+    notes TEXT,
+    items_adjusted INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT NOW()
+)
+
+stocktake_items (
+    id UUID PK DEFAULT gen_random_uuid(),
+    session_id UUID FK→stocktake_sessions(id),
+    medicine_id UUID FK→medicines(id),
+    medicine_name VARCHAR(100),
+    system_quantity INTEGER,
+    actual_quantity INTEGER,
+    difference INTEGER,
+    created_at TIMESTAMP DEFAULT NOW()
+)
+```
+
+**Critical Indexes for FEFO**:
+```sql
+CREATE INDEX idx_batches_medicine_id ON batches(medicine_id);
+CREATE INDEX idx_batches_expiry_date ON batches(expiry_date);
+CREATE INDEX idx_batches_active ON batches(is_active) WHERE is_active = true;
+CREATE INDEX idx_sale_items_batch_id ON sale_items(batch_id);
+```
+
+---
+
+## 5. IMPLEMENTED FEATURES BY STAGE
+
+### Stage 1 (v1.0) — Foundation
+- [x] PostgreSQL + 7 core tables
+- [x] FastAPI app structure with health checks
+- [x] Arabic RTL interface baseline
+
+### Stage 2 (v2.0) — Auth & Setup
+- [x] Product Key Activation (`/api/auth/activate`)
+- [x] Admin User Setup (`/api/auth/setup`)
+- [x] JWT Authentication (HS256, 24h expiry)
+- [x] System Status Check (`/api/system/status`) — needs_activation/needs_setup/ready
+- [x] Bcrypt password hashing (cost=12)
+
+### Stage 3 (v3.0) — Medicines & Inventory Core
+- [x] Medicine CRUD with 14 fixed categories (validated)
+- [x] Barcode search endpoint
+- [x] Image upload → Base64 in DB
+- [x] Unit conversion (box→strip→tablet) with conversion_factor
+- [x] Employee view hides purchase_price (separate response models)
+
+### Stage 4 (v4.0) — Batches & FEFO
+- [x] Batch receiving with unit conversion (`/api/batches/receive`)
+- [x] FEFO allocation engine (`get_fefo_batches()`) — sorts by expiry_date ASC
+- [x] Expiry status: critical ≤30d, warning ≤90d, normal >90d
+- [x] Short-expiry confirmation flow (`/receive/confirm-short-expiry`)
+- [x] Available batches endpoint (FEFO filtered, excludes expired)
+- [x] FEFO test endpoint (`/fefo-test/{medicine_id}?quantity=`)
+
+### Stage 5 (v5.0) — POS & Sales
+- [x] Cart + Search + Dual Barcode Scanner (BarcodeDetector + zxing-wasm)
+- [x] FEFO auto-deduction at sale (transaction-safe)
+- [x] Multi-payment: cash, bankak, fory, transfer
+- [x] PDF Invoice public endpoint (`/api/public/invoice/{num}` no auth)
+- [x] Quick medicines (top 6 by 30-day sales)
+- [x] Sequential invoice numbers per pharmacy
+- [x] Sales history with filters (date, payment, cashier)
+- [x] Sale detail view with batch tracking
+
+### Stage 6 (v6.0) — Reports & Analytics
+- [x] Dashboard: today revenue/profit/invoices, inventory summary, alerts, 7-day chart
+- [x] Sales Report: period filters, payment breakdown, cashier filter
+- [x] Profit Report (admin-only): per-medicine margin, 6-month comparison
+- [x] Slow Moving Report: no sale in X days, risk levels (critical/high/medium)
+- [x] Purchase Forecast: avg daily sales, days remaining, suggested order qty
+
+### Stage 7 (v7.0–7.2) — Operations & Security
+- [x] Alerts: unified expiry + low stock + count endpoint for bell badge
+- [x] Employees: CRUD, toggle active, reset password, audit logged
+- [x] Audit Log: async `log_action()`, admin viewer with filters/pagination
+- [x] Stocktake: start (load system qty) → submit (FEFO deduction or settlement batch)
+- [x] RBAC Phase 1: 5 roles, 24 permissions, role_permissions seeded, user.role_id backfill
+- [x] Security Phase 1: CORS restrict, rate limiting, SECRET_KEY enforce, debug routes disabled
+- [x] Security Phase 2: Security headers (CSP report-only), file upload validation, exception sanitization
+- [x] Mobile UX: splash screen at `/`, hamburger+overlay (PARTIAL: 2/17 templates)
+- [x] Pharmacy Types: development/demo/customer (set at provisioning)
+
+---
+
+## 6. RBAC STATUS
+
+### Seeded Roles & Permissions (Migration `20240618_rbac_phase1`)
+
+| Role | Permissions Count | Key Permissions |
+|------|-------------------|-----------------|
+| **owner** | 24 (ALL) | Full system access |
+| **manager** | 21 | All except `medicines.delete`, `settings.manage` |
+| **pharmacist** | 17 | Medicines CRUD, Inventory, Sales POS+void, Reports, Purchase |
+| **cashier** | 4 | Medicines.view, Inventory.view+expired, Sales.pos |
+| **store_keeper** | 7 | Medicines.view, Inventory full, Reports.forecast, Purchase.view |
+
+### Permission Categories (24 Total)
+- **Medicines** (4): view, create, edit, delete
+- **Inventory** (4): view, receive, adjust, view_expired
+- **Sales** (3): pos, view_history, void
+- **Reports** (3): sales, slow_moving, forecast
+- **Profit** (1): view
+- **Employees** (2): view, manage
+- **Settings** (2): view, manage
+- **Purchase** (1): view
+
+### Enforcement Status — CRITICAL GAP
+| Endpoint | Protection | Status |
+|----------|------------|--------|
+| `employees.*` | `require_permission()` | ✅ Enforced |
+| `inventory.stocktake` | `require_permission("inventory.adjust")` | ✅ Enforced |
+| `reports.profits` | `require_permission("profit.view")` | ✅ Enforced |
+| `medicines.*` | `require_admin` only | ⚠️ Over-permissive |
+| `batches.*` | `require_admin` only | ⚠️ Over-permissive |
+| `sales.create` | No granular check | ⚠️ Any authenticated user |
+| `reports.sales` | No granular check | ⚠️ |
+| `reports.slow-moving` | No granular check | ⚠️ |
+| `reports.purchase-forecast` | No granular check | ⚠️ |
+
+**Backfill Logic Applied** (Migration):
+- `admin` → `owner` role
+- `employee` → `cashier` role
+- Fallback: any NULL role_id → `cashier`
+
+---
+
+## 7. SECURITY STATUS
+
+### Phase 1 (Critical) — COMPLETE ✅
+| Item | Implementation |
+|------|----------------|
+| CORS | Restricted to `ALLOWED_ORIGINS` env var (split by comma) |
+| Rate Limiting | `slowapi`: 200/min default, 10/min auth endpoints |
+| SECRET_KEY | Mandatory, min 32 chars, rejects defaults/weak keys |
+| Debug Routes | Disabled in production (`ENVIRONMENT != "production"`) |
+
+### Phase 2 (High) — COMPLETE ✅
+| Item | Implementation |
+|------|----------------|
+| Security Headers | Middleware: X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy strict-origin-when-cross-origin, Permissions-Policy restrictive, CSP **report-only** |
+| File Upload | MIME type + magic bytes + 2MB limit + extension whitelist (jpg/jpeg/png/webp) |
+| Exception Sanitization | No `str(e)` in HTTP responses; generic messages only |
+
+### Phase 3 (Medium) — NOT STARTED ❌
+| Item | Required |
+|------|----------|
+| CSRF Protection | Double-submit cookie or header for state-changing ops |
+| MFA / TOTP | Google Authenticator for admin accounts |
+| JWT Revocation | Redis denylist checked on each request |
+| CSP Enforcement | Move from report-only to enforce |
+| CI/CD Pipeline | GitHub Actions: ruff, mypy, pytest, pip-audit, bandit |
+| Dependabot | Auto PRs for dependency updates |
+
+---
+
+## 8. PRODUCTION STATUS
+
+| Aspect | Status | Details |
+|--------|--------|---------|
+| **Version** | 7.2.0 | Live at https://pharmasud-api.onrender.com |
+| **Branch** | `master` | Render watches `master` |
+| **Latest Commit** | `c6b89f7` | RBAC tables + role_id in startup |
+| **Migrations** | 2 exist | `alembic/versions/` — NOT used in deploy |
+| **Demo Environment** | Auto-create | Startup creates `PHARM-DEMO-2026-VALIDATION` if DB empty |
+| **RBAC Tables** | Created + Seeded | Startup event handler creates and seeds |
+| **Tenant Isolation** | Enforced | All queries filter by `pharmacy_id` from JWT |
+| **Security Phase 1** | ✅ Complete | |
+| **Security Phase 2** | ✅ Complete | |
+| **Security Phase 3** | ❌ Not Started | |
+| **Mobile UX** | Partial | 2/17 templates fixed; 15 need inline CSS removal |
+| **Production DB** | ⚠️ NOT INITIALIZED | No product key activated; no admin user |
+
+---
+
+## 9. HISTORICAL DECISIONS
+
+| Decision | Date/Commit | Evidence |
+|----------|-------------|----------|
+| Base64 images in DB | Stage 3 | `models.py` line 666 |
+| 24h JWT expiry | Stage 2 | `auth.py` line 42 |
+| FEFO mandatory | Stage 4 | `batches.py` `get_fefo_batches()` |
+| Pharmacy types (dev/demo/customer) | 2026-06-18 | Migration `20240618_add_pharmacy_type` |
+| Type set at provisioning, NOT key prefix | 2026-06-18 | `auth.py` `create_new_pharmacy()` |
+| Demo pharmacy auto-create | 2026-06-18 | `main.py` lines 105-124 |
+| Single role per user | 2026-06-18 | Migration backfill logic |
+| CSP report-only (not enforce) | 2026-06-17 | `main.py` security headers middleware |
+| Direct push to master | Historical | No GitHub Actions workflow |
+
+---
+
+## 10. FIXED BUGS HISTORY (With Commit References)
+
+| Bug | Commit | Date | Fix |
+|-----|--------|------|-----|
+| White screen / Alpine crash | `5555a42`, `52093ec` | 2026-06-11 | `loadNotifications()` moved inside Alpine components |
+| Missing commas in 13 templates | `61ca970` | 2026-06-11 | Added commas before method definitions |
+| Syntax error `},};` → `},;` | `9f87a0f` | 2026-06-11 | Fixed in 10 templates |
+| Dashboard API wrong endpoint | `ba9ed0a` | 2026-06-13 | `/api/dashboard` → `/api/reports/dashboard` |
+| Batch receive route wrong | `9fd209c` | 2026-06-13 | `/batches` → `/batch-receive` nav links |
+| Batch receive Alpine init | `a1838f5` | 2026-06-13 | Added `init()` method, fixed `x-init` |
+| Mobile sidebar z-index | `b21a503`, `6f57bc4` | 2026-06-17 | Moved to desktop-only media query |
+| iPhone Safari sidebar | `7f59643`, `f2c0393` | 2026-06-13/17 | Hamburger, overlay, ESC, scroll lock |
+| POS modal visibility | `39a5b68` | 2026-06-13 | Override theme.css opacity in inline styles |
+| CORS wildcard | `254005e` | 2026-06-17 | Restricted to `ALLOWED_ORIGINS` |
+| Security headers | `b4837da` | 2026-06-17 | CSP report-only + headers middleware |
+| File upload validation | `c20ee67` | 2026-06-17 | MIME + magic bytes + size + whitelist |
+| Exception sanitization | `e2b3dc2` | 2026-06-17 | Removed `str(e)` from responses |
+| RBAC Phase 1 | `230071e`, `c6b89f7` | 2026-06-18/19 | 5 roles, 24 permissions, backfill |
+| Tenant isolation FEFO | `0ed6c01`, `999e5d3` | 2026-06-18/19 | Added pharmacy_id filter to FEFO queries |
+| Splash screen | `2d17024` | 2026-06-18 | Serves `splash.html` at `/` |
+| Parameter order bug | `b7aff52` | 2026-06-18 | Fixed `api_activate` / `api_setup` |
+| v7.2.0 Cloud Design | `0c7efa7`, `f1d8810` | 2026-06-11 | All 16 templates rewritten |
+| Active nav states | `cd906f1` | 2026-06-11 | Python script sets active class |
+| Notification bell | `56bca98` | 2026-06-13 | Dropdown + dark mode fixes |
+| Dark mode unified | `8422a2e` | 2026-06-13 | All templates |
+| SECRET_KEY in STATUS.md | `e902cd6` | 2026-06-13 | Removed from docs |
+
+---
+
+## 11. KNOWN ISSUES (Current — Verified Against Code)
+
+| Issue | Severity | Location | Root Cause |
+|-------|----------|----------|------------|
+| Mobile sidebar broken on 15/17 pages | HIGH | All templates except `shared_layout.html`, `login.html` | Inline CSS duplicates layout, overrides responsive styles |
+| Date picker broken on batch receive | HIGH | `batch_receive.html` | Spinbuttons show 0/0/0, don't update |
+| POS shows out-of-stock items | MEDIUM | `pos.html` search | No filter for `quantity=0` in results |
+| No void/edit sale after completion | HIGH | `sales.py` + POS | No `sales.void` endpoint; POS flow finalizes instantly |
+| Camera barcode scanner fails silently | MEDIUM | `pos.html` | "Requested device not found" — no fallback hint |
+| Profit report shows 0.00 | HIGH | `reports.py` | `purchase_price` not captured on all batches |
+| Quick medicines hardcoded (2 items) | MEDIUM | `pos.html` + `sales.py` | Not configurable per pharmacy |
+| No multi-item cart qty editing | MEDIUM | `pos.html` | +/- buttons don't persist correctly |
+| Production DB not initialized | BLOCKER | Render | No product key activated, no admin user |
+| RBAC granular enforcement minimal | HIGH | All routers | Only 3 endpoints use `require_permission()` |
+| FEFO uses `expiry_date > today` | MEDIUM | `batches.py` lines 361, 416, 497 | Excludes batches expiring TODAY |
+| No audit log for login events | MEDIUM | `audit.py` | Only logs specific actions |
+| Single role per user | MEDIUM | `User` model | Real pharmacy: owner may also be pharmacist |
+| CSP report-only only | MEDIUM | `main.py` | Not enforced |
+
+---
+
+## 12. SUDAN MARKET DECISIONS (Non-Negotiable)
+
+| Assumption | Implementation Evidence | Gap |
+|------------|------------------------|-----|
+| Owner often lives outside Sudan | Business strategy: "Mohamed sells, David builds" | No remote monitoring (WhatsApp alerts) |
+| Owner may NOT be pharmacist | `owner` ≠ `pharmacist` roles | Single role per user prevents dual-hat |
+| Pharmacist may BE owner | Small pharmacy reality | Same limitation |
+| Invoice printing OPTIONAL (95% decline) | Public invoice endpoint exists | POS never blocks on print ✅ |
+| FEFO MANDATORY (SMCA regulatory) | `get_fefo_batches()` in sales create | Correctly implemented ✅ |
+| Batch-level stock tracking | `Batch` model + `sale_items.batch_id` | Correctly implemented ✅ |
+| Multi-tenant shared DB | All queries filter `pharmacy_id` | Row-level in code, not RLS |
+| Cash = 90%+ payments | `demo_data.json` 60% weight | UI should optimize for cash |
+| Most customers don't want invoices | POS simulation finding | Public endpoint unused in POS |
+| Arabic-first, masculine voice (مذكر عام) | Templates: `تأكدي→تأكد` etc. | Fixed in v7.2.0 ✅ |
+| Low training requirement | Cashier high turnover | POS must be <1 hour learnable |
+| Credit sales (deferred) common | CODEX_BRIEF mentions v7.2.0 debt mgmt | NOT implemented |
+| Supplier management expected | `purchase.view` permission + Batch fields | No purchase module |
+
+---
+
+## 13. ROADMAP — 30 DAY (Must-Have)
+
+| Priority | Task | Est. Effort | Dependencies |
+|----------|------|-------------|--------------|
+| P0 | RBAC enforcement on ALL endpoints | 3 days | Permission matrix complete |
+| P0 | Mobile UX final fix (15 templates) | 4 days | Pattern established in `shared_layout.html` |
+| P0 | Security Phase 3: CSRF, MFA, JWT denylist | 5 days | Redis instance needed |
+| P0 | Production DB initialization | 1 day | Product key + admin creation |
+| P0 | Void sale + edit sale workflow | 3 days | `sales.void` endpoint + POS undo |
+| P0 | Fix date picker on batch receive | 2 days | Alpine component debug |
+| P0 | Hide out-of-stock from POS | 1 day | Query filter addition |
+| P0 | Capture cost price per batch | 2 days | Ensure `purchase_price` on receive |
+| P1 | CSP enforcement (remove report-only) | 2 days | Test for violations first |
+| P1 | GitHub Actions CI/CD pipeline | 3 days | Repo secrets config |
+| P1 | Audit log for login/failed login | 1 day | Call `log_action` in auth.py |
+
+---
+
+## 14. ROADMAP — 90 DAY (Strategic)
+
+| Phase | Focus | Key Deliverables |
+|-------|-------|------------------|
+| Month 2 | Operations Polish | Bulk receive CSV/Excel, WhatsApp daily summary to owner, Owner mobile dashboard (read-only), Shift handover report, Barcode label printing |
+| Month 3 | Owner Visibility | Customer credit accounts (اسم + هاتف + حد ائتمان), Multi-branch support (future-proof), Audit log partitioning + 7yr retention, Data export endpoint (GDPR), Staging environment |
+
+---
+
+## 15. IMPORTANT COMMITS (Chronological)
+
+| Hash | Date | Message |
+|------|------|---------|
+| `c6b89f7` | 2026-06-19 | Add RBAC tables and role_id column creation to startup event handler |
+| `230071e` | 2026-06-18 | RBAC Phase 1: roles, permissions, middleware, protected endpoints, audit logging |
+| `2d17024` | 2026-06-18 | Add splash/loading screen at root route |
+| `e2b3dc2` | 2026-06-17 | Phase 2.3: Exception handling sanitization |
+| `c20ee67` | 2026-06-17 | Phase 2.2: File upload validation |
+| `b4837da` | 2026-06-17 | Phase 2: Security headers middleware |
+| `254005e` | 2026-06-17 | Security hardening Phase 1: CORS fix, rate limiting, SECRET_KEY |
+| `d0447e0` | 2026-06-18 | Phase 1 Lite: Pharmacy type field, demo pharmacy foundation |
+| `0ed6c01` | 2026-06-18 | Security patch 7.1.1: Tenant isolation for FEFO |
+| `0c7efa7` | 2026-06-11 | v7.2.0: Complete Cloud Design rewrite for ALL templates |
+| `5555a42` | 2026-06-11 | Fix: move loadNotifications inside Alpine components |
+| `f2c0393` | 2026-06-13 | Mobile navigation fix: hamburger, overlay, ESC key |
+
+---
+
+## 16. DEPLOYMENT NOTES
+
+### Render.com Configuration
+- **Web Service**: `gunicorn main:app` (Free tier, auto-deploy on `master` push)
+- **PostgreSQL**: Free tier (7-day backups, no PITR)
+- **Branch**: `master` (NOT `main`)
+- **Build Time**: 2-5 minutes
+
+### Required Environment Variables (Render Dashboard)
+```bash
+DATABASE_URL=postgresql://...          # Auto-provided by Render Postgres
+SECRET_KEY=<32+ char random>           # MUST SET MANUALLY — auto-gen invalidates tokens on recreate
+ALLOWED_ORIGINS=https://pharmasud-api.onrender.com  # Comma-separated for CORS
+ENVIRONMENT=production                 # Disables debug routes
+```
+
+### Critical Deploy Behaviors
+1. **No Alembic in deploy** — `main.py` startup runs `Base.metadata.create_all()` + raw ALTER TABLE
+2. **SECRET_KEY auto-gen on first deploy** — Invalidates ALL tokens if service recreated
+3. **CSP report-only** — Violations logged but not enforced
+4. **No WAF/Cloudflare** — Direct Render exposure
+5. **No CI/CD** — Direct push to `master` triggers deploy
+
+---
+
+## 17. ENVIRONMENT VARIABLES
+
+| Variable | Required | Default | Notes |
+|----------|----------|---------|-------|
+| `DATABASE_URL` | YES | — | Auto from Render Postgres |
+| `SECRET_KEY` | YES | — | Min 32 chars, no defaults allowed |
+| `ALLOWED_ORIGINS` | YES | `https://pharmasud-api.onrender.com` | Comma-separated |
+| `ENVIRONMENT` | YES | `development` | Set `production` on Render |
+| `DEBUG` | NO | `false` | Not used in code |
+
+### .env.example (Template)
+```bash
+DATABASE_URL=postgresql://user:pass@host:5432/db
+SECRET_KEY=your-32-char-random-key-here
+ALLOWED_ORIGINS=https://pharmasud-api.onrender.com
+ENVIRONMENT=development
+```
+
+---
+
+## 18. LESSONS LEARNED
+
+| Lesson | Context | Impact |
+|--------|---------|--------|
+| **Surgical patches only** | White screen fixes corrupted 15 templates when bulk-edited | Never modify >1 template without testing first |
+| **Test one page before global changes** | Dark mode rollout broke POS modals | Verify pattern on single page first |
+| **Inline CSS destroys responsive design** | Mobile sidebar broken by duplicated layout styles | Move ALL layout to `theme.css`; templates extend `shared_layout` |
+| **FEFO requires tenant isolation** | `get_fefo_batches` leaked cross-pharmacy data | Every query MUST filter by `pharmacy_id` from JWT |
+| **localStorage JWT = no revocation** | Logout = client-side only; stolen token works 24h | Phase 3 must add Redis denylist |
+| **Direct push to master is dangerous** | No safety net for bad deploys | CI/CD + staging environment critical |
+| **Date picker in Alpine is fragile** | `batch_receive.html` spinbuttons stuck at 0 | Use native `<input type="date">` or proven component |
+| **Demo auto-create masks DB issues** | Startup seeds demo if empty; real pharmacy never tested | Production DB must be properly initialized |
+| **SemVer discipline prevents confusion** | Version bump rules: PATCH=fix, MINOR=feature, MAJOR=breaking | Clear communication with Mohamed (sales) |
+
+---
+
+## 19. FUTURE CONSTRAINTS
+
+| Constraint | Origin | Workaround |
+|------------|--------|------------|
+| Render Free Tier: no PITR | PostgreSQL backup only 7-day | Document restore procedure; consider paid plan |
+| Render Free Tier: single region | No HA/failover | Accept downtime risk; document RPO/RTO |
+| No persistent disk | Base64 images in DB | Migrate to S3/R2 when DB > 1GB |
+| SQLite only for local dev | PostgreSQL-specific features (gen_random_uuid, etc.) | Local dev requires Render DB or Docker Postgres |
+| Single `role_id` per user | Current schema | Add `user_roles` M2M table if dual-hat needed |
+| CSP report-only blocks inline scripts | Alpine/JS in templates | Move all JS/CSS to static files for enforce |
+| `psycopg2-binary` security surface | Includes OpenSSL | Migrate to `psycopg` v3 |
+| No automated tests | Single developer | Add pytest + GitHub Actions before team grows |
+
+---
+
+## 20. KNOWLEDGE GAPS & CONTRADICTIONS
+*Every place where documentation/memory/reports differ from actual code*
+
+| # | Source A | Source B | Contradiction | Resolution (Code Wins) |
+|---|----------|----------|---------------|------------------------|
+| 1 | SECURITY_AUDIT says v7.2.0 | `main.py` says 7.1.0 | Version mismatch | Code: 7.1.0; Audit may be aspirational |
+| 2 | STATUS.md: "Alembic migrations used" | `main.py` startup uses `create_all()` + ALTER TABLE | Migration tool NOT used in deploy | Alembic exists but bypassed |
+| 3 | STATUS.md: "RBAC enforced" | Only 3 endpoints use `require_permission()` | Overstatement | Most endpoints use `require_admin` or nothing |
+| 4 | Security Audit: "Migrations ready" | No CI/CD runs Alembic | Not production-ready | Manual migration step missing |
+| 5 | CODEX_BRIEF: "JWT 8 hours" | `auth.py`: `ACCESS_TOKEN_EXPIRE_HOURS = 24` | Expiry mismatch | Code: 24 hours |
+| 6 | CODEX_BRIEF: "CORS allows *" | `main.py`: restricted to `ALLOWED_ORIGINS` | Outdated info | Fixed in Phase 1 |
+| 7 | CODEX_BRIEF: "purchases/expenses/invoices tables" | `schema.sql` + models: only 13 tables | Imaginary tables | NOT implemented |
+| 8 | Security Audit: "profit.view only admin" | `reports.py` uses `require_permission("profit.view")` | Correct but only ONE endpoint granular | Consistent but incomplete |
+| 9 | README: "Railway hosting" | `render.yaml` + live URL: Render.com | Wrong platform | Migrated to Render |
+| 10 | README: "Stage 1 v1.0.0" | Git history: 50+ commits, v7.2.0 | Massive version drift | README never updated |
+| 11 | STATUS: "18 pages return 200" | Templates: 21 files | Count mismatch | Some pages may be duplicates |
+| 12 | Migration backfill: `admin→owner` | `auth.py` fallback: `admin` role gets ALL permissions | Legacy compat works but double-assigns | Intentional fallback |
+| 13 | CODEX_BRIEF: "Debt mgmt v7.2.0" | No debt/credit code exists | Planned not implemented | Roadmap only |
+| 14 | Security Audit: "WAF needed" | No Cloudflare config | Not configured | Gap acknowledged |
+| 15 | STATUS: "Mobile UX fixed" | Only 2/17 templates fixed | Premature claim | 15 templates still broken |
+
+---
+
+## 21. RECOVERY SNAPSHOT
+
+### Feature Completion Percentage
+| Area | Complete | Total | % |
+|------|----------|-------|---|
+| Core Auth (Stages 1-2) | 100% | 100% | ✅ |
+| Medicines & Batches (Stages 3-4) | 100% | 100% | ✅ |
+| POS & Sales (Stage 5) | 90% | 100% | ⚠️ Void/Edit missing |
+| Reports (Stage 6) | 100% | 100% | ✅ |
+| Operations (Stage 7) | 85% | 100% | ⚠️ Mobile UX partial |
+| RBAC Enforcement | 15% | 100% | ❌ Critical gap |
+| Security Phase 3 | 0% | 100% | ❌ Not started |
+| Mobile UX | 12% | 100% | ⚠️ 2/17 templates |
+| CI/CD & Ops | 0% | 100% | ❌ Not started |
+
+**Overall**: ~78% feature complete; ~45% production-hardened
+
+### Unfinished Modules
+1. **Void/Edit Sale** — Critical for real pharmacy workflow
+2. **Debt/Credit Management** — v7.2.0 planned, zero code
+3. **Purchase/Ordering Module** — Permission exists, no implementation
+4. **Multi-Branch Support** — Stage 8, zero code
+5. **WhatsApp/Notification Integration** — Stage 9, zero code
+6. **Full RBAC Enforcement** — Tables ready, middleware missing
+7. **CI/CD Pipeline** — Zero automation
+8. **Staging Environment** — Not created
+
+### Production Blockers (Must Fix Before Real Pharmacy Use)
+1. ❌ **Production DB not initialized** — No activated pharmacy, no admin
+2. ❌ **Mobile sidebar broken** — 15/17 pages unusable on phone
+3. ❌ **No void sale** — Customer changes mind = manual workaround
+4. ❌ **Profit shows 0.00** — Misleading owner dashboard
+5. ❌ **RBAC over-permissive** — Employees can call admin APIs
+6. ❌ **No JWT revocation** — Stolen token valid 24h
+7. ❌ **CSP report-only** — No XSS protection enforcement
+
+### Technical Debt (Prioritized)
+1. **Inline CSS in 15 templates** — Blocks mobile UX, maintenance nightmare
+2. **Base64 images in DB** — Bloats backups, no CDN
+3. **`create_all` + ALTER TABLE in startup** — Schema drift risk
+4. **localStorage JWT** — No revocation possible
+5. **24h token expiry** — Long exposure window
+6. **No refresh tokens** — Cannot rotate credentials
+7. **No automated tests** — Manual only; regression risk
+8. **`psycopg2-binary`** — Security surface; migrate to `psycopg` v3
+9. **Raw SQL string concatenation** — SQLi risk in `audit.py`, `reports.py`
+10. **Single role per user** — Cannot model owner+pharmacist dual-hat
+
+### Next Highest-Priority Tasks (In Order)
+| # | Task | Category | Effort |
+|---|------|----------|--------|
+| 1 | Initialize production DB (activate key + admin) | Blocker | 15 min |
+| 2 | Fix mobile sidebar on 15 templates | Blocker | 4 hours |
+| 3 | Implement `sales.void` + POS undo | Blocker | 1 day |
+| 4 | Enforce `require_permission()` on ALL endpoints | Security | 1 day |
+| 5 | Fix profit report (capture purchase_price) | Data Integrity | 4 hours |
+| 6 | Add Redis JWT denylist | Security | 2 days |
+| 7 | Move CSP to enforce mode | Security | 1 day |
+| 8 | GitHub Actions CI/CD | Ops | 1 day |
+| 9 | Date picker fix on batch receive | Usability | 4 hours |
+| 10 | Hide out-of-stock from POS search | Usability | 1 hour |
+
+---
+
+*END OF PROJECT MEMORY BACKUP — Update after EVERY major change*
+*Next Update Trigger: Any commit that changes features, fixes blockers, or alters architecture*
