@@ -551,6 +551,30 @@
     .chart-panel .period-tab:hover {
       color: #0F172A;
     }
+    .report-tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .report-tab {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 11px;
+      border-radius: 8px;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: #94A3B8;
+      font-family: inherit;
+      transition: all 0.2s ease;
+    }
+    .report-tab.active {
+      background: #DBEAFE;
+      color: #1AA7EC;
+    }
+    .report-tab:hover {
+      color: #0F172A;
+    }
     .chart-area {
       position: relative;
       height: 220px;
@@ -1150,6 +1174,15 @@
         <i data-lucide="search"></i>
         بحث
       </button>
+    </div>
+
+    <!-- Report Tabs -->
+    <div class="report-tabs">
+      <button class="report-tab" :class="{ 'active': window.location.pathname === '/reports-sales' }" @click="window.location='/reports-sales'">تقرير المبيعات</button>
+      <button class="report-tab" :class="{ 'active': window.location.pathname === '/reports-profits' }" @click="window.location='/reports-profits'">تقرير الأرباح</button>
+      <button class="report-tab" :class="{ 'active': window.location.pathname === '/reports-slow-moving' }" @click="window.location='/reports-slow-moving'">الأدوية الراكدة</button>
+      <button class="report-tab" :class="{ 'active': window.location.pathname === '/reports-purchase-forecast' }" @click="window.location='/reports-purchase-forecast'">توقعات الشراء</button>
+      <button class="report-tab" :class="{ 'active': window.location.pathname === '/sales-history' }" @click="window.location='/sales-history'">سجل المبيعات</button>
     </div>
 
     <!-- Loading State -->
