@@ -1,134 +1,52 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="/static/css/theme.css?v7.2.0">
-  <title>سجل المبيعات - PharmaSUD</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <style>
-    html, body {
-      margin: 0; padding: 0;
-      min-height: 100vh;
-      font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif;
-      background: #F6F8FA;
-      color: #0F172A;
-      -webkit-font-smoothing: antialiased;
-    }
-    .app-layout { display: flex; min-height: 100vh; }
+{% extends 'shared_layout.html' %}
 
-    /* ─── Sidebar ─── */
-    .sidebar {
-      width: 248px; background: #fff; border-left: 1px solid #EEF2F6;
-      display: flex; flex-direction: column; padding: 22px 16px;
-      position: fixed; right: 0; top: 0; bottom: 0;
-    }
+{% set active_page = 'sales-history' %}
+{% set page_title = 'سجل المبيعات' %}
+
+{% block extra_css %}
+<style>
+/* ─── Sidebar ─── */
+    
     @media (min-width: 1025px) {
-      .sidebar { z-index: 100; }
+      
     }
-    .sidebar .brand {
-      display: flex; align-items: center; gap: 11px;
-      padding: 0 8px 22px;
-    }
-    .sidebar .brand .icon {
-      width: 38px; height: 38px; border-radius: 11px;
-      background: #1AA7EC; position: relative; flex-shrink: 0;
-    }
-    .sidebar .brand .icon::before, .sidebar .brand .icon::after {
-      content: ''; position: absolute; left: 50%; top: 50%;
-      transform: translate(-50%, -50%); background: #fff; border-radius: 3px;
-    }
-    .sidebar .brand .icon::before { width: 18px; height: 5.5px; }
-    .sidebar .brand .icon::after { width: 5.5px; height: 18px; }
-    .sidebar .brand .name {
-      font: 700 18px/1 'IBM Plex Sans Arabic', sans-serif; letter-spacing: -0.02em;
-    }
-    .sidebar .brand .name span { color: #1AA7EC; }
-    .sidebar .nav-section {
-      font: 600 11px/1 'IBM Plex Mono', monospace; letter-spacing: 0.1em;
-      color: #CBD5E1; padding: 14px 10px 10px;
-    }
-    .sidebar .nav-item {
-      display: flex; align-items: center; gap: 12px;
-      padding: 11px 12px; border-radius: 11px;
-      color: #475569; font-size: 14px; font-weight: 500;
-      text-decoration: none; margin-bottom: 4px;
-      transition: all 0.2s ease;
-    }
-    .sidebar .nav-item:hover { background: #F8FAFC; color: #0F172A; }
-    .sidebar .nav-item.active {
-      background: #1AA7EC; color: #fff;
-      box-shadow: 0 8px 18px -8px rgba(26,167,236,0.55);
-    }
-    .sidebar .nav-item svg { width: 19px; height: 19px; flex-shrink: 0; }
-    .sidebar .nav-item .badge {
-      margin-right: auto; background: #FEF2F2; color: #DC2626;
-      font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px;
-    }
-    .sidebar .user-card {
-      margin-top: auto; display: flex; align-items: center; gap: 11px;
-      padding: 11px; border: 1px solid #EEF2F6; border-radius: 13px; cursor: pointer;
-      transition: all 0.2s ease;
-    }
-    .sidebar .user-card:hover { background: #F8FAFC; }
-    .sidebar .user-avatar {
-      width: 36px; height: 36px; border-radius: 10px; background: #1AA7EC;
-      color: #fff; display: flex; align-items: center; justify-content: center;
-      font-weight: 700; font-size: 14px; flex-shrink: 0;
-    }
-    .sidebar .user-name { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .sidebar .user-role { font-size: 11.5px; color: #94A3B8; }
-    .sidebar .user-card svg { width: 16px; height: 16px; color: #CBD5E1; flex-shrink: 0; }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
     /* ─── Topbar ─── */
-    .topbar {
-      height: 70px; background: #fff; border-bottom: 1px solid #EEF2F6;
-      display: flex; align-items: center; padding: 0 28px; gap: 18px;
-      position: fixed; top: 0; right: 248px; left: 0; z-index: 90;
-    }
-    .topbar .topbar-title h1 {
-      margin: 0; font: 700 20px/1 'IBM Plex Sans Arabic', sans-serif;
-      letter-spacing: -0.02em;
-    }
-    .topbar .topbar-title .subtitle {
-      margin: 4px 0 0; color: #64748B; font-size: 13px;
-    }
-    .topbar .search-box {
-      display: flex; align-items: center; gap: 10px; flex: 1; max-width: 380px;
-      height: 42px; padding: 0 14px; border-radius: 11px; background: #F6F8FA;
-      color: #94A3B8; font-size: 14px; margin-right: auto;
-    }
-    .topbar .search-box svg { width: 18px; height: 18px; flex-shrink: 0; }
-    .topbar .actions { display: flex; align-items: center; gap: 12px; }
-    .topbar .lang-toggle {
-      display: flex; border: 1px solid #E2E8F0; border-radius: 9px;
-      overflow: hidden; font-size: 13px; font-weight: 600;
-    }
-    .topbar .lang-toggle span { padding: 7px 12px; color: #64748B; cursor: pointer; transition: all 0.2s; }
-    .topbar .lang-toggle span.active { background: #1AA7EC; color: #fff; }
-    .topbar .icon-btn {
-      width: 42px; height: 42px; border-radius: 11px; border: 1px solid #E2E8F0;
-      display: flex; align-items: center; justify-content: center;
-      color: #475569; background: transparent; cursor: pointer; position: relative;
-      transition: all 0.2s ease;
-    }
-    .topbar .icon-btn:hover { background: #F8FAFC; }
-    .topbar .icon-btn svg { width: 18px; height: 18px; }
-    .topbar .icon-btn .dot {
-      position: absolute; top: 9px; left: 11px; width: 8px; height: 8px;
-      border-radius: 50%; background: #DC2626; border: 2px solid #fff;
-    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
     /* ─── Main Content ─── */
-    .main-content {
-      margin-right: 248px;
-      padding: calc(70px + 28px) 28px 28px;
-      min-height: 100vh;
-    }
+    
 
     /* ─── Page Header ─── */
     .page-header {
@@ -294,9 +212,7 @@
     .pagination button:hover { background: #F8FAFC; border-color: #CBD5E1; }
     .pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
     .pagination button svg { width: 15px; height: 15px; }
-    .pagination .page-info {
-      font-size: 13px; color: #94A3B8; padding: 0 8px;
-    }
+    .pagination 
 
     /* ─── Empty State ─── */
     .empty-state { text-align: center; padding: 60px 20px; }
@@ -344,7 +260,7 @@
     }
     .modal-close:hover { background: #F8FAFC; color: #0F172A; }
     .modal-close svg { width: 16px; height: 16px; }
-    .modal-body { padding: 18px 24px; }
+    .modal-
 
     .detail-grid {
       display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
@@ -401,53 +317,35 @@
     }
 
     /* ─── Dark Mode ─── */
-    body.dark-mode {
-      background: #0F172A;
-      color: #E2E8F0;
-    }
-    body.dark-mode .sidebar { background: #1E293B; border-color: #334155; }
-    body.dark-mode .sidebar .brand .name { color: #E2E8F0; }
-    body.dark-mode .sidebar .nav-item { color: #94A3B8; }
-    body.dark-mode .sidebar .nav-item:hover { background: #334155; color: #E2E8F0; }
-    body.dark-mode .sidebar .nav-item.active { background: #1AA7EC; color: #fff; }
-    body.dark-mode .sidebar .user-card { border-color: #334155; }
-    body.dark-mode .sidebar .user-card:hover { background: #334155; }
-    body.dark-mode .sidebar .user-name { color: #E2E8F0; }
-    body.dark-mode .topbar { background: #1E293B; border-color: #334155; }
-    body.dark-mode .topbar .topbar-title h1 { color: #E2E8F0; }
-    body.dark-mode .topbar .search-box { background: #334155; color: #64748B; }
-    body.dark-mode .topbar .icon-btn { border-color: #334155; color: #94A3B8; }
-    body.dark-mode .topbar .icon-btn:hover { background: #334155; }
-    body.dark-mode .topbar .lang-toggle { border-color: #334155; }
-    body.dark-mode .topbar .lang-toggle span { color: #94A3B8; }
-    body.dark-mode .metric-card { background: #1E293B; border-color: #334155; }
-    body.dark-mode .metric-card .metric-value { color: #E2E8F0; }
-    body.dark-mode .card { background: #1E293B; border-color: #334155; }
-    body.dark-mode .card-title { color: #E2E8F0; }
-    body.dark-mode .sale-row { background: #1E293B; }
-    body.dark-mode .sale-row:hover { background: #334155; }
-    body.dark-mode .sale-row .sale-number { color: #E2E8F0; }
-    body.dark-mode .sale-row .sale-amount { color: #4ADE80; }
-    body.dark-mode .filter-chip { background: #1E293B; border-color: #334155; color: #94A3B8; }
-    body.dark-mode .filter-chip:hover { background: #334155; border-color: #475569; }
-    body.dark-mode .filter-chip.active { background: #1AA7EC; color: #fff; border-color: #1AA7EC; }
-    body.dark-mode .filter-select { background: #1E293B; border-color: #334155; color: #94A3B8; }
-    body.dark-mode .modal { background: #1E293B; }
-    body.dark-mode .modal-top h2 { color: #E2E8F0; }
-    body.dark-mode .modal-close { border-color: #334155; color: #94A3B8; }
-    body.dark-mode .modal-close:hover { background: #334155; color: #E2E8F0; }
-    body.dark-mode .detail-grid { background: #0F172A; }
-    body.dark-mode .detail-grid .detail-value { color: #E2E8F0; }
-    body.dark-mode .detail-line { border-color: #334155; }
-    body.dark-mode .detail-line .item-name { color: #E2E8F0; }
-    body.dark-mode .detail-line .item-total { color: #4ADE80; }
-    body.dark-mode .detail-total .label { color: #94A3B8; }
-    body.dark-mode .detail-total .value { color: #4ADE80; }
-    body.dark-mode .modal-actions button { color: #94A3B8; }
-    body.dark-mode .modal-actions button:hover { background: #334155; }
-    body.dark-mode .pagination button { background: #1E293B; border-color: #334155; color: #94A3B8; }
-    body.dark-mode .pagination button:hover { background: #334155; }
-    body.dark-mode .empty-state h3 { color: #E2E8F0; }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
     /* ─── Animations ─── */
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -461,10 +359,7 @@
     .animate-fade-up { animation: fadeUp 0.4s cubic-bezier(0.22,1,0.36,1) forwards; }
 
     /* ─── Responsive ─── */
-    @media (max-width: 1024px) {
-      .topbar { right: 0; }
-      .main-content { margin-right: 0; }
-    }
+    
     @media (max-width: 640px) {
       .page-header { flex-direction: column; align-items: flex-start; gap: 14px; }
       .metrics-grid { grid-template-columns: 1fr; }
@@ -473,129 +368,30 @@
       .sale-row { flex-wrap: wrap; }
       .sale-row .sale-action-btn { width: 100%; justify-content: center; }
     }
-      .notif-dropdown {
-      position: absolute; top: 64px; left: 0; width: 380px; max-height: 460px;
-      background: #fff; border: 1px solid #E2E8F0; border-radius: 14px;
-      box-shadow: 0 12px 40px rgba(0,0,0,0.12); z-index: 200; overflow: hidden;
-    }
-    .notif-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 16px; border-bottom: 1px solid #E2E8F0;
-      font-weight: 700; font-size: 14px; color: #0F172A;
-    }
+      
+    
     .notif-header a { font-size: 12px; color: #1AA7EC; text-decoration: none; }
     .notif-list { max-height: 340px; overflow-y: auto; }
-    .notif-item {
-      display: flex; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #F1F5F9;
-      cursor: pointer; transition: background 0.15s;
-    }
+    
     .notif-item:hover { background: #F6F8FA; }
     .notif-item .notif-icon {
       width: 38px; height: 38px; border-radius: 10px;
       display: flex; align-items: center; justify-content: center;
       flex-shrink: 0; font-size: 16px;
     }
-    .notif-icon.expiry { background: #FEF3C7; color: #D97706; }
-    .notif-icon.stock { background: #FEE2E2; color: #DC2626; }
-    .notif-icon.system { background: #DBEAFE; color: #2563EB; }
-    .notif-body { flex: 1; min-width: 0; }
-    .notif-title { font-size: 13px; font-weight: 600; color: #0F172A; }
-    .notif-desc { font-size: 12px; color: #64748B; margin-top: 2px; }
-    .notif-time { font-size: 11px; color: #94A3B8; margin-top: 3px; }
-    .notif-empty { padding: 28px 16px; text-align: center; color: #94A3B8; font-size: 13px; }
-    .notif-loading { padding: 16px; text-align: center; color: #64748B; font-size: 13px; }
+    
+    
+    
+    .notif-
+</style>
+{% endblock %}
 
-  </style>
-</head>
-<body x-data="salesApp()" x-init="init()">
-
-  <div class="app-layout">
-    <!-- ═══════ Sidebar ═══════ -->
-    <aside class="sidebar">
-      <div class="brand">
-        <div class="icon"></div>
-        <div class="name">Pharma<span>SUD</span></div>
-      </div>
-
-      <div class="nav-section">MENU</div>
-      <a href="/dashboard" class="nav-item" id="nav-dashboard">
-        <i data-lucide="layout-dashboard"></i>
-        <span>لوحة التحكم</span>
-      </a>
-      <a href="/pos" class="nav-item" id="nav-pos">
-        <i data-lucide="scan-barcode"></i>
-        <span>نقطة البيع</span>
-      </a>
-      <a href="/medicines" class="nav-item" id="nav-medicines">
-        <i data-lucide="pill"></i>
-        <span>الأدوية</span>
-      </a>
-      <a href="/inventory" class="nav-item" id="nav-inventory">
-        <i data-lucide="package"></i>
-        <span>المخزون</span>
-      </a>
-      <a href="/batch-receive" class="nav-item" id="nav-batches">
-        <i data-lucide="calendar-clock"></i>
-        <span>الدفعات</span>
-      </a>
-      <a href="/reports-sales" class="nav-item active" id="nav-reports">
-        <i data-lucide="chart-line"></i>
-        <span>التقارير</span>
-      </a>
-      <a href="/employees" class="nav-item" id="nav-employees" x-show="isAdmin">
-        <i data-lucide="users"></i>
-        <span>الموظفين</span>
-      </a>
-      <a href="/alerts" class="nav-item" id="nav-alerts">
-        <i data-lucide="bell"></i>
-        <span>التنبيهات</span>
-        <span class="badge" x-show="alertCount > 0" x-text="alertCount"></span>
-      </a>
-      <a href="/settings" class="nav-item" id="nav-settings">
-        <i data-lucide="settings"></i>
-        <span>الإعدادات</span>
-      </a>
-
-      <div class="user-card" @click="logout()">
-        <div class="user-avatar" x-text="userInitials"></div>
-        <div style="min-width:0;flex:1">
-          <div class="user-name" x-text="userName || 'المستخدم'"></div>
-          <div class="user-role" x-text="isAdmin ? 'مدير' : 'صيدلي'"></div>
-        </div>
-        <i data-lucide="chevron-left"></i>
-      </div>
-    </aside>
+{% block content %}
+<!-- ═══════ Sidebar ═══════ -->
+    
 
     <!-- ═══════ Topbar ═══════ -->
-    <header class="topbar">
-      <!-- Mobile Menu Button - FIRST (RTL: rightmost) -->
-      <button class="mobile-menu-btn" @click="toggleMobileSidebar()" aria-label="فتح القائمة" title="القائمة">
-        <i data-lucide="menu"></i>
-      </button>
-      <div class="topbar-title">
-        <h1>سجل المبيعات</h1>
-        <p class="subtitle">عرض وإدارة الفواتير والمبيعات</p>
-      </div>
-
-      <div class="search-box">
-        <i data-lucide="search"></i>
-        <span>البحث في المبيعات والفواتير...</span>
-      </div>
-
-      <div class="actions">
-        <div class="lang-toggle">
-          <span :class="{ active: lang === 'en' }" @click="setLang('en')">EN</span>
-          <span :class="{ active: lang === 'ar' }" @click="setLang('ar')">ع</span>
-        </div>
-        <button class="icon-btn" @click="toggleTheme()" title="الوضع الداكن">
-          <i data-lucide="moon"></i>
-        </button>
-        <button class="icon-btn" @click="showNotifications = !showNotifications">
-          <i data-lucide="bell"></i>
-          <span class="dot" x-show="alertCount > 0"></span>
-        </button>
-      </div>
-    </header>
+    
 
     <!-- ═══════ Main Content ═══════ -->
     <main class="main-content">
@@ -804,8 +600,11 @@
       </div>
     </div>
   </div>
+{% endblock %}
 
-  <script>
+{% block extra_js %}
+<script>
+
     function salesApp() {
       return {
         // User
@@ -1068,7 +867,6 @@
       };
     }
         
-  </script>
-</body>
-</html>
-<!-- Cloud Design v7.2.0 -->
+  
+</script>
+{% endblock %}
