@@ -1,0 +1,98 @@
+<!-- templates/partials/sidebar.html -->
+<!-- Canonical sidebar component — shared by all page templates -->
+<!-- Context variables required from parent:
+     - active_page: string (e.g., 'dashboard', 'pos', 'reports-sales')
+     - is_admin: boolean (default true) — controls Employees link visibility
+     - user_name: string (default 'المستخدم') — displayed in user card
+     - user_role: string (default 'مدير') — displayed in user card
+     - user_initials: string — avatar initials
+     - alert_count: int (default 0) — notification badge number
+-->
+
+<aside class="sidebar" :class="{ 'mobile-open': sidebarOpen }">
+  <!-- Brand -->
+  <div class="brand">
+    <div class="icon"></div>
+    <div class="name">Pharma<span>SUD</span></div>
+  </div>
+
+  <!-- Section 1: Main Menu -->
+  <div class="nav-section">القائمة</div>
+
+  <a href="/dashboard"
+     class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">
+    <i data-lucide="layout-dashboard"></i><span>لوحة التحكم</span>
+  </a>
+  <a href="/pos"
+     class="nav-item {% if active_page == 'pos' %}active{% endif %}">
+    <i data-lucide="scan-barcode"></i><span>نقطة البيع</span>
+  </a>
+  <a href="/medicines"
+     class="nav-item {% if active_page == 'medicines' %}active{% endif %}">
+    <i data-lucide="pill"></i><span>الأدوية</span>
+  </a>
+  <a href="/inventory"
+     class="nav-item {% if active_page == 'inventory' %}active{% endif %}">
+    <i data-lucide="package"></i><span>المخزون</span>
+  </a>
+  <a href="/batch-receive"
+     class="nav-item {% if active_page == 'batch-receive' %}active{% endif %}">
+    <i data-lucide="calendar-clock"></i><span>استلام دفعة</span>
+  </a>
+  <a href="/sales-history"
+     class="nav-item {% if active_page == 'sales-history' %}active{% endif %}">
+    <i data-lucide="receipt"></i><span>سجل المبيعات</span>
+  </a>
+
+  <!-- Section 2: Reports -->
+  <div class="nav-section">التقارير</div>
+
+  <a href="/reports-sales"
+     class="nav-item {% if active_page == 'reports-sales' %}active{% endif %}">
+    <i data-lucide="chart-line"></i><span>تقارير المبيعات</span>
+  </a>
+  <a href="/reports-profits"
+     class="nav-item {% if active_page == 'reports-profits' %}active{% endif %}">
+    <i data-lucide="banknote"></i><span>تقرير الأرباح</span>
+  </a>
+  <a href="/reports-slow-moving"
+     class="nav-item {% if active_page == 'reports-slow-moving' %}active{% endif %}">
+    <i data-lucide="turtle"></i><span>بطيئة الحركة</span>
+  </a>
+  <a href="/purchase-forecast"
+     class="nav-item {% if active_page == 'purchase-forecast' %}active{% endif %}">
+    <i data-lucide="clipboard-list"></i><span>توقعات الشراء</span>
+  </a>
+
+  <!-- Admin-Only: Employees -->
+  {% if is_admin | default(true) %}
+  <a href="/employees"
+     class="nav-item {% if active_page == 'employees' %}active{% endif %}"
+     x-show="isAdmin">
+    <i data-lucide="users"></i><span>الموظفين</span>
+  </a>
+  {% endif %}
+
+  <!-- Common -->
+  <a href="/alerts"
+     class="nav-item {% if active_page == 'alerts' %}active{% endif %}">
+    <i data-lucide="bell"></i><span>التنبيهات</span>
+    {% if alert_count | default(0) > 0 %}
+    <span class="badge" x-text="alertCount"></span>
+    {% endif %}
+  </a>
+  <a href="/settings"
+     class="nav-item {% if active_page == 'settings' %}active{% endif %}">
+    <i data-lucide="settings"></i><span>الإعدادات</span>
+  </a>
+
+  <!-- User Card -->
+  <div class="user-card" @click="logout()">
+    <div class="user-avatar" x-text="userInitials || ''"></div>
+    <div class="user-info">
+      <div class="user-name" x-text="userName || 'المستخدم'"></div>
+      <div class="user-role" x-text="isAdmin ? 'مدير' : 'صيدلي'"></div>
+    </div>
+    <i data-lucide="log-out"></i>
+  </div>
+</aside>

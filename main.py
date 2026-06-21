@@ -309,7 +309,11 @@ logger = logging.getLogger(__name__)
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
     """Serve splash screen (v7.2.0 Cloud Design)."""
-    return templates.TemplateResponse("splash.html", {"request": request})
+    return templates.TemplateResponse("splash.html", {
+        "request": request,
+        "page_title": "PharmaSUD",
+        "css_version": "7.3.0",
+    })
 
 @app.get("/api")
 async def api_info():
@@ -347,7 +351,11 @@ async def ping():
 @app.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
     """Login page."""
-    return templates.TemplateResponse("login.html", {"request": request})
+    return templates.TemplateResponse("login.html", {
+        "request": request,
+        "page_title": "تسجيل الدخول",
+        "css_version": "7.3.0",
+    })
 
 # ================================================================
 # DASHBOARD PAGES (Stage 6)
@@ -356,37 +364,79 @@ async def login_page(request: Request):
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard_page(request: Request):
     """Main dashboard page."""
-    return templates.TemplateResponse("dashboard.html", {"request": request})
+    return templates.TemplateResponse("dashboard.html", {
+        "request": request,
+        "page_title": "لوحة التحكم",
+        "active_page": "dashboard",
+        "is_admin": True,
+        "css_version": "7.3.0",
+    })
 
 @app.get("/medicines", response_class=HTMLResponse)
 async def medicines_page(request: Request):
     """Medicines list page."""
-    return templates.TemplateResponse("medicines_list.html", {"request": request})
+    return templates.TemplateResponse("medicines_list.html", {
+        "request": request,
+        "page_title": "الأدوية",
+        "active_page": "medicines",
+        "is_admin": True,
+        "css_version": "7.3.0",
+    })
 
 @app.get("/medicine-form", response_class=HTMLResponse)
 async def medicine_form_page(request: Request):
     """Add/Edit medicine form."""
-    return templates.TemplateResponse("medicine_form.html", {"request": request})
+    return templates.TemplateResponse("medicine_form.html", {
+        "request": request,
+        "page_title": "إضافة دواء",
+        "active_page": "medicines",
+        "is_admin": True,
+        "css_version": "7.3.0",
+    })
 
 @app.get("/batch-receive", response_class=HTMLResponse)
 async def batch_receive_page(request: Request):
     """Batch receiving page."""
-    return templates.TemplateResponse("batch_receive.html", {"request": request})
+    return templates.TemplateResponse("batch_receive.html", {
+        "request": request,
+        "page_title": "استلام دفعة",
+        "active_page": "batch-receive",
+        "is_admin": True,
+        "css_version": "7.3.0",
+    })
 
 @app.get("/inventory", response_class=HTMLResponse)
 async def inventory_page(request: Request):
     """Inventory page."""
-    return templates.TemplateResponse("inventory.html", {"request": request})
+    return templates.TemplateResponse("inventory.html", {
+        "request": request,
+        "page_title": "المخزون",
+        "active_page": "inventory",
+        "is_admin": True,
+        "css_version": "7.3.0",
+    })
 
 @app.get("/settings", response_class=HTMLResponse)
 async def settings_page(request: Request):
     """Settings page."""
-    return templates.TemplateResponse("settings.html", {"request": request})
+    return templates.TemplateResponse("settings.html", {
+        "request": request,
+        "page_title": "الإعدادات",
+        "active_page": "settings",
+        "is_admin": True,
+        "css_version": "7.3.0",
+    })
 
 @app.get("/pos", response_class=HTMLResponse)
 async def pos_page(request: Request):
     """POS page."""
-    return templates.TemplateResponse("pos.html", {"request": request})
+    return templates.TemplateResponse("pos.html", {
+        "request": request,
+        "page_title": "نقطة البيع",
+        "active_page": "pos",
+        "is_admin": True,
+        "css_version": "7.3.0",
+    })
 
 # ═══════════════════════════════════════════════════════════════
 # BARCODE DIAGNOSTIC (disabled in production)
@@ -397,7 +447,13 @@ if os.getenv("ENVIRONMENT", "development") != "production":
     @app.get("/scanner-debug", response_class=HTMLResponse)
     async def scanner_debug_page(request: Request, current_user: dict = Depends(get_current_user)):
         """Barcode scanner diagnostic page (dev only)."""
-        return templates.TemplateResponse("scanner_debug.html", {"request": request})
+        return templates.TemplateResponse("scanner_debug.html", {
+            "request": request,
+            "page_title": "تشفير الباركود",
+            "active_page": "pos",
+            "is_admin": True,
+            "css_version": "7.3.0",
+        })
 
 # ═══════════════════════════════════════════════════════════════
 # STAGE 7 PAGES
@@ -406,22 +462,46 @@ if os.getenv("ENVIRONMENT", "development") != "production":
 @app.get("/alerts", response_class=HTMLResponse)
 async def alerts_page(request: Request):
     """Alerts page."""
-    return templates.TemplateResponse("alerts.html", {"request": request})
+    return templates.TemplateResponse("alerts.html", {
+        "request": request,
+        "page_title": "التنبيهات",
+        "active_page": "alerts",
+        "is_admin": True,
+        "css_version": "7.3.0",
+    })
 
 @app.get("/employees", response_class=HTMLResponse)
 async def employees_page(request: Request):
     """Employees management page."""
-    return templates.TemplateResponse("employees.html", {"request": request})
+    return templates.TemplateResponse("employees.html", {
+        "request": request,
+        "page_title": "الموظفين",
+        "active_page": "employees",
+        "is_admin": True,
+        "css_version": "7.3.0",
+    })
 
 @app.get("/audit-log", response_class=HTMLResponse)
 async def audit_log_page(request: Request):
     """Audit log page."""
-    return templates.TemplateResponse("audit_log.html", {"request": request})
+    return templates.TemplateResponse("audit_log.html", {
+        "request": request,
+        "page_title": "سجل التدقيق",
+        "active_page": "settings",
+        "is_admin": True,
+        "css_version": "7.3.0",
+    })
 
 @app.get("/stocktake", response_class=HTMLResponse)
 async def stocktake_page(request: Request):
     """Stocktake / inventory count page."""
-    return templates.TemplateResponse("stocktake.html", {"request": request})
+    return templates.TemplateResponse("stocktake.html", {
+        "request": request,
+        "page_title": "الجرد",
+        "active_page": "inventory",
+        "is_admin": True,
+        "css_version": "7.3.0",
+    })
 
 # ═══════════════════════════════════════════════════════════════
 # REPORTS PAGES (Stage 6)
@@ -430,7 +510,13 @@ async def stocktake_page(request: Request):
 @app.get("/sales-history", response_class=HTMLResponse)
 async def sales_history_page(request: Request):
     """Sales history page."""
-    return templates.TemplateResponse("sales_history.html", {"request": request})
+    return templates.TemplateResponse("sales_history.html", {
+        "request": request,
+        "page_title": "سجل المبيعات",
+        "active_page": "sales-history",
+        "is_admin": True,
+        "css_version": "7.3.0",
+    })
 
 # ================================================================
 # REPORTS PAGES (Stage 6)
@@ -439,22 +525,46 @@ async def sales_history_page(request: Request):
 @app.get("/reports-sales", response_class=HTMLResponse)
 async def reports_sales_page(request: Request):
     """Sales report page."""
-    return templates.TemplateResponse("reports_sales.html", {"request": request})
+    return templates.TemplateResponse("reports_sales.html", {
+        "request": request,
+        "page_title": "تقارير المبيعات",
+        "active_page": "reports-sales",
+        "is_admin": True,
+        "css_version": "7.3.0",
+    })
 
 @app.get("/reports-profits", response_class=HTMLResponse)
 async def reports_profits_page(request: Request):
     """Profit report page."""
-    return templates.TemplateResponse("reports_profits.html", {"request": request})
+    return templates.TemplateResponse("reports_profits.html", {
+        "request": request,
+        "page_title": "تقرير الأرباح",
+        "active_page": "reports-profits",
+        "is_admin": True,
+        "css_version": "7.3.0",
+    })
 
 @app.get("/reports-slow-moving", response_class=HTMLResponse)
 async def reports_slow_moving_page(request: Request):
     """Slow moving medicines report."""
-    return templates.TemplateResponse("reports_slow_moving.html", {"request": request})
+    return templates.TemplateResponse("reports_slow_moving.html", {
+        "request": request,
+        "page_title": "الأدوية الراكدة",
+        "active_page": "reports-slow-moving",
+        "is_admin": True,
+        "css_version": "7.3.0",
+    })
 
 @app.get("/reports-purchase-forecast", response_class=HTMLResponse)
 async def purchase_forecast_page(request: Request):
     """Purchase forecast report."""
-    return templates.TemplateResponse("purchase_forecast.html", {"request": request})
+    return templates.TemplateResponse("purchase_forecast.html", {
+        "request": request,
+        "page_title": "توقعات الشراء",
+        "active_page": "purchase-forecast",
+        "is_admin": True,
+        "css_version": "7.3.0",
+    })
 
 # ================================================================
 # AUTH API

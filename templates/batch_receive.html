@@ -1,451 +1,27 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="/static/css/theme.css?v7.2.0">
-  <title>استلام شحنة - PharmaSUD</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <style>
-    html, body {
-      margin: 0; padding: 0;
-      min-height: 100vh;
-      font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif;
-      background: #F6F8FA;
-      color: #0F172A;
-      -webkit-font-smoothing: antialiased;
-    }
+{% extends 'shared_layout.html' %}
 
-    /* ─── Layout ─── */
-    .app-layout { display: flex; min-height: 100vh; }
+{% set active_page = 'batch-receive' %}
+{% set page_title = 'استلام دفعة' %}
 
-    /* ─── Sidebar ─── */
-    .sidebar {
-      width: 248px; background: #fff; border-left: 1px solid #EEF2F6;
-      display: flex; flex-direction: column; padding: 22px 16px;
-      position: fixed; right: 0; top: 0; bottom: 0;
-    }
-    @media (min-width: 1025px) {
-      .sidebar { z-index: 100; }
-    }
-    .sidebar .brand { display: flex; align-items: center; gap: 11px; padding: 0 8px 22px; }
-    .sidebar .brand .icon {
-      width: 38px; height: 38px; border-radius: 11px;
-      background: #1AA7EC; position: relative; flex-shrink: 0;
-    }
-    .sidebar .brand .icon::before, .sidebar .brand .icon::after {
-      content: ''; position: absolute; left: 50%; top: 50%;
-      transform: translate(-50%, -50%); background: #fff; border-radius: 3px;
-    }
-    .sidebar .brand .icon::before { width: 18px; height: 5.5px; }
-    .sidebar .brand .icon::after { width: 5.5px; height: 18px; }
-    .sidebar .brand .name {
-      font: 700 18px/1 'IBM Plex Sans Arabic', sans-serif; letter-spacing: -0.02em;
-    }
-    .sidebar .brand .name span { color: #1AA7EC; }
-    .sidebar .nav-section {
-      font: 600 11px/1 'IBM Plex Mono', monospace; letter-spacing: 0.1em;
-      color: #CBD5E1; padding: 14px 10px 10px;
-    }
-    .sidebar .nav-item {
-      display: flex; align-items: center; gap: 12px;
-      padding: 11px 12px; border-radius: 11px;
-      color: #475569; font-size: 14px; font-weight: 500;
-      text-decoration: none; margin-bottom: 4px;
-      transition: all 0.2s ease;
-    }
-    .sidebar .nav-item:hover { background: #F8FAFC; color: #0F172A; }
-    .sidebar .nav-item.active {
-      background: #1AA7EC; color: #fff;
-      box-shadow: 0 8px 18px -8px rgba(26, 167, 236, 0.55);
-    }
-    .sidebar .nav-item svg { width: 19px; height: 19px; flex-shrink: 0; }
-    .sidebar .nav-item .badge {
-      margin-right: auto; background: #FEF2F2; color: #DC2626;
-      font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px;
-    }
-    .sidebar .user-card {
-      margin-top: auto; display: flex; align-items: center; gap: 11px;
-      padding: 11px; border: 1px solid #EEF2F6; border-radius: 13px; cursor: pointer;
-    }
-    .sidebar .user-avatar {
-      width: 36px; height: 36px; border-radius: 10px; background: #1AA7EC;
-      color: #fff; display: flex; align-items: center; justify-content: center;
-      font-weight: 700; font-size: 14px; flex-shrink: 0;
-    }
-    .sidebar .user-info { min-width: 0; flex: 1; }
-    .sidebar .user-name { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .sidebar .user-role { font-size: 11.5px; color: #94A3B8; }
-    .sidebar .user-card svg { width: 16px; height: 16px; color: #CBD5E1; flex-shrink: 0; }
-
-    /* ─── Topbar ─── */
-    .topbar {
-      height: 70px; background: #fff; border-bottom: 1px solid #EEF2F6;
-      display: flex; align-items: center; padding: 0 28px; gap: 18px;
-      position: fixed; top: 0; right: 248px; left: 0; z-index: 90;
-    }
-    .topbar .page-info h1 {
-      font: 700 20px/1 'IBM Plex Sans Arabic', sans-serif; letter-spacing: -0.02em;
-      margin: 0;
-    }
-    .topbar .page-info .subtitle {
-      font-size: 12.5px; color: #64748B; margin-top: 3px;
-    }
-    .topbar .actions { margin-right: auto; display: flex; align-items: center; gap: 12px; }
-    .topbar .lang-toggle {
-      display: flex; border: 1px solid #E2E8F0; border-radius: 9px;
-      overflow: hidden; font-size: 13px; font-weight: 600;
-    }
-    .topbar .lang-toggle span { padding: 7px 12px; color: #64748B; }
-    .topbar .lang-toggle span.active { background: #1AA7EC; color: #fff; }
-    .topbar .icon-btn {
-      width: 42px; height: 42px; border-radius: 11px; border: 1px solid #E2E8F0;
-      display: flex; align-items: center; justify-content: center;
-      color: #475569; background: transparent; cursor: pointer; position: relative;
-      transition: all 0.2s ease;
-    }
-    .topbar .icon-btn:hover { background: #F8FAFC; }
-    .topbar .icon-btn svg { width: 18px; height: 18px; }
-    .topbar .icon-btn .dot {
-      position: absolute; top: 9px; left: 11px; width: 8px; height: 8px;
-      border-radius: 50%; background: #DC2626; border: 2px solid #fff;
-    }
-
-    /* ─── Main Content ─── */
-    .main-content {
-      margin-right: 248px; padding: calc(70px + 28px) 28px 28px; min-height: 100vh;
-    }
-
-    /* ─── Page Header ─── */
-    .page-header {
-      display: flex; align-items: flex-end; justify-content: space-between;
-      margin-bottom: 24px;
-    }
-    .page-header h1 {
-      margin: 0 0 6px;
-      font: 700 26px/1.1 'IBM Plex Sans Arabic', sans-serif;
-      letter-spacing: -0.02em;
-    }
-    .page-header .subtitle {
-      margin: 0; color: #64748B; font-size: 14.5px;
-    }
-
-    /* ─── Step Badge ─── */
-    .step-flow {
-      display: flex; flex-direction: column; gap: 20px; max-width: 780px;
-    }
-    .step-badge {
-      display: inline-flex; align-items: center; gap: 8px;
-      font-size: 12px; font-weight: 700; letter-spacing: 0.04em;
-      color: #1AA7EC; background: #DBEAFE; padding: 5px 14px;
-      border-radius: 999px; margin-bottom: 4px; width: fit-content;
-    }
-    .step-badge svg { width: 14px; height: 14px; }
-
-    /* ─── Card ─── */
-    .card {
-      background: #fff; border: 1px solid #EEF2F6; border-radius: 16px;
-      padding: 24px; transition: all 0.25s ease;
-    }
-    .card:hover { border-color: #E2E8F0; }
-    .card .card-title {
-      font: 600 15px/1 'IBM Plex Sans Arabic', sans-serif; color: #0F172A;
-      margin-bottom: 18px; display: flex; align-items: center; gap: 10px;
-    }
-    .card .card-title svg { width: 18px; height: 18px; color: #1AA7EC; }
-
-    /* ─── Search Input ─── */
-    .search-row {
-      display: flex; gap: 10px;
-    }
-    .search-row input {
-      flex: 1; height: 46px; padding: 0 16px;
-      border: 1px solid #E2E8F0; border-radius: 11px;
-      background: #F6F8FA; font-family: inherit; font-size: 14px;
-      color: #0F172A; outline: none; transition: all 0.2s ease;
-    }
-    .search-row input::placeholder { color: #94A3B8; }
-    .search-row input:focus { border-color: #1AA7EC; background: #fff; box-shadow: 0 0 0 3px rgba(26,167,236,0.10); }
-    .search-row .btn-search {
-      display: flex; align-items: center; gap: 8px;
-      height: 46px; padding: 0 20px; border-radius: 11px;
-      background: #1AA7EC; color: #fff; border: none; cursor: pointer;
-      font-family: inherit; font-size: 14px; font-weight: 600;
-      box-shadow: 0 10px 22px -8px rgba(26, 167, 236, 0.55);
-      transition: all 0.2s ease; white-space: nowrap;
-    }
-    .search-row .btn-search:hover { filter: brightness(1.05); }
-    .search-row .btn-search svg { width: 17px; height: 17px; }
-
-    /* ─── Medicine Preview ─── */
-    .medicine-preview {
-      display: flex; align-items: center; gap: 18px;
-      padding: 18px; border-radius: 13px;
-      background: #F0F9FF; border: 1px solid #BAE6FD;
-    }
-    .medicine-preview .med-img {
-      width: 68px; height: 68px; border-radius: 12px;
-      background: #fff; object-fit: cover; flex-shrink: 0;
-      border: 1px solid #E2E8F0;
-    }
-    .medicine-preview .med-img-placeholder {
-      width: 68px; height: 68px; border-radius: 12px;
-      background: #DBEAFE; display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0; color: #1AA7EC;
-    }
-    .medicine-preview .med-img-placeholder svg { width: 28px; height: 28px; }
-    .medicine-preview .med-info { flex: 1; min-width: 0; }
-    .medicine-preview .med-name {
-      font: 700 16px/1.3 'IBM Plex Sans Arabic', sans-serif; color: #0F172A;
-      margin-bottom: 4px;
-    }
-    .medicine-preview .med-scientific {
-      font-size: 13px; color: #64748B; margin-bottom: 8px;
-    }
-    .medicine-preview .med-category {
-      display: inline-flex; align-items: center; gap: 5px;
-      background: #DBEAFE; color: #1AA7EC; font-size: 11.5px;
-      font-weight: 600; padding: 4px 10px; border-radius: 999px;
-    }
-    .medicine-preview .med-category svg { width: 12px; height: 12px; }
-
-    /* ─── Form Grid ─── */
-    .form-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
-    }
-    .form-group { display: flex; flex-direction: column; gap: 6px; }
-    .form-group.full { grid-column: 1 / -1; }
-    .form-group label {
-      font-size: 13px; font-weight: 500; color: #475569;
-      display: flex; align-items: center; gap: 4px;
-    }
-    .form-group label .required { color: #DC2626; font-size: 14px; }
-    .form-group input, .form-group select {
-      height: 44px; padding: 0 14px;
-      border: 1px solid #E2E8F0; border-radius: 11px;
-      background: #F6F8FA; font-family: inherit; font-size: 14px;
-      color: #0F172A; outline: none; transition: all 0.2s ease;
-      -webkit-appearance: none;
-    }
-    .form-group input::placeholder { color: #94A3B8; }
-    .form-group input:focus, .form-group select:focus {
-      border-color: #1AA7EC; background: #fff;
-      box-shadow: 0 0 0 3px rgba(26,167,236,0.10);
-    }
-    .form-group select { cursor: pointer; }
-    .form-group select option { background: #fff; color: #0F172A; }
-    .form-group .hint {
-      font-size: 11.5px; color: #94A3B8; margin-top: 2px;
-    }
-
-    /* ─── Unit Conversion Info ─── */
-    .conversion-info {
-      display: flex; align-items: center; gap: 10px;
-      margin-top: 16px; padding: 12px 16px; border-radius: 11px;
-      background: #F0F9FF; border: 1px solid #BAE6FD;
-      font-size: 13px; color: #0284C7;
-    }
-    .conversion-info svg { width: 16px; height: 16px; flex-shrink: 0; color: #1AA7EC; }
-
-    /* ─── Submit Button ─── */
-    .submit-btn {
-      width: 100%; margin-top: 22px;
-      display: flex; align-items: center; justify-content: center; gap: 10px;
-      height: 50px; border-radius: 13px; border: none;
-      background: #059669; color: #fff; cursor: pointer;
-      font-family: inherit; font-size: 16px; font-weight: 700;
-      box-shadow: 0 10px 22px -8px rgba(5, 150, 105, 0.55);
-      transition: all 0.2s ease;
-    }
-    .submit-btn:hover { background: #047857; transform: translateY(-1px); }
-    .submit-btn:disabled {
-      background: #E2E8F0; color: #94A3B8; cursor: not-allowed;
-      box-shadow: none; transform: none;
-    }
-    .submit-btn.loading { background: #1AA7EC; pointer-events: none; }
-    .submit-btn svg { width: 19px; height: 19px; }
-
-    /* ─── Result Card ─── */
-    .result-card {
-      background: #fff; border: 1px solid #BBF7D0; border-radius: 16px;
-      padding: 32px; text-align: center;
-    }
-    .result-card .result-icon {
-      width: 72px; height: 72px; border-radius: 50%;
-      background: #ECFDF5; display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 18px; color: #16A34A;
-    }
-    .result-card .result-icon svg { width: 36px; height: 36px; }
-    .result-card h3 {
-      font: 700 20px/1.3 'IBM Plex Sans Arabic', sans-serif; color: #059669;
-      margin-bottom: 10px;
-    }
-    .result-card .detail {
-      font-size: 14px; color: #64748B; margin-bottom: 6px;
-    }
-    .result-card .detail span { color: #0F172A; font-weight: 700; }
-    .result-card .expiry-warn {
-      display: inline-flex; align-items: center; gap: 6px;
-      margin-top: 10px; padding: 8px 16px; border-radius: 999px;
-      background: #FEF3C7; color: #D97706; font-size: 13px; font-weight: 600;
-    }
-    .result-card .expiry-warn svg { width: 15px; height: 15px; }
-    .result-card .btn-new {
-      display: inline-flex; align-items: center; gap: 8px;
-      margin-top: 22px; height: 44px; padding: 0 24px;
-      border-radius: 11px; background: #1AA7EC; color: #fff;
-      border: none; cursor: pointer; font-family: inherit;
-      font-size: 14px; font-weight: 600;
-      box-shadow: 0 10px 22px -8px rgba(26, 167, 236, 0.55);
-      transition: all 0.2s ease;
-    }
-    .result-card .btn-new:hover { filter: brightness(1.05); }
-    .result-card .btn-new svg { width: 16px; height: 16px; }
-
-    /* ─── Confirmation Dialog ─── */
-    .confirm-overlay {
-      position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6);
-      backdrop-filter: blur(4px);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 200;
-    }
-    .confirm-dialog {
-      background: #fff; border: 1px solid #FCA5A5; border-radius: 18px;
-      padding: 32px; max-width: 440px; width: 92%; text-align: center;
-      box-shadow: 0 20px 60px -12px rgba(0,0,0,0.25);
-    }
-    .confirm-dialog .warn-icon {
-      width: 56px; height: 56px; border-radius: 50%;
-      background: #FEF2F2; display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 16px; color: #DC2626;
-    }
-    .confirm-dialog .warn-icon svg { width: 28px; height: 28px; }
-    .confirm-dialog h3 {
-      font: 700 17px/1.3 'IBM Plex Sans Arabic', sans-serif; color: #DC2626;
-      margin-bottom: 10px;
-    }
-    .confirm-dialog p {
-      color: #64748B; font-size: 14px; margin-bottom: 24px; line-height: 1.7;
-    }
-    .confirm-dialog .btn-row { display: flex; gap: 12px; justify-content: center; }
-    .confirm-dialog .btn-confirm {
-      display: flex; align-items: center; gap: 8px;
-      height: 42px; padding: 0 24px; border-radius: 11px;
-      background: #DC2626; color: #fff; border: none; cursor: pointer;
-      font-family: inherit; font-size: 14px; font-weight: 600;
-      box-shadow: 0 8px 18px -6px rgba(220, 38, 38, 0.5);
-      transition: all 0.2s ease;
-    }
-    .confirm-dialog .btn-confirm:hover { background: #B91C1C; }
-    .confirm-dialog .btn-confirm svg { width: 16px; height: 16px; }
-    .confirm-dialog .btn-cancel {
-      display: flex; align-items: center; gap: 8px;
-      height: 42px; padding: 0 24px; border-radius: 11px;
-      background: #fff; color: #475569; border: 1px solid #E2E8F0;
-      cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 600;
-      transition: all 0.2s ease;
-    }
-    .confirm-dialog .btn-cancel:hover { background: #F8FAFC; }
-    .confirm-dialog .btn-cancel svg { width: 16px; height: 16px; }
-
-    /* ─── Toast ─── */
-    .toast {
-      position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
-      z-index: 300; min-width: 320px; max-width: 480px;
-      padding: 14px 20px; border-radius: 13px;
-      font-size: 14px; font-weight: 500;
-      display: flex; align-items: center; gap: 10px;
-      box-shadow: 0 12px 30px -8px rgba(0,0,0,0.18);
-      animation: slideDown 0.3s ease;
-    }
-    .toast svg { width: 18px; height: 18px; flex-shrink: 0; }
-    .toast-success { background: #ECFDF5; color: #059669; border: 1px solid #BBF7D0; }
-    .toast-error { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; }
-    .toast-warning { background: #FFFBEB; color: #D97706; border: 1px solid #FDE68A; }
-    .toast-info { background: #F0F9FF; color: #0284C7; border: 1px solid #BAE6FD; }
-
-    @keyframes slideDown {
-      from { opacity: 0; transform: translate(-50%, -12px); }
-      to { opacity: 1; transform: translate(-50%, 0); }
-    }
-
-    /* ─── Responsive ─── */
-    @media (max-width: 1024px) {
-      .topbar { right: 0; }
-      .main-content { margin-right: 0; }
-    }
-    @media (max-width: 640px) {
-      .form-grid { grid-template-columns: 1fr; }
-      .search-row { flex-direction: column; }
-      .search-row .btn-search { width: 100%; justify-content: center; }
-      .topbar { padding: 0 16px; gap: 10px; }
-      .main-content { padding: calc(70px + 16px) 16px 16px; }
-      .step-flow { gap: 16px; }
-    }
-
-    /* ─── Dark Mode ─── */
-    body.dark-mode body,     body.dark-mode .notif-dropdown { background: #1E293B; border-color: #334155; }
-    body.dark-mode .notif-header { color: #E2E8F0; border-color: #334155; }
-    body.dark-mode .notif-item { border-color: #1E293B; }
-    body.dark-mode .notif-item:hover { background: #111C2E; }
-    body.dark-mode .notif-title { color: #F1F5F9; }
-    body.dark-mode .notif-desc { color: #94A3B8; }
-    body.dark-mode .notif-time { color: #64748B; }
-    body.dark-mode .notif-empty { color: #64748B; }
-    body.dark-mode .main-content { background: #0F172A; color: #E2E8F0; }
-    body.dark-mode .sidebar { background: #1E293B; border-color: #334155; }
-    body.dark-mode .sidebar .nav-item { color: #94A3B8; }
-    body.dark-mode .sidebar .nav-item:hover { background: #334155; color: #E2E8F0; }
-    body.dark-mode .sidebar .user-card { border-color: #334155; }
-    body.dark-mode .sidebar .user-role { color: #64748B; }
-    body.dark-mode .topbar { background: #1E293B; border-color: #334155; }
-    body.dark-mode .topbar .icon-btn { border-color: #334155; color: #94A3B8; }
-    body.dark-mode .topbar .icon-btn:hover { background: #334155; }
-    body.dark-mode .topbar .lang-toggle { border-color: #334155; }
-    body.dark-mode .topbar .lang-toggle span { color: #94A3B8; }
-    body.dark-mode .card { background: #1E293B; border-color: #334155; }
-    body.dark-mode .card:hover { border-color: #475569; }
-    body.dark-mode .card .card-title { color: #E2E8F0; }
-    body.dark-mode .search-row input { background: #334155; border-color: #475569; color: #E2E8F0; }
-    body.dark-mode .search-row input::placeholder { color: #64748B; }
-    body.dark-mode .search-row input:focus { background: #1E293B; border-color: #1AA7EC; }
-    body.dark-mode .medicine-preview { background: rgba(26,167,236,0.08); border-color: #334155; }
-    body.dark-mode .medicine-preview .med-name { color: #E2E8F0; }
-    body.dark-mode .medicine-preview .med-scientific { color: #94A3B8; }
-    body.dark-mode .form-group label { color: #CBD5E1; }
-    body.dark-mode .form-group input, body.dark-mode .form-group select { background: #334155; border-color: #475569; color: #E2E8F0; }
-    body.dark-mode .form-group input::placeholder { color: #64748B; }
-    body.dark-mode .form-group input:focus, body.dark-mode .form-group select:focus { background: #1E293B; border-color: #1AA7EC; }
-    body.dark-mode .conversion-info { background: rgba(26,167,236,0.08); border-color: #334155; color: #7DD3FC; }
-    body.dark-mode .result-card { background: #1E293B; border-color: #065F46; }
-    body.dark-mode .confirm-dialog { background: #1E293B; border-color: #7F1D1D; }
-    body.dark-mode .confirm-dialog p { color: #94A3B8; }
-      .notif-dropdown {
+{% block extra_css %}
+<style>
       position: absolute; top: 64px; left: 0; width: 380px; max-height: 460px;
       background: #fff; border: 1px solid #E2E8F0; border-radius: 14px;
       box-shadow: 0 12px 40px rgba(0,0,0,0.12); z-index: 200; overflow: hidden;
-    }
     .notif-header {
       display: flex; align-items: center; justify-content: space-between;
       padding: 14px 16px; border-bottom: 1px solid #E2E8F0;
       font-weight: 700; font-size: 14px; color: #0F172A;
-    }
     .notif-header a { font-size: 12px; color: #1AA7EC; text-decoration: none; }
     .notif-list { max-height: 340px; overflow-y: auto; }
     .notif-item {
       display: flex; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #F1F5F9;
       cursor: pointer; transition: background 0.15s;
-    }
     .notif-item:hover { background: #F6F8FA; }
     .notif-item .notif-icon {
       width: 38px; height: 38px; border-radius: 10px;
       display: flex; align-items: center; justify-content: center;
       flex-shrink: 0; font-size: 16px;
-    }
     .notif-icon.expiry { background: #FEF3C7; color: #D97706; }
     .notif-icon.stock { background: #FEE2E2; color: #DC2626; }
     .notif-icon.system { background: #DBEAFE; color: #2563EB; }
@@ -455,61 +31,14 @@
     .notif-time { font-size: 11px; color: #94A3B8; margin-top: 3px; }
     .notif-empty { padding: 28px 16px; text-align: center; color: #94A3B8; font-size: 13px; }
     .notif-loading { padding: 16px; text-align: center; color: #64748B; font-size: 13px; }
+</style>
+{% endblock %}
 
-  </style>
-</head>
-<body x-data="batchReceiveApp()" x-init="init()">
+{% block content %}
 
-  <div class="app-layout">
-
-    <!-- ═══════ Sidebar ═══════ -->
-    <aside class="sidebar">
-      <div class="brand">
-        <div class="icon"></div>
-        <div class="name">Pharma<span>SUD</span></div>
-      </div>
-      <div class="nav-section">MENU</div>
-      <a href="/dashboard" class="nav-item" id="nav-dashboard">
-        <i data-lucide="layout-dashboard"></i><span>لوحة التحكم</span>
-      </a>
-      <a href="/pos" class="nav-item" id="nav-pos">
-        <i data-lucide="scan-barcode"></i><span>نقطة البيع</span>
-      </a>
-      <a href="/medicines" class="nav-item" id="nav-medicines">
-        <i data-lucide="pill"></i><span>الأدوية</span>
-      </a>
-      <a href="/inventory" class="nav-item" id="nav-inventory">
-        <i data-lucide="package"></i><span>المخزون</span>
-      </a>
-      <a href="/batch-receive" class="nav-item active" id="nav-batches">
-        <i data-lucide="calendar-clock"></i><span>الدفعات</span>
-      </a>
-      <a href="/reports-sales" class="nav-item" id="nav-reports">
-        <i data-lucide="chart-line"></i><span>التقارير</span>
-      </a>
-      <a href="/employees" class="nav-item" id="nav-employees" x-show="isAdmin">
-        <i data-lucide="users"></i><span>الموظفين</span>
-      </a>
-      <a href="/alerts" class="nav-item" id="nav-alerts">
-        <i data-lucide="bell"></i><span>التنبيهات</span><span class="badge">7</span>
-      </a>
-      <a href="/settings" class="nav-item" id="nav-settings">
-        <i data-lucide="settings"></i><span>الإعدادات</span>
-      </a>
-      <div class="user-card" @click="logout()">
-        <div class="user-avatar" x-text="userInitials"></div>
-        <div class="user-info">
-          <div class="user-name" x-text="userName || 'المستخدم'"></div>
-          <div class="user-role" x-text="isAdmin ? 'مدير' : 'صيدلي'"></div>
-        </div>
-        <i data-lucide="chevron-left"></i>
-      </div>
-    </aside>
 
     <!-- ═══════ Topbar ═══════ -->
     <header class="topbar">
-      <!-- Mobile Menu Button - FIRST (RTL: rightmost) -->
-      <button class="mobile-menu-btn" @click="toggleMobileSidebar()" aria-label="فتح القائمة" title="القائمة">
         <i data-lucide="menu"></i>
       </button>
       <div class="page-info">
@@ -1013,38 +542,8 @@
             }
           } catch (e) { /* silent */ }
           this.notificationsLoading = false;
-        },
+}
 
-        toggleMobileSidebar() {
-          const sidebar = document.querySelector('.sidebar');
-          const overlay = document.querySelector('.sidebar-overlay');
-          const btn = document.querySelector('.mobile-menu-btn');
-
-          if (!sidebar) return;
-
-          const isOpen = sidebar.classList.toggle('open');
-
-          if (!overlay) {
-            const newOverlay = document.createElement('div');
-            newOverlay.className = 'sidebar-overlay';
-            document.body.appendChild(newOverlay);
-            newOverlay.addEventListener('click', () => this.closeMobileSidebar());
-          }
-
-          const finalOverlay = document.querySelector('.sidebar-overlay');
-          if (isOpen) {
-            finalOverlay.classList.add('visible');
-            if (btn) btn.classList.add('active');
-            document.body.style.overflow = 'hidden';
-            this._escHandler = this._escHandler || this.handleEscKey.bind(this);
-            document.addEventListener('keydown', this._escHandler);
-          } else {
-            finalOverlay.classList.remove('visible');
-            if (btn) btn.classList.remove('active');
-            document.body.style.overflow = '';
-            if (this._escHandler) document.removeEventListener('keydown', this._escHandler);
-          }
-        },
 
         handleEscKey(e) {
           if (e.key === 'Escape') {
@@ -1054,8 +553,6 @@
 
         closeMobileSidebar() {
           const sidebar = document.querySelector('.sidebar');
-          const overlay = document.querySelector('.sidebar-overlay');
-          const btn = document.querySelector('.mobile-menu-btn');
 
           if (sidebar) sidebar.classList.remove('open');
           if (overlay) overlay.classList.remove('visible');
@@ -1067,7 +564,6 @@
     }
 
         
-  </script>
 
-</body>
-</html><!-- 1781564608 -->
+
+{% endblock %}

@@ -1,60 +1,21 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>الموظفين - PharmaSUD</title>
-    <link rel="stylesheet" href="/static/css/theme.css?v7.2.0">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:'IBM Plex Sans Arabic','IBM Plex Sans',sans-serif;background:#F6F8FA;color:#0F172A;min-height:100vh}
-        
-        /* Sidebar */
-        .sidebar{width:248px;background:#fff;border-left:1px solid #eef2f6;display:flex;flex-direction:column;padding:22px 16px;position:fixed;right:0;top:0;bottom:0;font-family:'IBM Plex Sans Arabic','IBM Plex Sans',sans-serif}
-        @media(min-width:1025px){.sidebar{z-index:100}}
-        .sidebar .brand{display:flex;align-items:center;gap:11px;padding:0 8px 22px}
-        .sidebar .brand .icon{width:38px;height:38px;border-radius:11px;background:#1AA7EC;position:relative;flex-shrink:0}
-        .sidebar .brand .icon::before,.sidebar .brand .icon::after{content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#fff;border-radius:3px}
-        .sidebar .brand .icon::before{width:18px;height:5.5px}
-        .sidebar .brand .icon::after{width:5.5px;height:18px}
-        .sidebar .brand .name{font:700 18px/1 'IBM Plex Sans Arabic',sans-serif;letter-spacing:-0.02em}
-        .sidebar .brand .name span{color:#1AA7EC}
-        .sidebar .nav-section{font:600 11px/1 'IBM Plex Mono',monospace;letter-spacing:0.1em;color:#CBD5E1;padding:14px 10px 10px}
-        .sidebar .nav-item{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:11px;color:#475569;font-size:14px;font-weight:500;text-decoration:none;margin-bottom:4px;transition:all 0.2s ease}
-        .sidebar .nav-item:hover{background:#F8FAFC;color:#0F172A}
-        .sidebar .nav-item.active{background:#1AA7EC;color:#fff;box-shadow:0 8px 18px -8px rgba(26,167,236,0.55)}
-        .sidebar .nav-item.active .badge{background:rgba(255,255,255,.22);color:#fff}
-        .sidebar .nav-item svg{width:19px;height:19px;flex-shrink:0}
-        .sidebar .nav-item .badge{margin-right:auto;background:#FEF2F2;color:#DC2626;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px}
-        .sidebar .user-card{margin-top:auto;display:flex;align-items:center;gap:11px;padding:11px;border:1px solid #EEF2F6;border-radius:13px;cursor:pointer}
-        .sidebar .user-avatar{width:36px;height:36px;border-radius:10px;background:#1AA7EC;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
-        .sidebar .user-name{font-size:13.5px;font-weight:600}
-        .sidebar .user-role{font-size:11.5px;color:#94A3B8}
-        .sidebar .user-card svg{width:16px;height:16px;color:#CBD5E1;flex-shrink:0;margin-right:auto}
-        
-        .main-wrap{margin-right:248px;min-height:100vh}
-        @media(max-width:1024px){.main-wrap{margin-right:0}}
-        
-        /* Topbar */
-        .topbar{height:70px;background:#fff;border-bottom:1px solid #eef2f6;display:flex;align-items:center;padding:0 28px;gap:18px}
+{% extends 'shared_layout.html' %}
+
+{% set active_page = 'employees' %}
+{% set page_title = 'الموظفين' %}
+
+{% block extra_css %}
+<style>
         .page-title{font:700 19px/1 'IBM Plex Sans',sans-serif;letter-spacing:-0.02em}
         .page-subtitle{font-size:12.5px;color:#94a3b8;margin-top:4px}
         .topbar-actions{margin-right:auto;display:flex;align-items:center;gap:12px}
-        
         /* Search */
         .search-input{display:flex;align-items:center;gap:10px;width:240px;height:42px;padding:0 14px;border-radius:11px;background:#f6f8fa;color:#94a3b8;border:none;font-size:14px;font-family:inherit}
         .search-input input{flex:1;border:none;background:transparent;outline:none;font-family:inherit;font-size:14px;color:#0F172A}
-        
         /* Buttons */
         .btn-primary{display:flex;align-items:center;gap:8px;height:42px;padding:0 18px;border-radius:11px;background:#1aa7ec;color:#fff;font-size:14px;font-weight:600;border:none;cursor:pointer;font-family:inherit;box-shadow:0 10px 20px -8px rgba(26,167,236,.55);transition:all .2s}
         .btn-primary:hover{filter:brightness(1.05)}
         .btn-secondary{display:flex;align-items:center;gap:8px;height:42px;padding:0 16px;border-radius:11px;border:1px solid #e2e8f0;background:#fff;font-size:14px;font-weight:600;color:#334155;cursor:pointer;font-family:inherit;transition:all .2s}
         .btn-secondary:hover{border-color:#1aa7ec}
-        
         /* Language + Theme */
         .lang-toggle{display:flex;border:1px solid #e2e8f0;border-radius:9px;overflow:hidden;font-size:13px;font-weight:600}
         .lang-toggle span{padding:7px 12px;cursor:pointer;transition:all .2s}
@@ -64,10 +25,8 @@
         .theme-toggle{width:42px;height:42px;border-radius:11px;border:1px solid #e2e8f0;background:#fff;display:flex;align-items:center;justify-content:center;color:#475569;cursor:pointer}
         .notif-btn{width:42px;height:42px;border-radius:11px;border:1px solid #e2e8f0;background:#fff;display:flex;align-items:center;justify-content:center;color:#475569;cursor:pointer;position:relative}
         .notif-dot{position:absolute;top:9px;right:11px;width:8px;height:8px;border-radius:50%;background:#dc2626;border:2px solid #fff}
-        
         /* Page Content */
         .page-content{padding:24px 28px}
-        
         /* Filter Chips */
         .filter-chips{display:flex;gap:9px;margin-bottom:20px;flex-wrap:wrap}
         .chip{height:34px;padding:0 14px;border-radius:9px;font-size:12.5px;font-weight:600;display:inline-flex;align-items:center;gap:6px;cursor:pointer;transition:all .2s;border:none;font-family:inherit}
@@ -75,12 +34,10 @@
         .chip:not(.active){background:#fff;border:1px solid #e2e8f0;color:#475569;font-weight:500}
         .chip:not(.active):hover{border-color:#1aa7ec}
         .chip .count{background:rgba(255,255,255,.2);padding:1px 7px;border-radius:999px;font-size:11px}
-        
         /* Employee Cards Grid */
         .emp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
         @media(max-width:1200px){.emp-grid{grid-template-columns:repeat(2,1fr)}}
         @media(max-width:640px){.emp-grid{grid-template-columns:1fr}}
-        
         .emp-card{background:#fff;border:1px solid #eef2f6;border-radius:16px;padding:20px;transition:all .2s}
         .emp-card:hover{border-color:#1aa7ec;box-shadow:0 4px 16px -4px rgba(26,167,236,.15)}
         .emp-header{display:flex;align-items:center;gap:13px;margin-bottom:16px}
@@ -101,7 +58,6 @@
         .emp-footer-label{font-size:11px;color:#94a3b8}
         .emp-footer-value{font-size:14px;font-weight:700}
         .emp-footer-time{font-size:13px;font-weight:600}
-        
         /* Action Buttons in Card */
         .emp-actions{display:flex;gap:8px;margin-top:12px}
         .emp-actions button{flex:1;padding:8px;border-radius:9px;font-size:12px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .2s}
@@ -111,7 +67,6 @@
         .btn-toggle-inactive:hover{background:#dcfce7}
         .btn-reset{background:#fffbeb;color:#d97706;border:1px solid #fde68a}
         .btn-reset:hover{background:#fef3c7}
-        
         /* Modal */
         .modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.5);display:none;align-items:center;justify-content:center;z-index:200;padding:16px;backdrop-filter:blur(4px)}
         .modal-overlay.show{display:flex}
@@ -126,24 +81,20 @@
         .modal-save:hover{filter:brightness(1.05)}
         .modal-cancel{background:#f1f5f9;color:#64748b}
         .modal-cancel:hover{background:#e2e8f0}
-        
         /* Toast */
         .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);padding:12px 24px;border-radius:12px;font-size:14px;font-weight:600;z-index:300;animation:slideIn .3s ease;box-shadow:0 10px 30px -5px rgba(0,0,0,.2)}
         .toast-success{background:#ecfdf5;color:#16a34a;border:1px solid #bbf7d0}
         .toast-error{background:#fef2f2;color:#dc2626;border:1px solid #fecaca}
         @keyframes slideIn{from{opacity:0;transform:translateX(-50%) translateY(-20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
-        
         /* Loading Skeleton */
         .skeleton{background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:11px}
         @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
         .skeleton-card{height:200px;border-radius:16px}
-        
         /* Empty State */
         .empty-state{text-align:center;padding:60px 20px}
         .empty-icon{width:64px;height:64px;border-radius:16px;background:#dbeafe;color:#1aa7ec;display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px}
         .empty-title{font-size:18px;font-weight:700;margin-bottom:6px}
         .empty-desc{font-size:14px;color:#94a3b8}
-        
         /* Dark mode */
         body.dark-mode{background:#0b1220;color:#e2e8f0}
         body.dark-mode .sidebar{background:#0f1a2e;border-left-color:#1e293b}
@@ -169,24 +120,20 @@
       position: absolute; top: 64px; left: 0; width: 380px; max-height: 460px;
       background: #fff; border: 1px solid #E2E8F0; border-radius: 14px;
       box-shadow: 0 12px 40px rgba(0,0,0,0.12); z-index: 200; overflow: hidden;
-    }
     .notif-header {
       display: flex; align-items: center; justify-content: space-between;
       padding: 14px 16px; border-bottom: 1px solid #E2E8F0;
       font-weight: 700; font-size: 14px; color: #0F172A;
-    }
     .notif-header a { font-size: 12px; color: #1AA7EC; text-decoration: none; }
     .notif-list { max-height: 340px; overflow-y: auto; }
     .notif-item {
       display: flex; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #F1F5F9;
       cursor: pointer; transition: background 0.15s;
-    }
     .notif-item:hover { background: #F6F8FA; }
     .notif-item .notif-icon {
       width: 38px; height: 38px; border-radius: 10px;
       display: flex; align-items: center; justify-content: center;
       flex-shrink: 0; font-size: 16px;
-    }
     .notif-icon.expiry { background: #FEF3C7; color: #D97706; }
     .notif-icon.stock { background: #FEE2E2; color: #DC2626; }
     .notif-icon.system { background: #DBEAFE; color: #2563EB; }
@@ -196,37 +143,16 @@
     .notif-time { font-size: 11px; color: #94A3B8; margin-top: 3px; }
     .notif-empty { padding: 28px 16px; text-align: center; color: #94A3B8; font-size: 13px; }
     .notif-loading { padding: 16px; text-align: center; color: #64748B; font-size: 13px; }
+</style>
+{% endblock %}
 
-  </style>
-</head>
-<body class="show">
+{% block content %}
 
-<!-- Sidebar -->
-<aside class="sidebar" id="cloud-sidebar">
-    <div class="brand"><div class="icon"></div><div class="name">Pharma<span>SUD</span></div></div>
-    <div class="nav-section">MENU</div>
-    <a href="/dashboard" class="nav-item" id="nav-dashboard"><i data-lucide="layout-dashboard"></i><span>لوحة التحكم</span></a>
-    <a href="/pos" class="nav-item" id="nav-pos"><i data-lucide="scan-barcode"></i><span>نقطة البيع</span></a>
-    <a href="/medicines" class="nav-item" id="nav-medicines"><i data-lucide="pill"></i><span>الأدوية</span></a>
-    <a href="/inventory" class="nav-item" id="nav-inventory"><i data-lucide="package"></i><span>المخزون</span></a>
-    <a href="/batch-receive" class="nav-item" id="nav-batches"><i data-lucide="calendar-clock"></i><span>الدفعات</span></a>
-    <a href="/reports-sales" class="nav-item" id="nav-reports"><i data-lucide="chart-line"></i><span>التقارير</span></a>
-    <a href="/employees" class="nav-item active" id="nav-employees"><i data-lucide="users"></i><span>الموظفين</span></a>
-    <a href="/alerts" class="nav-item" id="nav-alerts"><i data-lucide="bell"></i><span>التنبيهات</span><span class="badge">7</span></a>
-    <a href="/settings" class="nav-item" id="nav-settings"><i data-lucide="settings"></i><span>الإعدادات</span></a>
-    <div class="user-card" onclick="logout()">
-        <div class="user-avatar" id="user-initials">U</div>
-        <div style="min-width:0;flex:1"><div class="user-name" id="user-name">المستخدم</div><div class="user-role" id="user-role">صيدلي</div></div>
-        <i data-lucide="chevron-left"></i>
-    </div>
-</aside>
 
 <!-- Main -->
 <div class="main-wrap">
     <!-- Topbar -->
     <div class="topbar">
-        <!-- Mobile Menu Button - FIRST (RTL: rightmost) -->
-        <button class="mobile-menu-btn" onclick="toggleMobileSidebar()" aria-label="فتح القائمة" title="القائمة">
           <i data-lucide="menu" width="22" height="22"></i>
         </button>
         <div>
@@ -543,39 +469,9 @@
     document.getElementById('addModal').addEventListener('click', function(e) { if (e.target === this) hideAddModal(); });
     document.getElementById('resetModal').addEventListener('click', function(e) { if (e.target === this) hideResetModal(); });
 
-    // Mobile Sidebar Toggle
-    function toggleMobileSidebar() {
-      const sidebar = document.querySelector('.sidebar');
-      const overlay = document.querySelector('.sidebar-overlay');
-      const btn = document.querySelector('.mobile-menu-btn');
-
-      if (!sidebar) return;
-
-      const isOpen = sidebar.classList.toggle('open');
-
-      if (!overlay) {
-        const newOverlay = document.createElement('div');
-        newOverlay.className = 'sidebar-overlay';
-        document.body.appendChild(newOverlay);
-        newOverlay.addEventListener('click', closeMobileSidebar);
-      }
-
-      const finalOverlay = document.querySelector('.sidebar-overlay');
-      if (isOpen) {
-        finalOverlay.classList.add('visible');
-        if (btn) btn.classList.add('active');
-        document.body.style.overflow = 'hidden';
-      } else {
-        finalOverlay.classList.remove('visible');
-        if (btn) btn.classList.remove('active');
-        document.body.style.overflow = '';
-      }
-    }
 
     function closeMobileSidebar() {
       const sidebar = document.querySelector('.sidebar');
-      const overlay = document.querySelector('.sidebar-overlay');
-      const btn = document.querySelector('.mobile-menu-btn');
 
       if (sidebar) sidebar.classList.remove('open');
       if (overlay) overlay.classList.remove('visible');
@@ -586,6 +482,5 @@
     // Init
     loadEmployees();
     lucide.createIcons();
-</script>
-</body>
-</html>
+
+{% endblock %}

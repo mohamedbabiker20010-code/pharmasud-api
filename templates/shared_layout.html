@@ -3,14 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="/static/css/theme.css?v7.2.0">
-  <title>{{PAGE_TITLE}} - PharmaSUD</title>
+  <link rel="stylesheet" href="/static/css/theme.css?v{{ css_version | default('7.2.0') }}">
+  <title>{% block page_title %}{{ page_title | default('') }} - {% endblock %}PharmaSUD</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- ===== LAYOUT & SIDEBAR CSS — single source, no duplicates ===== -->
   <style>
+    /* Reset */
     html, body {
       margin: 0; padding: 0;
       min-height: 100vh;
@@ -19,18 +22,19 @@
       color: #0F172A;
       -webkit-font-smoothing: antialiased;
     }
+
+    /* App Layout */
     .app-layout { display: flex; min-height: 100vh; }
+
+    /* ─── Sidebar ─── */
     .sidebar {
       width: 248px; background: #fff; border-left: 1px solid #EEF2F6;
       display: flex; flex-direction: column; padding: 22px 16px;
       position: fixed; right: 0; top: 0; bottom: 0;
-    }
-    @media (min-width: 1025px) {
-      .sidebar { z-index: 100; }
+      z-index: 100; transition: transform 0.3s ease;
     }
     .sidebar .brand {
-      display: flex; align-items: center; gap: 11px;
-      padding: 0 8px 22px;
+      display: flex; align-items: center; gap: 11px; padding: 0 8px 22px;
     }
     .sidebar .brand .icon {
       width: 38px; height: 38px; border-radius: 11px;
@@ -41,7 +45,7 @@
       transform: translate(-50%, -50%); background: #fff; border-radius: 3px;
     }
     .sidebar .brand .icon::before { width: 18px; height: 5.5px; }
-    .sidebar .brand .icon::after { width: 5.5px; height: 18px; }
+    .sidebar .brand .icon::after  { width: 5.5px; height: 18px; }
     .sidebar .brand .name {
       font: 700 18px/1 'IBM Plex Sans Arabic', sans-serif; letter-spacing: -0.02em;
     }
@@ -58,7 +62,8 @@
       transition: all 0.2s ease;
     }
     .sidebar .nav-item:hover { background: #F8FAFC; color: #0F172A; }
-    .sidebar .nav-item.active { background: #1AA7EC; color: #fff;
+    .sidebar .nav-item.active {
+      background: #1AA7EC; color: #fff;
       box-shadow: 0 8px 18px -8px rgba(26,167,236,0.55);
     }
     .sidebar .nav-item svg { width: 19px; height: 19px; flex-shrink: 0; }
@@ -68,58 +73,90 @@
     }
     .sidebar .user-card {
       margin-top: auto; display: flex; align-items: center; gap: 11px;
-      padding: 11px; border: 1px solid #EEF2F6; border-radius: 13px; cursor: pointer;
+      padding: 11px; border: 1px solid #EEF2F6; border-radius: 13px;
+      cursor: pointer; transition: all 0.2s ease;
     }
+    .sidebar .user-card:hover { background: #F8FAFC; }
     .sidebar .user-avatar {
       width: 36px; height: 36px; border-radius: 10px; background: #1AA7EC;
       color: #fff; display: flex; align-items: center; justify-content: center;
       font-weight: 700; font-size: 14px; flex-shrink: 0;
     }
-    .sidebar .user-name { font-size: 13.5px; font-weight: 600; }
+    .sidebar .user-info { min-width: 0; flex: 1; }
+    .sidebar .user-name {
+      font-size: 13.5px; font-weight: 600;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
     .sidebar .user-role { font-size: 11.5px; color: #94A3B8; }
     .sidebar .user-card svg { width: 16px; height: 16px; color: #CBD5E1; flex-shrink: 0; }
+
+    /* ─── Topbar ─── */
     .topbar {
       height: 70px; background: #fff; border-bottom: 1px solid #EEF2F6;
       display: flex; align-items: center; padding: 0 28px; gap: 18px;
       position: fixed; top: 0; right: 248px; left: 0; z-index: 90;
     }
+    .topbar .mobile-menu-btn {
+      display: none; width: 42px; height: 42px;
+      border-radius: 11px; border: 1px solid #E2E8F0;
+      align-items: center; justify-content: center;
+      background: transparent; cursor: pointer;
+    }
+    .topbar .mobile-menu-btn svg { width: 20px; height: 20px; }
     .topbar .search-box {
-      display: flex; align-items: center; gap: 10px; flex: 1; max-width: 380px;
-      height: 42px; padding: 0 14px; border-radius: 11px; background: #F6F8FA;
-      color: #94A3B8; font-size: 14px;
+      display: flex; align-items: center; gap: 10px;
+      flex: 1; max-width: 380px; height: 42px;
+      padding: 0 14px; border-radius: 11px;
+      background: #F6F8FA; color: #94A3B8; font-size: 14px;
     }
     .topbar .search-box svg { width: 18px; height: 18px; flex-shrink: 0; }
-    .topbar .actions { margin-right: auto; display: flex; align-items: center; gap: 12px; }
-    .topbar .lang-toggle {
-      display: flex; border: 1px solid #E2E8F0; border-radius: 9px;
-      overflow: hidden; font-size: 13px; font-weight: 600;
+    .topbar .actions {
+      margin-right: auto; display: flex;
+      align-items: center; gap: 12px;
     }
-    .topbar .lang-toggle span { padding: 7px 12px; color: #64748B; }
+    .topbar .lang-toggle {
+      display: flex; border: 1px solid #E2E8F0;
+      border-radius: 9px; overflow: hidden;
+      font-size: 13px; font-weight: 600;
+    }
+    .topbar .lang-toggle span {
+      padding: 7px 12px; color: #64748B; cursor: pointer;
+    }
     .topbar .lang-toggle span.active { background: #1AA7EC; color: #fff; }
     .topbar .icon-btn {
-      width: 42px; height: 42px; border-radius: 11px; border: 1px solid #E2E8F0;
-      display: flex; align-items: center; justify-content: center;
+      width: 42px; height: 42px; border-radius: 11px;
+      border: 1px solid #E2E8F0; display: flex;
+      align-items: center; justify-content: center;
       color: #475569; background: transparent; cursor: pointer; position: relative;
     }
     .topbar .icon-btn svg { width: 18px; height: 18px; }
     .topbar .icon-btn .dot {
-      position: absolute; top: 9px; left: 11px; width: 8px; height: 8px;
-      border-radius: 50%; background: #DC2626; border: 2px solid #fff;
+      position: absolute; top: 9px; left: 11px;
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #DC2626; border: 2px solid #fff;
     }
+
+    /* ─── Notifications ─── */
     .notif-dropdown {
-      position: absolute; top: 64px; left: 0; width: 380px; max-height: 460px;
-      background: #fff; border: 1px solid #E2E8F0; border-radius: 14px;
-      box-shadow: 0 12px 40px rgba(0,0,0,0.12); z-index: 200; overflow: hidden;
+      position: absolute; top: 64px; left: 0;
+      width: 380px; max-height: 460px;
+      background: #fff; border: 1px solid #E2E8F0;
+      border-radius: 14px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+      z-index: 200; overflow: hidden;
     }
     .notif-header {
       display: flex; align-items: center; justify-content: space-between;
       padding: 14px 16px; border-bottom: 1px solid #E2E8F0;
       font-weight: 700; font-size: 14px; color: #0F172A;
     }
-    .notif-header a { font-size: 12px; color: #1AA7EC; text-decoration: none; }
+    .notif-header a {
+      font-size: 12px; color: #1AA7EC; text-decoration: none;
+    }
     .notif-list { max-height: 340px; overflow-y: auto; }
     .notif-item {
-      display: flex; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #F1F5F9;
+      display: flex; gap: 12px; padding: 12px 16px;
+      border-bottom: 1px solid #F1F5F9;
       cursor: pointer; transition: background 0.15s;
     }
     .notif-item:hover { background: #F6F8FA; }
@@ -128,94 +165,105 @@
       display: flex; align-items: center; justify-content: center;
       flex-shrink: 0; font-size: 16px;
     }
-    .notif-icon.expiry { background: #FEF3C7; color: #D97706; }
-    .notif-icon.stock { background: #FEE2E2; color: #DC2626; }
-    .notif-icon.system { background: #DBEAFE; color: #2563EB; }
+    .notif-icon.expiry   { background: #FEF3C7; color: #D97706; }
+    .notif-icon.stock    { background: #FEE2E2; color: #DC2626; }
+    .notif-icon.system   { background: #DBEAFE; color: #2563EB; }
     .notif-body { flex: 1; min-width: 0; }
     .notif-title { font-size: 13px; font-weight: 600; color: #0F172A; }
-    .notif-desc { font-size: 12px; color: #64748B; margin-top: 2px; }
-    .notif-time { font-size: 11px; color: #94A3B8; margin-top: 3px; }
-    .notif-empty { padding: 28px 16px; text-align: center; color: #94A3B8; font-size: 13px; }
+    .notif-desc  { font-size: 12px; color: #64748B; margin-top: 2px; }
+    .notif-time  { font-size: 11px; color: #94A3B8; margin-top: 3px; }
+    .notif-empty  { padding: 28px 16px; text-align: center; color: #94A3B8; font-size: 13px; }
     .notif-loading { padding: 16px; text-align: center; color: #64748B; font-size: 13px; }
+
+    /* ─── Main Content ─── */
     .main-content {
-      margin-right: 248px; padding: calc(70px + 28px) 28px 28px; min-height: 100vh;
+      margin-right: 248px;
+      padding: calc(70px + 28px) 28px 28px;
+      min-height: 100vh;
     }
+
+    /* ─── Mobile ─── */
     @media (max-width: 1024px) {
+      .sidebar { transform: translateX(100%); }
+      .sidebar.mobile-open { transform: translateX(0); }
       .topbar { right: 0; }
+      .topbar .mobile-menu-btn { display: flex; }
       .main-content { margin-right: 0; }
+      .sidebar-overlay {
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.3); z-index: 99;
+      }
     }
-    body.dark-mode, body.dark-mode body { background: #0b1220; color: #e2e8f0; }
+
+    /* ─── Dark Mode ─── */
+    body.dark-mode { background: #0b1220; color: #e2e8f0; }
     body.dark-mode .sidebar { background: #0f1a2e; border-left-color: #1e293b; }
     body.dark-mode .sidebar .brand .name { color: #fff; }
     body.dark-mode .sidebar .nav-item { color: #94a3b8; }
     body.dark-mode .sidebar .nav-item:hover { background: #111c2e; color: #e2e8f0; }
+    body.dark-mode .sidebar .nav-item.active { background: #1AA7EC; color: #fff; }
     body.dark-mode .sidebar .user-card { border-color: #1e293b; }
-    body.dark-mode .sidebar .user-name { color: #e2e8f0; }
     body.dark-mode .topbar { background: #0f1a2e; border-bottom-color: #1e293b; }
     body.dark-mode .topbar .search-box { background: #1e293b; color: #94a3b8; }
     body.dark-mode .icon-btn { border-color: #1e293b; color: #94a3b8; }
     body.dark-mode .lang-toggle { border-color: #1e293b; }
-    body.dark-mode .lang-toggle span:not(.active) { color: #94a3b8; }
     body.dark-mode .main-content { background: #0b1220; }
     body.dark-mode .notif-dropdown { background: #1E293B; border-color: #334155; }
     body.dark-mode .notif-header { color: #E2E8F0; border-color: #334155; }
     body.dark-mode .notif-item { border-color: #1E293B; }
-    body.dark-mode .notif-item:hover { background: #111C2E; }
     body.dark-mode .notif-title { color: #F1F5F9; }
-    body.dark-mode .notif-desc { color: #94A3B8; }
-    body.dark-mode .notif-time { color: #64748B; }
-    body.dark-mode .notif-empty { color: #64748B; }
+    body.dark-mode .notif-desc  { color: #94A3B8; }
+    body.dark-mode .notif-time  { color: #64748B; }
   </style>
+
+  <!-- ===== PAGE-SPECIFIC CSS (injected by child template) ===== -->
+  {% block extra_css %}{% endblock %}
 </head>
-<body x-data="pageApp()">
+
+<body x-data="pageApp()" :class="{ 'dark-mode': isDark }">
   <div class="app-layout">
-    <!-- Sidebar -->
-    <aside class="sidebar">
-      <div class="brand">
-        <div class="icon"></div>
-        <div class="name">Pharma<span>SUD</span></div>
-      </div>
-      <div class="nav-section">MENU</div>
-      <a href="/dashboard" class="nav-item {{DASHBOARD_ACTIVE}}"><i data-lucide="layout-dashboard"></i><span>لوحة التحكم</span></a>
-      <a href="/pos" class="nav-item {{POS_ACTIVE}}"><i data-lucide="scan-barcode"></i><span>نقطة البيع</span></a>
-      <a href="/medicines" class="nav-item {{MEDICINES_ACTIVE}}"><i data-lucide="pill"></i><span>الأدوية</span></a>
-      <a href="/inventory" class="nav-item {{INVENTORY_ACTIVE}}"><i data-lucide="package"></i><span>المخزون</span></a>
-      <a href="/batch-receive" class="nav-item {{BATCHES_ACTIVE}}"><i data-lucide="calendar-clock"></i><span>الدفعات</span></a>
-      <a href="/reports-sales" class="nav-item {{REPORTS_ACTIVE}}"><i data-lucide="chart-line"></i><span>التقارير</span></a>
-      <a href="/employees" class="nav-item {{EMPLOYEES_ACTIVE}}" x-show="isAdmin"><i data-lucide="users"></i><span>الموظفين</span></a>
-      <a href="/alerts" class="nav-item {{ALERTS_ACTIVE}}"><i data-lucide="bell"></i><span>التنبيهات</span><span class="badge">7</span></a>
-      <a href="/settings" class="nav-item {{SETTINGS_ACTIVE}}"><i data-lucide="settings"></i><span>الإعدادات</span></a>
-      <div class="user-card" @click="logout()">
-        <div class="user-avatar" x-text="userInitials"></div>
-        <div style="min-width:0;flex:1">
-          <div class="user-name" x-text="userName || 'المستخدم'"></div>
-          <div class="user-role" x-text="isAdmin ? 'مدير' : 'صيدلي'"></div>
-        </div>
-        <i data-lucide="chevron-left"></i>
-      </div>
-    </aside>
-    <!-- Topbar -->
+
+    <!-- Mobile Sidebar Overlay -->
+    <div class="sidebar-overlay"
+         x-show="sidebarOpen"
+         @click="sidebarOpen = false"
+         x-cloak></div>
+
+    <!-- ===== CANONICAL SIDEBAR ===== -->
+    {% include 'partials/sidebar.html' %}
+
+    <!-- ===== TOPBAR ===== -->
     <header class="topbar">
+      <button class="mobile-menu-btn"
+              @click="sidebarOpen = !sidebarOpen"
+              aria-label="القائمة"
+              title="القائمة">
+        <i data-lucide="menu"></i>
+      </button>
       <div class="search-box">
         <i data-lucide="search"></i>
         <span>البحث في الأدوية، المبيعات، الدفعات...</span>
       </div>
       <div class="actions">
         <div class="lang-toggle">
-          <span :class="{'active':lang==='en'}" @click="switchLang('en')">EN</span>
-          <span :class="{'active':lang==='ar'}" @click="switchLang('ar')">ع</span>
+          <span :class="{ 'active': lang === 'en' }" @click="switchLang('en')">EN</span>
+          <span :class="{ 'active': lang === 'ar' }" @click="switchLang('ar')">ع</span>
         </div>
         <button class="icon-btn" @click="toggleDark()">
-          <i :data-lucide="isDark?'sun':'moon'"></i>
+          <i :data-lucide="isDark ? 'sun' : 'moon'"></i>
         </button>
         <button class="icon-btn" @click="showNotifications = !showNotifications">
           <i data-lucide="bell"></i>
-          <span class="dot"></span>
+          <span class="dot" x-show="alertCount > 0"></span>
         </button>
       </div>
     </header>
-    <!-- Notifications Dropdown -->
-    <div class="notif-dropdown" x-show="showNotifications" x-cloak
+
+    <!-- ===== NOTIFICATIONS DROPDOWN ===== -->
+    <div class="notif-dropdown"
+         x-show="showNotifications"
+         x-cloak
+         @click.away="showNotifications = false"
          style="position:fixed; top:70px; left:28px;">
       <div class="notif-header">
         <span>التنبيهات</span>
@@ -229,58 +277,77 @@
           <div class="notif-empty">لا توجد تنبيهات</div>
         </template>
         <template x-for="n in notifications" :key="n.id">
-          <div class="notif-item" @click="showNotifications=false; window.location.href=n.href">
-            <div class="notif-icon" :class="n.type === 'expiry' ? 'expiry' : n.type === 'low_stock' ? 'stock' : 'system'">
+          <div class="notif-item"
+               @click="showNotifications = false; window.location.href = n.href">
+            <div class="notif-icon"
+                 :class="n.type === 'expiry' ? 'expiry' : n.type === 'low_stock' ? 'stock' : 'system'">
               <span x-text="n.type === 'expiry' ? '⏰' : n.type === 'low_stock' ? '📦' : 'ℹ️'"></span>
             </div>
             <div class="notif-body">
               <div class="notif-title" x-text="n.title"></div>
-              <div class="notif-desc" x-text="n.message"></div>
-              <div class="notif-time" x-text="n.time"></div>
+              <div class="notif-desc"  x-text="n.message"></div>
+              <div class="notif-time"  x-text="n.time"></div>
             </div>
           </div>
         </template>
       </div>
     </div>
-    <!-- Main Content -->
+
+    <!-- ===== MAIN CONTENT ===== -->
     <main class="main-content">
-      {{PAGE_CONTENT}}
+      {% block content %}{% endblock %}
     </main>
   </div>
+
+  <!-- ===== SHARED SCRIPTS ===== -->
   <script>
-    document.addEventListener('DOMContentLoaded', () => { if(window.lucide) lucide.createIcons(); });
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide) lucide.createIcons();
+    });
+
     function pageApp() {
       return {
-        userName: localStorage.getItem('userName') || 'المستخدم',
-        isAdmin: localStorage.getItem('role') === 'admin',
+        userName:    localStorage.getItem('userName') || 'المستخدم',
+        isAdmin:     localStorage.getItem('role') === 'admin',
+        userRole:    localStorage.getItem('role') || 'pharmacist',
         userInitials: '',
         showNotifications: false,
         notifications: [],
         notificationsLoading: false,
-        lang: localStorage.getItem('lang') || 'ar',
-        isDark: localStorage.getItem('darkMode') === 'true',
+        lang:        localStorage.getItem('lang') || 'ar',
+        isDark:      localStorage.getItem('darkMode') === 'true',
+        sidebarOpen: false,
+        alertCount:  {{ alert_count | default(0) | int }},
+
         init() {
           const name = this.userName;
           this.userInitials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-          if(!localStorage.getItem('token')) window.location.href = '/login';
-          if(this.isDark) document.body.classList.add('dark-mode');
-          this.$nextTick(() => { if(window.lucide) lucide.createIcons(); });
+          if (!localStorage.getItem('token')) window.location.href = '/login';
+          if (this.isDark) document.body.classList.add('dark-mode');
+          this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
+          this.loadNotifications();
         },
+
         switchLang(l) {
           this.lang = l;
           localStorage.setItem('lang', l);
-          document.documentElement.setAttribute('dir', l==='ar'?'rtl':'ltr');
+          document.documentElement.setAttribute('dir', l === 'ar' ? 'rtl' : 'ltr');
           document.documentElement.setAttribute('lang', l);
         },
+
         toggleDark() {
           this.isDark = !this.isDark;
           localStorage.setItem('darkMode', this.isDark);
           document.body.classList.toggle('dark-mode', this.isDark);
-          this.$nextTick(() => { if(window.lucide) lucide.createIcons(); });
+          this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
         },
-        logout() { localStorage.clear(); window.location.href = '/login'; }
-      
-        ,async loadNotifications() {
+
+        logout() {
+          localStorage.clear();
+          window.location.href = '/login';
+        },
+
+        async loadNotifications() {
           this.notificationsLoading = true;
           try {
             const token = localStorage.getItem('token');
@@ -289,36 +356,33 @@
             });
             if (r.ok) {
               const data = await r.json();
+              this.alertCount = data.total_count || 0;
               this.notifications = [];
-              // Build notification items from count data
-              if (data.total_count > 0 || data.expiry_count > 0 || data.low_stock_count > 0) {
-                if (data.expiry_count > 0) {
-                  this.notifications.push({
-                    id: 'expiry', type: 'expiry',
-                    title: 'تنبيهات الصلاحية',
-                    message: data.expiry_count + ' دووان قاربت على الانتهاء',
-                    time: 'الآن',
-                    href: '/alerts'
-                  });
-                }
-                if (data.low_stock_count > 0) {
-                  this.notifications.push({
-                    id: 'stock', type: 'low_stock',
-                    title: 'تنبيهات المخزون',
-                    message: data.low_stock_count + ' دووان مخزونها منخفض',
-                    time: 'الآن',
-                    href: '/medicines'
-                  });
-                }
+              if (data.expiry_count > 0) {
+                this.notifications.push({
+                  id: 'expiry', type: 'expiry',
+                  title: 'تنبيهات الصلاحية',
+                  message: data.expiry_count + ' دواء قارب على الانتهاء',
+                  time: 'الآن', href: '/alerts'
+                });
+              }
+              if (data.low_stock_count > 0) {
+                this.notifications.push({
+                  id: 'stock', type: 'low_stock',
+                  title: 'تنبيهات المخزون',
+                  message: data.low_stock_count + ' دواء مخزونها منخفض',
+                  time: 'الآن', href: '/medicines'
+                });
               }
             }
           } catch (e) { /* silent */ }
           this.notificationsLoading = false;
-        },}
+        }
+      };
     }
-
-        
   </script>
+
+  <!-- ===== PAGE-SPECIFIC SCRIPTS (injected by child template) ===== -->
+  {% block extra_js %}{% endblock %}
 </body>
 </html>
-<!-- 1781564609 -->
