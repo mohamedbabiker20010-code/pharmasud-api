@@ -465,13 +465,7 @@
 {% endblock %}
 
 {% block content %}
-<!-- Sidebar -->
-    
-
-    <!-- Topbar -->
-    
-
-    <!-- Main Content -->
+<div x-data="inventoryApp()" x-init="init()">
     <main class="main-content">
 
       <!-- Loading State -->
@@ -671,7 +665,7 @@
       </template>
 
     </main>
-  
+</div>
 {% endblock %}
 
 {% block extra_js %}

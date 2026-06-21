@@ -247,13 +247,7 @@
 {% endblock %}
 
 {% block content %}
-<!-- ═══════ Sidebar ═══════ -->
-    
-
-    <!-- ═══════ Topbar ═══════ -->
-    
-
-    <!-- ═══════ Main Content ═══════ -->
+<div x-data="medicinesListApp()" x-init="init()">
     <main class="main-content">
 
       <!-- Category Filter Chips -->
@@ -341,7 +335,7 @@
       </div>
 
     </main>
-  
+</div>
 
   <!-- ═══════ Alpine.js App ═══════ -->
 {% endblock %}
