@@ -242,10 +242,15 @@
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
     </template>
     <span x-text="message.text" style="white-space:pre-line"></span>
-  </div>
+  
 
   <!-- ═══════ Scripts ═══════ -->
-  <script>
+  
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
     function logout() { localStorage.clear(); window.location.href = '/login'; }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -629,7 +634,5 @@
       };
     }
 
-        
-
-
+</script>
 {% endblock %}

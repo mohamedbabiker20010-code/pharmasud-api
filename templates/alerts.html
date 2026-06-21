@@ -243,9 +243,14 @@
   <div class="toast success" x-show="showToast" x-transition style="display:none;" x-cloak>
     <i data-lucide="check-circle-2"></i>
     <span x-text="toastMsg"></span>
-  </div>
+  
 
-  <script>
+  
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
     document.addEventListener('DOMContentLoaded', () => {
       if (window.lucide) lucide.createIcons();
     });
@@ -507,7 +512,5 @@
       };
     }
 
-        
-<!-- 1781564608 -->
-
+</script>
 {% endblock %}

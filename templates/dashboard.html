@@ -664,7 +664,12 @@
     </main>
   </div>
 
-  <script>
+  
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
     document.addEventListener('DOMContentLoaded', () => {
       if (window.lucide) lucide.createIcons();
     });
@@ -809,4 +814,5 @@
 
     }
 
+</script>
 {% endblock %}

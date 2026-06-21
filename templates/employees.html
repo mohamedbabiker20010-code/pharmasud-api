@@ -249,6 +249,11 @@
     </div>
 </div>
 
+
+{% endblock %}
+
+
+{% block extra_js %}
 <script>
     // Auth
     const token = localStorage.getItem('token');
@@ -483,4 +488,5 @@
     loadEmployees();
     lucide.createIcons();
 
+</script>
 {% endblock %}
