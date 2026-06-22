@@ -195,7 +195,17 @@
         position: fixed; inset: 0;
         background: rgba(0,0,0,0.3); z-index: 99;
       }
+      .sidebar-close-btn {
+        display: flex;
+        position: absolute; top: 16px; left: 16px;
+        width: 36px; height: 36px;
+        border-radius: 10px; border: 1px solid #E2E8F0;
+        align-items: center; justify-content: center;
+        background: #fff; cursor: pointer; z-index: 10;
+      }
+      .sidebar-close-btn svg { width: 18px; height: 18px; color: #64748B; }
     }
+    .sidebar-close-btn { display: none; }
 
     /* ─── Dark Mode ─── */
     body.dark-mode { background: #0b1220; color: #e2e8f0; }

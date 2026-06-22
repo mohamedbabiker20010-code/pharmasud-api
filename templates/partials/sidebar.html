@@ -10,6 +10,11 @@
 -->
 
 <aside class="sidebar" :class="{ 'mobile-open': sidebarOpen }">
+  <!-- Mobile Close Button -->
+  <button class="sidebar-close-btn" @click="sidebarOpen = false" aria-label="إغلاق القائمة">
+    <i data-lucide="x"></i>
+  </button>
+
   <!-- Brand -->
   <div class="brand">
     <div class="icon"></div>
@@ -20,27 +25,33 @@
   <div class="nav-section">القائمة</div>
 
   <a href="/dashboard"
-     class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">
+     class="nav-item {% if active_page == 'dashboard' %}active{% endif %}"
+     @click="sidebarOpen = false">
     <i data-lucide="layout-dashboard"></i><span>لوحة التحكم</span>
   </a>
   <a href="/pos"
-     class="nav-item {% if active_page == 'pos' %}active{% endif %}">
+     class="nav-item {% if active_page == 'pos' %}active{% endif %}"
+     @click="sidebarOpen = false">
     <i data-lucide="scan-barcode"></i><span>نقطة البيع</span>
   </a>
   <a href="/medicines"
-     class="nav-item {% if active_page == 'medicines' %}active{% endif %}">
+     class="nav-item {% if active_page == 'medicines' %}active{% endif %}"
+     @click="sidebarOpen = false">
     <i data-lucide="pill"></i><span>الأدوية</span>
   </a>
   <a href="/inventory"
-     class="nav-item {% if active_page == 'inventory' %}active{% endif %}">
+     class="nav-item {% if active_page == 'inventory' %}active{% endif %}"
+     @click="sidebarOpen = false">
     <i data-lucide="package"></i><span>المخزون</span>
   </a>
   <a href="/batch-receive"
-     class="nav-item {% if active_page == 'batch-receive' %}active{% endif %}">
+     class="nav-item {% if active_page == 'batch-receive' %}active{% endif %}"
+     @click="sidebarOpen = false">
     <i data-lucide="calendar-clock"></i><span>استلام دفعة</span>
   </a>
   <a href="/sales-history"
-     class="nav-item {% if active_page == 'sales-history' %}active{% endif %}">
+     class="nav-item {% if active_page == 'sales-history' %}active{% endif %}"
+     @click="sidebarOpen = false">
     <i data-lucide="receipt"></i><span>سجل المبيعات</span>
   </a>
 
@@ -48,19 +59,23 @@
   <div class="nav-section">التقارير</div>
 
   <a href="/reports-sales"
-     class="nav-item {% if active_page == 'reports-sales' %}active{% endif %}">
+     class="nav-item {% if active_page == 'reports-sales' %}active{% endif %}"
+     @click="sidebarOpen = false">
     <i data-lucide="chart-line"></i><span>تقارير المبيعات</span>
   </a>
   <a href="/reports-profits"
-     class="nav-item {% if active_page == 'reports-profits' %}active{% endif %}">
+     class="nav-item {% if active_page == 'reports-profits' %}active{% endif %}"
+     @click="sidebarOpen = false">
     <i data-lucide="banknote"></i><span>تقرير الأرباح</span>
   </a>
   <a href="/reports-slow-moving"
-     class="nav-item {% if active_page == 'reports-slow-moving' %}active{% endif %}">
+     class="nav-item {% if active_page == 'reports-slow-moving' %}active{% endif %}"
+     @click="sidebarOpen = false">
     <i data-lucide="turtle"></i><span>بطيئة الحركة</span>
   </a>
   <a href="/reports-purchase-forecast"
-     class="nav-item {% if active_page == 'purchase-forecast' %}active{% endif %}">
+     class="nav-item {% if active_page == 'purchase-forecast' %}active{% endif %}"
+     @click="sidebarOpen = false">
     <i data-lucide="clipboard-list"></i><span>توقعات الشراء</span>
   </a>
 
@@ -68,26 +83,29 @@
   {% if is_admin | default(true) %}
   <a href="/employees"
      class="nav-item {% if active_page == 'employees' %}active{% endif %}"
-     x-show="isAdmin">
+     x-show="isAdmin"
+     @click="sidebarOpen = false">
     <i data-lucide="users"></i><span>الموظفين</span>
   </a>
   {% endif %}
 
   <!-- Common -->
   <a href="/alerts"
-     class="nav-item {% if active_page == 'alerts' %}active{% endif %}">
+     class="nav-item {% if active_page == 'alerts' %}active{% endif %}"
+     @click="sidebarOpen = false">
     <i data-lucide="bell"></i><span>التنبيهات</span>
     {% if alert_count | default(0) > 0 %}
     <span class="badge" x-text="alertCount"></span>
     {% endif %}
   </a>
   <a href="/settings"
-     class="nav-item {% if active_page == 'settings' %}active{% endif %}">
+     class="nav-item {% if active_page == 'settings' %}active{% endif %}"
+     @click="sidebarOpen = false">
     <i data-lucide="settings"></i><span>الإعدادات</span>
   </a>
 
   <!-- User Card -->
-  <div class="user-card" @click="logout()">
+  <div class="user-card" @click="logout(); sidebarOpen = false">
     <div class="user-avatar" x-text="userInitials || ''"></div>
     <div class="user-info">
       <div class="user-name" x-text="userName || 'المستخدم'"></div>
