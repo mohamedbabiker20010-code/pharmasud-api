@@ -583,7 +583,7 @@
     
 
     <!-- ═══════ Main Content ═══════ -->
-    <main class="main-content" x-data="slowMovingApp()" x-init="init()">
+    <div x-data="slowMovingApp()" x-init="init()">
 
       <!-- Loading State -->
       <template x-if="loading">
@@ -840,7 +840,7 @@
 
         </div>
       </template>
-    </main>
+    </div>
   
 {% endblock %}
 
