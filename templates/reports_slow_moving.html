@@ -583,7 +583,7 @@
     
 
     <!-- ═══════ Main Content ═══════ -->
-    <main class="main-content">
+    <main class="main-content" x-data="slowMovingApp()" x-init="init()">
 
       <!-- Loading State -->
       <template x-if="loading">
@@ -1084,7 +1084,7 @@
           document.removeEventListener('keydown', this.handleEscKey);
         },
 
-        ,async loadNotifications() {
+        async loadNotifications() {
           this.notificationsLoading = true;
           try {
             const token = localStorage.getItem('token');
