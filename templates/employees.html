@@ -264,18 +264,6 @@
     let resetTargetId = null;
     let currentFilter = 'all';
 
-    // User info in sidebar
-    document.addEventListener('DOMContentLoaded', function() {
-        const name = localStorage.getItem('userName') || 'المستخدم';
-        const role = localStorage.getItem('role') || 'pharmacist';
-        document.getElementById('user-name').textContent = name;
-        document.getElementById('user-role').textContent = role === 'admin' ? 'مدير' : 'صيدلي';
-        document.getElementById('user-initials').textContent = name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
-        if (role !== 'admin') {
-            document.getElementById('nav-employees').style.display = 'none';
-        }
-    });
-
     // Language & Theme
     function toggleLang() {
         const en = document.getElementById('langEn'), ar = document.getElementById('langAr');
