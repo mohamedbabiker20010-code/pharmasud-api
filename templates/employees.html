@@ -474,16 +474,6 @@
     document.getElementById('addModal').addEventListener('click', function(e) { if (e.target === this) hideAddModal(); });
     document.getElementById('resetModal').addEventListener('click', function(e) { if (e.target === this) hideResetModal(); });
 
-
-    function closeMobileSidebar() {
-      const sidebar = document.querySelector('.sidebar');
-
-      if (sidebar) sidebar.classList.remove('open');
-      if (overlay) overlay.classList.remove('visible');
-      if (btn) btn.classList.remove('active');
-      document.body.style.overflow = '';
-    }
-
     // Init
     loadEmployees();
     lucide.createIcons();
