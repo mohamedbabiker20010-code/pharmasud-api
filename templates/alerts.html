@@ -187,18 +187,14 @@
         </div>
       </template>
 
+      <!-- Toast -->
+      <div class="toast success" x-show="showToast" x-transition style="display:none;" x-cloak>
+        <i data-lucide="check-circle-2"></i>
+        <span x-text="toastMsg"></span>
+      </div>
     </div>
   </div>
-
-  <!-- Toast -->
-  <div class="toast success" x-show="showToast" x-transition style="display:none;" x-cloak>
-    <i data-lucide="check-circle-2"></i>
-    <span x-text="toastMsg"></span>
-  
-
-  
 {% endblock %}
-
 
 {% block extra_js %}
 <script>
