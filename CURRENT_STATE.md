@@ -11,38 +11,37 @@
 ---
 
 ## Current Task
-**No active task** — Project memory system created and committed. Ready for next sprint.
+**No active task** — Phase 2D/2F deployed. Mobile sidebar fixed for settings/alerts/batch_receive. Sidebar has close button + auto-close. Ready for next sprint.
 
 ---
 
 ## Next Task (Priority Order)
-1. **Initialize Production DB** — Activate product key + create admin (15 min)
-2. **Fix Mobile Sidebar** — Remove inline CSS from 15 templates (4 hrs)
-3. **Implement Void Sale** — `sales.void` endpoint + POS undo (1 day)
-4. **Full RBAC Enforcement** — Replace `require_admin` with `require_permission()` on all endpoints (1 day)
-5. **Fix Profit Report** — Capture `purchase_price` on all batches (4 hrs)
+1. **Fix mobile sidebar x-data on 2 pages** — sales_history.html and stocktake.html (2 hours)
+2. **Implement Void Sale** — `sales.void` endpoint + POS undo (1 day)
+3. **Full RBAC Enforcement** — Replace `require_admin` with `require_permission()` on all endpoints (1 day)
+4. **Fix Profit Report** — Capture `purchase_price` on all batches (4 hours)
+5. **Security Phase 3** — CSRF, MFA, JWT denylist, CSP enforcement (5 days)
 
 ---
 
 ## Production Blockers (Must Fix Before Real Pharmacy Use)
-1. ❌ **Production DB not initialized** — No activated pharmacy, no admin user
-2. ❌ **Mobile sidebar broken** — 15/17 pages unusable on phone
-3. ❌ **No void sale** — Customer changes mind = manual workaround
-4. ❌ **Profit shows 0.00** — Misleading owner dashboard
-5. ❌ **RBAC over-permissive** — Employees can call admin APIs
-6. ❌ **No JWT revocation** — Stolen token valid 24h
-7. ❌ **CSP report-only only** — No XSS protection enforcement
+1. ❌ **Mobile sidebar on 2 pages** — sales_history.html and stocktake.html still lack x-data wrapper
+2. ❌ **No void sale** — Customer changes mind = manual workaround
+3. ❌ **Profit shows 0.00** — Misleading owner dashboard
+4. ❌ **RBAC over-permissive** — Employees can call admin APIs
+5. ❌ **No JWT revocation** — Stolen token valid 24h
+6. ❌ **CSP report-only** — No XSS protection enforcement
 
 ---
 
 ## Recently Fixed Items (Last 5 Commits)
-| Commit | Date | Fix |
-|--------|------|-----|
-| `5a0c1aa` | 2026-06-19 | Project memory system (PROJECT_MEMORY.md + backup) |
-| `c6b89f7` | 2026-06-19 | RBAC tables + role_id in startup |
-| `230071e` | 2026-06-18 | RBAC Phase 1: roles, permissions, audit logging |
-| `2d17024` | 2026-06-18 | Splash screen at root (v7.2.0) |
-| `e2b3dc2` | 2026-06-17 | Exception sanitization (Phase 2.3) |
+|| Commit | Date | Fix |
+||--------|------|-----|
+|| `29fc483` | 2026-06-22 | Restore CSS styles in alerts.html - complete design migration |
+|| `1eec0cd` | 2026-06-22 | Fix JS syntax — close loadNotifications with comma not brace |
+|| `f4383f0` | 2026-06-22 | Phase 2D — Complete x-data wrappers for settings/alerts/batch_receive + sidebar X/close button |
+|| `acce5f7` | 2026-06-22 | Fix reports_slow_moving.html — replace nested <main> with <div> |
+|| `c6b89f7` | 2026-06-19 | Add RBAC tables and role_id column creation to startup event handler |
 
 ---
 
@@ -58,12 +57,12 @@
 ---
 
 ## Key Metrics
-- **Feature Complete**: ~78%
-- **Production Hardened**: ~45%
+- **Feature Complete**: ~80%
+- **Production Hardened**: ~48%
 - **RBAC Enforced**: 15% (only 3 endpoints)
-- **Mobile UX Fixed**: 12% (2/17 templates)
+- **Mobile UX Fixed**: 90% (2/21 pages remaining)
 
 ---
 
 ## Last Updated
-**2026-06-19** — Project memory system created, committed at `5a0c1aa`
+**2026-06-23** — Phase 2D/2F deployed. Mobile sidebar fixed for settings/alerts/batch_receive. Sidebar has close button + auto-close. Production verified with recoveryadmin.

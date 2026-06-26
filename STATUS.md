@@ -208,9 +208,9 @@ Before any major change:
 ---
 
 # PharmaSUD - Project Status
-## Last Updated: 2026-06-17 (Post-White Screen Fixes + Security Audit)
+## Last Updated: 2026-06-22 (Phase 2D/2F Mobile Sidebar Fixes)
 ## Current Stage: Stage 7 - Alerts + Employees + Audit + Stocktake
-## Version: 7.0.0
+## Version: 7.2.0
 ## Branch: master (Render watches this branch, NOT main!)
 ## Live URL: https://pharmasud-api.onrender.com
 ## GitHub: https://github.com/mohamedbabiker20010-code/pharmasud-api
@@ -374,7 +374,9 @@ CREATE TABLE stocktake_items (
 ---
 
 ## Known Technical Debt
-- CORS set to allow all origins (production should restrict to domain)
-- No rate limiting on login (brute force risk)
-- Typing indicator in POS interface (cosmetic only, no API cost)
+- Mobile sidebar fixed on 7/21 templates — 2 pages remain: sales_history.html, stocktake.html
+- CORS restricted to ALLOWED_ORIGINS (fixed in Phase 1)
+- No rate limiting on login (brute force risk) - Rate limiting added in Phase 1 ✅
+- No CSP enforcement (report-only mode)
+- No JWT revocation (logout = client-side only)
 - LSP diagnostics in inventory.py (type hints warnings, runtime OK)

@@ -5,15 +5,63 @@
 
 {% block extra_css %}
 <style>
+    /* ─── Alert Cards Grid ─── */
+    .alert-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    @media (max-width: 1200px) { .alert-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 640px) { .alert-grid { grid-template-columns: 1fr; } }
+
+    .alert-card {
+      background: #fff; border: 1px solid #EEF2F6; border-radius: 16px; padding: 20px;
+      transition: all 0.2s;
+    }
+    .alert-card:hover { border-color: #1AA7EC; box-shadow: 0 4px 16px -4px rgba(26,167,236,0.15); }
+
+    .alert-header { display: flex; align-items: center; gap: 13px; margin-bottom: 16px; }
+    .alert-icon { width: 48px; height: 48px; border-radius: 13px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 17px; color: #fff; }
+    .alert-icon.critical { background: #FEE2E2; color: #DC2626; }
+    .alert-icon.warning { background: #FEF3C7; color: #D97706; }
+    .alert-icon.low-stock { background: #E0F2FE; color: #0284C7; }
+    .alert-icon.info { background: #DBEAFE; color: #2563EB; }
+
+    .alert-title { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .alert-desc { font-size: 14px; color: #64748B; margin-top: 4px; }
+
+    .alert-badges { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .badge-pill { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 999px; display: inline-flex; align-items: center; gap: 5px; }
+    .badge-pill.expiry { color: #D97706; background: #FFFBEB; }
+    .badge-pill.stock { color: #DC2626; background: #FEF2F2; }
+    .badge-pill.system { color: #2563EB; background: #EFF6FF; }
+    .badge-pill.critical { color: #DC2626; background: #FEF2F2; }
+    .badge-pill.warning { color: #D97706; background: #FFFBEB; }
+    .badge-pill.low-stock { color: #0284C7; background: #E0F2FE; }
+
+    .alert-footer { display: flex; justify-content: space-between; padding-top: 14px; border-top: 1px solid #F1F5F9; }
+    .alert-footer-label { font-size: 11px; color: #94A3B8; }
+    .alert-footer-time { font-size: 13px; font-weight: 600; }
+
+    .alert-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .alert-actions button {
+      flex: 1; padding: 8px; border-radius: 9px; font-size: 12px; font-weight: 600;
+      cursor: pointer; border: none; font-family: inherit; transition: all 0.2s;
+    }
+    .btn-view { background: #FFFBEB; color: #D97706; border: 1px solid #FDE68A; }
+    .btn-view:hover { background: #FEF3C7; }
+    .btn-reorder { background: #EFF6FF; color: #2563EB; border: 1px solid #BFDBFE; }
+    .btn-reorder:hover { background: #DBEAFE; }
+    .btn-dismiss { background: #F1F5F9; color: #64748B; }
+    .btn-dismiss:hover { background: #E2E8F0; }
+
+    /* ─── Toast ─── */
+    .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 12px; font-size: 14px; font-weight: 600; z-index: 300; animation: slideIn .3s ease; box-shadow: 0 10px 30px -5px rgba(0,0,0,.2); }
+    .toast.success { background: #ECFDF5; color: #16A34A; border: 1px solid #BBF7D0; }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(-50%) translateY(-20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
     /* ─── Responsive ─── */
     @media (max-width: 640px) {
       .page-header { flex-direction: column; align-items: flex-start; gap: 14px; }
       .page-header .header-actions { width: 100%; }
-      .alert-card { flex-direction: column; }
-      .alert-actions { flex-direction: row; align-items: stretch; }
-      .alert-action-btn { flex: 1; justify-content: center; }
       .filter-chips { gap: 6px; }
-      .filter-chip { padding: 6px 12px; font-size: 12.5px; }
+      .chip { padding: 6px 12px; font-size: 12.5px; }
     }
 </style>
 {% endblock %}
@@ -40,42 +88,38 @@
 
       <!-- Filter Chips -->
       <div class="filter-chips">
-        <button class="filter-chip" :class="{ 'active': activeFilter === 'all' }" @click="setFilter('all')">
+        <button class="chip" :class="{ 'active': activeFilter === 'all' }" @click="setFilter('all')">
           الكل
-          <span class="chip-count" x-text="totalCount"></span>
+          <span class="count" x-text="totalCount"></span>
         </button>
-        <button class="filter-chip" :class="{ 'active': activeFilter === 'low_stock' }" @click="setFilter('low_stock')">
+        <button class="chip" :class="{ 'active': activeFilter === 'low_stock' }" @click="setFilter('low_stock')">
           مخزون منخفض
-          <span class="chip-count" x-text="lowStockCount"></span>
+          <span class="count" x-text="lowStockCount"></span>
         </button>
-        <button class="filter-chip" :class="{ 'active': activeFilter === 'expiry' }" @click="setFilter('expiry')">
+        <button class="chip" :class="{ 'active': activeFilter === 'expiry' }" @click="setFilter('expiry')">
           انتهاء الصلاحية
-          <span class="chip-count" x-text="expiryCount"></span>
+          <span class="count" x-text="expiryCount"></span>
         </button>
-        <button class="filter-chip" :class="{ 'active': activeFilter === 'system' }" @click="setFilter('system')">
+        <button class="chip" :class="{ 'active': activeFilter === 'system' }" @click="setFilter('system')">
           النظام
-          <span class="chip-count">0</span>
+          <span class="count">0</span>
         </button>
       </div>
 
       <!-- Loading State -->
-      <template x-if="loading">
-        <div>
-          <div class="skeleton-card"><div class="skeleton-circle"></div><div class="skeleton-lines"><div class="skeleton-line"></div><div class="skeleton-line"></div><div class="skeleton-line"></div></div></div>
-          <div class="skeleton-card"><div class="skeleton-circle"></div><div class="skeleton-lines"><div class="skeleton-line"></div><div class="skeleton-line"></div><div class="skeleton-line"></div></div></div>
-          <div class="skeleton-card"><div class="skeleton-circle"></div><div class="skeleton-lines"><div class="skeleton-line"></div><div class="skeleton-line"></div><div class="skeleton-line"></div></div></div>
-          <div class="skeleton-card"><div class="skeleton-circle"></div><div class="skeleton-lines"><div class="skeleton-line"></div><div class="skeleton-line"></div><div class="skeleton-line"></div></div></div>
-        </div>
-      </template>
+      <div x-show="loading" class="alert-grid">
+        <div class="skeleton skeleton-card"></div>
+        <div class="skeleton skeleton-card"></div>
+        <div class="skeleton skeleton-card"></div>
+      </div>
 
       <!-- Error State -->
       <template x-if="error">
-        <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:14px;padding:24px;text-align:center;color:#DC2626;">
-          <div style="font-size:18px;font-weight:700;margin-bottom:8px;">فشل تحميل التنبيهات</div>
-          <p style="font-size:14px;color:#64748B;margin-bottom:14px;" x-text="errorMsg"></p>
-          <button class="btn btn-secondary" @click="loadAlerts()" style="display:inline-flex;">
-            <i data-lucide="refresh-cw"></i> إعادة المحاولة
-          </button>
+        <div class="empty-state">
+          <div class="empty-icon"><i data-lucide="alert-triangle"></i></div>
+          <div class="empty-title">فشل تحميل التنبيهات</div>
+          <div class="empty-desc" x-text="errorMsg"></div>
+          <button class="btn-primary" style="margin:16px auto 0" @click="loadAlerts()"><i data-lucide="refresh-cw"></i>إعادة المحاولة</button>
         </div>
       </template>
 
@@ -85,105 +129,42 @@
           <!-- Empty State -->
           <template x-if="filteredAlerts.length === 0">
             <div class="empty-state">
-              <div class="empty-icon">
-                <i data-lucide="check-circle-2"></i>
+              <div class="empty-icon"><i data-lucide="check-circle-2"></i></div>
+              <div class="empty-title" x-text="activeFilter === 'all' ? 'لا توجد تنبيهات' : 'لا توجد تنبيهات في هذا التصنيف'"></div>
+              <div class="empty-desc" x-text="activeFilter === 'all' ? 'كل الأدوية في حالتها الطبيعية' : 'لا توجد تنبيهات تطابق الفلتر المحدد'"></div>
+            </div>
+          </template>
+
+          <!-- Alert Grid -->
+          <div x-show="filteredAlerts.length > 0" class="alert-grid">
+            <template x-for="alert in filteredAlerts" :key="alert.id">
+              <div class="alert-card" :data-type="alert.type" :data-severity="alert.severity">
+                <div class="alert-header">
+                  <div class="alert-icon" :class="alert.iconClass"><i :data-lucide="alert.icon"></i></div>
+                  <div style="flex:1;min-width:0">
+                    <div class="alert-title" x-text="alert.title"></div>
+                    <div class="alert-desc" x-text="alert.description"></div>
+                  </div>
+                </div>
+                <div class="alert-badges">
+                  <span class="badge-pill" :class="alert.severity" x-text="alert.severityLabel"></span>
+                  <span class="badge-pill" :class="alert.type === 'expiry' ? 'expiry' : 'stock'"><span x-text="alert.time"></span></span>
+                </div>
+                <div class="alert-footer">
+                  <div><div class="alert-footer-label">نوع التنبيه</div><div class="alert-footer-time" x-text="alert.typeLabel || (alert.type === 'expiry' ? 'صلاحية' : 'مخزون')"></div></div>
+                </div>
+                <div class="alert-actions">
+                  <template x-if="alert.actionType === 'view_batch'">
+                    <button class="btn-view" @click="handleAction(alert, 'view')"><i data-lucide="eye"></i> عرض الدفعة</button>
+                  </template>
+                  <template x-if="alert.actionType === 'reorder'">
+                    <button class="btn-reorder" @click="handleAction(alert, 'reorder')"><i data-lucide="shopping-cart"></i> إعادة طلب</button>
+                  </template>
+                  <button class="btn-dismiss" @click="dismissAlert(alert)"><i data-lucide="x"></i> تجاهل</button>
+                </div>
               </div>
-              <h3 x-text="activeFilter === 'all' ? 'لا توجد تنبيهات' : 'لا توجد تنبيهات في هذا التصنيف'"></h3>
-              <p x-text="activeFilter === 'all' ? 'كل الأدوية في حالتها الطبيعية' : 'لا توجد تنبيهات تطابق الفلتر المحدد'"></p>
-            </div>
-          </template>
-
-          <!-- Today's Alerts -->
-          <template x-if="todayAlerts.length > 0">
-            <div>
-              <div class="section-header">اليوم</div>
-              <template x-for="alert in todayAlerts" :key="alert.id">
-                <div class="alert-card" :class="'severity-' + alert.severity">
-                  <!-- Icon -->
-                  <div class="alert-icon" :class="alert.iconClass">
-                    <i :data-lucide="alert.icon"></i>
-                  </div>
-                  <!-- Body -->
-                  <div class="alert-body">
-                    <div class="alert-title" x-text="alert.title"></div>
-                    <div class="alert-desc" x-text="alert.description"></div>
-                    <div class="alert-meta">
-                      <span class="alert-time">
-                        <i data-lucide="clock"></i>
-                        <span x-text="alert.time"></span>
-                      </span>
-                      <span class="alert-severity-badge" :class="alert.severity" x-text="alert.severityLabel"></span>
-                    </div>
-                  </div>
-                  <!-- Actions -->
-                  <div class="alert-actions">
-                    <template x-if="alert.actionType === 'view_batch'">
-                      <button class="alert-action-btn red" @click="handleAction(alert, 'view')">
-                        <i data-lucide="eye"></i>
-                        عرض الدفعة
-                      </button>
-                    </template>
-                    <template x-if="alert.actionType === 'reorder'">
-                      <button class="alert-action-btn blue" @click="handleAction(alert, 'reorder')">
-                        <i data-lucide="shopping-cart"></i>
-                        إعادة طلب
-                      </button>
-                    </template>
-                    <button class="alert-action-btn gray" @click="dismissAlert(alert)">
-                      <i data-lucide="x"></i>
-                      تجاهل
-                    </button>
-                  </div>
-                </div>
-              </template>
-            </div>
-          </template>
-
-          <!-- Previous Alerts -->
-          <template x-if="previousAlerts.length > 0">
-            <div>
-              <div class="section-header">سابقاً</div>
-              <template x-for="alert in previousAlerts" :key="alert.id">
-                <div class="alert-card" :class="'severity-' + alert.severity">
-                  <!-- Icon -->
-                  <div class="alert-icon" :class="alert.iconClass">
-                    <i :data-lucide="alert.icon"></i>
-                  </div>
-                  <!-- Body -->
-                  <div class="alert-body">
-                    <div class="alert-title" x-text="alert.title"></div>
-                    <div class="alert-desc" x-text="alert.description"></div>
-                    <div class="alert-meta">
-                      <span class="alert-time">
-                        <i data-lucide="clock"></i>
-                        <span x-text="alert.time"></span>
-                      </span>
-                      <span class="alert-severity-badge" :class="alert.severity" x-text="alert.severityLabel"></span>
-                    </div>
-                  </div>
-                  <!-- Actions -->
-                  <div class="alert-actions">
-                    <template x-if="alert.actionType === 'view_batch'">
-                      <button class="alert-action-btn red" @click="handleAction(alert, 'view')">
-                        <i data-lucide="eye"></i>
-                        عرض الدفعة
-                      </button>
-                    </template>
-                    <template x-if="alert.actionType === 'reorder'">
-                      <button class="alert-action-btn blue" @click="handleAction(alert, 'reorder')">
-                        <i data-lucide="shopping-cart"></i>
-                        إعادة طلب
-                      </button>
-                    </template>
-                    <button class="alert-action-btn gray" @click="dismissAlert(alert)">
-                      <i data-lucide="x"></i>
-                      تجاهل
-                    </button>
-                  </div>
-                </div>
-              </template>
-            </div>
-          </template>
+            </template>
+          </div>
         </div>
       </template>
 
