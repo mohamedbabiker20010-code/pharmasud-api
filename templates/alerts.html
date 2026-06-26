@@ -5,6 +5,34 @@
 
 {% block extra_css %}
 <style>
+    /* ─── Filter Chips ─── */
+    .filter-chips { display: flex; gap: 9px; margin-bottom: 20px; flex-wrap: wrap; }
+    .chip {
+      height: 34px; padding: 0 14px; border-radius: 9px; font-size: 12.5px; font-weight: 600;
+      display: inline-flex; align-items: center; gap: 6px; cursor: pointer; transition: all 0.2s;
+      border: none; font-family: inherit;
+    }
+    .chip.active { background: #0f172a; color: #fff; }
+    .chip:not(.active) { background: #fff; border: 1px solid #e2e8f0; color: #475569; font-weight: 500; }
+    .chip:not(.active):hover { border-color: #1aa7ec; }
+    .chip .count { background: rgba(255,255,255,.2); padding: 1px 7px; border-radius: 999px; font-size: 11px; }
+
+    /* ─── Empty State ─── */
+    .empty-state { text-align: center; padding: 60px 20px; }
+    .empty-icon { width: 64px; height: 64px; border-radius: 16px; background: #DBEAFE; color: #1AA7EC; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+    .empty-icon svg { width: 32px; height: 32px; }
+    .empty-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+    .empty-desc { font-size: 14px; color: #94A3B8; }
+
+    /* ─── Skeleton ─── */
+    .skeleton {
+      background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+      background-size: 200% 100%; animation: shimmer 1.5s infinite;
+      border-radius: 11px;
+    }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    .skeleton-card { height: 200px; border-radius: 16px; }
+
     /* ─── Alert Cards Grid ─── */
     .alert-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
     @media (max-width: 1200px) { .alert-grid { grid-template-columns: repeat(2, 1fr); } }
