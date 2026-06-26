@@ -403,9 +403,9 @@
             if (window.lucide) lucide.createIcons();
           });
           setTimeout(() => { this.showToast = false; }, 3000);
-        }
-      
-        ,async loadNotifications() {
+        },
+
+        async loadNotifications() {
           this.notificationsLoading = true;
           try {
             const token = localStorage.getItem('token');
@@ -439,8 +439,7 @@
             }
           } catch (e) { /* silent */ }
           this.notificationsLoading = false;
-},
-
+        },
 
         handleEscKey(e) {
           if (e.key === 'Escape') {
@@ -450,6 +449,8 @@
 
         closeMobileSidebar() {
           const sidebar = document.querySelector('.sidebar');
+          const overlay = document.querySelector('.sidebar-overlay');
+          const btn = document.querySelector('.mobile-menu-btn');
 
           if (sidebar) sidebar.classList.remove('open');
           if (overlay) overlay.classList.remove('visible');
