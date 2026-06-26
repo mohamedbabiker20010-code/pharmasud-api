@@ -147,46 +147,10 @@
 {% endblock %}
 
 {% block content %}
-
-
-<!-- Main -->
-<div class="main-wrap">
-    <!-- Topbar -->
-    <div class="topbar">
-          <i data-lucide="menu" width="22" height="22"></i>
-        </button>
-        <div>
-            <div class="page-title">الموظفين</div>
-            <div class="page-subtitle" id="emp-subtitle">أعضاء الفريق</div>
-        </div>
-        <div class="topbar-actions">
-            <div class="lang-toggle" id="langToggle" onclick="toggleLang()">
-                <span class="lang-en active" id="langEn">EN</span>
-                <span class="lang-ar" id="langAr">ع</span>
-            </div>
-            <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">
-                <i data-lucide="moon" width="18" height="18" id="themeIcon"></i>
-            </button>
-            <button class="notif-btn" onclick="location.href='/alerts'">
-                <i data-lucide="bell" width="18" height="18"></i>
-                <span class="notif-dot"></span>
-            </button>
-            <div class="search-input">
-                <i data-lucide="search" width="18" height="18"></i>
-                <input type="text" placeholder="بحث عن موظف…" id="searchInput" oninput="filterEmployees()">
-            </div>
-            <button class="btn-primary" onclick="showAddModal()">
-                <i data-lucide="user-plus" width="18" height="18"></i>
-                إضافة موظف
-            </button>
-        </div>
-    </div>
-
-    <!-- Content -->
-    <div class="page-content">
-        <!-- Filter Chips -->
-        <div class="filter-chips">
-            <button class="chip active" data-role="all" onclick="setFilter('all',this)">الكل</button>
+<div class="page-content">
+    <!-- Filter Chips -->
+    <div class="filter-chips">
+        <button class="chip active" data-role="all" onclick="setFilter('all',this)">الكل</button>
             <button class="chip" data-role="admin" onclick="setFilter('admin',this)">مديرين</button>
             <button class="chip" data-role="pharmacist" onclick="setFilter('pharmacist',this)">صيادلة</button>
             <button class="chip" data-role="cashier" onclick="setFilter('cashier',this)">صرّف</button>
@@ -217,7 +181,6 @@
             <div class="empty-desc">أضف أول موظف للبدء</div>
         </div>
     </div>
-</div>
 
 <!-- Add Employee Modal -->
 <div class="modal-overlay" id="addModal">
