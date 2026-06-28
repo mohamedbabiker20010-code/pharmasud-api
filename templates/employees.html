@@ -102,7 +102,6 @@
         body.dark-mode .sidebar .nav-item{color:#94a3b8}
         body.dark-mode .sidebar .nav-item:hover{background:#111c2e;color:#e2e8f0}
         body.dark-mode .sidebar .user-card{border-color:#1e293b}
-        body.dark-mode .sidebar .user-name{color:#e2e8f0}
         body.dark-mode .topbar{background:#0f1a2e;border-bottom-color:#1e293b}
         body.dark-mode .page-title{color:#fff}
         body.dark-mode .page-subtitle{color:#64748b}
@@ -159,36 +158,36 @@
     <!-- Filter Chips -->
     <div class="filter-chips">
         <button class="chip active" data-role="all" onclick="setFilter('all',this)">الكل</button>
-            <button class="chip" data-role="admin" onclick="setFilter('admin',this)">مديرين</button>
-            <button class="chip" data-role="pharmacist" onclick="setFilter('pharmacist',this)">صيادلة</button>
-            <button class="chip" data-role="cashier" onclick="setFilter('cashier',this)">صرّف</button>
-        </div>
-
-        <!-- Loading -->
-        <div id="loading" class="emp-grid">
-            <div class="skeleton skeleton-card"></div>
-            <div class="skeleton skeleton-card"></div>
-            <div class="skeleton skeleton-card"></div>
-        </div>
-
-        <!-- Error -->
-        <div id="error-state" style="display:none" class="empty-state">
-            <div class="empty-icon"><i data-lucide="alert-triangle" width="32" height="32"></i></div>
-            <div class="empty-title">فشل تحميل الموظفين</div>
-            <div class="empty-desc" id="error-msg"></div>
-            <button class="btn-primary" style="margin:16px auto 0" onclick="loadEmployees()"><i data-lucide="refresh-cw" width="16" height="16"></i>إعادة المحاولة</button>
-        </div>
-
-        <!-- Employees Grid -->
-        <div id="emp-grid" class="emp-grid" style="display:none"></div>
-
-        <!-- Empty State -->
-        <div id="empty-state" style="display:none" class="empty-state">
-            <div class="empty-icon"><i data-lucide="users" width="32" height="32"></i></div>
-            <div class="empty-title">لا يوجد موظفون بعد</div>
-            <div class="empty-desc">أضف أول موظف للبدء</div>
-        </div>
+        <button class="chip" data-role="admin" onclick="setFilter('admin',this)">مديرين</button>
+        <button class="chip" data-role="pharmacist" onclick="setFilter('pharmacist',this)">صيادلة</button>
+        <button class="chip" data-role="cashier" onclick="setFilter('cashier',this)">صرّف</button>
     </div>
+
+    <!-- Loading -->
+    <div id="loading" class="emp-grid">
+        <div class="skeleton skeleton-card"></div>
+        <div class="skeleton skeleton-card"></div>
+        <div class="skeleton skeleton-card"></div>
+    </div>
+
+    <!-- Error -->
+    <div id="error-state" style="display:none" class="empty-state">
+        <div class="empty-icon"><i data-lucide="alert-triangle" width="32" height="32"></i></div>
+        <div class="empty-title">فشل تحميل الموظفين</div>
+        <div class="empty-desc" id="error-msg"></div>
+        <button class="btn-primary" style="margin:16px auto 0" onclick="loadEmployees()"><i data-lucide="refresh-cw" width="16" height="16"></i>إعادة المحاولة</button>
+    </div>
+
+    <!-- Employees Grid -->
+    <div id="emp-grid" class="emp-grid" style="display:none"></div>
+
+    <!-- Empty State -->
+    <div id="empty-state" style="display:none" class="empty-state">
+        <div class="empty-icon"><i data-lucide="users" width="32" height="32"></i></div>
+        <div class="empty-title">لا يوجد موظفون بعد</div>
+        <div class="empty-desc">أضف أول موظف للبدء</div>
+    </div>
+</div>
 
 <!-- Add Employee Modal -->
 <div class="modal-overlay" id="addModal">
@@ -235,22 +234,7 @@
     let resetTargetId = null;
     let currentFilter = 'all';
 
-    // Language & Theme
-    function toggleLang() {
-        const en = document.getElementById('langEn'), ar = document.getElementById('langAr');
-        if (en.classList.contains('active')) { en.classList.remove('active'); ar.classList.add('active'); }
-        else { ar.classList.remove('active'); en.classList.add('active'); }
-    }
-    function toggleTheme() {
-        document.body.classList.toggle('dark-mode');
-        const icon = document.getElementById('themeIcon');
-        if (document.body.classList.contains('dark-mode')) {
-            icon.setAttribute('data-lucide', 'sun'); localStorage.setItem('darkMode', true);
-        } else {
-            icon.setAttribute('data-lucide', 'moon'); localStorage.setItem('darkMode', false);
-        }
-        lucide.createIcons();
-    }
+    // Dark mode - handled by shared_layout Alpine pageApp()
     if (localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark-mode');
 
     // Toast
@@ -310,14 +294,12 @@
     function renderEmployees() {
         const grid = document.getElementById('emp-grid');
         const emptyState = document.getElementById('empty-state');
-        const search = document.getElementById('searchInput').value.toLowerCase();
+        // No search input exists - search disabled (handled by shared layout if needed)
+        const search = '';
 
         let filtered = employees;
         if (currentFilter !== 'all') {
             filtered = filtered.filter(e => (e.role || 'pharmacist') === currentFilter);
-        }
-        if (search) {
-            filtered = filtered.filter(e => (e.full_name || e.username).toLowerCase().includes(search) || (e.username || '').toLowerCase().includes(search));
         }
 
         if (filtered.length === 0) {
