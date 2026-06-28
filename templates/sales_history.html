@@ -394,7 +394,7 @@
     
 
     <!-- ═══════ Main Content ═══════ -->
-    <main class="main-content">
+    <main class="main-content" x-data="salesApp()" x-init="init()">
 
       <!-- Metrics -->
       <div class="metrics-grid">
@@ -817,9 +817,9 @@
         },
 
         toggleMobileSidebar() {
-          const sidebar = document.queryselector('.sidebar');
-          const overlay = document.queryselector('.sidebar-overlay');
-          const btn = document.queryselector('.mobile-menu-btn');
+          const sidebar = document.querySelector('.sidebar');
+          const overlay = document.querySelector('.sidebar-overlay');
+          const btn = document.querySelector('.mobile-menu-btn');
 
           if (!sidebar) return;
 
@@ -832,7 +832,7 @@
             newOverlay.addEventListener('click', () => this.closeMobileSidebar());
           }
 
-          const finalOverlay = document.queryselector('.sidebar-overlay');
+          const finalOverlay = document.querySelector('.sidebar-overlay');
           if (isOpen) {
             finalOverlay.classList.add('visible');
             if (btn) btn.classList.add('active');
@@ -854,9 +854,9 @@
         },
 
         closeMobileSidebar() {
-          const sidebar = document.queryselector('.sidebar');
-          const overlay = document.queryselector('.sidebar-overlay');
-          const btn = document.queryselector('.mobile-menu-btn');
+          const sidebar = document.querySelector('.sidebar');
+          const overlay = document.querySelector('.sidebar-overlay');
+          const btn = document.querySelector('.mobile-menu-btn');
 
           if (sidebar) sidebar.classList.remove('open');
           if (overlay) overlay.classList.remove('visible');

@@ -67,7 +67,7 @@
     </header>
 
     <!-- ═══════ Main Content ═══════ -->
-    <main class="main-content">
+    <main class="main-content" x-data="stocktakeApp()" x-init="init()">
 
       <!-- Page Header -->
       <div class="page-header">
@@ -613,7 +613,7 @@
             }
           } catch (e) { /* silent */ }
           this.notificationsLoading = false;
-}
+        },
 
 
         handleEscKey(e) {
@@ -623,7 +623,7 @@
         },
 
         closeMobileSidebar() {
-          const sidebar = document.queryselector('.sidebar');
+          const sidebar = document.querySelector('.sidebar');
 
           if (sidebar) sidebar.classList.remove('open');
           if (overlay) overlay.classList.remove('visible');
