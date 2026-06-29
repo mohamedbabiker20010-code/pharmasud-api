@@ -716,6 +716,8 @@
             console.warn('API error, using defaults');
           } finally {
             this.loading = false;
+            // Re-init lucide icons after Alpine renders the templates
+            if (window.lucide) lucide.createIcons();
           }
         },
 
