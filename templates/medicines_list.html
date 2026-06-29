@@ -5,7 +5,58 @@
 
 {% block extra_css %}
 <style>
-/* ─── Layout ─── */
+/* ─── Page Header ─── */
+    .page-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .page-header h1 {
+      margin: 0 0 6px;
+      font: 700 26px/1.1 'IBM Plex Sans Arabic', sans-serif;
+      letter-spacing: -0.02em;
+    }
+    .page-header .subtitle {
+      margin: 0;
+      color: #64748B;
+      font-size: 14.5px;
+    }
+    .page-header .actions {
+      display: flex;
+      gap: 10px;
+    }
+    .page-header .btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 42px;
+      padding: 0 16px;
+      border-radius: 11px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+    }
+    .page-header .btn-secondary {
+      background: #fff;
+      color: #334155;
+      border: 1px solid #E2E8F0;
+    }
+    .page-header .btn-secondary:hover {
+      background: #F8FAFC;
+    }
+    .page-header .btn-primary {
+      background: #1AA7EC;
+      color: #fff;
+      box-shadow: 0 10px 20px -8px rgba(26, 167, 236, 0.55);
+    }
+    .page-header .btn-primary:hover {
+      filter: brightness(1.05);
+    }
+
+    /* ─── Sidebar ─── */
     
 
     /* ─── Sidebar ─── */
@@ -115,7 +166,11 @@
     .med-card .card-img .stock-badge.out {
       background: rgba(220, 38, 38, 0.15); color: #DC2626;
     }
-    .med-card .card-
+
+    .med-card .card-body {
+      padding: 16px;
+    }
+
     .med-card .card-body .med-name {
       font: 700 15px/1.3 'IBM Plex Sans Arabic', sans-serif;
       color: #0F172A; margin-bottom: 4px;
@@ -247,8 +302,22 @@
 {% endblock %}
 
 {% block content %}
-<div x-data="medicinesListApp()" x-init="init()">
-    <main class="main-content">
+
+<div x-data="medicinesListApp()" x-init="init()" class="page-content">
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div>
+          <h1>الأدوية</h1>
+          <p class="subtitle" x-text="'إدارة مخزون الصيدلية · ' + medicines.length + ' دواء'"></p>
+        </div>
+        <div class="actions">
+          <a href="/medicine-form" class="btn btn-primary">
+            <i data-lucide="plus"></i>
+            <span>إضافة دواء</span>
+          </a>
+        </div>
+      </div>
 
       <!-- Search Bar -->
       <div class="search-bar" style="margin-bottom:20px;">
@@ -338,14 +407,11 @@
                 </button>
               </div>
             </div>
-          </div>
         </template>
       </div>
 
-    </main>
-</div>
+  </div>
 
-  <!-- ═══════ Alpine.js App ═══════ -->
 {% endblock %}
 
 {% block extra_js %}
@@ -368,6 +434,7 @@
           this.userInitials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
           await this.loadCategories();
           await this.loadMedicines();
+          lucide.createIcons();
         },
 
         async loadCategories() {
