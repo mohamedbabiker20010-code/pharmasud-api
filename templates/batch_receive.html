@@ -688,6 +688,8 @@
             expiry_warning: data.expiry_warning
           };
           this.showMessage('', '');
+          // Refresh page after delay to show updated stock count
+          setTimeout(() => { window.location.reload(); }, 2000);
         },
 
         // إعادة تعيين النموذج
