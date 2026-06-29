@@ -489,32 +489,32 @@
           <div class="metrics-grid">
             <div class="metric-card">
               <div class="metric-header">
-                <div class="metric-icon "><i data-lucide="banknote"></i></div>
-                <div class="metric-badge "><i data-lucide="trending-up" style="width:13px;height:13px"></i>12.4%</div>
+                <div class="metric-icon blue"><i data-lucide="banknote"></i></div>
+                <div class="metric-badge success"><i data-lucide="trending-up" style="width:13px;height:13px"></i>12.4%</div>
               </div>
               <div class="metric-label">إيرادات اليوم</div>
               <div class="metric-value" x-text="data.today.revenue + ' '"><span class="unit">SDG</span></div>
             </div>
             <div class="metric-card">
               <div class="metric-header">
-                <div class="metric-icon "><i data-lucide="receipt"></i></div>
-                <div class="metric-badge "><i data-lucide="trending-up" style="width:13px;height:13px"></i>8.1%</div>
+                <div class="metric-icon cyan"><i data-lucide="receipt"></i></div>
+                <div class="metric-badge success"><i data-lucide="trending-up" style="width:13px;height:13px"></i>8.1%</div>
               </div>
               <div class="metric-label">المعاملات</div>
               <div class="metric-value" x-text="data.today.invoices_count"></div>
             </div>
             <div class="metric-card">
               <div class="metric-header">
-                <div class="metric-icon "><i data-lucide="package-minus"></i></div>
-                <div class="metric-badge ">إعادة طلب</div>
+                <div class="metric-icon red"><i data-lucide="package-minus"></i></div>
+                <div class="metric-badge">إعادة طلب</div>
               </div>
               <div class="metric-label">أدوية منخفضة</div>
               <div class="metric-value" x-text="data.inventory_summary.low_stock_count"></div>
             </div>
             <div class="metric-card">
               <div class="metric-header">
-                <div class="metric-icon "><i data-lucide="calendar-x"></i></div>
-                <div class="metric-badge ">≤ 30 يوم</div>
+                <div class="metric-icon yellow"><i data-lucide="calendar-x"></i></div>
+                <div class="metric-badge">≤ 30 يوم</div>
               </div>
               <div class="metric-label">تنتهي قريباً</div>
               <div class="metric-value"><span x-text="data.inventory_summary.expiring_soon_count"></span> <span class="unit">دفعة</span></div>
