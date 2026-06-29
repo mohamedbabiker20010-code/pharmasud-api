@@ -109,26 +109,26 @@
 
     /* ─── Category Chips ─── */
     .chips-bar {
-      display: flex; gap: 8px; margin-bottom: 24px; overflow-x: auto;
-      padding-bottom: 4px;
+      display: flex; gap: 6px; margin-bottom: 20px; overflow-x: auto;
+      padding-bottom: 2px;
     }
     .chip {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 8px 18px; border-radius: 999px;
-      font-size: 13.5px; font-weight: 600; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 6px 14px; border-radius: 999px;
+      font-size: 12.5px; font-weight: 600; cursor: pointer;
       border: 1px solid #E2E8F0; background: #fff; color: #475569;
       transition: all 0.2s ease; white-space: nowrap;
     }
     .chip:hover { background: #F8FAFC; border-color: #CBD5E1; }
     .chip.active {
       background: #1AA7EC; color: #fff; border-color: #1AA7EC;
-      box-shadow: 0 6px 14px -4px rgba(26, 167, 236, 0.45);
+      box-shadow: 0 4px 10px -3px rgba(26, 167, 236, 0.4);
     }
-    .chip svg { width: 14px; height: 14px; }
+    .chip svg { width: 12px; height: 12px; }
 
     /* ─── Medicines Grid ─── */
     .med-grid {
-      display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px;
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
     }
 
     /* ─── Medicine Card ─── */
@@ -141,15 +141,15 @@
       transform: translateY(-2px);
     }
     .med-card .card-img {
-      height: 140px; background: #F6F8FA; display: flex;
+      height: 110px; background: #F6F8FA; display: flex;
       align-items: center; justify-content: center; position: relative;
       overflow: hidden;
     }
     .med-card .card-img img {
-      width: 100%; height: 100%; object-fit: contain; padding: 12px;
+      width: 100%; height: 100%; object-fit: contain; padding: 10px;
     }
     .med-card .card-img .placeholder-icon {
-      color: #CBD5E1; width: 48px; height: 48px;
+      color: #CBD5E1; width: 40px; height: 40px;
     }
     .med-card .card-img .stock-badge {
       position: absolute; top: 10px; left: 10px;
@@ -168,52 +168,52 @@
     }
 
     .med-card .card-body {
-      padding: 16px;
+      padding: 12px;
     }
 
     .med-card .card-body .med-name {
-      font: 700 15px/1.3 'IBM Plex Sans Arabic', sans-serif;
-      color: #0F172A; margin-bottom: 4px;
+      font: 600 14px/1.3 'IBM Plex Sans Arabic', sans-serif;
+      color: #0F172A; margin-bottom: 3px;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .med-card .card-body .med-category {
-      font-size: 12.5px; color: #94A3B8; font-weight: 500;
-      margin-bottom: 12px;
+      font-size: 11.5px; color: #94A3B8; font-weight: 500;
+      margin-bottom: 8px;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .med-card .card-body .med-stock {
-      display: flex; align-items: baseline; gap: 4px;
-      margin-bottom: 10px; font-size: 13px;
+      display: flex; align-items: baseline; gap: 3px;
+      margin-bottom: 8px; font-size: 12px;
     }
     .med-card .card-body .med-stock .qty {
-      font-weight: 700; color: #0F172A; font-size: 18px;
+      font-weight: 700; color: #0F172A; font-size: 16px;
     }
     .med-card .card-body .med-stock .unit {
       color: #94A3B8; font-weight: 500;
     }
     .med-card .card-body .med-price {
-      font: 700 17px/1 'IBM Plex Sans Arabic', sans-serif;
-      color: #1AA7EC; margin-bottom: 14px;
+      font: 600 15px/1 'IBM Plex Sans Arabic', sans-serif;
+      color: #1AA7EC; margin-bottom: 10px;
     }
     .med-card .card-body .med-price .currency {
-      font-size: 12px; color: #64748B; font-weight: 600; margin-right: 3px;
+      font-size: 11px; color: #64748B; font-weight: 600; margin-right: 2px;
     }
     .med-card .card-body .card-actions {
-      display: flex; gap: 8px;
+      display: flex; gap: 6px;
     }
     .med-card .card-body .btn-edit {
-      flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
-      height: 36px; border-radius: 9px; font-size: 13px; font-weight: 600;
+      flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px;
+      height: 32px; border-radius: 8px; font-size: 12px; font-weight: 600;
       border: 1px solid #E2E8F0; background: #fff; color: #334155;
       cursor: pointer; text-decoration: none;
       transition: all 0.2s ease;
     }
     .med-card .card-body .btn-edit:hover { background: #F8FAFC; border-color: #CBD5E1; }
-    .med-card .card-body .btn-edit svg { width: 14px; height: 14px; }
+    .med-card .card-body .btn-edit svg { width: 12px; height: 12px; }
     .med-card .card-body .btn-delete {
-      display: flex; align-items: center; justify-content: center; gap: 6px;
-      height: 36px; padding: 0 12px; border-radius: 9px;
-      font-size: 13px; font-weight: 600; border: none;
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+      height: 32px; padding: 0 10px; border-radius: 8px;
+      font-size: 12px; font-weight: 600; border: none;
       background: #FEF2F2; color: #DC2626; cursor: pointer;
       transition: all 0.2s ease;
     }
@@ -252,15 +252,18 @@
     /* ─── Responsive ─── */
     @media (max-width: 1280px) {
       .med-grid { grid-template-columns: repeat(3, 1fr); }
+      .page-header h1 { font-size: 22px; }
     }
-    
+    @media (max-width: 768px) {
+      .med-grid { grid-template-columns: repeat(2, 1fr); }
+      .page-header h1 { font-size: 20px; }
+      .med-card .card-img { height: 90px; }
     }
     @media (max-width: 640px) {
       .med-grid { grid-template-columns: 1fr; }
-      
-      
-      
-      .chips-bar { gap: 6px; }
+      .chips-bar { gap: 5px; margin-bottom: 16px; }
+      .chip { padding: 5px 12px; font-size: 11.5px; }
+      .chip svg { width: 11px; height: 11px; }
     }
 
     /* ─── Dark Mode ─── */
