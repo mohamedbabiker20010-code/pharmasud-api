@@ -73,13 +73,13 @@
       border-radius: 16px;
       padding: 20px;
     }
-    .metric-card .header {
+    .metric-card .metric-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       margin-bottom: 16px;
     }
-    .metric-card .icon {
+    .metric-card .metric-icon {
       width: 38px;
       height: 38px;
       border-radius: 10px;
@@ -87,15 +87,16 @@
       align-items: center;
       justify-content: center;
     }
-    .metric-card .icon.blue { background: #DBEAFE; color: #1AA7EC; }
-    .metric-card .icon.cyan { background: #E0F2FE; color: #0284C7; }
-    .metric-card .icon.yellow { background: #FEF3C7; color: #D97706; }
-    .metric-card .icon.red { background: #FEE2E2; color: #DC2626; }
-    .metric-card .icon svg {
+    .metric-card .metric-icon.blue { background: #DBEAFE; color: #1AA7EC; }
+    .metric-card .metric-icon.cyan { background: #E0F2FE; color: #0284C7; }
+    .metric-card .metric-icon.yellow { background: #FEF3C7; color: #D97706; }
+    .metric-card .metric-icon.red { background: #FEE2E2; color: #DC2626; }
+    .metric-card .metric-icon.purple { background: #EDE9FE; color: #7C3AED; }
+    .metric-card .metric-icon svg {
       width: 20px;
       height: 20px;
     }
-    .metric-card .badge {
+    .metric-card .metric-badge {
       display: flex;
       align-items: center;
       gap: 3px;
@@ -104,30 +105,30 @@
       padding: 3px 8px;
       border-radius: 999px;
     }
-    .metric-card .badge.success {
+    .metric-card .metric-badge.success {
       color: #16A34A;
       background: #ECFDF5;
     }
-    .metric-card .badge.warning {
+    .metric-card .metric-badge.warning {
       color: #D97706;
       background: #FFFbeb;
     }
-    .metric-card .badge.danger {
+    .metric-card .metric-badge.danger {
       color: #DC2626;
       background: #FEF2F2;
     }
-    .metric-card .label {
+    .metric-card .metric-label {
       font-size: 13px;
       color: #94A3B8;
       font-weight: 500;
       margin-bottom: 5px;
     }
-    .metric-card .value {
+    .metric-card .metric-value {
       font: 700 25px/1 'IBM Plex Sans Arabic', sans-serif;
       letter-spacing: -0.02em;
       color: #0F172A;
     }
-    .metric-card .value .unit {
+    .metric-card .metric-value .unit {
       font-size: 14px;
       color: #94A3B8;
       font-weight: 600;
@@ -445,10 +446,7 @@
 
 {% block content %}
 
-<div x-data="dashboardApp()" x-init="init()">
-
-    <!-- Main Content -->
-    <main class="main-content">
+<div x-data="dashboardApp()" x-init="init()" class="page-content">
       <!-- Loading -->
       <template x-if="loading">
         <div class="loading-state">
@@ -490,36 +488,36 @@
           <!-- Metrics -->
           <div class="metrics-grid">
             <div class="metric-card">
-              <div class="header">
-                <div class="icon blue"><i data-lucide="banknote"></i></div>
-                <div class="badge success"><i data-lucide="trending-up" style="width:13px;height:13px"></i>12.4%</div>
+              <div class="metric-header">
+                <div class="metric-icon "><i data-lucide="banknote"></i></div>
+                <div class="metric-badge "><i data-lucide="trending-up" style="width:13px;height:13px"></i>12.4%</div>
               </div>
-              <div class="label">إيرادات اليوم</div>
-              <div class="value" x-text="data.today.revenue + ' '"><span class="unit">SDG</span></div>
+              <div class="metric-label">إيرادات اليوم</div>
+              <div class="metric-value" x-text="data.today.revenue + ' '"><span class="unit">SDG</span></div>
             </div>
             <div class="metric-card">
-              <div class="header">
-                <div class="icon cyan"><i data-lucide="receipt"></i></div>
-                <div class="badge success"><i data-lucide="trending-up" style="width:13px;height:13px"></i>8.1%</div>
+              <div class="metric-header">
+                <div class="metric-icon "><i data-lucide="receipt"></i></div>
+                <div class="metric-badge "><i data-lucide="trending-up" style="width:13px;height:13px"></i>8.1%</div>
               </div>
-              <div class="label">المعاملات</div>
-              <div class="value" x-text="data.today.invoices_count"></div>
+              <div class="metric-label">المعاملات</div>
+              <div class="metric-value" x-text="data.today.invoices_count"></div>
             </div>
             <div class="metric-card">
-              <div class="header">
-                <div class="icon yellow"><i data-lucide="package-minus"></i></div>
-                <div class="badge warning">إعادة طلب</div>
+              <div class="metric-header">
+                <div class="metric-icon "><i data-lucide="package-minus"></i></div>
+                <div class="metric-badge ">إعادة طلب</div>
               </div>
-              <div class="label">أدوية منخفضة</div>
-              <div class="value" x-text="data.inventory_summary.low_stock_count"></div>
+              <div class="metric-label">أدوية منخفضة</div>
+              <div class="metric-value" x-text="data.inventory_summary.low_stock_count"></div>
             </div>
             <div class="metric-card">
-              <div class="header">
-                <div class="icon red"><i data-lucide="calendar-x"></i></div>
-                <div class="badge danger">≤ 30 يوم</div>
+              <div class="metric-header">
+                <div class="metric-icon "><i data-lucide="calendar-x"></i></div>
+                <div class="metric-badge ">≤ 30 يوم</div>
               </div>
-              <div class="label">تنتهي قريباً</div>
-              <div class="value"><span x-text="data.inventory_summary.expiring_soon_count"></span> <span class="unit">دفعة</span></div>
+              <div class="metric-label">تنتهي قريباً</div>
+              <div class="metric-value"><span x-text="data.inventory_summary.expiring_soon_count"></span> <span class="unit">دفعة</span></div>
             </div>
           </div>
 
@@ -601,7 +599,7 @@
               <div class="expiry-list">
                 <template x-for="(item, idx) in expiringItems" :key="idx">
                   <div class="expiry-item">
-                    <div class="header">
+                    <div class="metric-header">
                       <span class="name" x-text="item.name"></span>
                       <span class="days" :class="item.status" x-text="item.days + ' يوم'"></span>
                     </div>
@@ -616,10 +614,8 @@
           </div>
         </div>
       </template>
-    </main>
   </div>
 
-  
 {% endblock %}
 
 
