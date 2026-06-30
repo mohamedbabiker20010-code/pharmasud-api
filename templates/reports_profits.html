@@ -5,96 +5,15 @@
 
 {% block extra_css %}
 <style>
-/* ─── Dark Mode ─── */
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
-    /* ─── Layout ─── */
-    
-
-    /* ─── Sidebar ─── */
-    
-    @media (min-width: 1025px) {
-      
+    /* ─── Page Header ─── */
+    .page-header {
+      display: flex; align-items: flex-end; justify-content: space-between;
+      margin-bottom: 24px;
     }
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
-    /* ─── Topbar ─── */
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
-    /* ─── Main Content ─── */
-    
+    .page-header h1 {
+      margin: 0 0 6px; font: 700 26px/1.1 'IBM Plex Sans Arabic', sans-serif;
+      letter-spacing: -0.02em;
+    .page-header .subtitle { margin: 0; color: #64748B; font-size: 14.5px; }
 
     /* ─── Filter Bar ─── */
     .filter-bar {
@@ -225,7 +144,7 @@
     }
     .metric-card .metric-badge.warning {
       color: #D97706;
-      background: #FFFbeb;
+      background: #FFF7ED;
     }
     .metric-card .metric-badge.info {
       color: #0284C7;
@@ -309,7 +228,7 @@
     }
     .ranked-item .rank.r1 { background: #FEF3C7; color: #D97706; }
     .ranked-item .rank.r2 { background: #F1F5F9; color: #64748B; }
-    .ranked-item .rank.r3 { background: #FFFbeb; color: #CD7F32; }
+    .ranked-item .rank.r3 { background: #FFF7ED; color: #CD7F32; }
     .ranked-item .rank.rn { background: #DBEAFE; color: #1AA7EC; }
     .ranked-item .r-info {
       flex: 1;
@@ -341,7 +260,7 @@
       flex-shrink: 0;
     }
     .ranked-item .r-margin.high { color: #16A34A; background: #ECFDF5; }
-    .ranked-item .r-margin.mid { color: #D97706; background: #FFFbeb; }
+    .ranked-item .r-margin.mid { color: #D97706; background: #FFF7ED; }
     .ranked-item .r-margin.low { color: #64748B; background: #F1F5F9; }
 
     /* ─── Monthly Bar Chart Panel ─── */
@@ -447,7 +366,7 @@
     }
     .rank-1 { background: #FEF3C7; color: #D97706; }
     .rank-2 { background: #F1F5F9; color: #64748B; }
-    .rank-3 { background: #FFFbeb; color: #CD7F32; }
+    .rank-3 { background: #FFF7ED; color: #CD7F32; }
     .rank-n { background: #DBEAFE; color: #1AA7EC; }
 
     .profit-positive { color: #16A34A; }
@@ -461,7 +380,7 @@
       font-weight: 700;
     }
     .margin-badge.high { color: #16A34A; background: #ECFDF5; }
-    .margin-badge.mid { color: #D97706; background: #FFFbeb; }
+    .margin-badge.mid { color: #D97706; background: #FFF7ED; }
     .margin-badge.low { color: #64748B; background: #F1F5F9; }
 
     /* ─── Loading & Error ─── */
@@ -620,11 +539,7 @@
 {% endblock %}
 
 {% block content %}
-<div x-data="profitReportApp()" x-init="init()">
-  
-
-  <!-- Main Content -->
-  <main class="main-content">
+<div x-data="profitReportApp()" x-init="init()" class="page-content">
 
     <!-- ─── Access Denied (non-admin) ─── -->
     <template x-if="accessDenied && !loading">
@@ -873,8 +788,6 @@
       </div>
     </template>
 
-  </main>
-</div>
 {% endblock %}
 
 {% block extra_js %}
