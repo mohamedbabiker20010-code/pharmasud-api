@@ -56,8 +56,6 @@
     
 
     /* ─── Main Content ─── */
-    
-    /* ─── Page Content Wrapper ─── */
     .page-content {
       padding: 24px 28px;
     }
@@ -156,7 +154,10 @@
       width: 18px;
       height: 18px;
     }
-    .expired-alert-
+    .expired-alert-body {
+      max-height: 300px;
+      overflow-y: auto;
+    }
     .expired-row {
       display: flex;
       align-items: center;
@@ -428,49 +429,28 @@
     }
 
     /* ─── Responsive ─── */
-    
-    }
-    @media (max-width: 768px) {
-      .stats-grid { grid-template-columns: repeat(2, 1fr); }
-      
-      
-      .medicine-card-header { flex-wrap: wrap; }
-      .batches-table-header,
-      .batch-row { grid-template-columns: 1fr 1fr 60px 80px; }
-      .batches-table-header > :nth-child(2),
-      .batch-row > :nth-child(2) { display: none; }
-    }
-    @media (max-width: 640px) {
-      .stats-grid { grid-template-columns: 1fr 1fr; }
-      
-      .batch-row { grid-template-columns: 1fr 60px 80px; }
-      .batches-table-header { grid-template-columns: 1fr 60px 80px; }
-      .batches-table-header > :nth-child(4),
-      .batch-row > :nth-child(4) { display: none; }
-    }
+        @media (max-width: 768px) {
+          .stats-grid { grid-template-columns: repeat(2, 1fr); }
+          .medicine-card-header { flex-wrap: wrap; }
+          .batches-table-header,
+          .batch-row { grid-template-columns: 1fr 1fr 60px 80px; }
+          .batches-table-header > :nth-child(2),
+          .batch-row > :nth-child(2) { display: none; }
+        }
+        @media (max-width: 640px) {
+          .stats-grid { grid-template-columns: 1fr 1fr; }
+          .batch-row { grid-template-columns: 1fr 60px 80px; }
+          .batches-table-header { grid-template-columns: 1fr 60px 80px; }
+          .batches-table-header > :nth-child(4),
+          .batch-row > :nth-child(4) { display: none; }
+        }
 
-    @keyframes spin { to { transform: rotate(360deg); } }
-      
-    
-    .notif-header a { font-size: 12px; color: #1AA7EC; text-decoration: none; }
-    .notif-list { max-height: 340px; overflow-y: auto; }
-    
-    .notif-item:hover { background: #F6F8FA; }
-    .notif-item .notif-icon {
-      width: 38px; height: 38px; border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0; font-size: 16px;
-    }
-    
-    
-    
-    .notif-
-</style>
-{% endblock %}
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+    {% endblock %}
 
 {% block content %}
-<div x-data="inventoryApp()" x-init="loadInventory()">
-    <main class="main-content">
+<div x-data="inventoryApp()" x-init="loadInventory()" class="page-content">
 
       <!-- Loading State -->
       <template x-if="loading">
@@ -683,8 +663,7 @@
         </div>
       </template>
 
-    </main>
-</div>
+    </div>
 {% endblock %}
 
 {% block extra_js %}
