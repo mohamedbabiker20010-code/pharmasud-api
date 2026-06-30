@@ -46,7 +46,9 @@
     
 
     /* ─── Main Content ─── */
-    
+    .page-content {
+      padding: 24px 28px;
+    }
 
     /* ─── Page Header ─── */
     .page-header {
@@ -359,7 +361,6 @@
     .animate-fade-up { animation: fadeUp 0.4s cubic-bezier(0.22,1,0.36,1) forwards; }
 
     /* ─── Responsive ─── */
-    
     @media (max-width: 640px) {
       .page-header { flex-direction: column; align-items: flex-start; gap: 14px; }
       .metrics-grid { grid-template-columns: 1fr; }
@@ -368,21 +369,6 @@
       .sale-row { flex-wrap: wrap; }
       .sale-row .sale-action-btn { width: 100%; justify-content: center; }
     }
-      
-    
-    .notif-header a { font-size: 12px; color: #1AA7EC; text-decoration: none; }
-    .notif-list { max-height: 340px; overflow-y: auto; }
-    
-    .notif-item:hover { background: #F6F8FA; }
-    .notif-item .notif-icon {
-      width: 38px; height: 38px; border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0; font-size: 16px;
-    }
-    
-    
-    
-    .notif-
 </style>
 {% endblock %}
 
@@ -394,7 +380,7 @@
     
 
     <!-- ═══════ Main Content ═══════ -->
-    <main class="main-content" x-data="salesApp()" x-init="init()">
+  <div x-data="salesApp()" x-init="init()" class="page-content">
 
       <!-- Metrics -->
       <div class="metrics-grid">
@@ -533,8 +519,6 @@
           <i data-lucide="chevron-left"></i>
         </button>
       </div>
-    </main>
-  </div>
 
   <!-- ═══════ Detail Modal ═══════ -->
   <div class="modal-overlay" x-show="detailModal.show" x-cloak style="display:none;" @click.self="detailModal.show = false">
