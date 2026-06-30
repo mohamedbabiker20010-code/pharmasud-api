@@ -259,24 +259,31 @@
       .page-header h1 { font-size: 22px; }
     }
     @media (max-width: 640px) {
-      .med-grid { grid-template-columns: 1fr; gap: 12px; }
-      .med-card .card-img { height: 60px; }
-      .med-card .card-img .placeholder-icon { width: 28px; height: 28px; }
-      .med-card .card-img img { padding: 6px; }
-      .med-card .card-body { padding: 8px; }
-      .med-card .card-body .med-name { font-size: 13px; margin-bottom: 2px; }
-      .med-card .card-body .med-category { font-size: 11px; margin-bottom: 6px; }
-      .med-card .card-body .med-stock { margin-bottom: 6px; font-size: 11px; }
-      .med-card .card-body .med-stock .qty { font-size: 14px; }
-      .med-card .card-body .med-price { font-size: 14px; margin-bottom: 8px; }
-      .med-card .card-body .med-price .currency { font-size: 10px; }
-      .med-card .card-body .btn-edit { height: 28px; font-size: 11px; gap: 4px; }
-      .med-card .card-body .btn-edit svg { width: 10px; height: 10px; }
-      .med-card .card-body .btn-delete { height: 28px; font-size: 11px; padding: 0 8px; gap: 4px; }
-      .med-card .card-body .btn-delete svg { width: 10px; height: 10px; }
-      .chips-bar { gap: 6px; margin-bottom: 16px; padding-bottom: 3px; }
-      .chip { padding: 6px 12px; font-size: 13px; }
-      .chip svg { width: 12px; height: 12px; }
+      .med-grid { grid-template-columns: 1fr; gap: 10px; }
+      .med-card .card-img { height: 40px; }
+      .med-card .card-img .placeholder-icon { width: 20px; height: 20px; }
+      .med-card .card-img img { padding: 4px; }
+      .med-card .card-body { padding: 6px; }
+      .med-card .card-body .med-name { font-size: 12px; margin-bottom: 1px; }
+      .med-card .card-body .med-category { font-size: 10px; margin-bottom: 4px; }
+      .med-card .card-body .med-stock { margin-bottom: 4px; font-size: 10px; }
+      .med-card .card-body .med-stock .qty { font-size: 12px; }
+      .med-card .card-body .med-price { font-size: 12px; margin-bottom: 6px; }
+      .med-card .card-body .med-price .currency { font-size: 9px; }
+      .med-card .card-body .btn-edit { height: 24px; font-size: 10px; gap: 2px; }
+      .med-card .card-body .btn-edit svg { width: 8px; height: 8px; }
+      .med-card .card-body .btn-delete { height: 24px; font-size: 10px; padding: 0 6px; gap: 2px; }
+      .med-card .card-body .btn-delete svg { width: 8px; height: 8px; }
+      .chips-bar { gap: 6px; margin-bottom: 14px; padding-bottom: 2px; }
+      .chip { padding: 5px 10px; font-size: 12px; }
+      .chip svg { width: 10px; height: 10px; }
+    }
+
+    /* ─── Category Chips Desktop Readability ─── */
+    @media (min-width: 641px) {
+      .chips-bar { gap: 8px; margin-bottom: 20px; }
+      .chip { padding: 8px 16px; font-size: 15px; }
+      .chip svg { width: 15px; height: 15px; }
     }
 
     /* ─── Dark Mode ─── */
