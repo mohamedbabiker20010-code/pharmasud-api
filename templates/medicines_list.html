@@ -131,7 +131,7 @@
       display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
     }
 
-    /* ─── Medicine Card ─── */
+    /* ─── Medicine Card Desktop ─── */
     .med-card {
       background: #fff; border: 1px solid #EEF2F6; border-radius: 16px;
       overflow: hidden; transition: all 0.25s ease;
@@ -170,7 +170,6 @@
     .med-card .card-body {
       padding: 12px;
     }
-
     .med-card .card-body .med-name {
       font: 600 14px/1.3 'IBM Plex Sans Arabic', sans-serif;
       color: #0F172A; margin-bottom: 3px;
@@ -220,6 +219,88 @@
     .med-card .card-body .btn-delete:hover { background: #FEE2E2; }
     .med-card .card-body .btn-delete svg { width: 14px; height: 14px; }
 
+    /* ─── Medicine Card MOBILE HORIZONTAL (Shopping App Style) ─── */
+    @media (max-width: 640px) {
+      /* Hide desktop layout, show horizontal layout */
+      .med-card .card-img,
+      .med-card .card-body,
+      .med-card .card-actions { display: none; }
+      .med-card-inner,
+      .card-actions-mobile { display: flex !important; }
+      /* Horizontal card container */
+      .med-card {
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+      }
+      /* Horizontal inner layout */
+      .med-card-inner {
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 8px;
+      }
+      /* Square image - Amazon style */
+      .card-img-square {
+        width: 56px; height: 56px; flex-shrink: 0;
+        background: #F6F8FA; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        position: relative; overflow: hidden;
+      }
+      .card-img-square img {
+        width: 100%; height: 100%; object-fit: contain; padding: 4px;
+      }
+      .placeholder-icon-square {
+        color: #CBD5E1; width: 24px; height: 24px;
+      }
+      /* Horizontal content */
+      .card-content {
+        flex: 1; min-width: 0;
+        display: flex; flex-direction: row; justify-content: space-between;
+        align-items: flex-start; gap: 8px;
+      }
+      .card-content > div:first-child {
+        flex: 1; min-width: 0;
+      }
+      /* Stock badge on square image */
+      .stock-badge-mobile {
+        position: absolute; top: 3px; right: 3px;
+        padding: 2px 6px; border-radius: 999px;
+        font-size: 9px; font-weight: 600;
+        backdrop-filter: blur(4px);
+      }
+      .stock-badge-mobile.available { background: rgba(22, 163, 74, 0.9); color: #fff; }
+      .stock-badge-mobile.low { background: rgba(217, 119, 6, 0.9); color: #fff; }
+      .stock-badge-mobile.out { background: rgba(220, 38, 38, 0.9); color: #fff; }
+      /* Mobile text in horizontal layout */
+      .card-content .med-name {
+        font-size: 13px; margin-bottom: 2px;
+      }
+      .card-content .med-category {
+        font-size: 11px; margin-bottom: 4px;
+      }
+      .card-content .med-stock {
+        font-size: 11px; margin-bottom: 0;
+      }
+      .card-content .med-stock .qty { font-size: 13px; }
+      .card-content .med-price {
+        font-size: 13px; white-space: nowrap;
+        margin-bottom: 0;
+      }
+      .card-content .med-price .currency { font-size: 10px; }
+      /* Mobile actions bar */
+      .card-actions-mobile {
+        display: flex; gap: 6px; padding: 0 8px 8px;
+      }
+      .card-actions-mobile .btn-edit {
+        flex: 1; height: 30px; font-size: 11px; gap: 4px;
+      }
+      .card-actions-mobile .btn-delete {
+        height: 30px; font-size: 11px; padding: 0 10px;
+      }
+    }
+
     /* ─── Empty & Loading States ─── */
     .state-container {
       display: flex; flex-direction: column; align-items: center;
@@ -249,7 +330,7 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ─── Responsive ─── */
+    /* ─── Responsive (Tablet/Desktop) ─── */
     @media (max-width: 1280px) {
       .med-grid { grid-template-columns: repeat(3, 1fr); }
       .page-header h1 { font-size: 22px; }
@@ -260,23 +341,6 @@
     }
     @media (max-width: 640px) {
       .med-grid { grid-template-columns: 1fr; gap: 10px; }
-      .med-card .card-img { height: 40px; }
-      .med-card .card-img .placeholder-icon { width: 20px; height: 20px; }
-      .med-card .card-img img { padding: 4px; }
-      .med-card .card-body { padding: 6px; }
-      .med-card .card-body .med-name { font-size: 12px; margin-bottom: 1px; }
-      .med-card .card-body .med-category { font-size: 10px; margin-bottom: 4px; }
-      .med-card .card-body .med-stock { margin-bottom: 4px; font-size: 10px; }
-      .med-card .card-body .med-stock .qty { font-size: 12px; }
-      .med-card .card-body .med-price { font-size: 12px; margin-bottom: 6px; }
-      .med-card .card-body .med-price .currency { font-size: 9px; }
-      .med-card .card-body .btn-edit { height: 24px; font-size: 10px; gap: 2px; }
-      .med-card .card-body .btn-edit svg { width: 8px; height: 8px; }
-      .med-card .card-body .btn-delete { height: 24px; font-size: 10px; padding: 0 6px; gap: 2px; }
-      .med-card .card-body .btn-delete svg { width: 8px; height: 8px; }
-      .chips-bar { gap: 6px; margin-bottom: 14px; padding-bottom: 2px; }
-      .chip { padding: 5px 10px; font-size: 12px; }
-      .chip svg { width: 10px; height: 10px; }
     }
 
     /* ─── Category Chips Desktop Readability ─── */
@@ -388,7 +452,7 @@
       <div x-show="!loading && medicines.length > 0" class="med-grid">
         <template x-for="medicine in medicines" :key="medicine.id">
           <div class="med-card">
-            <!-- Image + Stock Badge -->
+            <!-- DESKTOP Layout: Vertical (110px image on top) -->
             <div class="card-img">
               <img x-show="medicine.image_url" :src="medicine.image_url" :alt="medicine.trade_name"
                    @error="$event.target.style.display='none'; $event.target.nextElementSibling.style.display='flex'">
@@ -405,7 +469,7 @@
                            medicine.stock_status === 'low' ? 'منخفض' : 'نفد'">
               </div>
             </div>
-            <!-- Body -->
+            <!-- Body for Desktop -->
             <div class="card-body">
               <div class="med-name" x-text="medicine.trade_name" :title="medicine.trade_name"></div>
               <div class="med-category" x-text="medicine.category || medicine.scientific_name || ''"></div>
@@ -430,6 +494,53 @@
                 </button>
               </div>
             </div>
+
+            <!-- MOBILE Layout: Horizontal -->
+            <div class="med-card-inner" style="display:none;">
+              <div class="card-img-square">
+                <img x-show="medicine.image_url" :src="medicine.image_url" :alt="medicine.trade_name"
+                     @error="$event.target.style.display='none'; $event.target.nextElementSibling.style.display='flex'">
+                <div class="placeholder-icon-square" :style="medicine.image_url ? 'display:none' : 'display:flex'">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg>
+                </div>
+                <div class="stock-badge-mobile"
+                     :class="{
+                       'available': medicine.stock_status === 'available',
+                       'low': medicine.stock_status === 'low',
+                       'out': medicine.stock_status === 'out'
+                     }"
+                     x-text="medicine.stock_status === 'available' ? 'متوفر' :
+                             medicine.stock_status === 'low' ? 'منخفض' : 'نفد'">
+                </div>
+              </div>
+              <div class="card-content">
+                <div>
+                  <div class="med-name" x-text="medicine.trade_name" :title="medicine.trade_name"></div>
+                  <div class="med-category" x-text="medicine.category || medicine.scientific_name || ''"></div>
+                  <div class="med-stock">
+                    <span class="qty" x-text="medicine.total_stock"></span>
+                    <span class="unit" x-text="medicine.base_unit"></span>
+                  </div>
+                </div>
+                <div class="med-price">
+                  <span class="currency">ج.س</span>
+                  <span x-text="medicine.sale_price"></span>
+                </div>
+              </div>
+            </div>
+            <div class="card-actions-mobile" style="display:none;">
+              <a :href="'/medicine-form?id=' + medicine.id" class="btn-edit">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                تعديل
+              </a>
+              <button x-show="isAdmin"
+                      @click="deleteMedicine(medicine.id, medicine.trade_name)"
+                      class="btn-delete">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                حذف
+              </button>
+            </div>
+          </div>
         </template>
       </div>
 
