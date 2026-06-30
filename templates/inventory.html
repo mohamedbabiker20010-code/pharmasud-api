@@ -55,8 +55,10 @@
     
     
 
-    /* ─── Main Content ─── */
-    
+    /* ─── Page Content Wrapper ─── */
+    .page-content {
+      padding: 24px 28px;
+    }
 
     /* ─── Stats Cards Row ─── */
     .stats-grid {
@@ -448,8 +450,7 @@
 {% endblock %}
 
 {% block content %}
-<div x-data="inventoryApp()" x-init="loadInventory()">
-    <main class="main-content">
+<div x-data="inventoryApp()" x-init="loadInventory()" class="page-content">
 
       <!-- Loading State -->
       <template x-if="loading">
@@ -662,8 +663,7 @@
         </div>
       </template>
 
-    </main>
-</div>
+    </div>
 {% endblock %}
 
 {% block extra_js %}
