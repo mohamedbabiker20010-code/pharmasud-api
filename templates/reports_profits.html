@@ -103,13 +103,13 @@
     .metric-card:hover {
       box-shadow: 0 4px 12px -2px rgba(15,23,42,0.06);
     }
-    .metric-card .metric-header {
+    .metric-card .header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       margin-bottom: 16px;
     }
-    .metric-card .metric-icon {
+    .metric-card .icon {
       width: 38px;
       height: 38px;
       border-radius: 10px;
@@ -117,15 +117,16 @@
       align-items: center;
       justify-content: center;
     }
-    .metric-card .metric-icon.blue { background: #DBEAFE; color: #1AA7EC; }
-    .metric-card .metric-icon.red { background: #FEE2E2; color: #DC2626; }
-    .metric-card .metric-icon.green { background: #ECFDF5; color: #16A34A; }
-    .metric-card .metric-icon.yellow { background: #FEF3C7; color: #D97706; }
-    .metric-card .metric-icon svg {
+    .metric-card .icon.blue { background: #DBEAFE; color: #1AA7EC; }
+    .metric-card .icon.red { background: #FEE2E2; color: #DC2626; }
+    .metric-card .icon.green { background: #ECFDF5; color: #16A34A; }
+    .metric-card .icon.yellow { background: #FEF3C7; color: #D97706; }
+    .metric-card .icon.cyan { background: #E0F2FE; color: #0284C7; }
+    .metric-card .icon svg {
       width: 20px;
       height: 20px;
     }
-    .metric-card .metric-badge {
+    .metric-card .badge {
       display: flex;
       align-items: center;
       gap: 3px;
@@ -134,34 +135,34 @@
       padding: 3px 8px;
       border-radius: 999px;
     }
-    .metric-card .metric-badge.success {
+    .metric-card .badge.success {
       color: #16A34A;
       background: #ECFDF5;
     }
-    .metric-card .metric-badge.danger {
-      color: #DC2626;
-      background: #FEF2F2;
-    }
-    .metric-card .metric-badge.warning {
+    .metric-card .badge.warning {
       color: #D97706;
       background: #FFF7ED;
     }
-    .metric-card .metric-badge.info {
+    .metric-card .badge.danger {
+      color: #DC2626;
+      background: #FEF2F2;
+    }
+    .metric-card .badge.info {
       color: #0284C7;
       background: #E0F2FE;
     }
-    .metric-card .metric-label {
+    .metric-card .label {
       font-size: 13px;
       color: #94A3B8;
       font-weight: 500;
       margin-bottom: 5px;
     }
-    .metric-card .metric-value {
+    .metric-card .value {
       font: 700 25px/1 'IBM Plex Sans Arabic', sans-serif;
       letter-spacing: -0.02em;
       color: #0F172A;
     }
-    .metric-card .metric-value .unit {
+    .metric-card .value .unit {
       font-size: 14px;
       color: #94A3B8;
       font-weight: 600;
@@ -625,15 +626,15 @@
             <div class="metrics-grid">
               <!-- Total Revenue -->
               <div class="metric-card">
-                <div class="metric-header">
-                  <div class="metric-icon blue"><i data-lucide="banknote"></i></div>
-                  <div class="metric-badge info">
+                <div class="header">
+                  <div class="icon blue"><i data-lucide="banknote"></i></div>
+                  <div class="badge info">
                     <i data-lucide="trending-up" style="width:13px;height:13px"></i>
                     الإيرادات
                   </div>
                 </div>
-                <div class="metric-label">إجمالي الإيرادات</div>
-                <div class="metric-value">
+                <div class="label">إجمالي الإيرادات</div>
+                <div class="value">
                   <span x-text="formatCurrency(report.summary.total_revenue)"></span>
                   <span class="unit">ج.س</span>
                 </div>
@@ -641,15 +642,15 @@
 
               <!-- Total Cost -->
               <div class="metric-card">
-                <div class="metric-header">
-                  <div class="metric-icon red"><i data-lucide="receipt"></i></div>
-                  <div class="metric-badge danger">
+                <div class="header">
+                  <div class="icon red"><i data-lucide="receipt"></i></div>
+                  <div class="badge danger">
                     <i data-lucide="trending-down" style="width:13px;height:13px"></i>
                     التكلفة
                   </div>
                 </div>
-                <div class="metric-label">إجمالي التكلفة</div>
-                <div class="metric-value">
+                <div class="label">إجمالي التكلفة</div>
+                <div class="value">
                   <span x-text="formatCurrency(report.summary.total_cost)"></span>
                   <span class="unit">ج.س</span>
                 </div>
@@ -657,15 +658,15 @@
 
               <!-- Net Profit -->
               <div class="metric-card">
-                <div class="metric-header">
-                  <div class="metric-icon green"><i data-lucide="trending-up"></i></div>
-                  <div class="metric-badge success">
+                <div class="header">
+                  <div class="icon green"><i data-lucide="trending-up"></i></div>
+                  <div class="badge success">
                     <i data-lucide="trending-up" style="width:13px;height:13px"></i>
                     الربح
                   </div>
                 </div>
-                <div class="metric-label">صافي الربح</div>
-                <div class="metric-value">
+                <div class="label">صافي الربح</div>
+                <div class="value">
                   <span x-text="formatCurrency(report.summary.net_profit)"></span>
                   <span class="unit">ج.س</span>
                 </div>
@@ -673,15 +674,15 @@
 
               <!-- Profit Margin -->
               <div class="metric-card">
-                <div class="metric-header">
-                  <div class="metric-icon yellow"><i data-lucide="percent"></i></div>
-                  <div class="metric-badge warning">
+                <div class="header">
+                  <div class="icon yellow"><i data-lucide="percent"></i></div>
+                  <div class="badge warning">
                     <i data-lucide="target" style="width:13px;height:13px"></i>
                     الهامش
                   </div>
                 </div>
-                <div class="metric-label">هامش الربح</div>
-                <div class="metric-value">
+                <div class="label">هامش الربح</div>
+                <div class="value">
                   <span x-text="report.summary.profit_margin"></span>
                   <span class="unit">%</span>
                 </div>
