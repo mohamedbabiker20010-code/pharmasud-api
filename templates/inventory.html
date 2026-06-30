@@ -322,7 +322,7 @@
     }
     .batches-table-header {
       display: grid;
-      grid-template-columns: 1.2fr 1fr 80px 100px 90px;
+      grid-template-columns: 1.3fr 1fr 1fr 1fr 1fr;
       gap: 8px;
       font: 600 11px/1 'IBM Plex Mono', monospace;
       letter-spacing: 0.06em;
@@ -331,7 +331,7 @@
     }
     .batch-row {
       display: grid;
-      grid-template-columns: 1.2fr 1fr 80px 100px 90px;
+      grid-template-columns: 1.3fr 1fr 1fr 1fr 1fr;
       gap: 8px;
       align-items: center;
       padding: 12px 14px;
@@ -423,13 +423,17 @@
     }
 
     /* ─── Responsive ─── */
-    @media (max-width: 768px) {
+    @media (max-width: 1024px) {
       .stats-grid { grid-template-columns: repeat(2, 1fr); }
       .medicine-card-header { flex-wrap: wrap; }
       .batches-table-header,
-      .batch-row { grid-template-columns: 1fr 1fr 60px 80px; }
+      .batch-row { grid-template-columns: 1fr 1fr 1fr 1fr; }
       .batches-table-header > :nth-child(2),
       .batch-row > :nth-child(2) { display: none; }
+    }
+    @media (max-width: 768px) {
+      .batches-table-header,
+      .batch-row { grid-template-columns: 1fr 1fr 60px 80px; }
     }
     @media (max-width: 640px) {
       .stats-grid { grid-template-columns: 1fr 1fr; }
