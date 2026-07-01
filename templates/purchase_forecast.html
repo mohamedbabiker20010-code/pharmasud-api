@@ -1,10 +1,293 @@
-{% extends 'shared_layout.html' %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/static/css/theme.css?v7.2.0">
+  <title>توقعات الشراء - PharmaSUD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif;
+      background: #F6F8FA;
+      color: #0F172A;
+      -webkit-font-smoothing: antialiased;
+    }
 
-{% set active_page = 'purchase-forecast' %}
-{% set page_title = 'توقعات الشراء' %}
+    /* ─── Dark Mode ─── */
+    html.dark body { background: #0F172A; color: #E2E8F0; }
+    html.dark .sidebar { background: #1E293B; border-color: #334155; }
+    html.dark .sidebar .brand .name { color: #E2E8F0; }
+    html.dark .sidebar .nav-item { color: #94A3B8; }
+    html.dark .sidebar .nav-item:hover { background: #334155; color: #E2E8F0; }
+    html.dark .sidebar .nav-item.active { background: #1AA7EC; color: #fff; }
+    html.dark .sidebar .user-card { border-color: #334155; background: #1E293B; }
+    html.dark .sidebar .user-name { color: #E2E8F0; }
+    html.dark .sidebar .user-role { color: #64748B; }
+    html.dark .topbar { background: #1E293B; border-color: #334155; }
+    html.dark .topbar .search-box { background: #0F172A; color: #64748B; }
+    html.dark .topbar .icon-btn { border-color: #334155; color: #94A3B8; }
+    html.dark .topbar .lang-toggle { border-color: #334155; }
+    html.dark .topbar .lang-toggle span { color: #94A3B8; }
+    html.dark .topbar .lang-toggle span.active { background: #1AA7EC; color: #fff; }
+    html.dark .metric-card { background: #1E293B; border-color: #334155; }
+    html.dark .metric-card .metric-label { color: #64748B; }
+    html.dark .metric-card .metric-value { color: #E2E8F0; }
+    html.dark .panel { background: #1E293B; border-color: #334155; }
+    html.dark .panel .panel-title { color: #E2E8F0; }
+    html.dark .panel .panel-subtitle { color: #64748B; }
+    html.dark .table th { color: #64748B; border-bottom-color: #334155; }
+    html.dark .table td { color: #CBD5E1; border-bottom-color: #1E293B; }
+    html.dark .table tr:hover td { background: #334155; }
+    html.dark .page-header h1 { color: #E2E8F0; }
+    html.dark .page-header .subtitle { color: #94A3B8; }
+    html.dark .priority-critical { background: rgba(185,28,28,0.3); color: #FCA5A5; border-color: rgba(239,68,68,0.4); }
+    html.dark .priority-high { background: rgba(180,83,9,0.25); color: #FCD34D; border-color: rgba(245,158,11,0.35); }
+    html.dark .priority-medium { background: rgba(30,64,175,0.25); color: #93C5FD; border-color: rgba(59,130,246,0.35); }
+    html.dark .priority-ok { background: rgba(22,101,52,0.2); color: #86EFAC; border-color: rgba(34,197,94,0.3); }
+    html.dark .action-box { background: rgba(185,28,28,0.1); border-color: rgba(239,68,68,0.25); }
+    html.dark .action-box.high { background: rgba(180,83,9,0.1); border-color: rgba(245,158,11,0.25); }
+    html.dark .no-data { color: #64748B; }
 
-{% block extra_css %}
-<style>
+    /* ─── Layout ─── */
+    .app-layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ─── Sidebar ─── */
+    .sidebar {
+      width: 248px;
+      background: #fff;
+      border-left: 1px solid #EEF2F6;
+      display: flex;
+      flex-direction: column;
+      padding: 22px 16px;
+      position: fixed;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      z-index: 100;
+    }
+    .sidebar .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 0 8px 22px;
+    }
+    .sidebar .brand .icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 11px;
+      background: #1AA7EC;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .sidebar .brand .icon::before,
+    .sidebar .brand .icon::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      background: #fff;
+      border-radius: 3px;
+    }
+    .sidebar .brand .icon::before { width: 18px; height: 5.5px; }
+    .sidebar .brand .icon::after { width: 5.5px; height: 18px; }
+    .sidebar .brand .name {
+      font: 700 18px/1 'IBM Plex Sans Arabic', sans-serif;
+      letter-spacing: -0.02em;
+    }
+    .sidebar .brand .name span { color: #1AA7EC; }
+
+    .sidebar .nav-section {
+      font: 600 11px/1 'IBM Plex Mono', monospace;
+      letter-spacing: 0.1em;
+      color: #CBD5E1;
+      padding: 14px 10px 10px;
+    }
+    .sidebar .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 12px;
+      border-radius: 11px;
+      color: #475569;
+      font-size: 14px;
+      font-weight: 500;
+      text-decoration: none;
+      margin-bottom: 4px;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .sidebar .nav-item:hover {
+      background: #F8FAFC;
+      color: #0F172A;
+    }
+    .sidebar .nav-item.active {
+      background: #1AA7EC;
+      color: #fff;
+      box-shadow: 0 8px 18px -8px rgba(26, 167, 236, 0.55);
+    }
+    .sidebar .nav-item svg {
+      width: 19px;
+      height: 19px;
+      flex-shrink: 0;
+    }
+    .sidebar .nav-item .badge {
+      margin-right: auto;
+      background: #FEF2F2;
+      color: #DC2626;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+    .sidebar .user-card {
+      margin-top: auto;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 11px;
+      border: 1px solid #EEF2F6;
+      border-radius: 13px;
+      margin-top: 20px;
+    }
+    .sidebar .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: #1AA7EC;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .sidebar .user-info { min-width: 0; flex: 1; }
+    .sidebar .user-name {
+      font-size: 13.5px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .sidebar .user-role {
+      font-size: 11.5px;
+      color: #94A3B8;
+    }
+    .sidebar .user-card svg {
+      width: 16px;
+      height: 16px;
+      color: #CBD5E1;
+      flex-shrink: 0;
+    }
+
+    /* ─── Topbar ─── */
+    .topbar {
+      height: 70px;
+      background: #fff;
+      border-bottom: 1px solid #EEF2F6;
+      display: flex;
+      align-items: center;
+      padding: 0 28px;
+      gap: 18px;
+      position: fixed;
+      top: 0;
+      right: 248px;
+      left: 0;
+      z-index: 90;
+    }
+    .topbar .search-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      max-width: 380px;
+      height: 42px;
+      padding: 0 14px;
+      border-radius: 11px;
+      background: #F6F8FA;
+      color: #94A3B8;
+      font-size: 14px;
+    }
+    .topbar .search-box svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .topbar .search-box kbd {
+      margin-right: auto;
+      font: 500 11px 'IBM Plex Mono', monospace;
+      color: #CBD5E1;
+      border: 1px solid #E2E8F0;
+      border-radius: 6px;
+      padding: 2px 6px;
+    }
+    .topbar .actions {
+      margin-right: auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .topbar .lang-toggle {
+      display: flex;
+      border: 1px solid #E2E8F0;
+      border-radius: 9px;
+      overflow: hidden;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .topbar .lang-toggle span {
+      padding: 7px 12px;
+      color: #64748B;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .topbar .lang-toggle span.active {
+      background: #1AA7EC;
+      color: #fff;
+    }
+    .topbar .icon-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 11px;
+      border: 1px solid #E2E8F0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #475569;
+      background: transparent;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+    .topbar .icon-btn:hover { background: #F8FAFC; }
+    .topbar .icon-btn svg { width: 18px; height: 18px; }
+    .topbar .icon-btn .dot {
+      position: absolute;
+      top: 9px;
+      left: 11px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #DC2626;
+      border: 2px solid #fff;
+    }
+
+    /* ─── Main Content ─── */
+    .main-content {
+      margin-right: 248px;
+      padding: calc(70px + 28px) 28px 28px;
+      min-height: 100vh;
+    }
+
     /* ─── Page Header ─── */
     .page-header {
       display: flex;
@@ -24,57 +307,58 @@
       color: #64748B;
       font-size: 14.5px;
     }
-
-    /* ─── Report Tabs ─── */
-    .report-tabs {
+    .page-header .actions {
       display: flex;
-      gap: 6px;
-      margin-bottom: 12px;
+      gap: 10px;
     }
-    .report-tab {
-      font-size: 12px;
+    .page-header .btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 42px;
+      padding: 0 16px;
+      border-radius: 11px;
+      font-size: 14px;
       font-weight: 600;
-      padding: 5px 11px;
-      border-radius: 8px;
       cursor: pointer;
       border: none;
-      background: transparent;
-      color: #94A3B8;
-      font-family: inherit;
       transition: all 0.2s ease;
+      font-family: inherit;
     }
-    .report-tab.active {
-      background: #DBEAFE;
-      color: #1AA7EC;
+    .page-header .btn-secondary {
+      background: #fff;
+      color: #334155;
+      border: 1px solid #E2E8F0;
     }
-    .report-tab:hover {
-      color: #0F172A;
+    .page-header .btn-secondary:hover { background: #F8FAFC; }
+    .page-header .btn-primary {
+      background: #1AA7EC;
+      color: #fff;
+      box-shadow: 0 10px 20px -8px rgba(26, 167, 236, 0.55);
     }
+    .page-header .btn-primary:hover { filter: brightness(1.05); }
+    .page-header .btn svg { width: 17px; height: 17px; }
 
     /* ─── Metric Cards ─── */
     .metrics-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 18px;
-      margin-bottom: 22px;
+      margin-bottom: 24px;
     }
     .metric-card {
       background: #fff;
       border: 1px solid #EEF2F6;
       border-radius: 16px;
       padding: 20px;
-      transition: box-shadow 0.2s ease;
     }
-    .metric-card:hover {
-      box-shadow: 0 4px 12px -2px rgba(15,23,42,0.06);
-    }
-    .metric-card .header {
+    .metric-card .metric-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       margin-bottom: 16px;
     }
-    .metric-card .icon {
+    .metric-card .metric-icon {
       width: 38px;
       height: 38px;
       border-radius: 10px;
@@ -82,15 +366,13 @@
       align-items: center;
       justify-content: center;
     }
-    .metric-card .icon.blue { background: #DBEAFE; color: #1AA7EC; }
-    .metric-card .icon.red { background: #FEE2E2; color: #DC2626; }
-    .metric-card .icon.green { background: #ECFDF5; color: #16A34A; }
-    .metric-card .icon.yellow { background: #FEF3C7; color: #D97706; }
-    .metric-card .icon svg {
-      width: 20px;
-      height: 20px;
-    }
-    .metric-card .badge {
+    .metric-card .metric-icon.blue { background: #DBEAFE; color: #1AA7EC; }
+    .metric-card .metric-icon.cyan { background: #E0F2FE; color: #0284C7; }
+    .metric-card .metric-icon.yellow { background: #FEF3C7; color: #D97706; }
+    .metric-card .metric-icon.red { background: #FEE2E2; color: #DC2626; }
+    .metric-card .metric-icon.green { background: #ECFDF5; color: #16A34A; }
+    .metric-card .metric-icon svg { width: 20px; height: 20px; }
+    .metric-card .metric-badge {
       display: flex;
       align-items: center;
       gap: 3px;
@@ -99,39 +381,22 @@
       padding: 3px 8px;
       border-radius: 999px;
     }
-    .metric-card .badge.success {
-      color: #16A34A;
-      background: #ECFDF5;
-    }
-    .metric-card .badge.warning {
-      color: #D97706;
-      background: #FFF7ED;
-    }
-    .metric-card .badge.danger {
-      color: #DC2626;
-      background: #FEF2F2;
-    }
-    .metric-card .badge.info {
-      color: #0284C7;
-      background: #E0F2FE;
-    }
-    .metric-card .label {
+    .metric-card .metric-badge.success { color: #16A34A; background: #ECFDF5; }
+    .metric-card .metric-badge.warning { color: #D97706; background: #FFFbeb; }
+    .metric-card .metric-badge.danger { color: #DC2626; background: #FEF2F2; }
+    .metric-card .metric-badge.info { color: #1AA7EC; background: #DBEAFE; }
+    .metric-card .metric-label {
       font-size: 13px;
       color: #94A3B8;
       font-weight: 500;
       margin-bottom: 5px;
     }
-    .metric-card .value {
+    .metric-card .metric-value {
       font: 700 25px/1 'IBM Plex Sans Arabic', sans-serif;
       letter-spacing: -0.02em;
       color: #0F172A;
     }
-    .metric-card .value .unit {
-      font-size: 14px;
-      color: #94A3B8;
-      font-weight: 600;
-    }
-    .metric-card .sub {
+    .metric-card .metric-sub {
       font-size: 12px;
       color: #94A3B8;
       margin-top: 4px;
@@ -143,12 +408,13 @@
       border: 1px solid #EEF2F6;
       border-radius: 16px;
       padding: 22px 24px;
+      margin-bottom: 24px;
     }
     .panel .panel-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 18px;
+      margin-bottom: 22px;
     }
     .panel .panel-title {
       font-size: 15px;
@@ -169,16 +435,17 @@
     }
     .table th {
       text-align: right;
-      padding: 12px 14px;
+      padding: 12px 16px;
       font: 600 11px 'IBM Plex Mono', monospace;
       letter-spacing: 0.06em;
       color: #CBD5E1;
       text-transform: uppercase;
       border-bottom: 1px solid #F1F5F9;
       white-space: nowrap;
+      user-select: none;
     }
     .table td {
-      padding: 13px 14px;
+      padding: 13px 16px;
       border-bottom: 1px solid #F6F8FA;
       color: #0F172A;
       vertical-align: middle;
@@ -203,44 +470,59 @@
       border: 1px solid;
     }
     .priority-critical {
-      background: rgba(239,68,68,0.12);
+      background: rgba(185,28,28,0.15);
       color: #DC2626;
-      border-color: rgba(239,68,68,0.25);
+      border-color: rgba(239,68,68,0.3);
     }
     .priority-high {
-      background: rgba(245,158,11,0.12);
+      background: rgba(180,83,9,0.12);
       color: #D97706;
       border-color: rgba(245,158,11,0.25);
     }
     .priority-medium {
-      background: rgba(26,167,236,0.1);
+      background: rgba(30,64,175,0.1);
       color: #1AA7EC;
       border-color: rgba(26,167,236,0.25);
     }
     .priority-ok {
-      background: rgba(34,197,94,0.1);
+      background: rgba(22,101,52,0.1);
       color: #16A34A;
       border-color: rgba(34,197,94,0.2);
     }
 
-    /* ─── Action Box ─── */
+    /* ─── Day Count Styling ─── */
+    .days-urgent { color: #DC2626; font-weight: 700; }
+    .days-warning { color: #D97706; font-weight: 600; }
+    .days-notice { color: #1AA7EC; }
+    .days-fine { color: #16A34A; }
+    .days-label { font-size: 11px; color: #94A3B8; margin-right: 2px; }
+
+    /* ─── Action Boxes ─── */
+    .actions-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
     .action-box {
-      background: #fff;
-      border: 1px solid #EEF2F6;
-      border-radius: 16px;
-      padding: 22px 24px;
-      margin-bottom: 22px;
+      border: 1px solid rgba(239,68,68,0.2);
+      border-radius: 12px;
+      padding: 18px;
+      background: rgba(185,28,28,0.04);
+    }
+    .action-box.high {
+      border-color: rgba(245,158,11,0.2);
+      background: rgba(180,83,9,0.04);
     }
     .action-box .action-header {
       display: flex;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
+      gap: 10px;
+      margin-bottom: 10px;
     }
     .action-box .action-icon {
-      width: 38px;
-      height: 38px;
-      border-radius: 10px;
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -248,9 +530,9 @@
     }
     .action-box .action-icon.red { background: #FEE2E2; color: #DC2626; }
     .action-box .action-icon.yellow { background: #FEF3C7; color: #D97706; }
-    .action-box .action-icon svg { width: 20px; height: 20px; }
+    .action-box .action-icon svg { width: 18px; height: 18px; }
     .action-box .action-title {
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 600;
     }
     .action-box .action-title.critical { color: #DC2626; }
@@ -258,21 +540,13 @@
     .action-box .action-body {
       font-size: 13px;
       color: #64748B;
-      line-height: 1.6;
+      line-height: 1.7;
     }
     .action-box .action-body strong { font-weight: 700; }
     .action-box .action-body .critical-num { color: #DC2626; }
     .action-box .action-body .high-num { color: #D97706; }
 
-    /* ─── Two Column Layout ─── */
-    .two-col {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 18px;
-      margin-bottom: 22px;
-    }
-
-    /* ─── Loading & Error ─── */
+    /* ─── Loading & Error States ─── */
     .loading-state {
       display: flex;
       flex-direction: column;
@@ -297,252 +571,617 @@
       justify-content: center;
       min-height: 400px;
       gap: 16px;
-    }
-    .error-state .err-msg {
       color: #DC2626;
-      font-size: 16px;
-      font-weight: 600;
     }
-    .error-state .err-detail {
-      color: #64748B;
-      font-size: 13px;
-    }
-    .retry-btn {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      height: 42px;
-      padding: 0 20px;
-      border-radius: 11px;
-      background: #1AA7EC;
-      border: none;
-      color: #fff;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      font-family: inherit;
-      box-shadow: 0 10px 22px -8px rgba(26, 167, 236, 0.55);
-      transition: all 0.2s ease;
-    }
-    .retry-btn:hover { filter: brightness(1.05); }
     .no-data {
       text-align: center;
-      padding: 30px 20px;
+      padding: 60px 20px;
+      color: #64748B;
+    }
+    .no-data .no-data-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+      opacity: 0.6;
+    }
+    .no-data .no-data-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #0F172A;
+      margin-bottom: 4px;
+    }
+    .no-data .no-data-sub {
+      font-size: 13px;
       color: #94A3B8;
-      font-size: 14px;
     }
 
     /* ─── Responsive ─── */
-    @media (max-width: 1200px) {
-      .two-col { grid-template-columns: 1fr; }
-    }
-    @media (max-width: 768px) {
+    @media (max-width: 1024px) {
+      .sidebar { display: none; }
+      .sidebar.mobile-open { display: flex; }
+      .sidebar-overlay { display: none; }
+      .sidebar-overlay.mobile-open { display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 99; }
+      .topbar { right: 0; }
+      .main-content { margin-right: 0; }
       .metrics-grid { grid-template-columns: repeat(2, 1fr); }
-      .two-col { grid-template-columns: 1fr; }
-      .report-tabs { flex-wrap: wrap; }
+      .actions-grid { grid-template-columns: 1fr; }
     }
     @media (max-width: 640px) {
-      .metrics-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+      .metrics-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
       .metric-card { padding: 16px; }
-      .metric-card .value { font-size: 20px; }
+      .metric-card .metric-value { font-size: 20px; }
       .page-header h1 { font-size: 20px; }
+      .actions-grid { grid-template-columns: 1fr; }
       .table { font-size: 13px; }
-      .table th, .table td { padding: 10px 12px; }
+      .table th, .table td { padding: 10px 10px; }
+      .table .col-unit, .table .col-daily { display: none; }
     }
 
     @keyframes spin { to { transform: rotate(360deg); } }
     [x-cloak] { display: none !important; }
-</style>
-{% endblock %}
+  </style>
+</head>
+<body>
 
-{% block content %}
-<div x-data="purchaseForecastApp()" x-init="init()" class="page-content">
+<div x-data="purchaseForecastApp()" x-init="init()" x-cloak>
+  <!-- Sidebar Overlay (mobile) -->
+  <div class="sidebar-overlay"
+       :class="{ 'mobile-open': sidebarOpen }"
+       @click="sidebarOpen = false"></div>
 
-    <!-- Report Tabs -->
-    <div class="report-tabs">
-      <button class="report-tab" :class="{ 'active': window.location.pathname === '/reports-sales' }" @click="window.location='/reports-sales'">تقرير المبيعات</button>
-      <button class="report-tab" :class="{ 'active': window.location.pathname === '/reports-profits' }" @click="window.location='/reports-profits'">تقرير الأرباح</button>
-      <button class="report-tab" :class="{ 'active': window.location.pathname === '/reports-slow-moving' }" @click="window.location='/reports-slow-moving'">الأدوية الراكدة</button>
-      <button class="report-tab" :class="{ 'active': window.location.pathname === '/reports-purchase-forecast' }" @click="window.location='/reports-purchase-forecast'">توقعات الشراء</button>
-      <button class="report-tab" :class="{ 'active': window.location.pathname === '/sales-history' }" @click="window.location='/sales-history'">سجل المبيعات</button>
-    </div>
-
-    <!-- Loading State -->
-    <template x-if="loading">
-      <div class="loading-state">
-        <div class="spinner"></div>
-        <span>جاري تحميل توقعات الشراء...</span>
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" :class="{ 'mobile-open': sidebarOpen }">
+      <div class="brand">
+        <div class="icon"></div>
+        <div class="name">Pharma<span>SUD</span></div>
       </div>
-    </template>
 
-    <!-- Error State -->
-    <template x-if="error">
-      <div class="error-state">
-        <i data-lucide="triangle-alert" style="width:48px;height:48px;color:#DC2626"></i>
-        <span class="err-msg">تعذر تحميل البيانات</span>
-        <span class="err-detail" x-text="errorMessage"></span>
-        <button class="retry-btn" @click="loadReport()">
-          <i data-lucide="refresh-cw" style="width:16px;height:16px"></i>
-          إعادة المحاولة
+      <div class="nav-section">القائمة</div>
+      <a href="/dashboard" class="nav-item">
+        <i data-lucide="layout-dashboard"></i>
+        <span>لوحة التحكم</span>
+      </a>
+      <a href="/pos" class="nav-item">
+        <i data-lucide="scan-barcode"></i>
+        <span>نقطة البيع</span>
+      </a>
+      <a href="/medicines" class="nav-item">
+        <i data-lucide="pill"></i>
+        <span>الأدوية</span>
+      </a>
+      <a href="/inventory" class="nav-item">
+        <i data-lucide="package"></i>
+        <span>المخزون</span>
+      </a>
+      <a href="/batch-receive" class="nav-item">
+        <i data-lucide="truck"></i>
+        <span>استلام دفعة</span>
+      </a>
+      <a href="/sales-history" class="nav-item">
+        <i data-lucide="receipt"></i>
+        <span>سجل المبيعات</span>
+      </a>
+
+      <div class="nav-section">التقارير</div>
+      <a href="/reports-sales" class="nav-item">
+        <i data-lucide="chart-line"></i>
+        <span>تقارير المبيعات</span>
+      </a>
+      <a href="/reports-profits" class="nav-item">
+        <i data-lucide="banknote"></i>
+        <span>تقارير الأرباح</span>
+      </a>
+      <a href="/reports-slow-moving" class="nav-item">
+        <i data-lucide="turtle"></i>
+        <span>بطيئة الحركة</span>
+      </a>
+      <a href="/reports-purchase-forecast" class="nav-item active">
+        <i data-lucide="clipboard-list"></i>
+        <span>توقعات الشراء</span>
+      </a>
+      <a href="/settings" class="nav-item">
+        <i data-lucide="settings"></i>
+        <span>الإعدادات</span>
+      </a>
+
+      <div class="user-card" @click="logout()" style="cursor:pointer;">
+        <div class="user-avatar" x-text="userInitials"></div>
+        <div class="user-info">
+          <div class="user-name" x-text="userName || 'مستخدم'"></div>
+          <div class="user-role" x-text="isAdmin ? 'مدير' : 'صيدلي'"></div>
+        </div>
+        <i data-lucide="log-out"></i>
+      </div>
+    </aside>
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <button class="icon-btn" @click="sidebarOpen = !sidebarOpen" style="display:none;" 
+              x-show="window.innerWidth <= 1024" x-cloak>
+        <i data-lucide="menu"></i>
+      </button>
+      <div class="search-box">
+        <i data-lucide="search"></i>
+        <span>البحث في الأدوية، المبيعات...</span>
+        <kbd>⌘K</kbd>
+      </div>
+      <div class="actions">
+        <div class="lang-toggle">
+          <span :class="{ 'active': lang === 'en' }" @click="switchLang('en')">EN</span>
+          <span :class="{ 'active': lang === 'ar' }" @click="switchLang('ar')">ع</span>
+        </div>
+        <button class="icon-btn" @click="toggleTheme()">
+          <i data-lucide="moon" x-show="!isDark"></i>
+          <i data-lucide="sun" x-show="isDark"></i>
+        </button>
+        <button class="icon-btn">
+          <i data-lucide="bell"></i>
+          <template x-if="summary.critical_count > 0">
+            <span class="dot"></span>
+          </template>
         </button>
       </div>
-    </template>
+    </header>
 
-    <!-- Report Content -->
-    <template x-if="!loading && !error && loaded">
-      <div>
-        <!-- Page Header -->
-        <div class="page-header">
-          <div>
-            <h1>توقعات الشراء</h1>
-            <p class="subtitle" x-text="pharmacyName + ' · ' + currentDate"></p>
-          </div>
-          <div class="actions">
-            <button class="btn btn-secondary" @click="loadReport()" style="display:flex;align-items:center;gap:8px;height:42px;padding:0 16px;border-radius:11px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid #E2E8F0;background:#fff;color:#334155;">
-              <i data-lucide="refresh-cw" style="width:17px;height:17px"></i>
-              <span>تحديث</span>
-            </button>
-          </div>
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Loading State -->
+      <template x-if="loading">
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <span>جاري تحميل توقعات الشراء...</span>
         </div>
+      </template>
 
-        <!-- Summary Description -->
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
-          <div style="font-size:13px;color:#64748B;">
-            تحليل توقعات الشراء لجميع الأدوية — يعتمد على متوسط المبيعات اليومية لآخر 30 يوماً
-          </div>
-          <div style="font-size:13px;color:#64748B;">
-            إجمالي الأدوية: <strong style="color:#0F172A;" x-text="medicines.length"></strong>
-          </div>
+      <!-- Error State -->
+      <template x-if="error">
+        <div class="error-state">
+          <i data-lucide="triangle-alert" style="width:48px;height:48px"></i>
+          <span x-text="errorMessage"></span>
+          <button class="btn btn-secondary" style="display:flex;align-items:center;gap:8px;height:42px;padding:0 16px;border-radius:11px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid #E2E8F0;background:#fff;color:#334155;"
+                  @click="loadReport()">
+            <i data-lucide="refresh-cw" style="width:17px;height:17px"></i>
+            إعادة المحاولة
+          </button>
         </div>
+      </template>
 
-        <!-- Summary Metric Cards -->
-        <div class="metrics-grid">
-          <div class="metric-card">
-            <div class="header">
-              <div class="icon red">
-                <i data-lucide="alert-octagon"></i>
-              </div>
-              <div class="badge danger">≤ 7 أيام</div>
+      <!-- Report Content -->
+      <template x-if="!loading && !error && loaded">
+        <div>
+          <!-- Page Header -->
+          <div class="page-header">
+            <div>
+              <h1>📋 توقعات الشراء</h1>
+              <p class="subtitle" x-text="pharmacyName + ' · ' + currentDate"></p>
             </div>
-            <div class="label">حرجة — شراء فوري</div>
-            <div class="value" x-text="summary.critical_count"></div>
-            <div class="sub">أقل من 7 أيام متبقية</div>
-          </div>
-          <div class="metric-card">
-            <div class="header">
-              <div class="icon yellow">
-                <i data-lucide="alert-triangle"></i>
-              </div>
-              <div class="badge warning">8–14 يوم</div>
+            <div class="actions">
+              <button class="btn btn-secondary" @click="loadReport()">
+                <i data-lucide="refresh-cw" style="width:17px;height:17px"></i>
+                <span>تحديث</span>
+              </button>
             </div>
-            <div class="label">عالية — شراء هذا الأسبوع</div>
-            <div class="value" x-text="summary.high_count"></div>
-            <div class="sub">8–14 يوم متبقية</div>
           </div>
-          <div class="metric-card">
-            <div class="header">
-              <div class="icon blue">
-                <i data-lucide="clock"></i>
-              </div>
-              <div class="badge info">15–30 يوم</div>
-            </div>
-            <div class="label">متوسطة — خطط للشراء</div>
-            <div class="value" x-text="summary.medium_count"></div>
-            <div class="sub">15–30 يوم متبقية</div>
-          </div>
-          <div class="metric-card">
-            <div class="header">
-              <div class="icon green">
-                <i data-lucide="check-circle-2"></i>
-              </div>
-              <div class="badge success">30+ يوم</div>
-            </div>
-            <div class="label">مُستقرّة — لا حاجة للشراء الآن</div>
-            <div class="value" x-text="summary.ok_count"></div>
-            <div class="sub">أكثر من 30 يوم متبقية</div>
-          </div>
-        </div>
 
-        <!-- Action Boxes for Critical & High -->
-        <template x-if="summary.critical_count > 0 || summary.high_count > 0">
-          <div class="two-col">
-            <template x-if="summary.critical_count > 0">
-              <div class="action-box">
+          <!-- Summary Description -->
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+            <div style="font-size:13px;color:#64748B;">
+              تحليل توقعات الشراء لجميع الأدوية — يعتمد على متوسط المبيعات اليومية لآخر 30 يوماً
+            </div>
+            <div style="font-size:13px;color:#64748B;">
+              إجمالي الأدوية: <strong style="color:#0F172A;" x-text="medicines.length"></strong>
+            </div>
+          </div>
+
+          <!-- Summary Metric Cards -->
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <div class="metric-header">
+                <div class="metric-icon red">
+                  <i data-lucide="alert-octagon"></i>
+                </div>
+                <div class="metric-badge danger">≤ 7 أيام</div>
+              </div>
+              <div class="metric-label">حرجة — شراء فوري</div>
+              <div class="metric-value" x-text="summary.critical_count"></div>
+              <div class="metric-sub">أقل من 7 أيام متبقية</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-header">
+                <div class="metric-icon yellow">
+                  <i data-lucide="alert-triangle"></i>
+                </div>
+                <div class="metric-badge warning">8–14 يوم</div>
+              </div>
+              <div class="metric-label">عالية — شراء هذا الأسبوع</div>
+              <div class="metric-value" x-text="summary.high_count"></div>
+              <div class="metric-sub">8–14 يوم متبقية</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-header">
+                <div class="metric-icon blue">
+                  <i data-lucide="clock"></i>
+                </div>
+                <div class="metric-badge info">15–30 يوم</div>
+              </div>
+              <div class="metric-label">متوسطة — خطط للشراء</div>
+              <div class="metric-value" x-text="summary.medium_count"></div>
+              <div class="metric-sub">15–30 يوم متبقية</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-header">
+                <div class="metric-icon green">
+                  <i data-lucide="check-circle-2"></i>
+                </div>
+                <div class="metric-badge success">> 30 يوم</div>
+              </div>
+              <div class="metric-label">جيدة — لا حاجة الآن</div>
+              <div class="metric-value" x-text="summary.ok_count"></div>
+              <div class="metric-sub">أكثر من 30 يوم متبقية</div>
+            </div>
+          </div>
+
+          <!-- Medicines Table -->
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <div class="panel-title">💊 قائمة توقعات شراء الأدوية</div>
+                <div class="panel-subtitle">مرتبة حسب الأولوية — الأكثر إلحاحاً أولاً</div>
+              </div>
+            </div>
+            <div class="table-container">
+              <template x-if="medicines.length > 0">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>اسم الدواء</th>
+                      <th>المخزون الحالي</th>
+                      <th class="col-unit">الوحدة</th>
+                      <th class="col-daily">متوسط البيع اليومي</th>
+                      <th>الأيام المتبقية</th>
+                      <th>تاريخ النفاد المتوقع</th>
+                      <th>كمية الطلب المقترحة</th>
+                      <th>الأولوية</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <template x-for="(med, index) in medicines" :key="med.medicine_id">
+                      <tr>
+                        <td class="num" x-text="index + 1"></td>
+                        <td class="med-name" x-text="med.trade_name"></td>
+                        <td class="stock-num" x-text="med.current_stock"></td>
+                        <td class="col-unit" x-text="med.base_unit"></td>
+                        <td class="col-daily num" x-text="formatDailyAvg(med.avg_daily_sales)"></td>
+                        <td>
+                          <span :class="daysClass(med.days_remaining)" x-text="med.days_remaining"></span>
+                          <span class="days-label">يوم</span>
+                        </td>
+                        <td class="runout-date" x-text="formatDate(med.expected_runout_date)"></td>
+                        <td class="stock-num" x-text="med.suggested_order_qty"></td>
+                        <td>
+                          <span class="priority-badge"
+                                :class="'priority-' + med.priority"
+                                x-text="priorityLabel(med.priority)"></span>
+                        </td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </template>
+              <template x-if="medicines.length === 0">
+                <div class="no-data">
+                  <div class="no-data-icon">✅</div>
+                  <div class="no-data-title">لا توجد أدوية تحتاج للشراء حالياً</div>
+                  <div class="no-data-sub">جميع الأدوية لديها مخزون كافٍ لأكثر من 30 يوماً</div>
+                </div>
+              </template>
+            </div>
+          </div>
+
+          <!-- Quick Actions Section -->
+          <div class="panel" x-show="summary.critical_count > 0 || summary.high_count > 0">
+            <div class="panel-header">
+              <div>
+                <div class="panel-title">⚡ إجراءات مقترحة</div>
+                <div class="panel-subtitle">بناءً على الأولويات الحالية</div>
+              </div>
+            </div>
+            <div class="actions-grid">
+              <div class="action-box" x-show="summary.critical_count > 0">
                 <div class="action-header">
                   <div class="action-icon red">
                     <i data-lucide="alert-octagon"></i>
                   </div>
-                  <div class="action-title critical">حالات حرجة تحتاج شراء فوري</div>
+                  <div class="action-title critical">حرجة — شراء فوري مطلوب</div>
                 </div>
                 <div class="action-body">
-                  <span x-text="summary.critical_count"></span> دواء <strong>حرج</strong> — مخزونك يكفي <strong class="critical-num">أقل من أسبوع</strong>. يرجى <strong>طلب الشراء فوراً</strong> لتجنب نفاد المخزون.
+                  <strong class="critical-num" x-text="summary.critical_count"></strong> دواء (أدوية) على وشك النفاد خلال 7 أيام أو أقل.
+                  يوصى بطلب شراء عاجل لتجنب نفاد المخزون وانقطاع الخدمة.
                 </div>
               </div>
-            </template>
-            <template x-if="summary.high_count > 0">
-              <div class="action-box">
+              <div class="action-box high" x-show="summary.high_count > 0">
                 <div class="action-header">
                   <div class="action-icon yellow">
                     <i data-lucide="alert-triangle"></i>
                   </div>
-                  <div class="action-title high">حالات عالية تحتاج خطة شراء</div>
+                  <div class="action-title high">عالية — يجب الشراء هذا الأسبوع</div>
                 </div>
                 <div class="action-body">
-                  <span x-text="summary.high_count"></span> دواء <strong>عالي الأولوية</strong> — مخزونك يكفي لمدة <strong class="high-num">أسبوع إلى اثنين</strong>. يرجى <strong>التخطيط للشراء هذا الأسبوع</strong>.
+                  <strong class="high-num" x-text="summary.high_count"></strong> دواء (أدوية) ستنفد خلال 14 يوماً.
+                  يوصى بتضمينها في طلب الشراء القادم هذا الأسبوع.
                 </div>
               </div>
-            </template>
-          </div>
-        </template>
-
-        <!-- Forecast Table -->
-        <div class="panel">
-          <div class="panel-header">
-            <div>
-              <div class="panel-title">جدول توقعات الشراء</div>
-              <div class="panel-subtitle">توقعات النفاد حسب متوسط المبيعات اليومية</div>
             </div>
           </div>
-          <template x-if="medicines.length > 0">
-            <div class="table-container">
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th>الدواء</th>
-                    <th>المخزون الحالي</th>
-                    <th class="col-unit">مبيعات يومية</th>
-                    <th>الأيام المتبقية</th>
-                    <th>تاريخ النفاد المتوقع</th>
-                    <th>الأولوية</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <template x-for="med in medicines" :key="med.id">
-                    <tr>
-                      <td class="med-name" x-text="med.trade_name"></td>
-                      <td class="stock-num" x-text="med.current_stock"></td>
-                      <td class="col-unit" x-text="med.avg_daily_sales.toFixed(1)"></td>
-                      <td>
-                        <span :class="med.days_remaining <= 7 ? 'days-urgent' : (med.days_remaining <= 14 ? 'days-warning' : (med.days_remaining <= 30 ? 'days-notice' : 'days-fine'))" x-text="med.days_remaining"></span>
-                        <span class="days-label">يوم</span>
-                      </td>
-                      <td class="runout-date" x-text="med.expected_runout_date"></td>
-                      <td>
-                        <span class="priority-badge" :class="med.priority_class" x-text="med.priority_label"></span>
-                      </td>
-                    </tr>
-                  </template>
-                </tbody>
-              </table>
-            </div>
-          </template>
-          <template x-if="medicines.length === 0">
-            <div class="no-data">
-              لا توجد بيانات متوفرة لعرضها
-            </div>
-          </template>
         </div>
-      </div>
-    </template>
+      </template>
+
+      <!-- Initial/Empty State -->
+      <template x-if="!loading && !error && !loaded">
+        <div class="loading-state" style="padding:80px 20px;">
+          <div style="font-size:48px;margin-bottom:12px;">📋</div>
+          <span>جاري تحميل توقعات الشراء...</span>
+        </div>
+      </template>
+    </main>
   </div>
-{% endblock %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.lucide) lucide.createIcons();
+});
+
+function purchaseForecastApp() {
+  return {
+    sidebarOpen: false,
+    loading: true,
+    error: false,
+    errorMessage: '',
+    loaded: false,
+    currentDate: '',
+    userName: '',
+    pharmacyName: '',
+    userInitials: '',
+    isAdmin: false,
+    isDark: false,
+    lang: 'ar',
+    medicines: [],
+    summary: {
+      critical_count: 0,
+      high_count: 0,
+      medium_count: 0,
+      ok_count: 0
+    },
+
+    init() {
+      // Dark mode check
+      this.isDark = localStorage.getItem('theme') === 'dark';
+      if (this.isDark) document.documentElement.classList.add('dark');
+
+      // Language check
+      this.lang = localStorage.getItem('lang') || 'ar';
+      if (this.lang === 'en') {
+        document.documentElement.dir = 'ltr';
+        document.documentElement.lang = 'en';
+      }
+
+      // Admin only
+      if (localStorage.getItem('role') !== 'admin') {
+        alert('هذه الصفحة للمدير فقط');
+        window.location.href = '/dashboard';
+        return;
+      }
+      this.isAdmin = true;
+      this.formatCurrentDate();
+      this.loadUserInfo();
+      this.loadReport();
+    },
+
+    formatCurrentDate() {
+      const now = new Date();
+      const options = {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      };
+      this.currentDate = now.toLocaleDateString('ar-SA', options);
+    },
+
+    loadUserInfo() {
+      try {
+        const token = localStorage.getItem('token');
+        if (token) {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          this.userName = payload.username || payload.sub || 'مستخدم';
+          this.pharmacyName = payload.pharmacy_name || 'صيدلية الزاريات';
+        } else {
+          this.userName = 'مستخدم';
+          this.pharmacyName = 'صيدلية الزاريات';
+        }
+      } catch (e) {
+        this.userName = 'مستخدم';
+        this.pharmacyName = 'صيدلية الزاريات';
+      }
+      this.userInitials = this.userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    },
+
+    async loadReport() {
+      this.loading = true;
+      this.error = false;
+      this.errorMessage = '';
+      this.loaded = false;
+
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          window.location.href = '/login';
+          return;
+        }
+
+        const response = await fetch('/api/reports/purchase-forecast', {
+          method: 'GET',
+          headers: {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            window.location.href = '/login';
+            return;
+          }
+          throw new Error('فشل تحميل التقرير (' + response.status + ')');
+        }
+
+        const result = await response.json();
+
+        // Normalize response — accept either top-level fields or nested in a report object
+        let meds = [];
+        let sum = { critical_count: 0, high_count: 0, medium_count: 0, ok_count: 0 };
+
+        if (result.medicines) {
+          meds = result.medicines;
+        } else if (result.report && result.report.medicines) {
+          meds = result.report.medicines;
+        }
+
+        if (result.summary) {
+          sum.critical_count = result.summary.critical_count || 0;
+          sum.high_count = result.summary.high_count || 0;
+          sum.medium_count = result.summary.medium_count || 0;
+          sum.ok_count = result.summary.ok_count || 0;
+        } else if (result.report && result.report.summary) {
+          const s = result.report.summary;
+          sum.critical_count = s.critical_count || 0;
+          sum.high_count = s.high_count || 0;
+          sum.medium_count = s.medium_count || 0;
+          sum.ok_count = s.ok_count || 0;
+        }
+
+        // If summary isn't provided, compute it from the medicines list
+        if (meds.length > 0 && sum.critical_count === 0 && sum.high_count === 0 && sum.medium_count === 0 && sum.ok_count === 0) {
+          for (const m of meds) {
+            const days = m.days_remaining;
+            if (days <= 7) sum.critical_count++;
+            else if (days <= 14) sum.high_count++;
+            else if (days <= 30) sum.medium_count++;
+            else sum.ok_count++;
+          }
+        }
+
+        // Sort medicines by priority: critical first, then high, medium, ok
+        const priorityOrder = { critical: 0, high: 1, medium: 2, ok: 3 };
+        meds.sort((a, b) => {
+          const pA = priorityOrder[a.priority] !== undefined ? priorityOrder[a.priority] : 99;
+          const pB = priorityOrder[b.priority] !== undefined ? priorityOrder[b.priority] : 99;
+          if (pA !== pB) return pA - pB;
+          return (a.days_remaining || 0) - (b.days_remaining || 0);
+        });
+
+        this.medicines = meds;
+        this.summary = sum;
+        this.loaded = true;
+
+        // Re-render Lucide icons after data loads
+        this.$nextTick(() => {
+          if (window.lucide) lucide.createIcons();
+        });
+
+      } catch (e) {
+        this.error = true;
+        this.errorMessage = e.message || 'حدث خطأ غير متوقع';
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    priorityLabel(priority) {
+      const labels = {
+        'critical': '🔴 اشترِ الآن فوراً',
+        'high': '🟡 اشترِ هذا الأسبوع',
+        'medium': '🔵 خطط للشراء',
+        'ok': '✅ لا حاجة الآن'
+      };
+      return labels[priority] || priority;
+    },
+
+    daysClass(days) {
+      if (days === null || days === undefined) return '';
+      if (days <= 7) return 'days-urgent';
+      if (days <= 14) return 'days-warning';
+      if (days <= 30) return 'days-notice';
+      return 'days-fine';
+    },
+
+    formatDailyAvg(value) {
+      if (value === null || value === undefined) return '—';
+      const num = typeof value === 'number' ? value : parseFloat(value);
+      return num.toFixed(1);
+    },
+
+    formatCurrency(value) {
+      if (value === null || value === undefined) return '0.00';
+      const num = typeof value === 'number' ? value : parseFloat(value);
+      return num.toLocaleString('ar-EG', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    },
+
+    formatDate(dateStr) {
+      if (!dateStr) return '—';
+      try {
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return dateStr;
+        return d.toLocaleDateString('ar-SA', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        });
+      } catch (e) {
+        return dateStr;
+      }
+    },
+
+    toggleTheme() {
+      this.isDark = !this.isDark;
+      if (this.isDark) {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+      }
+      this.$nextTick(() => {
+        if (window.lucide) lucide.createIcons();
+      });
+    },
+
+    switchLang(lang) {
+      this.lang = lang;
+      localStorage.setItem('lang', lang);
+      if (lang === 'en') {
+        document.documentElement.dir = 'ltr';
+        document.documentElement.lang = 'en';
+      } else {
+        document.documentElement.dir = 'rtl';
+        document.documentElement.lang = 'ar';
+      }
+    },
+
+    logout() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('role');
+      window.location.href = '/login';
+    }
+  };
+}
+</script>
+
+</body>
+</html>
