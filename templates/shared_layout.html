@@ -10,6 +10,9 @@
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/static/js/permissions.js"></script>
+  <script src="/static/js/perm-engine.js"></script>
+  <script src="/static/js/menu-definition.js"></script>
 
   <!-- ===== LAYOUT & SIDEBAR CSS — single source, no duplicates ===== -->
   <style>
@@ -315,9 +318,46 @@
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       if (window.lucide) lucide.createIcons();
+      
+      // Initialize Permission Engine
+      initializePermissionEngine();
     });
 
-    function pageApp() {
+    async function initializePermissionEngine() {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        
+        const response = await fetch('/api/user/context', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        
+        if (response.ok) {
+          const context = await response.json();
+          if (window.PharmaSUD && window.PharmaSUD.perm) {
+            window.PharmaSUD.perm.init(context);
+            
+            // Cache for offline/refresh resilience
+            localStorage.setItem('pharmasud.perm.cache', JSON.stringify(context));
+            
+            // Dispatch event for other components
+            window.dispatchEvent(new CustomEvent('pharmasud:perm:ready', { detail: context }));
+          }
+        }
+      } catch (e) {
+        console.warn('[PharmaSUD] Permission engine init failed:', e);
+        // Try cached version
+        try {
+          const cached = localStorage.getItem('pharmasud.perm.cache');
+          if (cached && window.PharmaSUD && window.PharmaSUD.perm) {
+            window.PharmaSUD.perm.init(JSON.parse(cached));
+          }
+        } catch (ce) {
+          console.warn('[PharmaSUD] Cached permission load failed:', ce);
+        }
+      }
+    }
+  </script>
       return {
         userName:    localStorage.getItem('userName') || 'المستخدم',
         isAdmin:     localStorage.getItem('role') === 'admin',
