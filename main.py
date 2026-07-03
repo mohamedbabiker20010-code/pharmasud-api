@@ -42,6 +42,7 @@ from reports import router as reports_router
 from alerts import router as alerts_router
 from employees import router as employees_router
 from audit import router as audit_router
+from routers.user_context import router as user_context_router
 
 app = FastAPI(
     title="PharmaSUD API",
@@ -297,6 +298,7 @@ app.include_router(reports_router)
 app.include_router(alerts_router)
 app.include_router(employees_router)
 app.include_router(audit_router)
+app.include_router(user_context_router)
 
 logger = logging.getLogger(__name__)
 
