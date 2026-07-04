@@ -215,20 +215,28 @@ async def create_tables():
         print(f"⚠️ Could not create RBAC tables: {e}")
 
     # RBAC Phase 1: Add role_id column to users if missing
-    try:
-        with engine.connect() as conn:
-            result = conn.execute(text("""\
-                SELECT column_name FROM information_schema.columns \
-                WHERE table_name = 'users' AND column_name = 'role_id'\
-            """)).fetchone()
-            if not result:
-                conn.execute(text("ALTER TABLE users ADD COLUMN role_id UUID REFERENCES roles(id)"))
-                conn.commit()
-                print("✅ Added role_id column to users table")
-            else:
-                print("✅ role_id column already exists in users table")
-    except Exception as e:
-        print(f"⚠️ Could not add role_id column: {e}")
+        try:
+            with engine.connect() as conn:
+                result = conn.execute(text("""\\
+                    SELECT column_name FROM information_schema.columns \\
+                    WHERE table_name = 'users' AND column_name = 'role_id'\\
+                """)).fetchone()
+                if not result:
+                    conn.execute(text("ALTER TABLE users ADD COLUMN role_id UUID REFERENCES roles(id)"))
+                    conn.commit()
+                    print("✅ Added role_id column to users table")
+                else:
+                    print("✅ role_id column already exists in users table")
+        except Exception as e:
+            print(f"⚠️ Could not add role_id column: {e}")
+
+        # RBAC Phase 1: Seed roles, permissions, role_permissions (idempotent)
+        try:
+            from rbac_seeder import seed_rbac_foundation
+            result = seed_rbac_foundation()
+            print(f"✅ RBAC Foundation seeded: roles={result['roles']}, permissions={result['permissions']}, mappings={result['role_permissions']}, migrated={result['migration'].get('updated', 0)}")
+        except Exception as e:
+            print(f"⚠️ Could not seed RBAC foundation: {e}")
 
 # CORS - Production hardened
 # Allow only specific production origins; credentials require explicit origins (no wildcard)
