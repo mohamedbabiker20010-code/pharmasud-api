@@ -21,7 +21,8 @@ def resolve_effective_permissions(user: Dict[str, Any], db: Session) -> Dict[str
     """
     Single extension point for all future permission sources.
     
-    Current implementation: Returns role-based permissions only.
+    Current implementation: Returns role-based permissions merged with
+    legacy fallback permissions for users without RBAC role_id.
     Future versions may merge:
     - User-level grants (user_permission_grants)
     - Temporary grants (with expires_at filtering)
@@ -31,21 +32,32 @@ def resolve_effective_permissions(user: Dict[str, Any], db: Session) -> Dict[str
     Frontend contract remains unchanged.
     """
     # 1. Base: Role permissions (current implementation)
-    role_perms = get_role_permissions(user.get("role_id"), db)
+    role_id = user.get("role_id") or ""
+    role_perms = get_role_permissions(role_id, db)
     
-    # 2. [FUTURE] User-level grants
-    # user_grants = get_user_permission_grants(user["user_id"], db)
+    # 2. Fallback: Legacy user-level grants for users without RBAC role
+    # get_current_user() computes fallback permissions based on legacy role
+    # and stores them in user["permissions"] (list of codes).
+    # This activates only when role_id is missing, NULL, or empty.
+    if not role_id:
+        fallback_perms = user.get("permissions", [])
+        # Convert list of codes to flat dict {code: true} matching RBAC format
+        user_grants = {code: True for code in fallback_perms}
+    else:
+        user_grants = {}
     
-    # 3. [FUTURE] Temporary grants (filter by expires_at > now)
+    # 3. [FUTURE] User-level grants (database-backed)
+    # user_grants_db = get_user_permission_grants(user["user_id"], db)
+    
+    # 4. [FUTURE] Temporary grants (filter by expires_at > now)
     # temp_grants = get_temporary_grants(user["user_id"], db)
     
-    # 4. [FUTURE] Branch/region scoped grants
+    # 5. [FUTURE] Branch/region scoped grants
     # branch_grants = get_branch_grants(user["user_id"], user.get("pharmacy_id"), db)
     
-    # 5. Merge: grants override role (additive)
-    # effective = {**role_perms, **user_grants, **temp_grants, **branch_grants}
-    
-    effective = role_perms  # Current v1 implementation
+    # 6. Merge: grants are additive (user grants supplement role perms)
+    # Role permissions remain primary; fallback only activates when role_id absent
+    effective = {**role_perms, **user_grants}
     return effective
 
 
