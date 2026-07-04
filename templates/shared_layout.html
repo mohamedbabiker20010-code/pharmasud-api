@@ -357,7 +357,9 @@
         }
       }
     }
-  </script>
+
+    // Alpine page component - must be defined before Alpine initializes
+    function pageApp() {
       return {
         userName:    localStorage.getItem('userName') || 'المستخدم',
         isAdmin:     localStorage.getItem('role') === 'admin',
