@@ -12,6 +12,10 @@ import random
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
 
+if os.getenv("ENVIRONMENT", "development").lower() == "production":
+    print("Test-data generation is disabled in production", file=sys.stderr)
+    sys.exit(2)
+
 # Load environment
 load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL")

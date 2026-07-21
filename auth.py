@@ -111,6 +111,12 @@ async def get_current_user(
     user = db.query(User).filter(User.id == user_id).first()
     if user is None:
         raise credentials_exception
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Account is disabled",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     
     # Get effective permissions from role
     permissions = []
@@ -239,6 +245,13 @@ def activate_product_key(product_key: str, db: Session) -> Dict[str, Any]:
     pharmacy.is_active = True
     pharmacy.activated_at = datetime.utcnow()
     db.commit()
+
+    from audit import log_action
+    log_action(
+        db=db, pharmacy_id=str(pharmacy.id), user_id=None, user_name="system",
+        action_type="product_activated", description="Product key activated",
+        target_entity="pharmacy", target_id=str(pharmacy.id),
+    )
     
     return {
         "success": True,
@@ -253,6 +266,7 @@ def activate_product_key(product_key: str, db: Session) -> Dict[str, Any]:
 
 def create_admin_user(
     pharmacy_id: str,
+    product_key: str,
     full_name: str,
     username: str,
     password: str,
@@ -289,7 +303,10 @@ def create_admin_user(
             "message": "معرف الصيدلية غير صالح"
         }
     
-    pharmacy = db.query(Pharmacy).filter(Pharmacy.id == pharmacy_uuid).first()
+    pharmacy = db.query(Pharmacy).filter(
+        Pharmacy.id == pharmacy_uuid,
+        Pharmacy.product_key == product_key,
+    ).first()
     if not pharmacy:
         return {
             "success": False,
@@ -325,6 +342,7 @@ def create_admin_user(
     # Create admin user
     from uuid import uuid4
     
+    owner_role = db.query(Role).filter(Role.name == "owner").one()
     new_admin = User(
         id=uuid4(),
         pharmacy_id=pharmacy_uuid,
@@ -332,11 +350,20 @@ def create_admin_user(
         full_name=full_name,
         password_hash=get_password_hash(password),
         role="admin",
+        role_id=owner_role.id,
         is_active=True
     )
     
     db.add(new_admin)
     db.commit()
+
+    from audit import log_action
+    log_action(
+        db=db, pharmacy_id=str(pharmacy_uuid), user_id=str(new_admin.id),
+        user_name=new_admin.username, action_type="administrator_created",
+        description="First administrator created", target_entity="user",
+        target_id=str(new_admin.id),
+    )
     
     return {
         "success": True,
@@ -432,7 +459,6 @@ def check_system_status(db: Session) -> Dict[str, Any]:
         # Activated but no admin - need setup
         return {
             "status": "needs_setup",
-            "pharmacy_id": str(activated_pharmacy.id),
             "message": "يجب إنشاء حساب المدير"
         }
     
@@ -541,6 +567,7 @@ def create_new_pharmacy(
     # Create admin user
     setup_result = create_admin_user(
         pharmacy_id=pharmacy_id,
+        product_key=product_key,
         full_name=admin_full_name,
         username=admin_username,
         password=admin_password,

@@ -12,6 +12,10 @@ from dotenv import load_dotenv
 load_dotenv()
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
+if os.getenv("ENVIRONMENT", "development").lower() == "production":
+    print("This maintenance script is disabled in production", file=sys.stderr)
+    sys.exit(2)
+
 if not DATABASE_URL:
     print("❌ DATABASE_URL not found in .env")
     sys.exit(1)

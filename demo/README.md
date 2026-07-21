@@ -96,9 +96,12 @@ The seeder will output credentials for the demo employees:
 ### Idempotent Seeding
 
 The seeder is idempotent - running it multiple times will:
-1. Clear existing demo data for that pharmacy
-2. Re-seed fresh data
-3. Generate NEW passwords each time
+1. Refresh disposable demo inventory and sales data
+2. Preserve every existing user and administrator
+3. Preserve existing usernames, roles, pharmacy IDs, and password hashes
+
+Passwords are generated only for missing demo users. In production, use
+`scripts/bootstrap_marketing_demo.py`; the module entry point fails closed.
 
 ## Product Key Management
 

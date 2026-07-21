@@ -10,9 +10,8 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from datetime import datetime
+from contextlib import asynccontextmanager
 import os
-import base64
-import io
 import logging
 
 # Rate limiting
@@ -20,12 +19,11 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
-from database import engine, get_db, test_connection, get_tables_count, Base
+from database import get_db, test_connection, get_tables_count
 from models import (
     ProductKeyActivate, AdminCreate, UserLogin, 
     TokenResponse, UserResponse, SystemStatus,
-    Pharmacy,
-    RoleResponse, PermissionResponse, RbacMeResponse,
+    RbacMeResponse,
 )
 from auth import (
     activate_product_key, create_admin_user, authenticate_user,
@@ -43,200 +41,22 @@ from alerts import router as alerts_router
 from employees import router as employees_router
 from audit import router as audit_router
 from routers.user_context import router as user_context_router
+from startup import initialize_database
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    """Initialize the production schema before accepting requests."""
+    initialize_database()
+    yield
 
 app = FastAPI(
     title="PharmaSUD API",
     description="Pharmacy Point of Sale System - Stage 7.1 (New Visual Identity)",
-    version="7.1.0"
+    version="7.1.0",
+    lifespan=lifespan,
 )
 
-# Create tables on startup (if they don't exist)
-@app.on_event("startup")
-async def create_tables():
-    """Create database tables on startup."""
-    try:
-        Base.metadata.create_all(bind=engine)
-        print("✅ Database tables created successfully")
-    except Exception as e:
-        print(f"⚠️ Could not create tables: {e}")
-
-    # Migration: add columns if needed
-    try:
-        with engine.connect() as conn:
-            conn.execute(text("ALTER TABLE batches ADD COLUMN IF NOT EXISTS supplier_name VARCHAR(100)"))
-            conn.commit()
-            print("✅ Added supplier_name column to batches table")
-    except Exception as e:
-        print(f"⚠️ Could not add supplier_name column: {e}")
-
-    try:
-        with engine.connect() as conn:
-            conn.execute(text("ALTER TABLE sale_items ADD COLUMN IF NOT EXISTS unit_name VARCHAR(20)"))
-            conn.commit()
-            print("✅ Added unit_name column to sale_items table")
-    except Exception as e:
-        print(f"⚠️ Could not add unit_name column: {e}")
-
-    try:
-        with engine.connect() as conn:
-            conn.execute(text("ALTER TABLE medicines ALTER COLUMN image_path TYPE TEXT"))
-            conn.commit()
-            print("✅ Changed image_path column to TEXT for Base64 storage")
-    except Exception as e:
-        print(f"⚠️ Could not change image_path column: {e}")
-
-    # Add pharmacy type column if missing (Phase 1 Lite)
-    try:
-        with engine.connect() as conn:
-            # Check if column exists first
-            result = conn.execute(text("""
-                SELECT column_name FROM information_schema.columns 
-                WHERE table_name = 'pharmacies' AND column_name = 'type'
-            """)).fetchone()
-            if not result:
-                conn.execute(text("ALTER TABLE pharmacies ADD COLUMN type VARCHAR(20) NOT NULL DEFAULT 'customer'"))
-                conn.execute(text("ALTER TABLE pharmacies ADD CONSTRAINT ck_pharmacies_type CHECK (type IN ('development', 'demo', 'customer'))"))
-                conn.commit()
-                print("✅ Added type column to pharmacies table")
-            else:
-                print("✅ type column already exists in pharmacies table")
-    except Exception as e:
-        print(f"⚠️ Could not add type column: {e}")
-
-    # Create demo pharmacy if none exists (for validation)
-    try:
-        with engine.connect() as conn:
-            # Check if any pharmacy exists
-            pharmacy_count = conn.execute(text("SELECT count(*) FROM pharmacies")).scalar()
-            if pharmacy_count == 0:
-                # Create demo pharmacy with known product key
-                import uuid as uuid_module
-                demo_pharmacy_id = uuid_module.uuid4()
-                demo_product_key = "PHARM-DEMO-2026-VALIDATION"
-                conn.execute(text("""
-                    INSERT INTO pharmacies (id, product_key, name, owner_name, is_active, type, created_at)
-                    VALUES (:id, :key, :name, :owner, false, 'demo', NOW())
-                """), {"id": demo_pharmacy_id, "key": demo_product_key, "name": "PharmaSUD Demo Pharmacy", "owner": "Demo Owner"})
-                conn.commit()
-                print(f"✅ Created demo pharmacy with key: {demo_product_key}")
-            else:
-                print(f"✅ Found {pharmacy_count} existing pharmacy(ies)")
-    except Exception as e:
-        print(f"⚠️ Could not create demo pharmacy: {e}")
-
-    # Stage 7: Create new tables
-    try:
-        with engine.connect() as conn:
-            conn.execute(text("""
-                CREATE TABLE IF NOT EXISTS audit_log (
-                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                    pharmacy_id UUID REFERENCES pharmacies(id),
-                    user_id UUID REFERENCES users(id),
-                    user_name VARCHAR(100),
-                    action_type VARCHAR(50),
-                    description TEXT NOT NULL,
-                    old_value TEXT,
-                    new_value TEXT,
-                    created_at TIMESTAMP DEFAULT NOW()
-                )
-            """))
-            conn.commit()
-            print("✅ Created audit_log table")
-    except Exception as e:
-        print(f"⚠️ Could not create audit_log table: {e}")
-
-    try:
-        with engine.connect() as conn:
-            conn.execute(text("""
-                CREATE TABLE IF NOT EXISTS stocktake_sessions (
-                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                    pharmacy_id UUID REFERENCES pharmacies(id),
-                    user_id UUID REFERENCES users(id),
-                    notes TEXT,
-                    items_adjusted INTEGER DEFAULT 0,
-                    created_at TIMESTAMP DEFAULT NOW()
-                )
-            """))
-            conn.commit()
-            print("✅ Created stocktake_sessions table")
-    except Exception as e:
-        print(f"⚠️ Could not create stocktake_sessions table: {e}")
-
-    try:
-        with engine.connect() as conn:
-            conn.execute(text("""\
-                CREATE TABLE IF NOT EXISTS stocktake_items (\
-                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\
-                    session_id UUID REFERENCES stocktake_sessions(id),\
-                    medicine_id UUID REFERENCES medicines(id),\
-                    medicine_name VARCHAR(100),\
-                    system_quantity INTEGER,\
-                    actual_quantity INTEGER,\
-                    difference INTEGER,\
-                    created_at TIMESTAMP DEFAULT NOW()\
-                )\
-            """))
-            conn.commit()
-            print("✅ Created stocktake_items table")
-    except Exception as e:
-        print(f"⚠️ Could not create stocktake_items table: {e}")
-
-    # RBAC Phase 1: Create roles, permissions, role_permissions tables
-    try:
-        with engine.connect() as conn:
-            conn.execute(text("""\
-                CREATE TABLE IF NOT EXISTS roles (\
-                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\
-                    name VARCHAR(30) UNIQUE NOT NULL,\
-                    display_name VARCHAR(50) NOT NULL,\
-                    description TEXT,\
-                    created_at TIMESTAMP DEFAULT NOW()\
-                )\
-            """))
-            conn.execute(text("""\
-                CREATE TABLE IF NOT EXISTS permissions (\
-                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\
-                    code VARCHAR(50) UNIQUE NOT NULL,\
-                    category VARCHAR(30) NOT NULL,\
-                    description TEXT,\
-                    created_at TIMESTAMP DEFAULT NOW()\
-                )\
-            """))
-            conn.execute(text("""\
-                CREATE TABLE IF NOT EXISTS role_permissions (\
-                    role_id UUID REFERENCES roles(id) ON DELETE CASCADE,\
-                    permission_id UUID REFERENCES permissions(id) ON DELETE CASCADE,\
-                    PRIMARY KEY (role_id, permission_id)\
-                )\
-            """))
-            conn.commit()
-            print("✅ Created RBAC tables: roles, permissions, role_permissions")
-    except Exception as e:
-        print(f"⚠️ Could not create RBAC tables: {e}")
-
-    # RBAC Phase 1: Add role_id column to users if missing
-        try:
-            with engine.connect() as conn:
-                result = conn.execute(text("""\\
-                    SELECT column_name FROM information_schema.columns \\
-                    WHERE table_name = 'users' AND column_name = 'role_id'\\
-                """)).fetchone()
-                if not result:
-                    conn.execute(text("ALTER TABLE users ADD COLUMN role_id UUID REFERENCES roles(id)"))
-                    conn.commit()
-                    print("✅ Added role_id column to users table")
-                else:
-                    print("✅ role_id column already exists in users table")
-        except Exception as e:
-            print(f"⚠️ Could not add role_id column: {e}")
-
-        # RBAC Phase 1: Seed roles, permissions, role_permissions (idempotent)
-        try:
-            from rbac_seeder import seed_rbac_foundation
-            result = seed_rbac_foundation()
-            print(f"✅ RBAC Foundation seeded: roles={result['roles']}, permissions={result['permissions']}, mappings={result['role_permissions']}, migrated={result['migration'].get('updated', 0)}")
-        except Exception as e:
-            print(f"⚠️ Could not seed RBAC foundation: {e}")
 
 # CORS - Production hardened
 # Allow only specific production origins; credentials require explicit origins (no wildcard)
@@ -340,14 +160,28 @@ async def health():
     try:
         db_ok = test_connection()
         tables = get_tables_count()
-        return {
-            "status": "healthy",
+        payload = {
+            "status": "healthy" if db_ok and tables > 0 else "unhealthy",
             "database": "connected" if db_ok else "disconnected",
-            "tables": tables,
+            "environment": os.getenv("ENVIRONMENT", "development"),
+            "schema_ready": bool(db_ok and tables > 0),
+            "version": app.version,
             "timestamp": datetime.now().isoformat()
         }
+        if not db_ok or tables <= 0:
+            return JSONResponse(status_code=503, content=payload)
+        return payload
     except Exception:
-        return {"status": "unhealthy", "error": "database connection failed"}
+        return JSONResponse(
+            status_code=503,
+            content={
+                "status": "unhealthy",
+                "database": "disconnected",
+                "environment": os.getenv("ENVIRONMENT", "development"),
+                "schema_ready": False,
+                "version": app.version,
+            },
+        )
 
 @app.get("/ping")
 async def ping():
@@ -592,6 +426,7 @@ def api_setup(request: Request, data: AdminCreate, db: Session = Depends(get_db)
     """Create admin user (Stage 2)."""
     return create_admin_user(
         pharmacy_id=data.pharmacy_id,
+        product_key=data.product_key,
         full_name=data.full_name,
         username=data.username,
         password=data.password,
@@ -603,60 +438,20 @@ def api_setup(request: Request, data: AdminCreate, db: Session = Depends(get_db)
 @app.post("/api/auth/create-pharmacy", response_model=dict)
 @limiter.limit("5/minute")
 def api_create_pharmacy(request: Request, data: dict, db: Session = Depends(get_db)):
-    """Create pharmacy with product key (for validation only)."""
-    import uuid as uuid_module
-    from auth import get_password_hash
-    
-    product_key = data.get("product_key")
-    pharmacy_name = data.get("pharmacy_name", "Demo Pharmacy")
-    owner_name = data.get("owner_name", "Demo Owner")
-    pharmacy_type = data.get("pharmacy_type", "demo")
-    
-    if not product_key:
-        return {"success": False, "message": "product_key is required"}
-    
-    # Check if key already exists
-    existing = db.query(Pharmacy).filter(Pharmacy.product_key == product_key).first()
-    if existing:
-        return {"success": False, "message": "Product key already exists"}
-    
-    # Create pharmacy
-    pharmacy_id = uuid_module.uuid4()
-    new_pharmacy = Pharmacy(
-        id=pharmacy_id,
-        product_key=product_key,
-        name=pharmacy_name,
-        owner_name=owner_name,
-        is_active=False,
-        type=pharmacy_type
-    )
-    db.add(new_pharmacy)
-    db.commit()
-    
-    return {
-        "success": True,
-        "pharmacy_id": str(pharmacy_id),
-        "product_key": product_key,
-        "name": pharmacy_name,
-        "type": pharmacy_type
-    }
+    """Retired validation route; pharmacy provisioning is never public."""
+    raise HTTPException(status_code=404, detail="Not found")
 
 # Temporary endpoint for validation - seed demo pharmacy
 @app.post("/api/auth/seed-demo", response_model=dict)
 @limiter.limit("2/minute")
 def api_seed_demo(request: Request, data: dict, db: Session = Depends(get_db)):
-    """Seed demo pharmacy with test data (for validation only)."""
-    from demo.seed_demo_pharmacy import seed_demo_pharmacy
-    
-    pharmacy_id = data.get("pharmacy_id")
-    if not pharmacy_id:
-        return {"success": False, "message": "pharmacy_id is required"}
-    
-    try:
-        result = seed_demo_pharmacy(pharmacy_id)
-        return result
-    except Exception as e:
-        return {"success": False, "message": f"Seeding failed: {str(e)}"}
+    """Retired HTTP demo route; use the confirmed one-time CLI bootstrap."""
+    logging.getLogger("pharmasud.audit").warning(
+        "rejected_demo_seed_http ip=%s environment=%s",
+        request.client.host if request.client else "unknown",
+        os.getenv("ENVIRONMENT", "development"),
+    )
+    raise HTTPException(status_code=404, detail="Not found")
 
 @app.post("/api/auth/login", response_model=TokenResponse)
 @limiter.limit("10/minute")

@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 
 from database import get_db
-from models import User
+from models import Role, User
 from auth import get_current_user, require_admin, get_password_hash, verify_password, require_permission
 from audit import log_action
 
@@ -60,7 +60,7 @@ async def list_employees(
     return {"employees": result}
 
 
-@router.post("/", dependencies=[Depends(require_permission("employees.manage"))])
+@router.post("/", dependencies=[Depends(require_admin), Depends(require_permission("employees.manage"))])
 async def create_employee(
     data: EmployeeCreateSchema,
     current_user: dict = Depends(get_current_user),
@@ -75,6 +75,7 @@ async def create_employee(
         raise HTTPException(status_code=400, detail="اسم المستخدم موجود مسبقاً")
 
     # إنشاء المستخدم
+    cashier_role = db.query(Role).filter(Role.name == "cashier").one()
     new_user = User(
         id=uuid.uuid4(),
         pharmacy_id=ph_id,
@@ -83,6 +84,7 @@ async def create_employee(
         password_hash=get_password_hash(data.password),
         phone=data.phone or "",
         role="employee",
+        role_id=cashier_role.id,
         is_active=True
     )
 
@@ -108,7 +110,7 @@ async def create_employee(
     }
 
 
-@router.put("/{employee_id}/toggle", dependencies=[Depends(require_permission("employees.manage"))])
+@router.put("/{employee_id}/toggle", dependencies=[Depends(require_admin), Depends(require_permission("employees.manage"))])
 async def toggle_employee(
     employee_id: str,
     current_user: dict = Depends(get_current_user),
@@ -134,6 +136,15 @@ async def toggle_employee(
     if not employee:
         raise HTTPException(status_code=404, detail="الموظف غير موجود")
 
+    if employee.role == "admin" and employee.is_active:
+        active_admins = db.query(User).filter(
+            User.pharmacy_id == ph_id,
+            User.role == "admin",
+            User.is_active == True,
+        ).count()
+        if active_admins <= 1:
+            raise HTTPException(status_code=400, detail="لا يمكن تعطيل آخر حساب مدير")
+
     # بدّل الحالة
     employee.is_active = not employee.is_active
     db.commit()
@@ -157,7 +168,7 @@ async def toggle_employee(
     }
 
 
-@router.put("/{employee_id}/reset-password", dependencies=[Depends(require_permission("employees.manage"))])
+@router.put("/{employee_id}/reset-password", dependencies=[Depends(require_admin), Depends(require_permission("employees.manage"))])
 async def reset_employee_password(
     employee_id: str,
     data: ResetPasswordSchema,

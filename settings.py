@@ -16,7 +16,7 @@ from sqlalchemy import text
 
 from database import get_db
 from models import (
-    Pharmacy, User,
+    Pharmacy, User, Role,
     EmployeeCreate, EmployeeResponse, EmployeeListResponse,
     PasswordChange, PharmacyUpdate, PharmacySettingsResponse,
     EmployeeStatusToggle,
@@ -72,7 +72,7 @@ async def list_employees(
 # POST /api/settings/employees
 # ═══════════════════════════════════════════════════════════
 
-@router.post("/employees", dependencies=[Depends(require_permission("employees.manage"))])
+@router.post("/employees", dependencies=[Depends(require_admin), Depends(require_permission("employees.manage"))])
 async def create_employee(
     data: EmployeeCreate,
     current_user: dict = Depends(get_current_user),
@@ -91,6 +91,8 @@ async def create_employee(
         raise HTTPException(status_code=400, detail="الدور يجب أن يكون admin أو employee")
 
     # إنشاء المستخدم
+    role_name = "owner" if data.role == "admin" else "cashier"
+    role_obj = db.query(Role).filter(Role.name == role_name).one()
     new_user = User(
         id=uuid.uuid4(),
         pharmacy_id=ph_id,
@@ -98,6 +100,7 @@ async def create_employee(
         full_name=data.full_name,
         password_hash=get_password_hash(data.password),
         role=data.role,
+        role_id=role_obj.id,
         is_active=True
     )
 
@@ -128,7 +131,7 @@ async def create_employee(
 # DELETE /api/settings/employees/{employee_id}
 # ═══════════════════════════════════════════════════════════
 
-@router.delete("/employees/{employee_id}", dependencies=[Depends(require_permission("employees.manage"))])
+@router.delete("/employees/{employee_id}", dependencies=[Depends(require_admin), Depends(require_permission("employees.manage"))])
 async def delete_employee(
     employee_id: str,
     current_user: dict = Depends(get_current_user),
@@ -154,6 +157,15 @@ async def delete_employee(
 
     if not employee:
         raise HTTPException(status_code=404, detail="الموظف غير موجود")
+
+    if employee.role == "admin" and employee.is_active:
+        active_admins = db.query(User).filter(
+            User.pharmacy_id == ph_id,
+            User.role == "admin",
+            User.is_active == True,
+        ).count()
+        if active_admins <= 1:
+            raise HTTPException(status_code=400, detail="لا يمكن حذف آخر حساب مدير")
 
     name = employee.full_name or employee.username
     db.delete(employee)
@@ -181,7 +193,7 @@ async def delete_employee(
 # PATCH /api/settings/employees/{employee_id}/toggle
 # ═══════════════════════════════════════════════════════════
 
-@router.patch("/employees/{employee_id}/toggle", dependencies=[Depends(require_permission("employees.manage"))])
+@router.patch("/employees/{employee_id}/toggle", dependencies=[Depends(require_admin), Depends(require_permission("employees.manage"))])
 async def toggle_employee_status(
     employee_id: str,
     data: EmployeeStatusToggle,
@@ -207,6 +219,15 @@ async def toggle_employee_status(
 
     if not employee:
         raise HTTPException(status_code=404, detail="الموظف غير موجود")
+
+    if employee.role == "admin" and employee.is_active and not data.is_active:
+        active_admins = db.query(User).filter(
+            User.pharmacy_id == ph_id,
+            User.role == "admin",
+            User.is_active == True,
+        ).count()
+        if active_admins <= 1:
+            raise HTTPException(status_code=400, detail="لا يمكن تعطيل آخر حساب مدير")
 
     employee.is_active = data.is_active
     db.commit()
@@ -257,6 +278,17 @@ async def change_password(
     # تحديث كلمة السر
     user.password_hash = get_password_hash(data.new_password)
     db.commit()
+
+    log_action(
+        db=db,
+        pharmacy_id=current_user["pharmacy_id"],
+        user_id=current_user["user_id"],
+        user_name=current_user.get("full_name", current_user["username"]),
+        action_type="password_changed",
+        description="User changed their own password",
+        target_entity="user",
+        target_id=str(user.id),
+    )
 
     return {
         "success": True,

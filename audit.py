@@ -24,12 +24,16 @@ router = APIRouter(prefix="/api/audit-log", tags=["audit"])
 def log_action(
     db: Session,
     pharmacy_id: str,
-    user_id: str,
+    user_id: Optional[str],
     user_name: str,
     action_type: str,
     description: str,
     old_value: Optional[str] = None,
-    new_value: Optional[str] = None
+    new_value: Optional[str] = None,
+    target_entity: Optional[str] = None,
+    target_id: Optional[str] = None,
+    success: bool = True,
+    request_ip: Optional[str] = None,
 ):
     """تسجيل أي عملية حساسة في audit_log."""
     try:
@@ -37,23 +41,33 @@ def log_action(
             text("""
                 INSERT INTO audit_log
                     (pharmacy_id, user_id, user_name, action_type,
-                     description, old_value, new_value)
+                     description, target_entity, target_id, old_value,
+                     new_value, success, request_ip)
                 VALUES
                     (:pid, :uid, :uname, :atype,
-                     :desc, :old, :new)
+                     :desc, :target_entity, :target_id, :old, :new,
+                     :success, :request_ip)
             """),
             {
                 "pid": uuid.UUID(pharmacy_id),
-                "uid": uuid.UUID(user_id),
+                "uid": uuid.UUID(str(user_id)) if user_id else None,
                 "uname": user_name,
                 "atype": action_type,
                 "desc": description,
+                "target_entity": target_entity,
+                "target_id": target_id,
                 "old": old_value,
-                "new": new_value
+                "new": new_value,
+                "success": success,
+                "request_ip": request_ip,
             }
         )
+        db.commit()
+        return True
     except Exception as e:
-        print(f"⚠️ Audit log error: {e}")
+        db.rollback()
+        print(f"Audit log error: {type(e).__name__}")
+        return False
 
 
 @router.get("/")

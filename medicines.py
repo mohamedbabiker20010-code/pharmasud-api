@@ -12,7 +12,6 @@ Handles:
 
 import os
 import uuid
-import shutil
 from datetime import datetime
 from typing import Optional, List, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Query
@@ -33,13 +32,11 @@ from audit import log_action
 
 import base64
 import io
-import magic  # python-magic for MIME/magic byte detection
 
 # Create router
 router = APIRouter(prefix="/api/medicines", tags=["medicines"])
 
 # Upload settings
-UPLOAD_DIR = "static/medicines/images"
 MAX_IMAGE_SIZE = 2 * 1024 * 1024  # 2MB
 ALLOWED_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.webp'}
 # MIME types that are actually allowed (not just extensions)
@@ -51,10 +48,6 @@ MAGIC_SIGNATURES = {
     b'RIFF': 'image/webp',               # WebP (starts with RIFF, need to check further)
 }
 DEFAULT_IMAGE_SIZE = (300, 300)
-
-# Ensure upload directory exists
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-
 
 # ═══════════════════════════════════════════════════════════
 # Helper Functions
@@ -116,9 +109,11 @@ def validate_image_file(file: UploadFile) -> bytes:
             detail="يجب أن تكون الصورة بصيغة: JPG, PNG، أو WEBP"
         )
     
-    # 3. Validate magic bytes / MIME type using python-magic
+    # 3. Decode with Pillow; this validates the actual image format portably.
     try:
-        mime_type = magic.from_buffer(file_content, mime=True)
+        with Image.open(io.BytesIO(file_content)) as decoded:
+            decoded.verify()
+            mime_type = Image.MIME.get(decoded.format)
     except Exception:
         raise HTTPException(
             status_code=400,

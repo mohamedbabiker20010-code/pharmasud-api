@@ -14,10 +14,12 @@ Requirements:
 """
 
 import json
+import os
 import uuid
 import secrets
 import string
 from datetime import datetime, date, timedelta
+from contextlib import nullcontext
 from typing import Dict, List, Any, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import text
@@ -65,7 +67,7 @@ def seed_pharmacy_info(db: Session, pharmacy: Pharmacy, demo_data: dict) -> None
     pharmacy.owner_name = demo_pharmacy['owner_name']
     pharmacy.phone = demo_pharmacy['phone']
     pharmacy.address = demo_pharmacy['address']
-    db.commit()
+    db.flush()
 
 
 def seed_medicines_and_batches(
@@ -127,7 +129,7 @@ def seed_medicines_and_batches(
 
         medicine_id_map[med_data['trade_name']] = med_id
 
-    db.commit()
+    db.flush()
     return medicine_id_map
 
 
@@ -135,15 +137,22 @@ def seed_employees(
     db: Session,
     pharmacy_id: uuid.UUID,
     demo_data: dict
-) -> Dict[str, str]:
+) -> Dict[str, Optional[str]]:
     """
-    Create demo employees (admin + employee).
-    Passwords generated at runtime and returned.
-    Returns username -> password mapping.
+    Create only missing demo employees.
+    Existing identity, role, pharmacy and password fields are never modified.
     """
-    credentials = {}
+    credentials: Dict[str, Optional[str]] = {}
 
     for emp_data in demo_data['employees']:
+        existing = db.query(User).filter(
+            User.pharmacy_id == pharmacy_id,
+            User.username == emp_data['username']
+        ).first()
+        if existing:
+            credentials[emp_data['username']] = None
+            continue
+
         password = generate_secure_password()
         credentials[emp_data['username']] = password
 
@@ -158,7 +167,7 @@ def seed_employees(
         )
         db.add(user)
 
-    db.commit()
+    db.flush()
     return credentials
 
 
@@ -233,7 +242,7 @@ def seed_sales(
         sale.total_amount = total_amount
         sale.created_at = sale_date
 
-    db.commit()
+    db.flush()
 
 
 def apply_demo_settings(db: Session, pharmacy_id: uuid.UUID, demo_data: dict) -> None:
@@ -243,7 +252,12 @@ def apply_demo_settings(db: Session, pharmacy_id: uuid.UUID, demo_data: dict) ->
     pass
 
 
-def seed_demo_pharmacy(pharmacy_id: str) -> dict:
+def seed_demo_pharmacy(
+    pharmacy_id: str,
+    db: Optional[Session] = None,
+    seed_users: bool = True,
+    allow_production_cli: bool = False,
+) -> dict:
     """
     Main entry point to seed a demo pharmacy.
     
@@ -256,22 +270,25 @@ def seed_demo_pharmacy(pharmacy_id: str) -> dict:
     Raises:
         ValueError: If pharmacy not found or not type='demo'
     """
+    if os.getenv("ENVIRONMENT", "development") == "production" and not allow_production_cli:
+        raise RuntimeError("Production demo seeding requires the confirmed bootstrap CLI")
+
     demo_data = load_demo_data()
 
-    with Session(engine) as db:
-        # Verify pharmacy
-        pharmacy = verify_demo_pharmacy(db, pharmacy_id)
-        pharmacy_uuid = uuid.UUID(pharmacy_id)
+    owns_session = db is None
+    session = db or Session(engine)
+    try:
+        transaction = session.begin() if owns_session else nullcontext()
+        with transaction:
+            pharmacy = verify_demo_pharmacy(session, pharmacy_id)
+            pharmacy_uuid = uuid.UUID(pharmacy_id)
 
-        # Clear existing demo data (idempotent)
-        clear_demo_data(db, pharmacy_id)
-
-        # Seed in order
-        seed_pharmacy_info(db, pharmacy, demo_data)
-        medicine_id_map = seed_medicines_and_batches(db, uuid.UUID(pharmacy_id), demo_data)
-        credentials = seed_employees(db, uuid.UUID(pharmacy_id), demo_data)
-        seed_sales(db, uuid.UUID(pharmacy_id), medicine_id_map, demo_data)
-        apply_demo_settings(db, uuid.UUID(pharmacy_id), demo_data)
+            clear_demo_data(session, pharmacy_id)
+            seed_pharmacy_info(session, pharmacy, demo_data)
+            medicine_id_map = seed_medicines_and_batches(session, pharmacy_uuid, demo_data)
+            credentials = seed_employees(session, pharmacy_uuid, demo_data) if seed_users else {}
+            seed_sales(session, pharmacy_uuid, medicine_id_map, demo_data)
+            apply_demo_settings(session, pharmacy_uuid, demo_data)
 
         return {
             'success': True,
@@ -281,15 +298,22 @@ def seed_demo_pharmacy(pharmacy_id: str) -> dict:
             'batches_seeded': sum(
                 len(m['batches']) for m in demo_data['medicines']
             ),
-            'employees_seeded': len(demo_data['employees']),
+            'employees_seeded': sum(value is not None for value in credentials.values()),
             'sales_seeded': len(demo_data['sales']),
             'credentials': credentials,
             'message': 'Demo pharmacy seeded successfully'
         }
+    except Exception:
+        if owns_session:
+            session.rollback()
+        raise
+    finally:
+        if owns_session:
+            session.close()
 
 
 def clear_demo_data(db: Session, pharmacy_id: str) -> None:
-    """Clear existing demo data for idempotent seeding."""
+    """Clear disposable demo business data while preserving all users."""
     pid = uuid.UUID(pharmacy_id)
 
     # Delete in reverse FK order
@@ -313,9 +337,7 @@ def clear_demo_data(db: Session, pharmacy_id: str) -> None:
     ).delete(synchronize_session=False)
 
     db.query(Medicine).filter(Medicine.pharmacy_id == pid).delete(synchronize_session=False)
-    db.query(User).filter(User.pharmacy_id == pid).delete(synchronize_session=False)
-
-    db.commit()
+    db.flush()
 
 
 if __name__ == '__main__':
@@ -324,6 +346,10 @@ if __name__ == '__main__':
     if len(sys.argv) != 2:
         print("Usage: python -m demo.seed_demo_pharmacy <pharmacy_id>")
         sys.exit(1)
+
+    if os.getenv("ENVIRONMENT", "development") == "production":
+        print("Direct demo seeding is disabled in production; use bootstrap_marketing_demo.py", file=sys.stderr)
+        sys.exit(2)
 
     pharmacy_id = sys.argv[1]
 

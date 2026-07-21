@@ -7,8 +7,7 @@ Includes Pydantic models for authentication and validation.
 """
 
 import uuid
-from sqlalchemy import Column, String, Integer, Boolean, DateTime, Date, Numeric, Text, ForeignKey, CheckConstraint, text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, String, Integer, Boolean, DateTime, Date, Numeric, Text, ForeignKey, CheckConstraint, Uuid as UUID, func, text
 from sqlalchemy.orm import relationship
 from pydantic import BaseModel, Field, validator
 from typing import Optional
@@ -34,6 +33,7 @@ class ProductKeyActivate(BaseModel):
 class AdminCreate(BaseModel):
     """Schema for creating first admin user."""
     pharmacy_id: str = Field(..., description="Pharmacy UUID")
+    product_key: str = Field(..., min_length=10, max_length=100, description="One-time product activation key")
     full_name: str = Field(..., min_length=2, max_length=100, description="Full name in Arabic or English")
     username: str = Field(..., min_length=3, max_length=50, description="Unique username")
     password: str = Field(..., min_length=6, max_length=100, description="Password (min 6 characters)")
@@ -571,7 +571,7 @@ class Pharmacy(Base):
     address = Column(String)
     is_active = Column(Boolean, default=False)
     activated_at = Column(DateTime)
-    created_at = Column(DateTime, server_default=text("NOW()"))
+    created_at = Column(DateTime, server_default=func.now())
     # Pharmacy type: development, demo, customer
     type = Column(String(20), nullable=False, default='customer',
                   comment='Pharmacy type: development, demo, customer')
@@ -599,7 +599,7 @@ class User(Base):
     full_name = Column(String(100))
     phone = Column(String(20))
     is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, server_default=text("NOW()"))
+    created_at = Column(DateTime, server_default=func.now())
 
     # Enforce valid legacy roles (will be removed in future version)
     __table_args__ = (
@@ -620,7 +620,7 @@ class Role(Base):
     name = Column(String(30), unique=True, nullable=False)
     display_name = Column(String(50), nullable=False)
     description = Column(Text)
-    created_at = Column(DateTime, server_default=text("NOW()"))
+    created_at = Column(DateTime, server_default=func.now())
 
     # Relationships
     users = relationship("User", back_populates="role_obj")
@@ -635,7 +635,7 @@ class Permission(Base):
     code = Column(String(50), unique=True, nullable=False)
     category = Column(String(30), nullable=False)
     description = Column(Text)
-    created_at = Column(DateTime, server_default=text("NOW()"))
+    created_at = Column(DateTime, server_default=func.now())
 
     # Relationships
     roles = relationship("Role", secondary="role_permissions", back_populates="permissions")
@@ -664,7 +664,7 @@ class Medicine(Base):
     base_unit = Column(String(20), default="strip")
     min_stock = Column(Integer, default=10)
     image_path = Column(Text)  # Base64 image data (persists across deploys)
-    created_at = Column(DateTime, server_default=text("NOW()"))
+    created_at = Column(DateTime, server_default=func.now())
 
     # Relationships
     pharmacy = relationship("Pharmacy", back_populates="medicines")
@@ -698,7 +698,7 @@ class Batch(Base):
     purchase_price = Column(Numeric(10, 2))
     supplier_invoice = Column(String(50))
     supplier_name = Column(String(100))
-    received_at = Column(DateTime, server_default=text("NOW()"))
+    received_at = Column(DateTime, server_default=func.now())
     is_active = Column(Boolean, default=True)
 
     # Relationships
@@ -717,7 +717,7 @@ class Sale(Base):
     customer_name = Column(String(100))
     total_amount = Column(Numeric(10, 2), nullable=False)
     payment_method = Column(String(20), nullable=False)
-    created_at = Column(DateTime, server_default=text("NOW()"))
+    created_at = Column(DateTime, server_default=func.now())
 
     # Valid payment methods
     __table_args__ = (
