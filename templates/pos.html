@@ -1826,7 +1826,7 @@
                         doc.setFontSize(4);
                         doc.setFont('helvetica', 'normal');
                         doc.setTextColor(...mutedColor);
-                        const url = 'pharmasud-api.onrender.com/invoice/' + (saleData.invoice_number || '');
+                        const url = 'pharmasud-api.onrender.com/invoice/' + (saleData.public_invoice_token || '');
                         const reversedUrl = url.split('').reverse().join('');
                         centerText(reversedUrl, y, 4);
                         

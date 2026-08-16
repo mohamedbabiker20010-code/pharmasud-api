@@ -7,11 +7,17 @@ Includes Pydantic models for authentication and validation.
 """
 
 import uuid
+import secrets
 from sqlalchemy import Column, String, Integer, Boolean, DateTime, Date, Numeric, Text, ForeignKey, CheckConstraint, Uuid as UUID, func, text
 from sqlalchemy.orm import relationship
 from pydantic import BaseModel, Field, validator
 from typing import Optional
 from database import Base
+
+
+def generate_public_invoice_token() -> str:
+    """Generate an opaque, cryptographically unpredictable public invoice id."""
+    return secrets.token_urlsafe(32)
 
 
 # ═══════════════════════════════════════════════════════════
@@ -490,6 +496,7 @@ class SaleResponse(BaseModel):
     success: bool
     sale_id: Optional[str] = None
     invoice_number: Optional[int] = None
+    public_invoice_token: Optional[str] = None
     total_amount: Optional[float] = None
     payment_method: Optional[str] = None
     customer_name: Optional[str] = None
@@ -714,6 +721,10 @@ class Sale(Base):
     pharmacy_id = Column(UUID(as_uuid=True), ForeignKey("pharmacies.id"), nullable=False)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))
     invoice_number = Column(Integer)
+    public_invoice_token = Column(
+        String(64), unique=True, nullable=False,
+        default=generate_public_invoice_token,
+    )
     customer_name = Column(String(100))
     total_amount = Column(Numeric(10, 2), nullable=False)
     payment_method = Column(String(20), nullable=False)

@@ -26,7 +26,6 @@ from models import (
 )
 from auth import get_current_user, require_admin, require_permission
 from batches import format_batch_response, calculate_days_remaining, get_expiry_status, get_fefo_batches
-from audit import log_action
 
 # Create router
 router = APIRouter(prefix="/api/inventory", tags=["inventory"])
@@ -297,72 +296,77 @@ async def submit_stocktake(
     ph_uuid = uuid.UUID(pharmacy_id)
     user_uuid = uuid.UUID(user_id)
 
-    # إنشاء جلسة الجرد
-    session_id = uuid.uuid4()
-    db.execute(
-        text("""
-            INSERT INTO stocktake_sessions (id, pharmacy_id, user_id, notes)
-            VALUES (:sid, :pid, :uid, :notes)
-        """),
-        {"sid": session_id, "pid": ph_uuid, "uid": user_uuid, "notes": data.notes}
-    )
+    try:
+        # Validate all objects before creating a session or changing stock.
+        # Foreign and nonexistent medicines deliberately produce the same response.
+        owned_medicines = {}
+        for item in data.items:
+            try:
+                med_uuid = uuid.UUID(item.medicine_id)
+            except (ValueError, TypeError):
+                raise HTTPException(status_code=404, detail="الدواء غير موجود")
 
-    adjustments = []
-    unchanged_count = 0
-    today = date.today()
+            medicine = db.query(Medicine).filter(
+                Medicine.id == med_uuid,
+                Medicine.pharmacy_id == ph_uuid,
+            ).first()
+            if not medicine:
+                raise HTTPException(status_code=404, detail="الدواء غير موجود")
+            owned_medicines[med_uuid] = medicine
 
-    for item in data.items:
-        med_id_str = item.medicine_id
-        try:
-            med_uuid = uuid.UUID(med_id_str)
-        except ValueError:
-            continue
-
-        # 1. أعد حساب system_quantity الحالي من قاعدة البيانات
-        system_qty = get_medicine_total_stock(str(med_uuid), db)
-
-        actual_qty = item.actual_quantity
-        difference = actual_qty - system_qty
-
-        # 2. لو الفرق = 0 → تجاهل
-        if difference == 0:
-            unchanged_count += 1
-            continue
-
-        # نجيب اسم الدواء
-        medicine = db.query(Medicine).filter(Medicine.id == med_uuid).first()
-        med_name = medicine.trade_name if medicine else "غير معروف"
-
-        # سجّل في stocktake_items
+        session_id = uuid.uuid4()
         db.execute(
             text("""
-                INSERT INTO stocktake_items
-                    (session_id, medicine_id, medicine_name,
-                     system_quantity, actual_quantity, difference)
-                VALUES
-                    (:sid, :mid, :mname, :sys, :act, :diff)
+                INSERT INTO stocktake_sessions (id, pharmacy_id, user_id, notes)
+                VALUES (:sid, :pid, :uid, :notes)
             """),
-            {
-                "sid": session_id,
-                "mid": med_uuid,
-                "mname": med_name,
-                "sys": system_qty,
-                "act": actual_qty,
-                "diff": difference
-            }
+            {"sid": session_id, "pid": ph_uuid, "uid": user_uuid, "notes": data.notes}
         )
 
-        action_desc = ""
+        adjustments = []
+        unchanged_count = 0
+        today = date.today()
 
-        if difference < 0:
-            # 3. الفرق سالب (نقصان): اخصم |الفرق| باستخدام FEFO
-            qty_to_remove = abs(difference)
+        for item in data.items:
+            med_uuid = uuid.UUID(item.medicine_id)
+            medicine = owned_medicines[med_uuid]
+            system_qty = get_medicine_total_stock(med_uuid, db)
+            actual_qty = item.actual_quantity
+            difference = actual_qty - system_qty
 
-            # استخدم FEFO لتحديد الشحنات المطلوب خصمها
-            try:
-                # نجيب الشحنات المتاحة مرتبة FEFO
-                fefo_batches = db.query(Batch).filter(
+            if difference == 0:
+                unchanged_count += 1
+                continue
+
+            med_name = medicine.trade_name
+            db.execute(
+                text("""
+                    INSERT INTO stocktake_items
+                        (session_id, medicine_id, medicine_name,
+                         system_quantity, actual_quantity, difference)
+                    VALUES
+                        (:sid, :mid, :mname, :sys, :act, :diff)
+                """),
+                {
+                    "sid": session_id,
+                    "mid": med_uuid,
+                    "mname": med_name,
+                    "sys": system_qty,
+                    "act": actual_qty,
+                    "diff": difference,
+                },
+            )
+
+            action_desc = ""
+
+            if difference < 0:
+                qty_to_remove = abs(difference)
+                # Explicitly bind every selected batch to the authenticated pharmacy.
+                fefo_batches = db.query(Batch).join(
+                    Medicine, Batch.medicine_id == Medicine.id
+                ).filter(
                     Batch.medicine_id == med_uuid,
+                    Medicine.pharmacy_id == ph_uuid,
                     Batch.quantity > 0,
                     Batch.is_active == True,
                     Batch.expiry_date > today
@@ -379,69 +383,76 @@ async def submit_stocktake(
                         batch.is_active = False
 
                 action_desc = "تم خصم من المخزون"
-            except Exception:
-                action_desc = "فشل الخصم"
 
-        elif difference > 0:
-            # 4. الفرق موجب (زيادة): أضف شحنة تسوية
-            last_price = get_last_purchase_price(str(med_uuid), db)
-            next_year = today + timedelta(days=365)
+            elif difference > 0:
+                last_price = get_last_purchase_price(med_uuid, db)
+                next_year = today + timedelta(days=365)
 
-            db.execute(
-                text("""
-                    INSERT INTO batches
-                        (id, medicine_id, batch_number, quantity,
-                         expiry_date, purchase_price, supplier_name, is_active)
-                    VALUES
-                        (:bid, :mid, :bnum, :qty, :exp, :price, :supplier, true)
-                """),
-                {
-                    "bid": uuid.uuid4(),
-                    "mid": med_uuid,
-                    "bnum": f"تسوية-جرد-{today.isoformat()}",
-                    "qty": difference,
-                    "exp": next_year,
-                    "price": last_price,
-                    "supplier": "تسوية جرد"
-                }
-            )
+                db.execute(
+                    text("""
+                        INSERT INTO batches
+                            (id, medicine_id, batch_number, quantity,
+                             expiry_date, purchase_price, supplier_name, is_active)
+                        VALUES
+                            (:bid, :mid, :bnum, :qty, :exp, :price, :supplier, true)
+                    """),
+                    {
+                        "bid": uuid.uuid4(),
+                        "mid": med_uuid,
+                        "bnum": f"تسوية-جرد-{today.isoformat()}",
+                        "qty": difference,
+                        "exp": next_year,
+                        "price": last_price,
+                        "supplier": "تسوية جرد",
+                    },
+                )
 
-            action_desc = f"تم إضافة {difference} كشحنة تسوية"
+                action_desc = f"تم إضافة {difference} كشحنة تسوية"
 
-        adjustments.append({
-            "medicine_name": med_name,
-            "system_quantity": system_qty,
-            "actual_quantity": actual_qty,
-            "difference": difference,
-            "action": action_desc
-        })
+            adjustments.append({
+                "medicine_name": med_name,
+                "system_quantity": system_qty,
+                "actual_quantity": actual_qty,
+                "difference": difference,
+                "action": action_desc,
+            })
 
-        # 7. سجّل في audit_log
-        log_action(
-            db=db,
-            pharmacy_id=pharmacy_id,
-            user_id=user_id,
-            user_name=user_name,
-            action_type="stocktake_adjustment",
-            description=f"جرد: {med_name} - النظام: {system_qty} - الفعلي: {actual_qty} - الفرق: {difference}",
-            old_value=str(system_qty),
-            new_value=str(actual_qty)
+            # Keep the audit record inside this transaction; do not commit per item.
+            db.execute(text("""
+                INSERT INTO audit_log
+                    (pharmacy_id, user_id, user_name, action_type, description,
+                     old_value, new_value, success)
+                VALUES
+                    (:pid, :uid, :uname, 'stocktake_adjustment', :description,
+                     :old_value, :new_value, TRUE)
+            """), {
+                "pid": ph_uuid,
+                "uid": user_uuid,
+                "uname": user_name,
+                "description": f"جرد: {med_name} - النظام: {system_qty} - الفعلي: {actual_qty} - الفرق: {difference}",
+                "old_value": str(system_qty),
+                "new_value": str(actual_qty),
+            })
+
+        db.execute(
+            text("UPDATE stocktake_sessions SET items_adjusted = :adj WHERE id = :sid"),
+            {"adj": len(adjustments), "sid": session_id},
         )
 
-    # تحديث عدد العناصر المعدّلة في الجلسة
-    db.execute(
-        text("UPDATE stocktake_sessions SET items_adjusted = :adj WHERE id = :sid"),
-        {"adj": len(adjustments), "sid": session_id}
-    )
+        db.commit()
 
-    db.commit()
-
-    return {
-        "success": True,
-        "session_id": str(session_id),
-        "adjustments": adjustments,
-        "unchanged_count": unchanged_count
-    }
+        return {
+            "success": True,
+            "session_id": str(session_id),
+            "adjustments": adjustments,
+            "unchanged_count": unchanged_count
+        }
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="فشل حفظ الجرد")
 
 
 # ✅ انتهى - inventory.py - المرحلة 7

@@ -20,14 +20,14 @@ def test_real_postgres_startup_is_idempotent_and_preserves_users():
     before_pharmacies = 0
     if "users" in inspector.get_table_names():
         with engine.connect() as connection:
-            before_users = dict(connection.execute(text("SELECT id::text, password_hash FROM users")))
+            before_users = dict(connection.execute(text("SELECT id::text, password_hash FROM users")).all())
             before_pharmacies = connection.execute(text("SELECT COUNT(*) FROM pharmacies")).scalar()
 
     initialize_database()
     initialize_database()
 
     with engine.connect() as connection:
-        after_users = dict(connection.execute(text("SELECT id::text, password_hash FROM users")))
+        after_users = dict(connection.execute(text("SELECT id::text, password_hash FROM users")).all())
         after_pharmacies = connection.execute(text("SELECT COUNT(*) FROM pharmacies")).scalar()
         role_count = connection.execute(text("SELECT COUNT(*) FROM roles")).scalar()
         permission_count = connection.execute(text("SELECT COUNT(*) FROM permissions")).scalar()

@@ -264,6 +264,7 @@ async def create_sale(
             success=True,
             sale_id=str(sale.id),
             invoice_number=sale.invoice_number,
+            public_invoice_token=sale.public_invoice_token,
             total_amount=float(sale.total_amount),
             payment_method=format_payment_method(sale.payment_method),
             customer_name=sale.customer_name,
@@ -706,7 +707,7 @@ async def pos_barcode_search(
 
 # ═══════════════════════════════════════════════════════════
 # المهمة 7: عرض الفاتورة العامة (بدون JWT)
-# GET /api/public/invoice/{invoice_number}
+# GET /api/public/invoice/{public_invoice_token}
 # ═══════════════════════════════════════════════════════════
 
 # This endpoint is mounted in main.py under /api/public prefix
@@ -715,18 +716,18 @@ async def pos_barcode_search(
 public_router = APIRouter(prefix="/api/public", tags=["public"])
 
 
-@public_router.get("/invoice/{invoice_number}")
+@public_router.get("/invoice/{public_invoice_token}")
 async def get_public_invoice(
-    invoice_number: int,
+    public_invoice_token: str,
     db: Session = Depends(get_db)
 ):
     """
     عرض الفاتورة للعميل (بدون تسجيل دخول).
     تُستخدم عند مسح QR Code من الفاتورة.
     """
-    # نجيب المبيعة برقم الفاتورة
+    # Sequential invoice numbers are pharmacy-local and are never public lookup keys.
     sale = db.query(Sale).filter(
-        Sale.invoice_number == invoice_number
+        Sale.public_invoice_token == public_invoice_token
     ).first()
     
     if not sale:
