@@ -1,7 +1,7 @@
 """Add unique opaque public invoice tokens.
 
 Revision ID: 20260816_public_invoice_token
-Revises: 20240618_rbac_phase1
+Revises: 20260818_schema_adoption
 """
 
 from alembic import op
@@ -9,7 +9,7 @@ import sqlalchemy as sa
 
 
 revision = "20260816_public_invoice_token"
-down_revision = "20240618_rbac_phase1"
+down_revision = "20260818_schema_adoption"
 branch_labels = None
 depends_on = None
 

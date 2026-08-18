@@ -41,11 +41,13 @@ def postgres():
             CREATE TABLE audit_log (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 pharmacy_id UUID REFERENCES pharmacies(id),
-                user_id UUID REFERENCES users(id) ON DELETE SET NULL,
-                user_name VARCHAR(100), action_type VARCHAR(50) NOT NULL,
-                description TEXT NOT NULL, old_value TEXT, new_value TEXT,
-                success BOOLEAN NOT NULL DEFAULT TRUE, created_at TIMESTAMP DEFAULT NOW()
-            )
+                    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+                    user_name VARCHAR(100), action_type VARCHAR(50) NOT NULL,
+                    description TEXT NOT NULL, target_entity VARCHAR(50),
+                    target_id VARCHAR(100), old_value TEXT, new_value TEXT,
+                    success BOOLEAN NOT NULL DEFAULT TRUE, request_ip VARCHAR(64),
+                    created_at TIMESTAMP DEFAULT NOW()
+                )
         """))
         connection.execute(text("""
             CREATE TABLE stocktake_sessions (
