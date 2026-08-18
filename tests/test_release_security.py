@@ -44,6 +44,9 @@ def test_production_demo_http_routes_are_not_available(monkeypatch):
     client = TestClient(main.app)
     assert client.post("/api/auth/seed-demo", json={}).status_code == 404
     assert client.post("/api/auth/create-pharmacy", json={}).status_code == 404
+    assert client.post("/api/auth/activate", json={"product_key": "retired"}).status_code == 404
+    assert client.post("/api/auth/setup", json={}).status_code == 404
+    assert "تفعيل بمفتاح المنتج" not in (ROOT / "templates" / "login.html").read_text(encoding="utf-8")
 
 
 def test_database_url_validation_fails_closed():
@@ -154,7 +157,10 @@ def test_render_yaml_uses_external_secret_database():
 
 
 def test_no_unprotected_admin_or_demo_mutation_route():
-    allowed_onboarding = {"/api/auth/activate", "/api/auth/setup", "/api/auth/login"}
+    allowed_onboarding = {
+        "/api/auth/activate", "/api/auth/setup", "/api/auth/login",
+        "/api/auth/owner-activation",
+    }
     source_text = (ROOT / "main.py").read_text(encoding="utf-8")
     source_tree = ast.parse(source_text)
     functions = {node.name: node for node in ast.walk(source_tree) if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))}

@@ -3,8 +3,6 @@ PharmaSUD - Authentication Module
 Stage 2 - Version 2.0.0
 
 Handles:
-- Product Key Activation
-- Admin Creation
 - JWT Authentication
 - User Authorization
 """
@@ -17,7 +15,6 @@ from sqlalchemy.orm import Session
 from jose import JWTError, jwt
 import bcrypt
 import os
-import uuid
 from dotenv import load_dotenv
 
 from database import get_db
@@ -107,11 +104,20 @@ async def get_current_user(
     if user_id is None or pharmacy_id is None:
         raise credentials_exception
     
-    # Verify user exists in database
+    # Verify user and authoritative tenant linkage in the database.
     user = db.query(User).filter(User.id == user_id).first()
     if user is None:
         raise credentials_exception
     if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Account is disabled",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    if str(user.pharmacy_id) != str(pharmacy_id):
+        raise credentials_exception
+    pharmacy = db.query(Pharmacy).filter(Pharmacy.id == user.pharmacy_id).first()
+    if pharmacy is None or not pharmacy.is_active:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Account is disabled",
@@ -156,9 +162,9 @@ async def get_current_user(
         role_id_str = str(user.role_id) if user.role_id else ""
     
     return {
-        "user_id": user_id,
-        "pharmacy_id": pharmacy_id,
-        "role": role,  # Legacy role string
+        "user_id": str(user.id),
+        "pharmacy_id": str(user.pharmacy_id),
+        "role": user.role,  # Authoritative legacy role string
         "role_id": role_id_str,  # New RBAC role UUID
         "role_display_name": role_display_name,
         "permissions": permissions,
@@ -203,175 +209,6 @@ async def require_admin(
 
 
 # ═══════════════════════════════════════════════════════════
-# Product Key Activation Functions
-# ═══════════════════════════════════════════════════════════
-
-def activate_product_key(product_key: str, db: Session) -> Dict[str, Any]:
-    """
-    Activate a product key for first-time setup.
-    
-    Returns:
-        Dict with success status, pharmacy info or error message
-    """
-    # Find pharmacy by product key
-    pharmacy = db.query(Pharmacy).filter(Pharmacy.product_key == product_key).first()
-    
-    if not pharmacy:
-        return {
-            "success": False,
-            "message": "المفتاح غير صحيح"
-        }
-    
-    # Check if already activated
-    if pharmacy.is_active:
-        return {
-            "success": False,
-            "message": "المفتاح مُفعّل مسبقاً"
-        }
-    
-    # Check if pharmacy already has an admin
-    existing_admin = db.query(User).filter(
-        User.pharmacy_id == pharmacy.id,
-        User.role == "admin"
-    ).first()
-    
-    if existing_admin:
-        return {
-            "success": False,
-            "message": "الصيدلية لديها حساب مسؤول بالفعل"
-        }
-    
-    # Activate the pharmacy
-    pharmacy.is_active = True
-    pharmacy.activated_at = datetime.utcnow()
-    db.commit()
-
-    from audit import log_action
-    log_action(
-        db=db, pharmacy_id=str(pharmacy.id), user_id=None, user_name="system",
-        action_type="product_activated", description="Product key activated",
-        target_entity="pharmacy", target_id=str(pharmacy.id),
-    )
-    
-    return {
-        "success": True,
-        "pharmacy_id": str(pharmacy.id),
-        "pharmacy_name": pharmacy.name
-    }
-
-
-# ═══════════════════════════════════════════════════════════
-# Admin Creation Functions
-# ═══════════════════════════════════════════════════════════
-
-def create_admin_user(
-    pharmacy_id: str,
-    product_key: str,
-    full_name: str,
-    username: str,
-    password: str,
-    confirm_password: str,
-    db: Session
-) -> Dict[str, Any]:
-    """
-    Create the first admin user for a pharmacy.
-    
-    Returns:
-        Dict with success status and message
-    """
-    # Validate passwords match
-    if password != confirm_password:
-        return {
-            "success": False,
-            "message": "كلمتا المرور غير متطابقتين"
-        }
-    
-    # Validate password length
-    if len(password) < 6:
-        return {
-            "success": False,
-            "message": "كلمة المرور يجب أن تكون 6 أحرف على الأقل"
-        }
-    
-    # Check if pharmacy exists and is activated
-    from uuid import UUID as UUID_Class
-    try:
-        pharmacy_uuid = UUID_Class(pharmacy_id)
-    except ValueError:
-        return {
-            "success": False,
-            "message": "معرف الصيدلية غير صالح"
-        }
-    
-    pharmacy = db.query(Pharmacy).filter(
-        Pharmacy.id == pharmacy_uuid,
-        Pharmacy.product_key == product_key,
-    ).first()
-    if not pharmacy:
-        return {
-            "success": False,
-            "message": "الصيدلية غير موجودة"
-        }
-    
-    if not pharmacy.is_active:
-        return {
-            "success": False,
-            "message": "يجب تفعيل مفتاح المنتج أولاً"
-        }
-    
-    # Check if admin already exists
-    existing_admin = db.query(User).filter(
-        User.pharmacy_id == pharmacy_uuid,
-        User.role == "admin"
-    ).first()
-    
-    if existing_admin:
-        return {
-            "success": False,
-            "message": "يوجد مسؤول بالفعل لهذه الصيدلية"
-        }
-    
-    # Check if username is taken
-    existing_user = db.query(User).filter(User.username == username).first()
-    if existing_user:
-        return {
-            "success": False,
-            "message": "اسم المستخدم مستخدم مسبقاً"
-        }
-    
-    # Create admin user
-    from uuid import uuid4
-    
-    owner_role = db.query(Role).filter(Role.name == "owner").one()
-    new_admin = User(
-        id=uuid4(),
-        pharmacy_id=pharmacy_uuid,
-        username=username,
-        full_name=full_name,
-        password_hash=get_password_hash(password),
-        role="admin",
-        role_id=owner_role.id,
-        is_active=True
-    )
-    
-    db.add(new_admin)
-    db.commit()
-
-    from audit import log_action
-    log_action(
-        db=db, pharmacy_id=str(pharmacy_uuid), user_id=str(new_admin.id),
-        user_name=new_admin.username, action_type="administrator_created",
-        description="First administrator created", target_entity="user",
-        target_id=str(new_admin.id),
-    )
-    
-    return {
-        "success": True,
-        "message": "تم إنشاء حساب المدير بنجاح"
-    }
-
-
-# ═══════════════════════════════════════════════════════════
 # Login Functions
 # ═══════════════════════════════════════════════════════════
 
@@ -407,7 +244,12 @@ def authenticate_user(username: str, password: str, db: Session) -> Dict[str, An
     
     # Get pharmacy info
     pharmacy = db.query(Pharmacy).filter(Pharmacy.id == user.pharmacy_id).first()
-    pharmacy_name = pharmacy.name if pharmacy else "Unknown"
+    if pharmacy is None or not pharmacy.is_active:
+        return {
+            "success": False,
+            "message": "اسم المستخدم أو كلمة المرور غير صحيحة"
+        }
+    pharmacy_name = pharmacy.name
     
     # Create JWT token
     token_data = {
@@ -466,143 +308,6 @@ def check_system_status(db: Session) -> Dict[str, Any]:
     return {
         "status": "ready",
         "message": "النظام جاهز - تسجيل الدخول"
-    }
-
-
-# ════════════════════════════════════════════════════════════
-# Pharmacy Provisioning Helpers
-# ════════════════════════════════════════════════════════════
-
-def apply_default_settings(db: Session, pharmacy_id: str) -> None:
-    """
-    Apply default settings to a newly created pharmacy.
-    Lightweight defaults - no settings registry table.
-    """
-    pharmacy = db.query(Pharmacy).filter(
-        Pharmacy.id == uuid.UUID(pharmacy_id)
-    ).first()
-
-    if not pharmacy:
-        return
-
-    # Default settings are handled via template defaults
-    # No settings registry table - values provided by template context
-    # This function exists for future extension
-    pass
-
-
-def create_new_pharmacy(
-    db: Session,
-    *,
-    product_key: str,
-    admin_username: str,
-    admin_password: str,
-    admin_full_name: str,
-    pharmacy_name: str,
-    owner_name: str,
-    pharmacy_type: str = 'customer',
-    phone: str = '',
-    address: str = ''
-) -> dict:
-    """
-    Single-call pharmacy provisioning.
-
-    Responsibilities:
-    1. Validate product_key format (no type derivation)
-    2. Create pharmacy record (type from parameter)
-    3. Create admin user
-    4. Apply defaults
-    5. Return pharmacy info + admin credentials
-
-    Does NOT:
-    - Seed demo data (use seed_demo_pharmacy separately)
-    - Configure RBAC/permissions
-    - Start cron jobs
-    - Set up monitoring
-
-    Args:
-        product_key: Product activation key (must be valid and unused)
-        admin_username: Admin username
-        admin_password: Admin password (plaintext, will be hashed)
-        admin_full_name: Admin full name
-        pharmacy_name: Pharmacy name
-        owner_name: Owner name
-        pharmacy_type: 'development', 'demo', or 'customer' (default: 'customer')
-        phone: Optional phone number
-        address: Optional address
-
-    Returns:
-        Dict with pharmacy_id, admin credentials, type
-
-    Raises:
-        ValueError: If product key invalid, already used, or type invalid
-    """
-    # Validate pharmacy type
-    if pharmacy_type not in ('development', 'demo', 'customer'):
-        raise ValueError(f"Invalid pharmacy_type: {pharmacy_type}. Must be 'development', 'demo', or 'customer'")
-
-    # Activate product key (validates key, checks not already used)
-    activation_result = activate_product_key(product_key, db)
-    if not activation_result.get('success'):
-        raise ValueError(activation_result.get('message', 'Invalid product key'))
-
-    pharmacy_id = activation_result['pharmacy_id']
-
-    # Update pharmacy with provided details and type
-    pharmacy = db.query(Pharmacy).filter(
-        Pharmacy.id == uuid.UUID(pharmacy_id)
-    ).first()
-
-    if not pharmacy:
-        raise ValueError("Pharmacy not found after activation")
-
-    pharmacy.name = pharmacy_name
-    pharmacy.owner_name = owner_name
-    pharmacy.phone = phone
-    pharmacy.address = address
-    pharmacy.type = pharmacy_type  # Set type from parameter, NOT from key prefix
-
-    db.commit()
-
-    # Create admin user
-    setup_result = create_admin_user(
-        pharmacy_id=pharmacy_id,
-        product_key=product_key,
-        full_name=admin_full_name,
-        username=admin_username,
-        password=admin_password,
-        confirm_password=admin_password,
-        db=db
-    )
-
-    if not setup_result.get('success'):
-        # Transaction will rollback on exception
-        raise ValueError(setup_result.get('message', 'Failed to create admin user'))
-
-    # Apply defaults
-    apply_default_settings(db, pharmacy_id)
-
-    # Audit log
-    from audit import log_action
-    log_action(
-        db=db,
-        pharmacy_id=pharmacy_id,
-        user_id=db.query(User).filter(
-            User.username == admin_username
-        ).first().id,
-        user_name=admin_full_name,
-        action_type="pharmacy_provisioned",
-        description=f"Pharmacy provisioned: {pharmacy_name} (type: {pharmacy_type})",
-        new_value=f"type={pharmacy_type}, admin={admin_username}"
-    )
-
-    return {
-        'success': True,
-        'pharmacy_id': pharmacy_id,
-        'pharmacy_name': pharmacy_name,
-        'pharmacy_type': pharmacy_type,
-        'admin_username': admin_username,
-        'message': f"Pharmacy '{pharmacy_name}' provisioned successfully as {pharmacy_type}"
     }
 
 

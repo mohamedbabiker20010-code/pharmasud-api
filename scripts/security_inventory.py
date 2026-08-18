@@ -11,8 +11,13 @@ import main
 
 ROOT = Path(__file__).resolve().parents[1]
 MUTATING_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
-CLOSED_ROUTES = {"/api/auth/seed-demo", "/api/auth/create-pharmacy"}
-ONBOARDING_ROUTES = {"/api/auth/activate", "/api/auth/setup"}
+CLOSED_ROUTES = {
+    "/api/auth/activate",
+    "/api/auth/setup",
+    "/api/auth/seed-demo",
+    "/api/auth/create-pharmacy",
+}
+ONBOARDING_ROUTES = {"/api/auth/owner-activation"}
 
 
 def dependency_names(dependant):

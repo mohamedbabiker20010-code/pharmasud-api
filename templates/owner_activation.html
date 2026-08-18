@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Activate Owner - PharmaSUD</title>
+</head>
+<body>
+  <main>
+    <h1>Activate your PharmaSUD owner account</h1>
+    <p id="message">Choose a private password to complete activation.</p>
+    <form id="activation-form">
+      <label>New password <input id="password" type="password" minlength="12" maxlength="72" required></label>
+      <label>Confirm password <input id="confirm" type="password" minlength="12" maxlength="72" required></label>
+      <button type="submit">Activate account</button>
+    </form>
+  </main>
+  <script>
+    const token = new URLSearchParams(window.location.hash.slice(1)).get('token') || '';
+    document.getElementById('activation-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const password = document.getElementById('password').value;
+      const confirm_password = document.getElementById('confirm').value;
+      const response = await fetch('/api/auth/owner-activation', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({token, password, confirm_password})
+      });
+      document.getElementById('message').textContent = response.ok
+        ? 'Activation complete. You can now sign in.'
+        : 'Activation link is invalid or expired.';
+      if (response.ok) document.getElementById('activation-form').remove();
+    });
+  </script>
+</body>
+</html>

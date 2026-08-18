@@ -19,7 +19,13 @@ def initialize_database() -> dict:
         identity["environment"], identity["masked_host"], identity["database"], identity["fingerprint"],
     )
 
-    Base.metadata.create_all(bind=engine)
+    # P1-A tables are migration-owned. Excluding them prevents an application
+    # deploy from racing ahead of the reviewed Alembic migration.
+    startup_tables = [
+        table for table in Base.metadata.sorted_tables
+        if table.name != "owner_activation_tokens"
+    ]
+    Base.metadata.create_all(bind=engine, tables=startup_tables)
     with engine.begin() as conn:
         conn.execute(text("ALTER TABLE batches ADD COLUMN IF NOT EXISTS supplier_name VARCHAR(100)"))
         conn.execute(text("ALTER TABLE sale_items ADD COLUMN IF NOT EXISTS unit_name VARCHAR(20)"))

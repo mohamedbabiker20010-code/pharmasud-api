@@ -20,8 +20,10 @@ def test_public_invoice_migration_follows_schema_adoption():
     script = ScriptDirectory.from_config(config)
 
     invoice = script.get_revision("20260816_public_invoice_token")
+    provisioning = script.get_revision("20260818_p1a_provisioning")
     adoption = script.get_revision("20260818_schema_adoption")
 
-    assert script.get_current_head() == "20260816_public_invoice_token"
+    assert script.get_current_head() == "20260818_p1a_provisioning"
+    assert provisioning.down_revision == "20260816_public_invoice_token"
     assert invoice.down_revision == "20260818_schema_adoption"
     assert adoption.down_revision == "20240618_rbac_phase1"

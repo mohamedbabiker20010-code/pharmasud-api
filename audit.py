@@ -35,32 +35,13 @@ def log_action(
     success: bool = True,
     request_ip: Optional[str] = None,
 ):
-    """تسجيل أي عملية حساسة في audit_log."""
+    """Legacy convenience wrapper that commits its own audit write."""
     try:
-        db.execute(
-            text("""
-                INSERT INTO audit_log
-                    (pharmacy_id, user_id, user_name, action_type,
-                     description, target_entity, target_id, old_value,
-                     new_value, success, request_ip)
-                VALUES
-                    (:pid, :uid, :uname, :atype,
-                     :desc, :target_entity, :target_id, :old, :new,
-                     :success, :request_ip)
-            """),
-            {
-                "pid": uuid.UUID(pharmacy_id),
-                "uid": uuid.UUID(str(user_id)) if user_id else None,
-                "uname": user_name,
-                "atype": action_type,
-                "desc": description,
-                "target_entity": target_entity,
-                "target_id": target_id,
-                "old": old_value,
-                "new": new_value,
-                "success": success,
-                "request_ip": request_ip,
-            }
+        add_audit_event(
+            db, pharmacy_id=pharmacy_id, user_id=user_id, user_name=user_name,
+            action_type=action_type, description=description, old_value=old_value,
+            new_value=new_value, target_entity=target_entity, target_id=target_id,
+            success=success, request_ip=request_ip,
         )
         db.commit()
         return True
@@ -68,6 +49,50 @@ def log_action(
         db.rollback()
         print(f"Audit log error: {type(e).__name__}")
         return False
+
+
+def add_audit_event(
+    db: Session,
+    *,
+    pharmacy_id: Optional[str],
+    user_id: Optional[str],
+    user_name: str,
+    action_type: str,
+    description: str,
+    old_value: Optional[str] = None,
+    new_value: Optional[str] = None,
+    target_entity: Optional[str] = None,
+    target_id: Optional[str] = None,
+    success: bool = True,
+    request_ip: Optional[str] = None,
+) -> None:
+    """Insert an audit event without committing or rolling back the caller."""
+    db.execute(
+        text("""
+            INSERT INTO audit_log
+                (pharmacy_id, user_id, user_name, action_type,
+                 description, target_entity, target_id, old_value,
+                 new_value, success, request_ip)
+            VALUES
+                (:pid, :uid, :uname, :atype,
+                 :desc, :target_entity, :target_id, :old, :new,
+                 :success, :request_ip)
+        """),
+        {
+            "pid": uuid.UUID(str(pharmacy_id)) if pharmacy_id else None,
+            "uid": uuid.UUID(str(user_id)) if user_id else None,
+            "uname": user_name,
+            "atype": action_type,
+            "desc": description,
+            "target_entity": target_entity,
+            "target_id": target_id,
+            "old": old_value,
+            "new": new_value,
+            "success": success,
+            "request_ip": request_ip,
+        },
+    )
+    db.flush()
 
 
 @router.get("/")

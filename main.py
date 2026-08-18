@@ -19,15 +19,14 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
-from database import get_db, test_connection, get_tables_count
+from database import SessionLocal, get_db, test_connection, get_tables_count
 from models import (
-    ProductKeyActivate, AdminCreate, UserLogin, 
+    OwnerActivationRequest, UserLogin,
     TokenResponse, UserResponse, SystemStatus,
     RbacMeResponse,
 )
 from auth import (
-    activate_product_key, create_admin_user, authenticate_user,
-    get_current_user, require_admin, check_system_status,
+    authenticate_user, get_current_user, require_admin, check_system_status,
     require_permission,
 )
 from medicines import router as medicines_router
@@ -42,6 +41,7 @@ from employees import router as employees_router
 from audit import router as audit_router
 from routers.user_context import router as user_context_router
 from startup import initialize_database
+from services.provisioning import ActivationError, activate_owner
 
 
 @asynccontextmanager
@@ -416,23 +416,33 @@ async def purchase_forecast_page(request: Request):
 
 @app.post("/api/auth/activate", response_model=dict)
 @limiter.limit("10/minute")
-def api_activate(request: Request, data: ProductKeyActivate, db: Session = Depends(get_db)):
-    """Activate product key (Stage 2)."""
-    return activate_product_key(data.product_key, db)
+def api_activate(request: Request):
+    """Retired: product keys are license identifiers, not activation secrets."""
+    raise HTTPException(status_code=404, detail="Not found")
 
 @app.post("/api/auth/setup", response_model=dict)
 @limiter.limit("5/minute")
-def api_setup(request: Request, data: AdminCreate, db: Session = Depends(get_db)):
-    """Create admin user (Stage 2)."""
-    return create_admin_user(
-        pharmacy_id=data.pharmacy_id,
-        product_key=data.product_key,
-        full_name=data.full_name,
-        username=data.username,
-        password=data.password,
-        confirm_password=data.confirm_password,
-        db=db
-    )
+def api_setup(request: Request):
+    """Retired: owner accounts are created only by trusted provisioning."""
+    raise HTTPException(status_code=404, detail="Not found")
+
+
+@app.get("/owner-activation", response_class=HTMLResponse)
+async def owner_activation_page(request: Request):
+    return templates.TemplateResponse("owner_activation.html", {"request": request})
+
+
+@app.post("/api/auth/owner-activation", response_model=dict)
+@limiter.limit("5/minute")
+def api_owner_activation(request: Request, data: OwnerActivationRequest):
+    if data.password != data.confirm_password:
+        raise HTTPException(status_code=400, detail="Activation link is invalid or expired")
+    try:
+        with SessionLocal.begin() as session:
+            activate_owner(session, secret=data.token, password=data.password)
+    except ActivationError:
+        raise HTTPException(status_code=400, detail="Activation link is invalid or expired")
+    return {"success": True, "message": "Owner account activated"}
 
 # Temporary endpoint for validation - creates pharmacy with product key
 @app.post("/api/auth/create-pharmacy", response_model=dict)

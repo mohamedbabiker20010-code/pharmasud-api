@@ -36,6 +36,9 @@ def postgres():
     Base.metadata.create_all(engine)
 
     with engine.begin() as connection:
+        connection.execute(text("DROP TABLE owner_activation_tokens"))
+        connection.execute(text("ALTER TABLE pharmacies DROP COLUMN provisioning_request_id"))
+        connection.execute(text("ALTER TABLE pharmacies DROP COLUMN customer_reference"))
         connection.execute(text("ALTER TABLE sales DROP COLUMN public_invoice_token"))
         connection.execute(text("""
             CREATE TABLE audit_log (

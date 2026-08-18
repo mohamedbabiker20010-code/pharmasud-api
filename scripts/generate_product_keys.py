@@ -13,7 +13,7 @@ Usage:
 """
 
 import argparse
-import uuid
+import secrets
 import json
 import sys
 from datetime import datetime
@@ -21,10 +21,8 @@ from pathlib import Path
 
 
 def generate_product_key(prefix: str = "PHARM") -> str:
-    """Generate a single product key."""
-    # Use UUID4 for cryptographic randomness
-    # Take first 12 chars of hex for readability
-    unique_part = uuid.uuid4().hex[:12].upper()
+    """Generate a license identifier with 192 bits of secure randomness."""
+    unique_part = secrets.token_urlsafe(24)
     return f"{prefix}-{unique_part}"
 
 

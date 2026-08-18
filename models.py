@@ -24,43 +24,10 @@ def generate_public_invoice_token() -> str:
 # Pydantic Models for Authentication (Stage 2)
 # ═══════════════════════════════════════════════════════════
 
-class ProductKeyActivate(BaseModel):
-    """Schema for product key activation."""
-    product_key: str = Field(..., min_length=10, max_length=100, description="Product activation key")
-    
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "product_key": "PHARM-SDN-2026-RAHMA-X7K9"
-            }
-        }
-
-
-class AdminCreate(BaseModel):
-    """Schema for creating first admin user."""
-    pharmacy_id: str = Field(..., description="Pharmacy UUID")
-    product_key: str = Field(..., min_length=10, max_length=100, description="One-time product activation key")
-    full_name: str = Field(..., min_length=2, max_length=100, description="Full name in Arabic or English")
-    username: str = Field(..., min_length=3, max_length=50, description="Unique username")
-    password: str = Field(..., min_length=6, max_length=100, description="Password (min 6 characters)")
-    confirm_password: str = Field(..., description="Password confirmation")
-    
-    @validator('username')
-    def username_alphanumeric(cls, v):
-        if not v.isalnum():
-            raise ValueError('اسم المستخدم يجب أن يكون حروف أبجدية وأرقام فقط')
-        return v
-    
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "pharmacy_id": "550e8400-e29b-41d4-a716-446655440000",
-                "full_name": "محمد أحمد",
-                "username": "admin",
-                "password": "123456",
-                "confirm_password": "123456"
-            }
-        }
+class OwnerActivationRequest(BaseModel):
+    token: str = Field(..., min_length=32, max_length=200)
+    password: str = Field(..., min_length=12, max_length=72)
+    confirm_password: str = Field(..., min_length=12, max_length=72)
 
 
 class UserLogin(BaseModel):
@@ -572,6 +539,9 @@ class Pharmacy(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     product_key = Column(String(50), unique=True, nullable=False)
+    # Nullable only for legacy/demo rows created before P1-A.
+    customer_reference = Column(String(100), unique=True, nullable=True, index=True)
+    provisioning_request_id = Column(UUID(as_uuid=True), unique=True, nullable=True, index=True)
     name = Column(String(100), nullable=False)
     owner_name = Column(String(100))
     phone = Column(String(20))
@@ -617,6 +587,28 @@ class User(Base):
     pharmacy = relationship("Pharmacy", back_populates="users")
     sales = relationship("Sale", back_populates="user")
     role_obj = relationship("Role", back_populates="users")
+    activation_tokens = relationship(
+        "OwnerActivationToken", back_populates="user", cascade="all, delete-orphan"
+    )
+
+
+class OwnerActivationToken(Base):
+    """Hashed, expiring, single-use activation token for a provisioned owner."""
+    __tablename__ = "owner_activation_tokens"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False,
+        index=True,
+    )
+    token_hash = Column(String(64), unique=True, nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+    used_at = Column(DateTime, nullable=True)
+    revoked_at = Column(DateTime, nullable=True)
+    provisioning_request_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    created_at = Column(DateTime, server_default=func.now(), nullable=False)
+
+    user = relationship("User", back_populates="activation_tokens")
 
 
 class Role(Base):
