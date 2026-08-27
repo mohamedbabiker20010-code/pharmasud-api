@@ -8,7 +8,7 @@ Includes Pydantic models for authentication and validation.
 
 import uuid
 import secrets
-from sqlalchemy import Column, String, Integer, Boolean, DateTime, Date, Numeric, Text, ForeignKey, CheckConstraint, Uuid as UUID, func, text
+from sqlalchemy import Column, String, Integer, Boolean, DateTime, Date, Numeric, Text, ForeignKey, CheckConstraint, Index, Uuid as UUID, func, text
 from sqlalchemy.orm import relationship
 from pydantic import BaseModel, Field, validator
 from typing import Optional
@@ -569,8 +569,9 @@ class User(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     pharmacy_id = Column(UUID(as_uuid=True), ForeignKey("pharmacies.id"), nullable=False)
-    username = Column(String(50), unique=True, nullable=False)
-    password_hash = Column(String(255), nullable=False)
+    username = Column(String(320), unique=True, nullable=False)
+    email = Column(String(320), nullable=True)
+    password_hash = Column(String(255), nullable=True)
     role = Column(String(20), nullable=False)  # Legacy: 'admin' or 'employee' (kept for compatibility)
     role_id = Column(UUID(as_uuid=True), ForeignKey("roles.id"), nullable=True)  # New RBAC
     full_name = Column(String(100))
@@ -581,6 +582,12 @@ class User(Base):
     # Enforce valid legacy roles (will be removed in future version)
     __table_args__ = (
         CheckConstraint("role IN ('admin', 'employee')", name="check_user_role"),
+        Index(
+            "uq_users_email_normalized",
+            func.lower(email),
+            unique=True,
+            postgresql_where=email.isnot(None),
+        ),
     )
 
     # Relationships

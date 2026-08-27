@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from jose import JWTError, jwt
 import bcrypt
@@ -42,8 +43,10 @@ ACCESS_TOKEN_EXPIRE_HOURS = 24
 security = HTTPBearer()
 
 
-def verify_password(plain_password: str, hashed_password: str) -> bool:
+def verify_password(plain_password: str, hashed_password: Optional[str]) -> bool:
     """Verify a plain password against its hash."""
+    if not hashed_password:
+        return False
     return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
 
 
@@ -220,7 +223,10 @@ def authenticate_user(username: str, password: str, db: Session) -> Dict[str, An
         Dict with success status, token and user info or error message
     """
     # Find user by username
-    user = db.query(User).filter(User.username == username).first()
+    identity = username.strip()
+    user = db.query(User).filter(User.username == identity).first()
+    if user is None and "@" in identity:
+        user = db.query(User).filter(func.lower(User.email) == identity.lower()).first()
     
     if not user:
         return {
@@ -236,7 +242,7 @@ def authenticate_user(username: str, password: str, db: Session) -> Dict[str, An
         }
     
     # Verify password
-    if not verify_password(password, user.password_hash):
+    if not user.password_hash or not verify_password(password, user.password_hash):
         return {
             "success": False,
             "message": "اسم المستخدم أو كلمة المرور غير صحيحة"

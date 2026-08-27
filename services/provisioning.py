@@ -21,9 +21,9 @@ from models import OwnerActivationToken, Pharmacy, Role, User
 from rbac_seeder import PERMISSION_DEFINITIONS, ROLE_PERMISSIONS
 
 
-P1A_ALEMBIC_HEAD = "20260818_p1a_provisioning"
+P1A_ALEMBIC_HEAD = "20260827_owner_email_password"
 ACTIVATION_TTL_HOURS = 24
-_USERNAME_RE = re.compile(r"^[a-z0-9][a-z0-9._-]{2,49}$")
+_EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 _REFERENCE_RE = re.compile(r"^[A-Z0-9][A-Z0-9._/-]{2,99}$")
 
 
@@ -48,7 +48,7 @@ class ProvisioningInput:
     customer_reference: str
     pharmacy_name: str
     owner_name: str
-    owner_username: str
+    owner_email: str
     operator: str
     phone: str = ""
     address: str = ""
@@ -60,7 +60,7 @@ class ProvisioningResult:
     status: str
     pharmacy_name: str
     customer_reference: str
-    owner_username: str
+    owner_email: str
     provisioning_request_id: uuid.UUID
     product_key: Optional[str]
     activation_secret: Optional[str]
@@ -77,10 +77,10 @@ def normalize_customer_reference(value: str) -> str:
     return normalized
 
 
-def normalize_username(value: str) -> str:
+def normalize_email(value: str) -> str:
     normalized = value.strip().lower()
-    if not _USERNAME_RE.fullmatch(normalized):
-        raise ValueError("owner_username must be 3-50 lowercase ASCII characters")
+    if len(normalized) > 320 or not _EMAIL_RE.fullmatch(normalized):
+        raise ValueError("owner_email must be a valid email address")
     return normalized
 
 
@@ -96,7 +96,7 @@ def canonicalize(data: ProvisioningInput) -> ProvisioningInput:
         customer_reference=normalize_customer_reference(data.customer_reference),
         pharmacy_name=_clean(data.pharmacy_name, "pharmacy_name", 100, 2),
         owner_name=_clean(data.owner_name, "owner_name", 100, 2),
-        owner_username=normalize_username(data.owner_username),
+        owner_email=normalize_email(data.owner_email),
         operator=_clean(data.operator, "operator", 100, 2),
         phone=data.phone.strip()[:20],
         address=data.address.strip()[:500],
@@ -158,8 +158,10 @@ class ProvisioningService:
         try:
             with self.session_factory.begin() as session:
                 owner_role = self.validate_rbac(session)
-                if session.query(User).filter(func.lower(User.username) == data.owner_username).first():
-                    raise ProvisioningError("owner username is already in use")
+                if session.query(User).filter(func.lower(User.email) == data.owner_email).first():
+                    raise ProvisioningError("owner email is already in use")
+                if session.query(User).filter(func.lower(User.username) == data.owner_email).first():
+                    raise ProvisioningError("owner login identity is already in use")
 
                 pharmacy = Pharmacy(
                     id=uuid.uuid4(),
@@ -178,18 +180,17 @@ class ProvisioningService:
                 session.flush()
                 self.failure_injector("after_pharmacy_flush")
 
-                discarded_password = secrets.token_urlsafe(48)
                 owner = User(
                     id=uuid.uuid4(),
                     pharmacy_id=pharmacy.id,
-                    username=data.owner_username,
+                    username=data.owner_email,
+                    email=data.owner_email,
                     full_name=data.owner_name,
-                    password_hash=get_password_hash(discarded_password),
+                    password_hash=None,
                     role="admin",
                     role_id=owner_role.id,
                     is_active=False,
                 )
-                discarded_password = ""
                 session.add(owner)
                 session.flush()
                 self.failure_injector("after_owner_flush")
@@ -219,7 +220,7 @@ class ProvisioningService:
                     target_id=str(pharmacy.id),
                     new_value=json.dumps({
                         "customer_reference": data.customer_reference,
-                        "owner_username": data.owner_username,
+                        "owner_user_id": str(owner.id),
                         "provisioning_request_id": str(request_id),
                         "pharmacy_type": "customer",
                     }, sort_keys=True),
@@ -260,7 +261,8 @@ class ProvisioningService:
             and (pharmacy.phone or "") == data.phone
             and (pharmacy.address or "") == data.address
             and owner is not None
-            and owner.username == data.owner_username
+            and owner.email == data.owner_email
+            and owner.username == data.owner_email
         )
         if data.provisioning_request_id and pharmacy.provisioning_request_id != request_id:
             same = False
@@ -279,8 +281,10 @@ class ProvisioningService:
     def _verify_in_transaction(session, pharmacy, owner, owner_role, activation):
         if owner.pharmacy_id != pharmacy.id or owner.role_id != owner_role.id:
             raise ProvisioningError("owner tenant/RBAC linkage failed")
-        if owner.is_active or owner.role != "admin":
+        if owner.is_active or owner.password_hash is not None or owner.role != "admin":
             raise ProvisioningError("owner pre-activation state is invalid")
+        if owner.email is None or owner.username != owner.email:
+            raise ProvisioningError("owner email identity is invalid")
         if activation.user_id != owner.id or activation.provisioning_request_id != pharmacy.provisioning_request_id:
             raise ProvisioningError("activation linkage failed")
         foreign_counts = [
@@ -318,7 +322,7 @@ class ProvisioningService:
                 raise ProvisioningError("persisted audit verification failed")
             return ProvisioningResult(
                 status=status, pharmacy_name=pharmacy.name,
-                customer_reference=customer_reference, owner_username=owner.username,
+                customer_reference=customer_reference, owner_email=owner.email,
                 provisioning_request_id=request_id, product_key=product_key,
                 activation_secret=activation_secret, activation_expires_at=expires_at,
                 tenant_verification=True, rbac_verification=True, audit_verification=True,
@@ -379,7 +383,10 @@ def activate_owner(session: Session, *, secret: str, password: str, now: Optiona
     ):
         raise ActivationError("Activation link is invalid or expired")
     owner = session.query(User).filter(User.id == token.user_id).with_for_update().one_or_none()
-    if owner is None or owner.is_active or owner.role_id is None:
+    if (
+        owner is None or owner.is_active or owner.password_hash is not None
+        or owner.role_id is None
+    ):
         raise ActivationError("Activation link is invalid or expired")
     pharmacy = session.query(Pharmacy).filter(Pharmacy.id == owner.pharmacy_id).one_or_none()
     if pharmacy is None or not pharmacy.is_active:

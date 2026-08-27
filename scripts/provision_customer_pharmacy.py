@@ -69,7 +69,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--customer-reference")
     parser.add_argument("--pharmacy-name")
     parser.add_argument("--owner-name")
-    parser.add_argument("--owner-username")
+    parser.add_argument("--owner-email")
     parser.add_argument("--operator")
     parser.add_argument("--phone", default="")
     parser.add_argument("--address", default="")
@@ -83,7 +83,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 def _complete_interactive(args):
     if args.non_interactive:
-        required = ("customer_reference", "pharmacy_name", "owner_name", "owner_username", "operator")
+        required = ("customer_reference", "pharmacy_name", "owner_name", "owner_email", "operator")
         missing = [name for name in required if not getattr(args, name)]
         if missing and not args.reissue_activation:
             raise RuntimeError("Missing required arguments: " + ", ".join(missing))
@@ -93,7 +93,7 @@ def _complete_interactive(args):
     if not args.reissue_activation:
         args.pharmacy_name = args.pharmacy_name or input("Pharmacy name: ")
         args.owner_name = args.owner_name or input("Owner full name: ")
-        args.owner_username = args.owner_username or input("Owner username: ")
+        args.owner_email = args.owner_email or input("Owner email: ")
     return args
 
 
@@ -123,7 +123,7 @@ def main(argv=None) -> int:
                 customer_reference=args.customer_reference,
                 pharmacy_name=args.pharmacy_name,
                 owner_name=args.owner_name,
-                owner_username=args.owner_username,
+                owner_email=args.owner_email,
                 operator=args.operator,
                 phone=args.phone,
                 address=args.address,
@@ -132,7 +132,7 @@ def main(argv=None) -> int:
         print("\n" + result.status)
         print(f"Pharmacy: {result.pharmacy_name}")
         print(f"Customer Reference: {result.customer_reference}")
-        print(f"Owner Username: {result.owner_username}")
+        print(f"Owner Email: {result.owner_email}")
         if result.product_key:
             print(f"License Key: {result.product_key}")
         if result.activation_secret:

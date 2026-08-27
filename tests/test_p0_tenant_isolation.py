@@ -37,6 +37,10 @@ def postgres():
 
     with engine.begin() as connection:
         connection.execute(text("DROP TABLE owner_activation_tokens"))
+        connection.execute(text("DROP INDEX uq_users_email_normalized"))
+        connection.execute(text("ALTER TABLE users DROP COLUMN email"))
+        connection.execute(text("ALTER TABLE users ALTER COLUMN username TYPE VARCHAR(50)"))
+        connection.execute(text("ALTER TABLE users ALTER COLUMN password_hash SET NOT NULL"))
         connection.execute(text("ALTER TABLE pharmacies DROP COLUMN provisioning_request_id"))
         connection.execute(text("ALTER TABLE pharmacies DROP COLUMN customer_reference"))
         connection.execute(text("ALTER TABLE sales DROP COLUMN public_invoice_token"))

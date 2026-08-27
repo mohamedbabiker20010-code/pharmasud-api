@@ -80,7 +80,7 @@ def p1a_db():
         seed_rbac_foundation(session)
     config = Config(os.path.join(os.path.dirname(__file__), "..", "alembic.ini"))
     config.set_main_option("sqlalchemy.url", DATABASE_URL)
-    command.stamp(config, "20260818_p1a_provisioning")
+    command.stamp(config, "20260827_owner_email_password")
     yield engine, factory
     engine.dispose()
 
@@ -91,12 +91,12 @@ def provisioned(p1a_db):
     service = ProvisioningService(factory)
     a = service.provision(ProvisioningInput(
         customer_reference="ORDER-A", pharmacy_name="PHARMACY_A", owner_name="OWNER A",
-        owner_username="owner.a", operator="TEST OPERATOR",
+        owner_email="owner.a@example.com", operator="TEST OPERATOR",
         provisioning_request_id=uuid.uuid4(),
     ))
     b = service.provision(ProvisioningInput(
         customer_reference="ORDER-B", pharmacy_name="PHARMACY_B", owner_name="OWNER B",
-        owner_username="owner.b", operator="TEST OPERATOR",
+        owner_email="owner.b@example.com", operator="TEST OPERATOR",
         provisioning_request_id=uuid.uuid4(),
     ))
     return engine, factory, service, a, b
@@ -119,6 +119,32 @@ def test_provisions_two_fully_linked_inactive_owners(provisioned):
         assert owner_a.role_id == owner_b.role_id == owner_role.id
         assert owner_a.role == owner_b.role == "admin"
         assert owner_a.is_active is owner_b.is_active is False
+        assert owner_a.password_hash is owner_b.password_hash is None
+        assert owner_a.email == owner_a.username == "owner.a@example.com"
+
+
+def test_provisioning_requires_valid_email_and_never_hashes_a_password(p1a_db, monkeypatch):
+    _, factory = p1a_db
+    monkeypatch.setattr(
+        provisioning_module, "get_password_hash",
+        lambda _password: (_ for _ in ()).throw(AssertionError("provisioning must not hash a password")),
+    )
+    result = ProvisioningService(factory).provision(ProvisioningInput(
+        customer_reference="ORDER-NO-PASSWORD", pharmacy_name="No Password Pharmacy",
+        owner_name="No Password Owner", owner_email="new.owner@example.com",
+        operator="TEST OPERATOR",
+    ))
+    assert result.status == "PROVISIONING_SUCCESS"
+    with factory() as session:
+        owner = _owner(session, "ORDER-NO-PASSWORD")
+        assert owner.password_hash is None
+        assert owner.is_active is False
+    with pytest.raises(ValueError):
+        ProvisioningService(factory).provision(ProvisioningInput(
+            customer_reference="ORDER-BAD-EMAIL", pharmacy_name="Bad Email Pharmacy",
+            owner_name="Bad Email Owner", owner_email="not-an-email",
+            operator="TEST OPERATOR",
+        ))
 
 
 def test_activation_hash_only_expiry_and_single_use(provisioned):
@@ -130,12 +156,15 @@ def test_activation_hash_only_expiry_and_single_use(provisioned):
         assert token.token_hash == hash_activation_secret(a.activation_secret)
         assert a.activation_secret not in token.token_hash
         assert a.activation_secret not in str(token.__dict__)
-    assert authenticate_user("owner.a", "Owner-A-Password!", factory())["success"] is False
+    assert authenticate_user("owner.a@example.com", "Owner-A-Password!", factory())["success"] is False
     with factory.begin() as session:
         activate_owner(session, secret=a.activation_secret, password="Owner-A-Password!")
     with factory() as session:
         assert _owner(session, "ORDER-A").is_active is True
-        assert authenticate_user("owner.a", "Owner-A-Password!", session)["success"] is True
+        owner = _owner(session, "ORDER-A")
+        assert owner.password_hash and owner.password_hash.startswith("$2")
+        assert authenticate_user("owner.a@example.com", "Owner-A-Password!", session)["success"] is True
+        assert authenticate_user("OWNER.A@EXAMPLE.COM", "Owner-A-Password!", session)["success"] is True
         assert session.execute(text("""
             SELECT count(*) FROM audit_log
             WHERE action_type='owner_first_login_activated'
@@ -156,11 +185,41 @@ def test_activation_hash_only_expiry_and_single_use(provisioned):
         activate_owner(session, secret=expired_secret, password="Owner-B-Password!")
 
 
+def test_null_password_fails_closed_even_if_account_is_active(p1a_db):
+    _, factory = p1a_db
+    with factory.begin() as session:
+        owner = _owner(session, "ORDER-B")
+        owner.is_active = True
+        assert owner.password_hash is None
+    with factory() as session:
+        assert authenticate_user("owner.b@example.com", "any-password", session)["success"] is False
+    with factory.begin() as session:
+        _owner(session, "ORDER-B").is_active = False
+
+
+def test_activation_hash_failure_rolls_back_atomically(provisioned, monkeypatch):
+    _, factory, _, _, b = provisioned
+    monkeypatch.setattr(
+        provisioning_module, "get_password_hash",
+        lambda _password: (_ for _ in ()).throw(RuntimeError("hash failure")),
+    )
+    with pytest.raises(RuntimeError), factory.begin() as session:
+        activate_owner(session, secret=b.activation_secret, password="Owner-B-Password!")
+    with factory() as session:
+        owner = _owner(session, "ORDER-B")
+        token = session.query(OwnerActivationToken).filter(
+            OwnerActivationToken.token_hash == hash_activation_secret(b.activation_secret)
+        ).one()
+        assert owner.is_active is False
+        assert owner.password_hash is None
+        assert token.used_at is None
+
+
 def test_idempotency_reference_request_and_conflict(provisioned):
     _, factory, service, _, b = provisioned
     same = ProvisioningInput(
         customer_reference="order-b", pharmacy_name="PHARMACY_B", owner_name="OWNER B",
-        owner_username="OWNER.B", operator="TEST OPERATOR",
+        owner_email="OWNER.B@EXAMPLE.COM", operator="TEST OPERATOR",
         provisioning_request_id=b.provisioning_request_id,
     )
     retry = service.provision(same)
@@ -171,7 +230,7 @@ def test_idempotency_reference_request_and_conflict(provisioned):
     with pytest.raises(CustomerReferenceConflict):
         service.provision(ProvisioningInput(
             customer_reference="ORDER-B", pharmacy_name="DIFFERENT", owner_name="OWNER B",
-            owner_username="owner.b", operator="TEST OPERATOR",
+            owner_email="owner.b@example.com", operator="TEST OPERATOR",
         ))
 
 
@@ -179,7 +238,7 @@ def test_activation_reissue_is_explicit_and_revokes_previous(provisioned):
     _, factory, service, _, _ = provisioned
     initial = service.provision(ProvisioningInput(
         customer_reference="ORDER-REISSUE", pharmacy_name="Reissue Pharmacy",
-        owner_name="Reissue Owner", owner_username="owner.reissue",
+        owner_name="Reissue Owner", owner_email="owner.reissue@example.com",
         operator="TEST OPERATOR",
     ))
     original = initial.activation_secret
@@ -201,7 +260,7 @@ def test_concurrent_retry_creates_one_tenant(p1a_db):
     request_id = uuid.uuid4()
     data = ProvisioningInput(
         customer_reference="ORDER-CONCURRENT", pharmacy_name="Concurrent Pharmacy",
-        owner_name="Concurrent Owner", owner_username="owner.concurrent",
+        owner_name="Concurrent Owner", owner_email="owner.concurrent@example.com",
         operator="TEST OPERATOR", provisioning_request_id=request_id,
     )
     with ThreadPoolExecutor(max_workers=2) as pool:
@@ -227,7 +286,7 @@ def test_failure_injection_rolls_back_everything(p1a_db, stage):
     with pytest.raises(RuntimeError):
         service.provision(ProvisioningInput(
             customer_reference=reference, pharmacy_name="Rollback Pharmacy",
-            owner_name="Rollback Owner", owner_username=("rb." + stage)[:50],
+            owner_name="Rollback Owner", owner_email=("rb." + stage + "@example.com"),
             operator="TEST OPERATOR",
         ))
     with factory() as session:
@@ -240,18 +299,18 @@ def test_audit_failure_rolls_back(p1a_db, monkeypatch):
     with pytest.raises(RuntimeError):
         ProvisioningService(factory).provision(ProvisioningInput(
             customer_reference="FAIL-AUDIT", pharmacy_name="Audit Rollback",
-            owner_name="Audit Owner", owner_username="audit.owner", operator="TEST OPERATOR",
+            owner_name="Audit Owner", owner_email="audit.owner@example.com", operator="TEST OPERATOR",
         ))
     with factory() as session:
         assert session.query(Pharmacy).filter(Pharmacy.customer_reference == "FAIL-AUDIT").count() == 0
 
 
-def test_username_and_product_key_uniqueness(provisioned):
+def test_email_identity_and_product_key_uniqueness(provisioned):
     _, factory, service, _, _ = provisioned
     with pytest.raises(Exception):
         service.provision(ProvisioningInput(
             customer_reference="DUP-USERNAME", pharmacy_name="Duplicate Username",
-            owner_name="Duplicate", owner_username="owner.a", operator="TEST OPERATOR",
+            owner_name="Duplicate", owner_email="OWNER.A@EXAMPLE.COM", operator="TEST OPERATOR",
         ))
     with factory() as session:
         assert session.query(Pharmacy).filter(Pharmacy.customer_reference == "DUP-USERNAME").count() == 0
@@ -286,7 +345,7 @@ def test_jwt_tenant_mismatch_and_suspension(provisioned):
         pharmacy = session.get(Pharmacy, pharmacy_id)
         pharmacy.is_active = False
     with factory() as session:
-        assert authenticate_user("owner.a", "Owner-A-Password!", session)["success"] is False
+        assert authenticate_user("owner.a@example.com", "Owner-A-Password!", session)["success"] is False
         with pytest.raises(Exception):
             asyncio.run(get_current_user(_credentials(valid), session))
         assert session.query(User).filter(User.pharmacy_id == pharmacy_id).count() == 1
@@ -298,7 +357,7 @@ def test_jwt_tenant_mismatch_and_suspension(provisioned):
     with factory.begin() as session:
         session.get(Pharmacy, pharmacy_id).is_active = True
     with factory() as session:
-        assert authenticate_user("owner.a", "Owner-A-Password!", session)["success"] is True
+        assert authenticate_user("owner.a@example.com", "Owner-A-Password!", session)["success"] is True
 
 
 def _request(app, method, path, **kwargs):
@@ -410,7 +469,7 @@ class Args:
 def test_environment_gate_fail_closed():
     metadata = {
         "environment": "production", "database_type": "postgresql",
-        "database_fingerprint": "abc123", "current_alembic_revision": "20260818_p1a_provisioning",
+        "database_fingerprint": "abc123", "current_alembic_revision": "20260827_owner_email_password",
     }
     enforce_environment_gate(Args(), metadata)
     for key, value in [
@@ -429,7 +488,7 @@ def test_environment_gate_fail_closed():
 def test_interactive_production_confirmation(monkeypatch):
     metadata = {
         "environment": "production", "database_type": "postgresql",
-        "database_fingerprint": "abc123", "current_alembic_revision": "20260818_p1a_provisioning",
+        "database_fingerprint": "abc123", "current_alembic_revision": "20260827_owner_email_password",
     }
     args = Args(); args.non_interactive = False
     monkeypatch.setattr("builtins.input", lambda _prompt: "PROVISION ORDER-X ON abc123")
