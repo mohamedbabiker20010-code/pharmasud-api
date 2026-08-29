@@ -357,7 +357,7 @@
 </head>
 <body>
 
-<div class="login-page" x-data="loginApp()">
+<div class="login-page" x-data="loginApp()" :lang="language" :dir="language === 'ar' ? 'rtl' : 'ltr'">
   <!-- Left Panel -->
   <div class="login-left">
     <div class="ring-1"></div>
@@ -389,8 +389,8 @@
   <!-- Right Panel -->
   <div class="login-right">
     <div class="lang-toggle">
-      <span class="active">EN</span>
-      <span>ع</span>
+      <span :class="{ 'active': language === 'en' }" @click="language = 'en'">EN</span>
+      <span :class="{ 'active': language === 'ar' }" @click="language = 'ar'">ع</span>
     </div>
 
     <div class="form-wrap">
@@ -400,10 +400,10 @@
       <div class="error-msg" :class="{ 'show': errorMsg }" x-text="errorMsg"></div>
 
       <div class="input-group">
-        <label>البريد الإلكتروني أو اسم المستخدم</label>
+        <label x-text="language === 'ar' ? 'البريد الإلكتروني أو اسم المستخدم' : 'Email or username'">البريد الإلكتروني أو اسم المستخدم</label>
         <div class="input-wrap">
           <i data-lucide="mail"></i>
-          <input type="text" x-model="username" placeholder="أدخل البريد الإلكتروني أو اسم المستخدم" autocomplete="username" required>
+          <input type="text" x-model="username" :placeholder="language === 'ar' ? 'أدخل البريد الإلكتروني أو اسم المستخدم' : 'Enter email or username'" placeholder="أدخل البريد الإلكتروني أو اسم المستخدم" autocomplete="username" required>
         </div>
       </div>
 
@@ -444,6 +444,7 @@
 
   function loginApp() {
     return {
+      language: 'ar',
       username: '',
       password: '',
       showPassword: false,

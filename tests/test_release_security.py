@@ -263,6 +263,9 @@ def test_post_acceptance_ui_contracts_have_no_runtime_dashboard_fixtures():
     for fake in ("1.42M", "12.4%", "8.1%", "INV-2841", "سارة م.", "Augmentin 625mg"):
         assert fake not in dashboard
     assert "البريد الإلكتروني أو اسم المستخدم" in login
+    assert "أدخل البريد الإلكتروني أو اسم المستخدم" in login
+    assert "Email or username" in login
+    assert "Enter email or username" in login
     assert "showAddModal()" in employees and "deleteEmployee(" in employees
     assert "viewDetail(sale.sale_id)" in sales_history
     assert "sidebar-collapsed" in shared
