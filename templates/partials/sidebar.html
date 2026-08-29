@@ -10,6 +10,9 @@
 -->
 
 <aside class="sidebar" :class="{ 'mobile-open': sidebarOpen }">
+  <button class="sidebar-collapse-btn" @click="toggleSidebarCollapse()" :aria-label="sidebarCollapsed ? 'توسيع القائمة' : 'طي القائمة'">
+    <i :data-lucide="sidebarCollapsed ? 'panel-right-open' : 'panel-right-close'"></i>
+  </button>
   <!-- Mobile Close Button -->
   <button class="sidebar-close-btn" @click="sidebarOpen = false" aria-label="إغلاق القائمة">
     <i data-lucide="x"></i>
@@ -109,7 +112,7 @@
     <div class="user-avatar" x-text="userInitials || ''"></div>
     <div class="user-info">
       <div class="user-name" x-text="userName || 'المستخدم'"></div>
-      <div class="user-role" x-text="isAdmin ? 'مدير' : 'صيدلي'"></div>
+      <div class="user-role" x-text="userRoleLabel || (isAdmin ? 'مدير' : 'صيدلي')"></div>
     </div>
     <i data-lucide="log-out"></i>
   </div>

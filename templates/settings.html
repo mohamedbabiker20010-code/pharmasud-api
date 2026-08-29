@@ -423,9 +423,9 @@
                     <span x-text="emp.full_name || emp.username"></span>
                   </div>
                   <div class="emp-meta">
-                    <span class="role-badge" :class="emp.role === 'admin' ? 'admin' : 'employee'"
-                          x-text="emp.role === 'admin' ? 'مدير' : 'موظف'"></span>
-                    <span>@<span x-text="emp.username"></span></span>
+                    <span class="role-badge" :class="['owner','manager'].includes(emp.role) ? 'admin' : 'employee'"
+                          x-text="emp.role === 'owner' ? 'مالك' : emp.role === 'manager' ? 'مدير' : emp.role === 'pharmacist' ? 'صيدلي' : emp.role === 'store_keeper' ? 'أمين مخزن' : 'كاشير'"></span>
+                    <span dir="ltr" style="unicode-bidi:plaintext" x-text="emp.email || emp.username"></span>
                     <template x-if="!emp.is_active">
                       <span class="inactive-tag">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
@@ -434,7 +434,7 @@
                     </template>
                   </div>
                 </div>
-                <div class="emp-actions">
+                <div class="emp-actions" x-show="emp.role !== 'owner'">
                   <button class="emp-action-btn toggle-on" x-show="!emp.is_active" @click="toggleEmployee(emp)">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                     تفعيل
@@ -493,8 +493,10 @@
             <div class="form-group">
               <label class="form-label">الدور</label>
               <select class="form-select" x-model="empForm.role">
-                <option value="employee">موظف</option>
-                <option value="admin">مدير</option>
+                <option value="cashier">كاشير</option>
+                <option value="pharmacist">صيدلي</option>
+                <option value="store_keeper">أمين مخزن</option>
+                <option value="manager">مدير</option>
               </select>
             </div>
           </div>
@@ -530,7 +532,7 @@
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">كلمة المرور الجديدة <span class="required">*</span></label>
-              <input type="password" class="form-input" x-model="passForm.new_pass" placeholder="6 أحرف على الأقل">
+              <input type="password" class="form-input" x-model="passForm.new_pass" placeholder="12 حرفاً على الأقل">
             </div>
             <div class="form-group">
               <label class="form-label">تأكيد كلمة المرور الجديدة <span class="required">*</span></label>
@@ -697,7 +699,7 @@
         // Employees
         loadingEmployees: true,
         employees: [],
-        empForm: { full_name: '', username: '', password: '', role: 'employee' },
+        empForm: { full_name: '', username: '', password: '', role: 'cashier' },
         showConfirm: false,
         deleteTarget: null,
         isDark: localStorage.getItem('darkMode') === 'true',
@@ -762,7 +764,7 @@
             const data = await r.json();
             if (r.ok) {
               this.showMessage(data.message, 'success');
-              this.empForm = { full_name: '', username: '', password: '', role: 'employee' };
+              this.empForm = { full_name: '', username: '', password: '', role: 'cashier' };
               await this.loadEmployees();
             } else {
               this.showMessage(data.detail || data.message || 'فشل الإضافة', 'error');
@@ -832,7 +834,8 @@
               headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
               body: JSON.stringify({
                 current_password: this.passForm.current,
-                new_password: this.passForm.new_pass
+                new_password: this.passForm.new_pass,
+                confirm_new_password: this.passForm.confirm
               })
             });
             const data = await r.json();

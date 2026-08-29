@@ -38,7 +38,8 @@ def format_employee(user: User) -> dict:
         "id": str(user.id),
         "full_name": user.full_name,
         "username": user.username,
-        "role": user.role,
+        "role": user.role_obj.name if user.role_obj else user.role,
+        "email": user.email,
         "is_active": user.is_active,
         "created_at": user.created_at.isoformat() if user.created_at else None
     }
@@ -87,19 +88,18 @@ async def create_employee(
         raise HTTPException(status_code=400, detail="اسم المستخدم موجود مسبقاً")
 
     # التحقق من أن الدور صحيح
-    if data.role not in ("admin", "employee"):
-        raise HTTPException(status_code=400, detail="الدور يجب أن يكون admin أو employee")
+    if data.role not in ("manager", "pharmacist", "cashier", "store_keeper"):
+        raise HTTPException(status_code=400, detail="الدور المحدد غير صالح")
 
     # إنشاء المستخدم
-    role_name = "owner" if data.role == "admin" else "cashier"
-    role_obj = db.query(Role).filter(Role.name == role_name).one()
+    role_obj = db.query(Role).filter(Role.name == data.role).one()
     new_user = User(
         id=uuid.uuid4(),
         pharmacy_id=ph_id,
         username=data.username,
         full_name=data.full_name,
         password_hash=get_password_hash(data.password),
-        role=data.role,
+        role="admin" if data.role == "manager" else "employee",
         role_id=role_obj.id,
         is_active=True
     )
@@ -158,17 +158,21 @@ async def delete_employee(
     if not employee:
         raise HTTPException(status_code=404, detail="الموظف غير موجود")
 
-    if employee.role == "admin" and employee.is_active:
-        active_admins = db.query(User).filter(
-            User.pharmacy_id == ph_id,
-            User.role == "admin",
-            User.is_active == True,
-        ).count()
-        if active_admins <= 1:
-            raise HTTPException(status_code=400, detail="لا يمكن حذف آخر حساب مدير")
+    canonical_role = employee.role_obj.name if employee.role_obj else None
+    if canonical_role == "owner":
+        raise HTTPException(status_code=400, detail="لا يمكن حذف حساب المالك")
+
+    # Preserve historical sales and their seller identity. Used accounts are archived.
+    from models import Sale
+    sales_count = db.query(Sale).filter(Sale.user_id == employee.id).count()
 
     name = employee.full_name or employee.username
-    db.delete(employee)
+    if sales_count:
+        employee.is_active = False
+        lifecycle = "archived"
+    else:
+        db.delete(employee)
+        lifecycle = "deleted"
     db.commit()
 
     # سجل في audit_log
@@ -184,7 +188,8 @@ async def delete_employee(
 
     return {
         "success": True,
-        "message": f"تم حذف {name} بنجاح"
+        "message": f"تم {'أرشفة' if lifecycle == 'archived' else 'حذف'} {name} بنجاح",
+        "lifecycle": lifecycle,
     }
 
 
@@ -220,14 +225,9 @@ async def toggle_employee_status(
     if not employee:
         raise HTTPException(status_code=404, detail="الموظف غير موجود")
 
-    if employee.role == "admin" and employee.is_active and not data.is_active:
-        active_admins = db.query(User).filter(
-            User.pharmacy_id == ph_id,
-            User.role == "admin",
-            User.is_active == True,
-        ).count()
-        if active_admins <= 1:
-            raise HTTPException(status_code=400, detail="لا يمكن تعطيل آخر حساب مدير")
+    canonical_role = employee.role_obj.name if employee.role_obj else None
+    if canonical_role == "owner" and not data.is_active:
+        raise HTTPException(status_code=400, detail="لا يمكن تعطيل حساب المالك")
 
     employee.is_active = data.is_active
     db.commit()
@@ -265,15 +265,26 @@ async def change_password(
     db: Session = Depends(get_db)
 ):
     """تغيير كلمة السر للمستخدم الحالي."""
-    user_id = current_user["user_id"]
+    try:
+        user_id = uuid.UUID(current_user["user_id"])
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=400, detail="معرف المستخدم غير صالح")
 
-    user = db.query(User).filter(User.id == user_id).first()
+    user = db.query(User).filter(
+        User.id == user_id,
+        User.pharmacy_id == uuid.UUID(current_user["pharmacy_id"]),
+    ).first()
     if not user:
         raise HTTPException(status_code=404, detail="المستخدم غير موجود")
 
     # التحقق من كلمة السر الحالية
     if not verify_password(data.current_password, user.password_hash):
         raise HTTPException(status_code=400, detail="كلمة السر الحالية غير صحيحة")
+
+    if data.new_password != data.confirm_new_password:
+        raise HTTPException(status_code=400, detail="كلمتا السر الجديدتان غير متطابقتين")
+    if verify_password(data.new_password, user.password_hash):
+        raise HTTPException(status_code=400, detail="كلمة السر الجديدة يجب أن تختلف عن الحالية")
 
     # تحديث كلمة السر
     user.password_hash = get_password_hash(data.new_password)

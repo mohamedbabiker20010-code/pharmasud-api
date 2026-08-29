@@ -34,7 +34,7 @@
       width: 248px; background: #fff; border-left: 1px solid #EEF2F6;
       display: flex; flex-direction: column; padding: 22px 16px;
       position: fixed; right: 0; top: 0; bottom: 0;
-      z-index: 100; transition: transform 0.3s ease;
+      z-index: 100; transition: transform 0.3s ease, width 0.2s ease, padding 0.2s ease;
       overflow-y: auto; overflow-x: hidden;
       min-height: 0;
     }
@@ -94,6 +94,21 @@
     }
     .sidebar .user-role { font-size: 11.5px; color: #94A3B8; }
     .sidebar .user-card svg { width: 16px; height: 16px; color: #CBD5E1; flex-shrink: 0; }
+    .sidebar-collapse-btn {
+      display:flex; position:absolute; top:16px; left:12px; width:34px; height:34px;
+      align-items:center; justify-content:center; border:1px solid #E2E8F0; border-radius:9px;
+      background:#fff; color:#64748B; cursor:pointer;
+    }
+    body.sidebar-collapsed .sidebar { width:76px; padding-inline:10px; }
+    body.sidebar-collapsed .sidebar .brand .name,
+    body.sidebar-collapsed .sidebar .nav-section,
+    body.sidebar-collapsed .sidebar .nav-item span,
+    body.sidebar-collapsed .sidebar .user-info,
+    body.sidebar-collapsed .sidebar .user-card > svg { display:none; }
+    body.sidebar-collapsed .sidebar .brand { padding-inline:8px; justify-content:center; }
+    body.sidebar-collapsed .sidebar .nav-item { justify-content:center; padding-inline:10px; }
+    body.sidebar-collapsed .topbar { right:76px; }
+    body.sidebar-collapsed .main-content { margin-right:76px; }
 
     /* ─── Topbar ─── */
     .topbar {
@@ -207,6 +222,9 @@
         background: #fff; cursor: pointer; z-index: 10;
       }
       .sidebar-close-btn svg { width: 18px; height: 18px; color: #64748B; }
+      .sidebar-collapse-btn { display:none; }
+      body.sidebar-collapsed .topbar { right:0; }
+      body.sidebar-collapsed .main-content { margin-right:0; }
     }
     .sidebar-close-btn { display: none; }
 
@@ -235,7 +253,7 @@
   {% block extra_css %}{% endblock %}
 </head>
 
-<body x-data="pageApp()" :class="{ 'dark-mode': isDark }">
+<body x-data="pageApp()" :class="{ 'dark-mode': isDark, 'sidebar-collapsed': sidebarCollapsed }">
   <div class="app-layout">
 
     <!-- Mobile Sidebar Overlay -->
@@ -364,6 +382,7 @@
         userName:    localStorage.getItem('userName') || 'المستخدم',
         isAdmin:     localStorage.getItem('role') === 'admin',
         userRole:    localStorage.getItem('role') || 'pharmacist',
+        userRoleLabel: localStorage.getItem('roleDisplayName') || '',
         userInitials: '',
         showNotifications: false,
         notifications: [],
@@ -371,6 +390,7 @@
         lang:        localStorage.getItem('lang') || 'ar',
         isDark:      localStorage.getItem('darkMode') === 'true',
         sidebarOpen: false,
+        sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',
         alertCount:  {{ alert_count | default(0) | int }},
 
         init() {
@@ -380,6 +400,10 @@
           if (this.isDark) document.body.classList.add('dark-mode');
           this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
           this.loadNotifications();
+          window.addEventListener('pharmasud:perm:ready', event => {
+            this.userRoleLabel = event.detail?.authentication?.display_role_ar || '';
+            if (this.userRoleLabel) localStorage.setItem('roleDisplayName', this.userRoleLabel);
+          });
         },
 
         switchLang(l) {
@@ -393,6 +417,12 @@
           this.isDark = !this.isDark;
           localStorage.setItem('darkMode', this.isDark);
           document.body.classList.toggle('dark-mode', this.isDark);
+          this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
+        },
+
+        toggleSidebarCollapse() {
+          this.sidebarCollapsed = !this.sidebarCollapsed;
+          localStorage.setItem('sidebarCollapsed', this.sidebarCollapsed);
           this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
         },
 

@@ -470,7 +470,7 @@
           <!-- Page Header -->
           <div class="page-header">
             <div>
-              <h1>صباح الخير، <span x-text="userName || 'Ahmed'"></span></h1>
+              <h1>صباح الخير، <span x-text="userName || 'المستخدم'"></span></h1>
               <p class="subtitle" x-text="pharmacyName + ' · ' + currentDate"></p>
             </div>
             <div class="actions">
@@ -490,7 +490,7 @@
             <div class="metric-card">
               <div class="metric-header">
                 <div class="metric-icon blue"><i data-lucide="banknote"></i></div>
-                <div class="metric-badge success"><i data-lucide="trending-up" style="width:13px;height:13px"></i>12.4%</div>
+                <div class="metric-badge">—</div>
               </div>
               <div class="metric-label">إيرادات اليوم</div>
               <div class="metric-value" x-text="data.today.revenue + ' '"><span class="unit">SDG</span></div>
@@ -498,7 +498,7 @@
             <div class="metric-card">
               <div class="metric-header">
                 <div class="metric-icon cyan"><i data-lucide="receipt"></i></div>
-                <div class="metric-badge success"><i data-lucide="trending-up" style="width:13px;height:13px"></i>8.1%</div>
+                <div class="metric-badge">—</div>
               </div>
               <div class="metric-label">المعاملات</div>
               <div class="metric-value" x-text="data.today.invoices_count"></div>
@@ -514,7 +514,7 @@
             <div class="metric-card">
               <div class="metric-header">
                 <div class="metric-icon yellow"><i data-lucide="calendar-x"></i></div>
-                <div class="metric-badge">≤ 30 يوم</div>
+                <div class="metric-badge">≤ 90 يوم</div>
               </div>
               <div class="metric-label">تنتهي قريباً</div>
               <div class="metric-value"><span x-text="data.inventory_summary.expiring_soon_count"></span> <span class="unit">دفعة</span></div>
@@ -535,6 +535,7 @@
                 </div>
               </div>
               <div class="chart-bars">
+                <div class="notif-empty" x-show="weeklyTotalValue === 0">لا توجد مبيعات هذا الأسبوع</div>
                 <template x-for="(day, idx) in weeklyData" :key="idx">
                   <div class="chart-bar">
                     <div class="bar" :class="{ 'active': day.isToday, 'secondary': day.isYesterday }" :style="'height: ' + day.height + '%'"></div>
@@ -547,6 +548,7 @@
             <div class="panel">
               <div class="panel-title" style="margin-bottom:18px">الأكثر مبيعاً</div>
               <div class="top-list">
+                <div class="notif-empty" x-show="topMedicines.length === 0">لا توجد بيانات مبيعات بعد</div>
                 <template x-for="(med, idx) in topMedicines" :key="idx">
                   <div class="top-item">
                     <div class="icon" :class="['blue','cyan','yellow','purple'][idx % 4]">
@@ -556,7 +558,7 @@
                       <div class="name" x-text="med.name"></div>
                       <div class="meta"><span x-text="med.sold"></span> وحدة</div>
                     </div>
-                    <span class="change up" x-text="'+' + med.growth + '%'"></span>
+                    <span class="change" x-text="formatCurrency(med.revenue) + ' ج.س'"></span>
                   </div>
                 </template>
               </div>
@@ -571,6 +573,7 @@
                 <span class="panel-action">عرض الكل</span>
               </div>
               <div class="data-table">
+                <div class="notif-empty" x-show="recentSales.length === 0">لا توجد مبيعات بعد</div>
                 <div class="table-header">
                   <span>الفاتورة</span>
                   <span>الكاشير</span>
@@ -579,7 +582,7 @@
                 </div>
                 <template x-for="(sale, idx) in recentSales" :key="idx">
                   <div class="table-row">
-                    <span class="cell-primary" x-text="'#INV-' + sale.id"></span>
+                    <span class="cell-primary" x-text="'#' + sale.id"></span>
                     <span class="cell-secondary" x-text="sale.cashier"></span>
                     <span class="cell-number" x-text="sale.total.toLocaleString()"></span>
                     <span class="cell-time" x-text="sale.time"></span>
@@ -597,6 +600,7 @@
                 </span>
               </div>
               <div class="expiry-list">
+                <div class="notif-empty" x-show="expiringItems.length === 0">لا توجد دفعات قاربت على الانتهاء</div>
                 <template x-for="(item, idx) in expiringItems" :key="idx">
                   <div class="expiry-item">
                     <div class="metric-header">
@@ -639,39 +643,16 @@
         showNotifications: false,
         notifications: [],
         notificationsLoading: false,
-        weeklyTotal: '1.42M',
+        weeklyTotal: '0',
+        weeklyTotalValue: 0,
         data: {
           today: { revenue: '0.00', invoices_count: 0, profit: '0.00', top_medicines: [] },
           inventory_summary: { total_medicines: 0, low_stock_count: 0, expiring_soon_count: 0 }
         },
-        weeklyData: [
-          { day_name: 'الإثنين', height: 54 },
-          { day_name: 'الثلاثاء', height: 71 },
-          { day_name: 'الأربعاء', height: 48 },
-          { day_name: 'الخميس', height: 82 },
-          { day_name: 'الجمعة', height: 64 },
-          { day_name: 'السبت', height: 100, isToday: true },
-          { day_name: 'الأحد', height: 76, isYesterday: true }
-        ],
-        topMedicines: [
-          { name: 'Paracetamol 500mg', sold: 312, growth: 18 },
-          { name: 'Amoxicillin 250mg', sold: 241, growth: 11 },
-          { name: 'Ibuprofen 400mg', sold: 198, growth: 6 },
-          { name: 'Vitamin C 1000mg', sold: 156, growth: 4 }
-        ],
-        recentSales: [
-          { id: '2841', cashier: 'سارة م.', total: 4200, time: '10:24' },
-          { id: '2840', cashier: 'أحمد ح.', total: 12800, time: '10:11' },
-          { id: '2839', cashier: 'سارة م.', total: 2650, time: '09:58' },
-          { id: '2838', cashier: 'خالد ع.', total: 8400, time: '09:42' },
-          { id: '2837', cashier: 'سارة م.', total: 1950, time: '09:30' }
-        ],
-        expiringItems: [
-          { name: 'Augmentin 625mg', days: 9, status: 'danger', percent: 18, batch: 'B-1042', units: 40 },
-          { name: 'Insulin Glargine', days: 17, status: 'warning', percent: 34, batch: 'B-0987', units: 12 },
-          { name: 'Ventolin Inhaler', days: 23, status: 'warning', percent: 46, batch: 'B-1101', units: 8 },
-          { name: 'Metformin 850mg', days: 28, status: 'success', percent: 56, batch: 'B-1055', units: 60 }
-        ],
+        weeklyData: [],
+        topMedicines: [],
+        recentSales: [],
+        expiringItems: [],
 
         async init() {
           // Auth check
@@ -681,8 +662,8 @@
             return;
           }
 
-          this.userName = localStorage.getItem('userName') || 'Ahmed';
-          this.pharmacyName = localStorage.getItem('pharmacyName') || 'صيدلية الشفاء';
+          this.userName = localStorage.getItem('userName') || 'المستخدم';
+          this.pharmacyName = localStorage.getItem('pharmacyName') || '';
           this.isAdmin = localStorage.getItem('role') === 'admin';
           this.userInitials = this.userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 
@@ -709,16 +690,38 @@
             const result = await res.json();
             this.data.today = result.today || this.data.today;
             this.data.inventory_summary = result.inventory_summary || this.data.inventory_summary;
-            if (result.weekly_chart) {
-              // Map API data to chart format
-            }
+            const chart = result.weekly_chart || [];
+            this.weeklyTotalValue = chart.reduce((sum, day) => sum + Number(day.revenue || 0), 0);
+            this.weeklyTotal = this.formatCurrency(this.weeklyTotalValue);
+            const maxRevenue = Math.max(...chart.map(day => Number(day.revenue || 0)), 0);
+            const today = new Date().toISOString().slice(0, 10);
+            this.weeklyData = chart.map(day => ({
+              ...day,
+              height: maxRevenue ? Math.max(3, Number(day.revenue || 0) / maxRevenue * 100) : 0,
+              isToday: day.date === today
+            }));
+            this.topMedicines = (result.today.top_medicines || []).map(med => ({ name: med.trade_name, sold: med.quantity_sold, revenue: med.revenue }));
+            this.recentSales = (result.recent_sales || []).map(sale => ({
+              id: sale.invoice_number, cashier: sale.cashier_name, total: Number(sale.total_amount || 0),
+              time: sale.created_at ? new Date(sale.created_at).toLocaleTimeString('ar', {hour:'2-digit', minute:'2-digit'}) : '—'
+            }));
+            this.expiringItems = (result.expiring_items || []).map(item => ({
+              name: item.trade_name, days: item.days_remaining, batch: item.batch_number || '—', units: item.quantity,
+              status: item.days_remaining <= 30 ? 'danger' : item.days_remaining <= 60 ? 'warning' : 'success',
+              percent: Math.max(0, Math.min(100, 100 - item.days_remaining))
+            }));
           } catch (e) {
-            console.warn('API error, using defaults');
+            this.error = true;
+            this.errorMessage = 'تعذر تحميل بيانات لوحة التحكم';
           } finally {
             this.loading = false;
             // Re-init lucide icons after Alpine renders the templates
             if (window.lucide) lucide.createIcons();
           }
+        },
+
+        formatCurrency(value) {
+          return Number(value || 0).toLocaleString('ar-SD', { maximumFractionDigits: 2 });
         },
 
         logout() {

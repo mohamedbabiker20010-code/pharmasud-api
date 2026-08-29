@@ -772,7 +772,7 @@ class EmployeeCreate(BaseModel):
     full_name: str = Field(..., min_length=2, max_length=100, description="Full name")
     username: str = Field(..., min_length=3, max_length=50, description="Unique username")
     password: str = Field(..., min_length=6, max_length=100, description="Password")
-    role: str = Field(default="employee", description="Role: admin or employee")
+    role: str = Field(default="cashier", pattern="^(manager|pharmacist|cashier|store_keeper)$", description="Canonical RBAC role")
 
 
 class EmployeeResponse(BaseModel):
@@ -797,7 +797,8 @@ class EmployeeListResponse(BaseModel):
 class PasswordChange(BaseModel):
     """Schema for changing password."""
     current_password: str = Field(..., min_length=1, description="Current password")
-    new_password: str = Field(..., min_length=6, max_length=100, description="New password")
+    new_password: str = Field(..., min_length=12, max_length=72, description="New password")
+    confirm_new_password: str = Field(..., min_length=12, max_length=72, description="Confirm new password")
 
 
 class PharmacyUpdate(BaseModel):

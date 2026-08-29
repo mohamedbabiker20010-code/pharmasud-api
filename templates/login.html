@@ -400,10 +400,10 @@
       <div class="error-msg" :class="{ 'show': errorMsg }" x-text="errorMsg"></div>
 
       <div class="input-group">
-        <label>اسم المستخدم</label>
+        <label>البريد الإلكتروني أو اسم المستخدم</label>
         <div class="input-wrap">
           <i data-lucide="mail"></i>
-          <input type="text" x-model="username" placeholder="ادخل اسم المستخدم" required>
+          <input type="text" x-model="username" placeholder="أدخل البريد الإلكتروني أو اسم المستخدم" autocomplete="username" required>
         </div>
       </div>
 
@@ -453,7 +453,7 @@
       async login() {
         this.errorMsg = '';
         if (!this.username || !this.password) {
-          this.errorMsg = 'يرجى إدخال اسم المستخدم وكلمة المرور';
+          this.errorMsg = 'يرجى إدخال البريد الإلكتروني أو اسم المستخدم وكلمة المرور';
           return;
         }
         this.loading = true;

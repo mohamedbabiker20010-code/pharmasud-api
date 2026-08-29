@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 
 from database import get_db
-from models import Role, User
+from models import Role, Sale, User
 from auth import get_current_user, require_admin, get_password_hash, verify_password, require_permission
 from audit import log_action
 
@@ -27,6 +27,7 @@ class EmployeeCreateSchema(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
     password: str = Field(..., min_length=6, max_length=100)
     phone: str = Field("", max_length=20)
+    role: str = Field("cashier", pattern="^(manager|pharmacist|cashier|store_keeper)$")
 
 
 class ResetPasswordSchema(BaseModel):
@@ -52,7 +53,8 @@ async def list_employees(
             "full_name": emp.full_name,
             "username": emp.username,
             "phone": emp.phone or "",
-            "role": emp.role,
+            "role": emp.role_obj.name if emp.role_obj else emp.role,
+            "email": emp.email,
             "is_active": emp.is_active,
             "created_at": emp.created_at.isoformat() if emp.created_at else None
         })
@@ -66,7 +68,7 @@ async def create_employee(
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """إنشاء موظف جديد (Admin فقط - role='employee' دائماً)."""
+    """Create an employee in the authenticated user's pharmacy."""
     ph_id = uuid.UUID(current_user["pharmacy_id"])
 
     # التحقق من أن اسم المستخدم غير مكرر
@@ -74,8 +76,7 @@ async def create_employee(
     if existing:
         raise HTTPException(status_code=400, detail="اسم المستخدم موجود مسبقاً")
 
-    # إنشاء المستخدم
-    cashier_role = db.query(Role).filter(Role.name == "cashier").one()
+    role_obj = db.query(Role).filter(Role.name == data.role).one()
     new_user = User(
         id=uuid.uuid4(),
         pharmacy_id=ph_id,
@@ -83,8 +84,8 @@ async def create_employee(
         full_name=data.full_name,
         password_hash=get_password_hash(data.password),
         phone=data.phone or "",
-        role="employee",
-        role_id=cashier_role.id,
+        role="admin" if data.role == "manager" else "employee",
+        role_id=role_obj.id,
         is_active=True
     )
 
@@ -136,14 +137,8 @@ async def toggle_employee(
     if not employee:
         raise HTTPException(status_code=404, detail="الموظف غير موجود")
 
-    if employee.role == "admin" and employee.is_active:
-        active_admins = db.query(User).filter(
-            User.pharmacy_id == ph_id,
-            User.role == "admin",
-            User.is_active == True,
-        ).count()
-        if active_admins <= 1:
-            raise HTTPException(status_code=400, detail="لا يمكن تعطيل آخر حساب مدير")
+    if employee.role_obj and employee.role_obj.name == "owner" and employee.is_active:
+        raise HTTPException(status_code=400, detail="لا يمكن تعطيل حساب المالك")
 
     # بدّل الحالة
     employee.is_active = not employee.is_active
@@ -166,6 +161,48 @@ async def toggle_employee(
         "success": True,
         "message": description
     }
+
+
+@router.delete("/{employee_id}", dependencies=[Depends(require_admin), Depends(require_permission("employees.manage"))])
+async def delete_employee(
+    employee_id: str,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Delete unused employees; archive employees referenced by historical sales."""
+    if employee_id == current_user["user_id"]:
+        raise HTTPException(status_code=400, detail="لا يمكنك حذف حسابك بنفسك")
+    try:
+        emp_uuid = uuid.UUID(employee_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="معرف الموظف غير صالح")
+    employee = db.query(User).filter(
+        User.id == emp_uuid,
+        User.pharmacy_id == uuid.UUID(current_user["pharmacy_id"]),
+    ).first()
+    if not employee:
+        raise HTTPException(status_code=404, detail="الموظف غير موجود")
+    if employee.role_obj and employee.role_obj.name == "owner":
+        raise HTTPException(status_code=400, detail="لا يمكن حذف حساب المالك")
+
+    name = employee.full_name or employee.username
+    sale_count = db.query(Sale).filter(Sale.user_id == employee.id).count()
+    if sale_count:
+        employee.is_active = False
+        lifecycle = "archived"
+    else:
+        db.delete(employee)
+        lifecycle = "deleted"
+    db.commit()
+    log_action(
+        db=db,
+        pharmacy_id=current_user["pharmacy_id"],
+        user_id=current_user["user_id"],
+        user_name=current_user.get("full_name", current_user["username"]),
+        action_type="employee_archived" if lifecycle == "archived" else "employee_deleted",
+        description=f"{'أرشفة' if lifecycle == 'archived' else 'حذف'} موظف: {name}",
+    )
+    return {"success": True, "lifecycle": lifecycle, "message": f"تم {'أرشفة' if lifecycle == 'archived' else 'حذف'} {name} بنجاح"}
 
 
 @router.put("/{employee_id}/reset-password", dependencies=[Depends(require_admin), Depends(require_permission("employees.manage"))])

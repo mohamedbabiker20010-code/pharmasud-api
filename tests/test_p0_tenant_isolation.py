@@ -16,6 +16,7 @@ from database import get_db
 from inventory import router as inventory_router
 from models import Base, Batch, Medicine, Pharmacy, Sale, SaleItem, User
 from sales import public_router, router as sales_router
+from reports import router as reports_router
 
 
 DATABASE_URL = os.environ.get("P0_TEST_DATABASE_URL")
@@ -212,6 +213,7 @@ def api(seeded):
     app.include_router(inventory_router)
     app.include_router(sales_router)
     app.include_router(public_router)
+    app.include_router(reports_router)
     app.dependency_overrides[get_db] = test_db
     return app
 
@@ -296,3 +298,52 @@ def test_authenticated_sale_detail_remains_tenant_scoped(api, seeded):
     assert _request(api, "GET", f"/api/sales/{ids['sale_b']}", headers=headers_b).status_code == 200
     assert _request(api, "GET", f"/api/sales/{ids['sale_b']}", headers=headers_a).status_code == 404
     assert _request(api, "GET", f"/api/sales/{ids['sale_a']}", headers=headers_b).status_code == 404
+
+
+def test_dashboard_aggregates_are_tenant_scoped_and_real(api, seeded):
+    _, _, ids = seeded
+    dashboard_a = _request(
+        api, "GET", "/api/reports/dashboard",
+        headers=_auth(ids["owner_a"], ids["pharmacy_a"], "P0_OWNER_A"),
+    )
+    dashboard_b = _request(
+        api, "GET", "/api/reports/dashboard",
+        headers=_auth(ids["owner_b"], ids["pharmacy_b"], "P0_OWNER_B"),
+    )
+    assert dashboard_a.status_code == dashboard_b.status_code == 200
+    body_a, body_b = dashboard_a.json(), dashboard_b.json()
+    assert body_a["today"]["revenue"] == 10
+    assert body_b["today"]["revenue"] == 20
+    assert body_a["today"]["invoices_count"] == body_b["today"]["invoices_count"] == 1
+    assert [item["trade_name"] for item in body_a["today"]["top_medicines"]] == ["MEDICINE_A"]
+    assert [item["trade_name"] for item in body_b["today"]["top_medicines"]] == ["MEDICINE_B"]
+    assert body_a["recent_sales"][0]["sale_id"] == str(ids["sale_a"])
+    assert body_b["recent_sales"][0]["sale_id"] == str(ids["sale_b"])
+
+
+def test_empty_tenant_dashboard_has_clean_zero_state(api, seeded):
+    _, factory, _ = seeded
+    with factory.begin() as db:
+        pharmacy = Pharmacy(product_key="P0-EMPTY", name="EMPTY", is_active=True)
+        db.add(pharmacy)
+        db.flush()
+        owner = User(
+            pharmacy_id=pharmacy.id, username="P0_EMPTY_OWNER",
+            password_hash=get_password_hash("Synthetic-Empty-Only!"),
+            role="admin", is_active=True,
+        )
+        db.add(owner)
+        db.flush()
+        owner_id, pharmacy_id = owner.id, pharmacy.id
+    response = _request(
+        api, "GET", "/api/reports/dashboard",
+        headers=_auth(owner_id, pharmacy_id, "P0_EMPTY_OWNER"),
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["today"]["revenue"] == 0
+    assert body["today"]["invoices_count"] == 0
+    assert body["today"]["top_medicines"] == []
+    assert body["recent_sales"] == []
+    assert body["expiring_items"] == []
+    assert all(day["revenue"] == 0 for day in body["weekly_chart"])

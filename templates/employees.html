@@ -153,6 +153,9 @@
         <h1 class="page-title">الموظفون</h1>
         <p class="page-subtitle" id="emp-subtitle">...</p>
       </div>
+      <button class="btn-primary" type="button" onclick="showAddModal()">
+        <i data-lucide="user-plus" width="17" height="17"></i>إضافة موظف
+      </button>
     </div>
 
     <!-- Filter Chips -->
@@ -197,6 +200,12 @@
             <input id="new-full-name" type="text" placeholder="الاسم الكامل" class="modal-input">
             <input id="new-username" type="text" placeholder="اسم المستخدم" class="modal-input" dir="ltr" style="text-align:right">
             <input id="new-password" type="password" placeholder="كلمة المرور (6 أحرف على الأقل)" class="modal-input">
+            <select id="new-role" class="modal-input">
+                <option value="cashier">كاشير</option>
+                <option value="pharmacist">صيدلي</option>
+                <option value="store_keeper">أمين مخزن</option>
+                <option value="manager">مدير</option>
+            </select>
             <input id="new-phone" type="text" placeholder="رقم الهاتف (اختياري)" class="modal-input" dir="ltr" style="text-align:right">
         </div>
         <div class="modal-actions">
@@ -253,7 +262,8 @@
 
     // Role badge class
     function getRoleBadge(role) {
-        if (role === 'admin') return '<span class="badge-pill badge-admin"><span style="width:5px;height:5px;border-radius:50%;background:#7c3aed"></span>مدير</span>';
+        if (role === 'owner') return '<span class="badge-pill badge-admin"><span style="width:5px;height:5px;border-radius:50%;background:#7c3aed"></span>مالك</span>';
+        if (role === 'manager') return '<span class="badge-pill badge-admin"><span style="width:5px;height:5px;border-radius:50%;background:#7c3aed"></span>مدير</span>';
         if (role === 'pharmacist') return '<span class="badge-pill badge-pharmacist"><span style="width:5px;height:5px;border-radius:50%;background:#0284c7"></span>صيدلي</span>';
         return '<span class="badge-pill badge-cashier"><span style="width:5px;height:5px;border-radius:50%;background:#d97706"></span>صرّف</span>';
     }
@@ -319,6 +329,8 @@
                 ? '<span class="badge-pill badge-active"><span style="width:5px;height:5px;border-radius:50%;background:#16a34a"></span>في المناوبة</span>'
                 : '<span class="badge-pill badge-inactive"><span style="width:5px;height:5px;border-radius:50%;background:#94a3b8"></span>خارج المناوبة</span>';
             const createdAt = emp.created_at ? emp.created_at.slice(0,10) : '—';
+            const isProtectedOwner = role === 'owner';
+            const identity = emp.email || emp.username;
 
             return `
                 <div class="emp-card">
@@ -326,7 +338,7 @@
                         <div class="emp-avatar" style="background:${color}">${initials}</div>
                         <div style="flex:1;min-width:0">
                             <div class="emp-name">${name}</div>
-                            <div class="emp-username">@${emp.username}</div>
+                            <div class="emp-username" dir="ltr" style="text-align:right;unicode-bidi:plaintext">${identity}</div>
                         </div>
                         <div class="emp-status-dot ${emp.is_active?'online':'offline'}"></div>
                     </div>
@@ -335,9 +347,10 @@
                         <div><div class="emp-footer-label">تاريخ الانضمام</div><div class="emp-footer-time">${createdAt}</div></div>
                         <div style="text-align:left"><div class="emp-footer-label">الهاتف</div><div class="emp-footer-time">${emp.phone || '—'}</div></div>
                     </div>
-                    <div class="emp-actions">
+                    <div class="emp-actions" ${isProtectedOwner ? 'style="display:none"' : ''}>
                         <button class="${emp.is_active ? 'btn-toggle-active' : 'btn-toggle-inactive'}" onclick="toggleEmployee('${emp.id}')">${emp.is_active ? 'تعطيل' : 'تفعيل'}</button>
                         <button class="btn-reset" onclick="showResetModal('${emp.id}', '${name}')">إعادة كلمة المرور</button>
+                        <button class="btn-toggle-active" onclick="deleteEmployee('${emp.id}', '${name}')">حذف</button>
                     </div>
                 </div>
             `;
@@ -353,6 +366,7 @@
         const username = document.getElementById('new-username').value.trim();
         const password = document.getElementById('new-password').value;
         const phone = document.getElementById('new-phone').value.trim();
+        const role = document.getElementById('new-role').value;
 
         if (!fullName || !username || !password) { showToast('الاسم واسم المستخدم وكلمة المرور مطلوبة', 'error'); return; }
         if (password.length < 6) { showToast('كلمة المرور يجب أن تكون 6 أحرف على الأقل', 'error'); return; }
@@ -361,7 +375,7 @@
             const res = await fetch('/api/employees/', {
                 method: 'POST',
                 headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ full_name: fullName, username, password, phone })
+                body: JSON.stringify({ full_name: fullName, username, password, phone, role })
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.detail || 'فشل الإضافة');
@@ -382,6 +396,17 @@
             const data = await res.json();
             if (!res.ok) throw new Error(data.detail || 'فشل التبديل');
             showToast(data.message || 'تم التحديث', 'success');
+            loadEmployees();
+        } catch (e) { showToast(e.message, 'error'); }
+    }
+
+    async function deleteEmployee(id, name) {
+        if (!window.confirm('هل تريد حذف أو أرشفة ' + name + '؟')) return;
+        try {
+            const res = await fetch('/api/employees/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.detail || 'فشل الحذف');
+            showToast(data.message, 'success');
             loadEmployees();
         } catch (e) { showToast(e.message, 'error'); }
     }

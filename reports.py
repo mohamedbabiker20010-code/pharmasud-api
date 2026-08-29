@@ -285,6 +285,39 @@ async def get_dashboard(
                 "revenue": 0.0
             })
     weekly_chart.sort(key=lambda x: x["date"])
+
+    recent_rows = db.execute(text("""
+        SELECT s.id, s.invoice_number, s.total_amount, s.created_at,
+               COALESCE(u.full_name, u.username, '—') AS cashier_name
+        FROM sales s
+        LEFT JOIN users u ON u.id = s.user_id
+        WHERE s.pharmacy_id = :pid
+        ORDER BY s.created_at DESC
+        LIMIT 5
+    """), {"pid": pharmacy_id}).fetchall()
+    recent_sales = [{
+        "sale_id": str(row[0]),
+        "invoice_number": row[1],
+        "total_amount": format_currency(row[2]),
+        "created_at": row[3].isoformat() if row[3] else None,
+        "cashier_name": row[4],
+    } for row in recent_rows]
+
+    expiring_rows = db.execute(text("""
+        SELECT m.trade_name, b.batch_number, b.quantity,
+               (b.expiry_date - CURRENT_DATE)::INTEGER AS days_remaining
+        FROM batches b
+        JOIN medicines m ON m.id = b.medicine_id
+        WHERE m.pharmacy_id = :pid
+          AND b.is_active = true AND b.quantity > 0
+          AND b.expiry_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '90 days'
+        ORDER BY b.expiry_date ASC
+        LIMIT 5
+    """), {"pid": pharmacy_id}).fetchall()
+    expiring_items = [{
+        "trade_name": row[0], "batch_number": row[1], "quantity": row[2],
+        "days_remaining": row[3],
+    } for row in expiring_rows]
     
     return {
         "today": {
@@ -299,7 +332,9 @@ async def get_dashboard(
             "expiring_soon_count": expiring_count
         },
         "alerts": alerts,
-        "weekly_chart": weekly_chart
+        "weekly_chart": weekly_chart,
+        "recent_sales": recent_sales,
+        "expiring_items": expiring_items,
     }
 
 

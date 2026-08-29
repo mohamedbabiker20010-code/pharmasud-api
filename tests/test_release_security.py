@@ -1,5 +1,6 @@
 import argparse
 import ast
+import asyncio
 import uuid
 from pathlib import Path
 
@@ -11,10 +12,12 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 import main
-from auth import authenticate_user, get_password_hash
+from auth import authenticate_user, get_password_hash, verify_password
 from database import validate_database_url
 from demo import seed_demo_pharmacy as demo_seeder
-from models import Base, Pharmacy, Role, User
+from models import Base, PasswordChange, Pharmacy, Role, Sale, User
+from employees import EmployeeCreateSchema, create_employee, delete_employee, toggle_employee
+from settings import change_password
 from rbac_seeder import seed_rbac_foundation
 from scripts import bootstrap_marketing_demo
 
@@ -146,6 +149,130 @@ def test_login_survives_reseed(db_session, monkeypatch):
     session.expire_all()
     assert authenticate_user("demo_admin", "OriginalPassword123!", session)["success"] is True
     assert authenticate_user("demo_admin", "wrong", session)["success"] is False
+
+
+def _context(user):
+    return {
+        "user_id": str(user.id), "pharmacy_id": str(user.pharmacy_id),
+        "role": user.role, "username": user.username, "full_name": user.full_name,
+    }
+
+
+def test_password_change_full_lifecycle_and_identity_invariants(db_session):
+    session, _, _ = db_session
+    pharmacy, owner = _create_demo_admin(session, username="password_owner", password="OriginalPassword123!")
+    other = User(
+        pharmacy_id=pharmacy.id, username="other_user", full_name="Other",
+        password_hash=get_password_hash("OtherPassword123!"), role="employee", is_active=True,
+    )
+    session.add(other)
+    session.commit()
+    before = (owner.id, owner.pharmacy_id, owner.role_id, other.password_hash)
+
+    asyncio.run(change_password(
+        PasswordChange(
+            current_password="OriginalPassword123!",
+            new_password="ReplacementPassword456!",
+            confirm_new_password="ReplacementPassword456!",
+        ), current_user=_context(owner), db=session,
+    ))
+    session.refresh(owner)
+    assert not verify_password("OriginalPassword123!", owner.password_hash)
+    assert verify_password("ReplacementPassword456!", owner.password_hash)
+    assert (owner.id, owner.pharmacy_id, owner.role_id, other.password_hash) == before
+
+    with pytest.raises(Exception) as wrong:
+        asyncio.run(change_password(PasswordChange(
+            current_password="wrong-current",
+            new_password="AnotherPassword789!",
+            confirm_new_password="AnotherPassword789!",
+        ), current_user=_context(owner), db=session))
+    assert getattr(wrong.value, "status_code", None) == 400
+
+    with pytest.raises(Exception) as mismatch:
+        asyncio.run(change_password(PasswordChange(
+            current_password="ReplacementPassword456!",
+            new_password="AnotherPassword789!",
+            confirm_new_password="MismatchPassword789!",
+        ), current_user=_context(owner), db=session))
+    assert getattr(mismatch.value, "status_code", None) == 400
+
+
+def test_employee_lifecycle_owner_safety_and_cross_tenant_guards(db_session):
+    session, _, _ = db_session
+    pharmacy, owner = _create_demo_admin(session, username="employee_owner")
+    employee_role = session.query(Role).filter(Role.name == "cashier").one()
+    created = asyncio.run(create_employee(EmployeeCreateSchema(
+        full_name="Disposable Cashier", username="disposable_cashier",
+        password="DisposablePassword123!", role="cashier",
+    ), current_user=_context(owner), db=session))
+    employee = session.get(User, uuid.UUID(created["employee_id"]))
+    assert employee.pharmacy_id == pharmacy.id
+    assert employee.role_id == employee_role.id
+    assert verify_password("DisposablePassword123!", employee.password_hash)
+
+    asyncio.run(toggle_employee(str(employee.id), current_user=_context(owner), db=session))
+    session.refresh(employee)
+    assert employee.is_active is False
+    assert authenticate_user(employee.username, "DisposablePassword123!", session)["success"] is False
+    asyncio.run(toggle_employee(str(employee.id), current_user=_context(owner), db=session))
+    session.refresh(employee)
+    assert employee.is_active is True
+    assert authenticate_user(employee.username, "DisposablePassword123!", session)["success"] is True
+
+    with pytest.raises(Exception) as self_toggle:
+        asyncio.run(toggle_employee(str(owner.id), current_user=_context(owner), db=session))
+    assert getattr(self_toggle.value, "status_code", None) == 400
+    with pytest.raises(Exception) as self_delete:
+        asyncio.run(delete_employee(str(owner.id), current_user=_context(owner), db=session))
+    assert getattr(self_delete.value, "status_code", None) == 400
+
+    foreign_pharmacy, foreign_owner = _create_demo_admin(session, username="foreign_owner")
+    with pytest.raises(Exception) as foreign_toggle:
+        asyncio.run(toggle_employee(str(employee.id), current_user=_context(foreign_owner), db=session))
+    assert getattr(foreign_toggle.value, "status_code", None) == 404
+
+    session.add(Sale(
+        pharmacy_id=pharmacy.id, user_id=employee.id, invoice_number=1,
+        total_amount=10, payment_method="cash",
+    ))
+    session.commit()
+    archived = asyncio.run(delete_employee(str(employee.id), current_user=_context(owner), db=session))
+    assert archived["lifecycle"] == "archived"
+    session.refresh(employee)
+    assert employee.is_active is False
+
+    unused = asyncio.run(create_employee(EmployeeCreateSchema(
+        full_name="Unused Cashier", username="unused_cashier",
+        password="UnusedPassword123!", role="cashier",
+    ), current_user=_context(owner), db=session))
+    unused_id = uuid.UUID(unused["employee_id"])
+    deleted = asyncio.run(delete_employee(str(unused_id), current_user=_context(owner), db=session))
+    assert deleted["lifecycle"] == "deleted"
+    assert session.get(User, unused_id) is None
+
+
+def test_post_acceptance_ui_contracts_have_no_runtime_dashboard_fixtures():
+    dashboard = (ROOT / "templates" / "dashboard.html").read_text(encoding="utf-8")
+    login = (ROOT / "templates" / "login.html").read_text(encoding="utf-8")
+    employees = (ROOT / "templates" / "employees.html").read_text(encoding="utf-8")
+    sales_history = (ROOT / "templates" / "sales_history.html").read_text(encoding="utf-8")
+    shared = (ROOT / "templates" / "shared_layout.html").read_text(encoding="utf-8")
+    sidebar = (ROOT / "templates" / "partials" / "sidebar.html").read_text(encoding="utf-8")
+
+    for fake in ("1.42M", "12.4%", "8.1%", "INV-2841", "سارة م.", "Augmentin 625mg"):
+        assert fake not in dashboard
+    assert "البريد الإلكتروني أو اسم المستخدم" in login
+    assert "showAddModal()" in employees and "deleteEmployee(" in employees
+    assert "viewDetail(sale.sale_id)" in sales_history
+    assert "sidebar-collapsed" in shared
+    assert "sidebar-close-btn" in sidebar and "sidebar-collapse-btn" in sidebar
+
+
+def test_report_module_navigation_is_only_in_sidebar():
+    for name in ("reports_sales.html", "reports_profits.html"):
+        source = (ROOT / "templates" / name).read_text(encoding="utf-8")
+        assert "<!-- Report Tabs -->" not in source
 
 
 def test_render_yaml_uses_external_secret_database():
