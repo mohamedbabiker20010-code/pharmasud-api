@@ -257,6 +257,7 @@ def test_post_acceptance_ui_contracts_have_no_runtime_dashboard_fixtures():
     login = (ROOT / "templates" / "login.html").read_text(encoding="utf-8")
     employees = (ROOT / "templates" / "employees.html").read_text(encoding="utf-8")
     sales_history = (ROOT / "templates" / "sales_history.html").read_text(encoding="utf-8")
+    settings = (ROOT / "templates" / "settings.html").read_text(encoding="utf-8")
     shared = (ROOT / "templates" / "shared_layout.html").read_text(encoding="utf-8")
     sidebar = (ROOT / "templates" / "partials" / "sidebar.html").read_text(encoding="utf-8")
 
@@ -267,8 +268,16 @@ def test_post_acceptance_ui_contracts_have_no_runtime_dashboard_fixtures():
     assert "Email or username" in login
     assert "Enter email or username" in login
     assert "showAddModal()" in employees and "deleteEmployee(" in employees
+    assert ".modal-overlay.show{display:flex;opacity:1;visibility:visible}" in employees
     assert "viewDetail(sale.sale_id)" in sales_history
+    assert "opacity: 1;" in sales_history and "visibility: visible;" in sales_history
+    assert 'href="/employees"' in settings
+    assert "async addEmployee()" not in settings
+    assert "/api/settings/employees" not in settings
     assert "sidebar-collapsed" in shared
+    assert "body.mobile-drawer-open { overflow: hidden; }" in shared
+    assert "html, body { overflow-x: hidden; }" in shared
+    assert ":class=\"{ 'visible': sidebarOpen }\"" in shared
     assert "sidebar-close-btn" in sidebar and "sidebar-collapse-btn" in sidebar
 
 

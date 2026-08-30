@@ -204,6 +204,8 @@
 
     /* ─── Mobile ─── */
     @media (max-width: 1024px) {
+      html, body { overflow-x: hidden; }
+      body.mobile-drawer-open { overflow: hidden; }
       .sidebar { transform: translateX(100%); }
       .sidebar.mobile-open { transform: translateX(0); }
       .topbar { right: 0; }
@@ -213,6 +215,7 @@
         position: fixed; inset: 0;
         background: rgba(0,0,0,0.3); z-index: 99;
       }
+      .sidebar-overlay.visible { display: block; opacity: 1; }
       .sidebar-close-btn {
         display: flex;
         position: absolute; top: 16px; left: 16px;
@@ -226,7 +229,9 @@
       body.sidebar-collapsed .topbar { right:0; }
       body.sidebar-collapsed .main-content { margin-right:0; }
     }
-    .sidebar-close-btn { display: none; }
+    @media (min-width: 1025px) {
+      .sidebar-close-btn { display: none; }
+    }
 
     /* ─── Dark Mode ─── */
     body.dark-mode { background: #0b1220; color: #e2e8f0; }
@@ -253,12 +258,14 @@
   {% block extra_css %}{% endblock %}
 </head>
 
-<body x-data="pageApp()" :class="{ 'dark-mode': isDark, 'sidebar-collapsed': sidebarCollapsed }">
+<body x-data="pageApp()"
+      :class="{ 'dark-mode': isDark, 'sidebar-collapsed': sidebarCollapsed, 'mobile-drawer-open': sidebarOpen }">
   <div class="app-layout">
 
     <!-- Mobile Sidebar Overlay -->
     <div class="sidebar-overlay"
          x-show="sidebarOpen"
+         :class="{ 'visible': sidebarOpen }"
          @click="sidebarOpen = false"
          x-cloak></div>
 
@@ -269,6 +276,7 @@
     <header class="topbar">
       <button class="mobile-menu-btn"
               @click="sidebarOpen = !sidebarOpen"
+              :aria-expanded="sidebarOpen.toString()"
               aria-label="القائمة"
               title="القائمة">
         <i data-lucide="menu"></i>
