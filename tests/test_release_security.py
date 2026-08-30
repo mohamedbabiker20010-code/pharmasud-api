@@ -287,6 +287,18 @@ def test_report_module_navigation_is_only_in_sidebar():
         assert "<!-- Report Tabs -->" not in source
 
 
+def test_employee_creation_form_blocks_owner_autofill_and_resets():
+    employees = (ROOT / "templates" / "employees.html").read_text(encoding="utf-8")
+
+    assert 'id="add-employee-form" autocomplete="off"' in employees
+    assert 'name="employee_creation_username"' in employees
+    assert 'name="employee_creation_password"' in employees
+    assert 'autocomplete="new-password"' in employees
+    assert 'placeholder="مثال: ahmed.ibrahim"' in employees
+    assert "function resetAddEmployeeForm()" in employees
+    assert employees.count("resetAddEmployeeForm();") >= 2
+
+
 def test_render_yaml_uses_external_secret_database():
     config = yaml.safe_load((ROOT / "render.yaml").read_text(encoding="utf-8"))
     assert "databases" not in config

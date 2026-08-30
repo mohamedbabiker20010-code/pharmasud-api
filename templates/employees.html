@@ -198,22 +198,29 @@
 <div class="modal-overlay" id="addModal">
     <div class="modal" onclick="event.stopPropagation()">
         <h2><i data-lucide="user-plus" width="22" height="22" style="color:#1aa7ec"></i>إضافة موظف جديد</h2>
+        <form id="add-employee-form" autocomplete="off" onsubmit="event.preventDefault(); addEmployee()">
         <div style="display:flex;flex-direction:column;gap:14px">
-            <input id="new-full-name" type="text" placeholder="الاسم الكامل" class="modal-input">
-            <input id="new-username" type="text" placeholder="اسم المستخدم" class="modal-input" dir="ltr" style="text-align:right">
-            <input id="new-password" type="password" placeholder="كلمة المرور (6 أحرف على الأقل)" class="modal-input">
-            <select id="new-role" class="modal-input">
+            <label for="new-full-name">الاسم الكامل</label>
+            <input id="new-full-name" name="employee_creation_full_name" type="text" placeholder="الاسم الكامل" class="modal-input" autocomplete="off">
+            <label for="new-username">اسم المستخدم</label>
+            <input id="new-username" name="employee_creation_username" type="text" placeholder="مثال: ahmed.ibrahim" class="modal-input" dir="ltr" style="text-align:right" autocomplete="off" autocapitalize="none" spellcheck="false">
+            <label for="new-password">كلمة المرور</label>
+            <input id="new-password" name="employee_creation_password" type="password" placeholder="كلمة المرور (6 أحرف على الأقل)" class="modal-input" autocomplete="new-password">
+            <label for="new-role">الدور</label>
+            <select id="new-role" name="employee_creation_role" class="modal-input" autocomplete="off">
                 <option value="cashier">كاشير</option>
                 <option value="pharmacist">صيدلي</option>
                 <option value="store_keeper">أمين مخزن</option>
                 <option value="manager">مدير</option>
             </select>
-            <input id="new-phone" type="text" placeholder="رقم الهاتف (اختياري)" class="modal-input" dir="ltr" style="text-align:right">
+            <label for="new-phone">رقم الهاتف (اختياري)</label>
+            <input id="new-phone" name="employee_creation_phone" type="tel" placeholder="رقم الهاتف (اختياري)" class="modal-input" dir="ltr" style="text-align:right" autocomplete="off">
         </div>
         <div class="modal-actions">
-            <button class="modal-cancel" onclick="hideAddModal()">إلغاء</button>
-            <button class="modal-save" onclick="addEmployee()">حفظ الموظف</button>
+            <button type="button" class="modal-cancel" onclick="hideAddModal()">إلغاء</button>
+            <button type="submit" class="modal-save">حفظ الموظف</button>
         </div>
+        </form>
     </div>
 </div>
 
@@ -360,8 +367,19 @@
     }
 
     // Add Employee
-    function showAddModal() { document.getElementById('addModal').classList.add('show'); }
-    function hideAddModal() { document.getElementById('addModal').classList.remove('show'); }
+    function resetAddEmployeeForm() {
+        document.getElementById('add-employee-form').reset();
+    }
+
+    function showAddModal() {
+        resetAddEmployeeForm();
+        document.getElementById('addModal').classList.add('show');
+    }
+
+    function hideAddModal() {
+        document.getElementById('addModal').classList.remove('show');
+        resetAddEmployeeForm();
+    }
 
     async function addEmployee() {
         const fullName = document.getElementById('new-full-name').value.trim();
@@ -383,10 +401,6 @@
             if (!res.ok) throw new Error(data.detail || 'فشل الإضافة');
             hideAddModal();
             showToast(data.message || 'تم إضافة الموظف بنجاح', 'success');
-            document.getElementById('new-full-name').value = '';
-            document.getElementById('new-username').value = '';
-            document.getElementById('new-password').value = '';
-            document.getElementById('new-phone').value = '';
             loadEmployees();
         } catch (e) { showToast(e.message, 'error'); }
     }
