@@ -1,13 +1,18 @@
 """Private, non-tenant platform-operator customer handover console."""
 
+from collections import OrderedDict, deque
 from datetime import datetime
+import base64
+import binascii
 import hmac
+import math
 import os
+import threading
+import time
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
@@ -23,16 +28,142 @@ from services.provisioning import (
 )
 
 router = APIRouter(tags=["internal-customers"])
-basic = HTTPBasic()
 
 
-def require_platform_operator(credentials: HTTPBasicCredentials = Depends(basic)) -> str:
+class OperatorAuthRateLimiter:
+    """Bounded, per-process failed-authentication throttle for the private console."""
+
+    def __init__(
+        self,
+        *,
+        failure_limit: int = 5,
+        window_seconds: int = 600,
+        cooldown_seconds: int = 600,
+        max_identities: int = 2048,
+        clock=time.monotonic,
+    ) -> None:
+        self.failure_limit = failure_limit
+        self.window_seconds = window_seconds
+        self.cooldown_seconds = cooldown_seconds
+        self.max_identities = max_identities
+        self._clock = clock
+        self._entries: OrderedDict[str, tuple[deque[float], float, float]] = OrderedDict()
+        self._lock = threading.Lock()
+
+    def _prune(self, now: float) -> None:
+        stale_before = now - max(self.window_seconds, self.cooldown_seconds)
+        stale = [key for key, (_, blocked_until, last_seen) in self._entries.items()
+                 if blocked_until <= now and last_seen < stale_before]
+        for key in stale:
+            self._entries.pop(key, None)
+
+    def retry_after(self, identity: str) -> int:
+        now = self._clock()
+        with self._lock:
+            self._prune(now)
+            entry = self._entries.get(identity)
+            if not entry:
+                return 0
+            _, blocked_until, _ = entry
+            if blocked_until <= now:
+                return 0
+            self._entries.move_to_end(identity)
+            return max(1, math.ceil(blocked_until - now))
+
+    def record_failure(self, identity: str) -> int:
+        now = self._clock()
+        with self._lock:
+            self._prune(now)
+            failures, blocked_until, _ = self._entries.get(identity, (deque(), 0.0, now))
+            cutoff = now - self.window_seconds
+            while failures and failures[0] <= cutoff:
+                failures.popleft()
+            failures.append(now)
+            if len(failures) >= self.failure_limit:
+                blocked_until = max(blocked_until, now + self.cooldown_seconds)
+            self._entries[identity] = (failures, blocked_until, now)
+            self._entries.move_to_end(identity)
+            while len(self._entries) > self.max_identities:
+                self._entries.popitem(last=False)
+            return max(0, math.ceil(blocked_until - now))
+
+    def record_success(self, identity: str) -> None:
+        with self._lock:
+            self._entries.pop(identity, None)
+
+    def clear(self) -> None:
+        """Test isolation without exposing rate-limit state through HTTP."""
+        with self._lock:
+            self._entries.clear()
+
+
+# Production currently runs one service replica/process. This deliberately avoids
+# new infrastructure; multiple workers/replicas would each have an independent
+# bucket and must move this state to a shared edge/store before horizontal scaling.
+operator_auth_limiter = OperatorAuthRateLimiter()
+
+
+def _basic_credentials(request: Request) -> tuple[str, str] | None:
+    authorization = request.headers.get("Authorization", "")
+    scheme, separator, encoded = authorization.partition(" ")
+    if not separator or scheme.lower() != "basic" or not encoded or len(encoded) > 8192:
+        return None
+    try:
+        decoded = base64.b64decode(encoded, validate=True).decode("utf-8")
+    except (binascii.Error, UnicodeDecodeError, ValueError):
+        return None
+    username, separator, password = decoded.partition(":")
+    if not separator:
+        return None
+    return username, password
+
+
+def _operator_auth_error(status_code: int, retry_after: int = 0) -> HTTPException:
+    if status_code == 429:
+        return HTTPException(
+            status_code=429,
+            detail="Too many platform operator authentication attempts",
+            headers={"Retry-After": str(retry_after)},
+        )
+    return HTTPException(
+        status_code=401,
+        detail="Invalid platform operator credentials",
+        headers={"WWW-Authenticate": "Basic"},
+    )
+
+
+def require_platform_operator(request: Request) -> str:
     expected_user = os.getenv("PLATFORM_OPERATOR_USERNAME", "")
     expected_hash = os.getenv("PLATFORM_OPERATOR_PASSWORD_HASH", "")
     if not expected_user or not expected_hash:
         raise HTTPException(status_code=503, detail="Platform operator access is not configured")
-    if not hmac.compare_digest(credentials.username, expected_user) or not verify_password(credentials.password, expected_hash):
-        raise HTTPException(status_code=401, detail="Invalid platform operator credentials", headers={"WWW-Authenticate": "Basic"})
+
+    # The deployment has no application-level trusted-proxy allowlist, so neither
+    # Forwarded/X-Forwarded-For nor request.client is safe as an end-user identity.
+    # Use one fail-closed bucket for the configured operator account. This cannot
+    # be bypassed by changing source headers, username candidates, or paths.
+    identity = "configured-platform-operator"
+    retry_after = operator_auth_limiter.retry_after(identity)
+    if retry_after:
+        raise _operator_auth_error(429, retry_after)
+
+    credentials = _basic_credentials(request)
+    username = credentials[0] if credentials else ""
+    password = credentials[1] if credentials else ""
+    username_valid = hmac.compare_digest(username, expected_user)
+    try:
+        password_valid = verify_password(password, expected_hash)
+    except ValueError:
+        # bcrypt rejects oversized/malformed candidates; they are authentication
+        # failures and must contribute to throttling rather than become a 500.
+        password_valid = False
+    if not username_valid or not password_valid:
+        retry_after = operator_auth_limiter.record_failure(identity)
+        if retry_after:
+            raise _operator_auth_error(429, retry_after)
+        raise _operator_auth_error(401)
+
+    operator_auth_limiter.record_success(identity)
     return expected_user
 
 
