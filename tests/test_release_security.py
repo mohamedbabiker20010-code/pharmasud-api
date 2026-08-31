@@ -311,6 +311,7 @@ def test_no_unprotected_admin_or_demo_mutation_route():
     allowed_onboarding = {
         "/api/auth/activate", "/api/auth/setup", "/api/auth/login",
         "/api/auth/owner-activation",
+        "/api/auth/forgot-password", "/api/auth/reset-password",
     }
     source_text = (ROOT / "main.py").read_text(encoding="utf-8")
     source_tree = ast.parse(source_text)
@@ -324,7 +325,7 @@ def test_no_unprotected_admin_or_demo_mutation_route():
             assert 'raise HTTPException(status_code=404, detail="Not found")' in source
             continue
         dependency_names = {getattr(dependency.call, "__name__", "") for dependency in route.dependant.dependencies}
-        assert dependency_names & {"get_current_user", "require_admin", "permission_checker"}, route.path
+        assert dependency_names & {"get_current_user", "require_admin", "permission_checker", "require_platform_operator"}, route.path
 
 
 def test_repository_contains_no_committed_credentials_or_database_url():

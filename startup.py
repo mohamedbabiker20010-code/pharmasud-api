@@ -23,7 +23,7 @@ def initialize_database() -> dict:
     # deploy from racing ahead of the reviewed Alembic migration.
     startup_tables = [
         table for table in Base.metadata.sorted_tables
-        if table.name != "owner_activation_tokens"
+        if table.name not in {"owner_activation_tokens", "password_reset_tokens", "customer_handovers"}
     ]
     Base.metadata.create_all(bind=engine, tables=startup_tables)
     with engine.begin() as conn:

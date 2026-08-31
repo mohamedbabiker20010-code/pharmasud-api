@@ -577,6 +577,7 @@ class User(Base):
     full_name = Column(String(100))
     phone = Column(String(20))
     is_active = Column(Boolean, default=True)
+    auth_version = Column(Integer, nullable=False, default=0, server_default="0")
     created_at = Column(DateTime, server_default=func.now())
 
     # Enforce valid legacy roles (will be removed in future version)
@@ -597,6 +598,9 @@ class User(Base):
     activation_tokens = relationship(
         "OwnerActivationToken", back_populates="user", cascade="all, delete-orphan"
     )
+    password_reset_tokens = relationship(
+        "PasswordResetToken", back_populates="user", cascade="all, delete-orphan"
+    )
 
 
 class OwnerActivationToken(Base):
@@ -616,6 +620,50 @@ class OwnerActivationToken(Base):
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
 
     user = relationship("User", back_populates="activation_tokens")
+
+
+class PasswordResetToken(Base):
+    """Hash-only, expiring and single-use email password recovery token."""
+    __tablename__ = "password_reset_tokens"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    token_hash = Column(String(64), unique=True, nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+    used_at = Column(DateTime, nullable=True)
+    revoked_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, server_default=func.now(), nullable=False)
+
+    user = relationship("User", back_populates="password_reset_tokens")
+
+
+class CustomerHandover(Base):
+    """Minimal internal commercial gate before atomic tenant provisioning."""
+    __tablename__ = "customer_handovers"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    customer_reference = Column(String(100), unique=True, nullable=False)
+    pharmacy_name = Column(String(100), nullable=False)
+    owner_name = Column(String(100), nullable=False)
+    owner_email = Column(String(320), nullable=False)
+    owner_phone = Column(String(20), nullable=True)
+    city = Column(String(100), nullable=True)
+    status = Column(String(40), nullable=False, default="PAYMENT_PENDING")
+    payment_confirmed_at = Column(DateTime, nullable=True)
+    payment_confirmed_by = Column(String(100), nullable=True)
+    pharmacy_id = Column(UUID(as_uuid=True), ForeignKey("pharmacies.id"), nullable=True, unique=True)
+    activation_email_sent_at = Column(DateTime, nullable=True)
+    activation_email_error = Column(String(200), nullable=True)
+    created_at = Column(DateTime, server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('PAYMENT_PENDING','READY_TO_PROVISION','AWAITING_OWNER_ACTIVATION','ACTIVATION_EMAIL_FAILED','ACTIVE')",
+            name="ck_customer_handovers_status",
+        ),
+        Index("uq_customer_handovers_owner_email_normalized", func.lower(owner_email), unique=True),
+    )
 
 
 class Role(Base):

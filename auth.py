@@ -111,6 +111,9 @@ async def get_current_user(
     user = db.query(User).filter(User.id == user_id).first()
     if user is None:
         raise credentials_exception
+    token_auth_version = payload.get("auth_version", 0)
+    if token_auth_version != user.auth_version:
+        raise credentials_exception
     if not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -262,7 +265,8 @@ def authenticate_user(username: str, password: str, db: Session) -> Dict[str, An
         "user_id": str(user.id),
         "pharmacy_id": str(user.pharmacy_id),
         "role": user.role,
-        "username": user.username
+        "username": user.username,
+        "auth_version": user.auth_version,
     }
     
     access_token = create_access_token(token_data)

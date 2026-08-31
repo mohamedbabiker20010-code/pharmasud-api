@@ -469,7 +469,7 @@ class Args:
 def test_environment_gate_fail_closed():
     metadata = {
         "environment": "production", "database_type": "postgresql",
-        "database_fingerprint": "abc123", "current_alembic_revision": "20260827_owner_email_password",
+        "database_fingerprint": "abc123", "current_alembic_revision": "20260901_handover_recovery",
     }
     enforce_environment_gate(Args(), metadata)
     for key, value in [
@@ -488,7 +488,7 @@ def test_environment_gate_fail_closed():
 def test_interactive_production_confirmation(monkeypatch):
     metadata = {
         "environment": "production", "database_type": "postgresql",
-        "database_fingerprint": "abc123", "current_alembic_revision": "20260827_owner_email_password",
+        "database_fingerprint": "abc123", "current_alembic_revision": "20260901_handover_recovery",
     }
     args = Args(); args.non_interactive = False
     monkeypatch.setattr("builtins.input", lambda _prompt: "PROVISION ORDER-X ON abc123")

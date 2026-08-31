@@ -1,0 +1,293 @@
+import os
+import re
+import uuid
+import base64
+import socket
+import threading
+import time
+
+import pytest
+from fastapi.testclient import TestClient
+from sqlalchemy import text
+
+from auth import get_password_hash
+from database import Base, SessionLocal, engine
+from models import CustomerHandover, OwnerActivationToken, PasswordResetToken, Pharmacy, Role, User
+from rbac_seeder import seed_rbac_foundation
+from services.mail import CapturedMailTransport
+
+pytestmark = pytest.mark.skipif(
+    os.getenv("RUN_HANDOVER_TESTS") != "1",
+    reason="RUN_HANDOVER_TESTS=1 requires a dedicated PostgreSQL DATABASE_URL",
+)
+
+
+@pytest.fixture(scope="module")
+def prepared():
+    os.environ["PLATFORM_OPERATOR_PASSWORD_HASH"] = get_password_hash(os.environ["PLATFORM_OPERATOR_PASSWORD"])
+    with engine.begin() as connection:
+        connection.execute(text("DROP SCHEMA public CASCADE"))
+        connection.execute(text("CREATE SCHEMA public"))
+    Base.metadata.create_all(engine)
+    with engine.begin() as connection:
+        connection.execute(text("""CREATE TABLE audit_log (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(), pharmacy_id UUID REFERENCES pharmacies(id),
+            user_id UUID REFERENCES users(id) ON DELETE SET NULL, user_name VARCHAR(100),
+            action_type VARCHAR(50) NOT NULL, description TEXT NOT NULL, target_entity VARCHAR(50),
+            target_id VARCHAR(100), old_value TEXT, new_value TEXT, success BOOLEAN DEFAULT TRUE,
+            request_ip VARCHAR(64), created_at TIMESTAMP DEFAULT NOW())"""))
+        connection.execute(text("""CREATE TABLE stocktake_sessions (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(), pharmacy_id UUID REFERENCES pharmacies(id),
+            user_id UUID REFERENCES users(id), notes TEXT, items_adjusted INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT NOW())"""))
+        connection.execute(text("""CREATE TABLE stocktake_items (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(), session_id UUID REFERENCES stocktake_sessions(id),
+            medicine_id UUID REFERENCES medicines(id), medicine_name VARCHAR(100), system_quantity INTEGER,
+            actual_quantity INTEGER, difference INTEGER, created_at TIMESTAMP DEFAULT NOW())"""))
+    with SessionLocal.begin() as db:
+        seed_rbac_foundation(db)
+        role = db.query(Role).filter(Role.name == "pharmacist").one()
+        owner_role = db.query(Role).filter(Role.name == "owner").one()
+        legacy_pharmacy = Pharmacy(id=uuid.uuid4(), product_key="LEGACY-HANDOVER", name="Legacy", is_active=True, type="demo")
+        db.add(legacy_pharmacy); db.flush()
+        db.add_all([
+            User(id=uuid.uuid4(), pharmacy_id=legacy_pharmacy.id, username="legacy_employee",
+                 password_hash=get_password_hash("LegacyEmployee123!"), role="employee", role_id=role.id, is_active=True),
+            User(id=uuid.uuid4(), pharmacy_id=legacy_pharmacy.id, username="legacy.owner@example.test",
+                 email="legacy.owner@example.test", password_hash=get_password_hash("LegacyOwnerPassword123!"),
+                 role="admin", role_id=owner_role.id, is_active=True),
+        ])
+    return True
+
+
+def _secret(message, page):
+    match = re.search(rf"/{page}#token=([^\s<]+)", message.text)
+    assert match
+    return match.group(1)
+
+
+def test_complete_paid_customer_activation_and_recovery(prepared, monkeypatch):
+    import internal
+    import recovery
+    from main import app
+    from services.recovery import hash_reset_secret
+
+    activation_mail = CapturedMailTransport()
+    reset_mail = CapturedMailTransport()
+    monkeypatch.setattr(internal, "get_mail_transport", lambda: activation_mail)
+    monkeypatch.setattr(recovery, "get_mail_transport", lambda: reset_mail)
+    auth = (os.environ["PLATFORM_OPERATOR_USERNAME"], os.environ["PLATFORM_OPERATOR_PASSWORD"])
+    client = TestClient(app)
+
+    payload = {"pharmacy_name": "Handover A", "owner_name": "Owner A", "owner_email": "owner.a@example.test",
+               "owner_phone": "", "city": "Khartoum", "payment_confirmed": False}
+    internal_headers = {"X-PharmaSUD-Internal": "1"}
+    created = client.post("/api/internal/customers", auth=auth, headers=internal_headers, json=payload)
+    assert created.status_code == 200
+    customer_id = created.json()["customer"]["id"]
+    duplicate = client.post("/api/internal/customers", auth=auth, headers=internal_headers, json=payload)
+    assert duplicate.status_code == 200 and duplicate.json()["idempotent"] is True
+    assert duplicate.json()["customer"]["id"] == customer_id
+    assert client.post("/api/internal/customers", auth=auth, json=payload).status_code == 403
+    assert client.post(f"/api/internal/customers/{customer_id}/provision", auth=auth, headers=internal_headers).status_code == 409
+    assert client.post(f"/api/internal/customers/{customer_id}/confirm-payment", auth=auth, headers=internal_headers).status_code == 200
+
+    provisioned = client.post(f"/api/internal/customers/{customer_id}/provision", auth=auth, headers=internal_headers)
+    assert provisioned.status_code == 200 and len(activation_mail.messages) == 1
+    assert activation_mail.messages[0].recipient == "owner.a@example.test"
+    assert "PharmaSUD" in activation_mail.messages[0].subject
+    assert "Handover A" in activation_mail.messages[0].text
+    assert "Owner A" in activation_mail.messages[0].text
+    activation_secret = _secret(activation_mail.messages[0], "owner-activation")
+    with SessionLocal() as db:
+        row = db.get(CustomerHandover, uuid.UUID(customer_id))
+        owner = db.query(User).filter(User.email == "owner.a@example.test").one()
+        owner_identity = (owner.id, owner.pharmacy_id, owner.role_id)
+        tokens = db.query(OwnerActivationToken).filter(OwnerActivationToken.user_id == owner.id).all()
+        assert row.status == "AWAITING_OWNER_ACTIVATION" and owner.password_hash is None and not owner.is_active
+        assert len(tokens) == 1 and activation_secret not in tokens[0].token_hash
+        counts = (db.query(Pharmacy).filter(Pharmacy.name == "Handover A").count(),
+                  db.query(User).filter(User.email == "owner.a@example.test").count())
+        payment_audits = db.execute(text(
+            "SELECT count(*) FROM audit_log WHERE action_type='customer_payment_confirmed' AND target_id=:id"
+        ), {"id": customer_id}).scalar_one()
+        assert payment_audits == 1
+    retry = client.post(f"/api/internal/customers/{customer_id}/provision", auth=auth, headers=internal_headers)
+    assert retry.status_code == 200 and retry.json()["idempotent"] is True
+    with SessionLocal() as db:
+        assert counts == (1, 1)
+
+    first_password = "OwnerFirstPassword123!"
+    activated = client.post("/api/auth/owner-activation", json={
+        "token": activation_secret, "password": first_password, "confirm_password": first_password})
+    assert activated.status_code == 200
+    assert client.post("/api/auth/owner-activation", json={
+        "token": activation_secret, "password": first_password, "confirm_password": first_password}).status_code == 400
+    login = client.post("/api/auth/login", json={"username": "owner.a@example.test", "password": first_password})
+    assert login.status_code == 200 and login.json()["success"]
+    old_token = login.json()["token"]
+
+    generic_existing = client.post("/api/auth/forgot-password", json={"email": "owner.a@example.test"})
+    generic_missing = client.post("/api/auth/forgot-password", json={"email": "missing@example.test"})
+    assert generic_existing.json()["message"] == generic_missing.json()["message"] and len(reset_mail.messages) == 1
+    reset_secret = _secret(reset_mail.messages[0], "reset-password")
+    assert reset_mail.messages[0].recipient == "owner.a@example.test"
+    assert "PharmaSUD" in reset_mail.messages[0].subject
+    with SessionLocal() as db:
+        legacy_owner_hash = db.query(User).filter(User.email == "legacy.owner@example.test").one().password_hash
+        stored_reset = db.query(PasswordResetToken).filter(
+            PasswordResetToken.token_hash == hash_reset_secret(reset_secret)
+        ).one()
+        assert reset_secret not in stored_reset.token_hash
+    new_password = "OwnerResetPassword456!"
+    reset = client.post("/api/auth/reset-password", json={
+        "token": reset_secret, "password": new_password, "confirm_password": new_password})
+    assert reset.status_code == 200
+    assert client.post("/api/auth/reset-password", json={
+        "token": reset_secret, "password": new_password, "confirm_password": new_password}).status_code == 400
+    assert not client.post("/api/auth/login", json={"username": "owner.a@example.test", "password": first_password}).json()["success"]
+    assert client.post("/api/auth/login", json={"username": "owner.a@example.test", "password": new_password}).json()["success"]
+    assert client.get("/api/auth/me", headers={"Authorization": "Bearer " + old_token}).status_code == 401
+    assert client.post("/api/auth/login", json={
+        "username": "legacy.owner@example.test", "password": "LegacyOwnerPassword123!"
+    }).json()["success"]
+    with SessionLocal() as db:
+        assert db.query(User).filter(User.email == "legacy.owner@example.test").one().password_hash == legacy_owner_hash
+        owner = db.query(User).filter(User.email == "owner.a@example.test").one()
+        assert (owner.id, owner.pharmacy_id, owner.role_id) == owner_identity
+        assert db.get(CustomerHandover, uuid.UUID(customer_id)).status == "ACTIVE"
+
+    tenant_token = client.post("/api/auth/login", json={"username": "legacy_employee", "password": "LegacyEmployee123!"}).json()["token"]
+    assert client.get("/api/internal/customers", headers={"Authorization": "Bearer " + tenant_token}).status_code == 401
+    owner_token = client.post("/api/auth/login", json={"username": "owner.a@example.test", "password": new_password}).json()["token"]
+    assert client.get("/api/internal/customers", headers={"Authorization": "Bearer " + owner_token}).status_code == 401
+
+
+def test_reset_expiry_replacement_and_email_failure_reissue(prepared, monkeypatch):
+    from datetime import datetime, timedelta
+    import internal
+    from services.recovery import ResetError, hash_reset_secret, request_password_reset, reset_password
+
+    capture = CapturedMailTransport()
+    with SessionLocal.begin() as db:
+        request_password_reset(db, email="owner.a@example.test", transport=capture)
+        first = _secret(capture.messages[-1], "reset-password")
+        request_password_reset(db, email="owner.a@example.test", transport=capture)
+        second = _secret(capture.messages[-1], "reset-password")
+    with SessionLocal.begin() as db:
+        with pytest.raises(ResetError): reset_password(db, secret=first, password="ReplacementPassword123!")
+        token = db.query(PasswordResetToken).filter(
+            PasswordResetToken.token_hash == hash_reset_secret(second)
+        ).one()
+        token.expires_at = datetime.utcnow() - timedelta(seconds=1)
+    with SessionLocal.begin() as db:
+        with pytest.raises(ResetError): reset_password(db, secret=second, password="ExpiredPassword123!")
+
+    class Failing:
+        def send(self, message): raise RuntimeError("mail unavailable")
+    monkeypatch.setattr(internal, "get_mail_transport", lambda: Failing())
+    from main import app
+    client = TestClient(app)
+    auth = (os.environ["PLATFORM_OPERATOR_USERNAME"], os.environ["PLATFORM_OPERATOR_PASSWORD"])
+    internal_headers = {"X-PharmaSUD-Internal": "1"}
+    created = client.post("/api/internal/customers", auth=auth, headers=internal_headers, json={
+        "pharmacy_name": "Handover B", "owner_name": "Owner B",
+        "owner_email": "owner.b@example.test", "payment_confirmed": True,
+    })
+    customer_id = created.json()["customer"]["id"]
+    failed = client.post(f"/api/internal/customers/{customer_id}/provision", auth=auth, headers=internal_headers)
+    assert failed.status_code == 200
+    assert failed.json()["customer"]["status"] == "ACTIVATION_EMAIL_FAILED"
+    with SessionLocal() as db:
+        assert db.query(Pharmacy).filter(Pharmacy.name == "Handover B").count() == 1
+        assert db.query(User).filter(User.email == "owner.b@example.test").count() == 1
+
+    resent_mail = CapturedMailTransport()
+    monkeypatch.setattr(internal, "get_mail_transport", lambda: resent_mail)
+    resent = client.post(f"/api/internal/customers/{customer_id}/resend-activation", auth=auth, headers=internal_headers)
+    assert resent.status_code == 200
+    assert resent.json()["customer"]["status"] == "AWAITING_OWNER_ACTIVATION"
+    assert len(resent_mail.messages) == 1
+    with SessionLocal() as db:
+        owner = db.query(User).filter(User.email == "owner.b@example.test").one()
+        valid = db.query(OwnerActivationToken).filter(
+            OwnerActivationToken.user_id == owner.id,
+            OwnerActivationToken.used_at.is_(None),
+            OwnerActivationToken.revoked_at.is_(None),
+        ).all()
+        assert len(valid) == 1
+        assert db.query(Pharmacy).filter(Pharmacy.name == "Handover B").count() == 1
+        resend_audits = db.execute(text(
+            "SELECT count(*) FROM audit_log WHERE action_type='owner_activation_reissued' AND target_id=:id"
+        ), {"id": str(owner.id)}).scalar_one()
+        assert resend_audits == 1
+
+
+def test_internal_console_and_forgot_pages(prepared):
+    from main import app
+    client = TestClient(app)
+    auth = (os.environ["PLATFORM_OPERATOR_USERNAME"], os.environ["PLATFORM_OPERATOR_PASSWORD"])
+    assert client.get("/internal/customers", auth=auth).status_code == 200
+    assert client.get("/internal/customers").status_code == 401
+    assert client.get("/forgot-password").status_code == 200
+    assert client.get("/reset-password").status_code == 200
+
+
+@pytest.mark.skipif(
+    os.getenv("RUN_HANDOVER_BROWSER") != "1",
+    reason="RUN_HANDOVER_BROWSER=1 enables the real Chromium workflow",
+)
+def test_real_browser_operator_and_recovery_ui(prepared, monkeypatch):
+    import main
+    import uvicorn
+    from playwright.sync_api import sync_playwright
+
+    monkeypatch.setattr(main, "initialize_database", lambda: {"schema_ready": True})
+    with socket.socket() as probe:
+        probe.bind(("127.0.0.1", 0))
+        port = probe.getsockname()[1]
+    server = uvicorn.Server(uvicorn.Config(main.app, host="127.0.0.1", port=port, log_level="error"))
+    thread = threading.Thread(target=server.run, daemon=True)
+    thread.start()
+    for _ in range(100):
+        if server.started:
+            break
+        time.sleep(0.05)
+    assert server.started
+
+    credentials = base64.b64encode(
+        f'{os.environ["PLATFORM_OPERATOR_USERNAME"]}:{os.environ["PLATFORM_OPERATOR_PASSWORD"]}'.encode()
+    ).decode()
+    chrome = "/home/lenovo/.cache/ms-playwright/chromium-1217/chrome-linux64/chrome"
+    try:
+        with sync_playwright() as playwright:
+            browser = playwright.chromium.launch(headless=True, executable_path=chrome)
+            context = browser.new_context(extra_http_headers={"Authorization": f"Basic {credentials}"})
+            page = context.new_page()
+            page.goto(f"http://127.0.0.1:{port}/internal/customers")
+            assert page.locator("h1").is_visible()
+            page.locator("#pharmacy").fill("Browser Handover")
+            page.locator("#owner").fill("Browser Owner")
+            page.locator("#email").fill("browser.owner@example.test")
+            page.locator("#customer button").click()
+            page.get_by_text("Browser Handover").wait_for()
+            row = page.locator("tr", has_text="Browser Handover")
+            assert "PAYMENT_PENDING" in row.inner_text()
+            row.get_by_text("تأكيد الدفع").click()
+            provision = page.locator("tr", has_text="Browser Handover").get_by_text("إنشاء الصيدلية")
+            provision.wait_for()
+            provision.click()
+            page.locator("tr", has_text="Browser Handover").get_by_text("إعادة إرسال التفعيل").wait_for()
+
+            page.goto(f"http://127.0.0.1:{port}/forgot-password")
+            page.locator("#email").fill("absent@example.test")
+            page.locator("button").click()
+            page.locator("#message").get_by_text("If an account exists", exact=False).wait_for()
+            page.goto(f"http://127.0.0.1:{port}/reset-password#token=invalid-browser-token-value-123456")
+            assert page.locator("#password").get_attribute("autocomplete") == "new-password"
+            assert page.locator("#confirm").get_attribute("autocomplete") == "new-password"
+            browser.close()
+    finally:
+        server.should_exit = True
+        thread.join(timeout=10)
+    assert not thread.is_alive()

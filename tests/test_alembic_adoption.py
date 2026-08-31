@@ -24,7 +24,9 @@ def test_public_invoice_migration_follows_schema_adoption():
     activation_contract = script.get_revision("20260827_owner_email_password")
     adoption = script.get_revision("20260818_schema_adoption")
 
-    assert script.get_current_head() == "20260827_owner_email_password"
+    handover = script.get_revision("20260901_handover_recovery")
+    assert script.get_current_head() == "20260901_handover_recovery"
+    assert handover.down_revision == "20260827_owner_email_password"
     assert activation_contract.down_revision == "20260818_p1a_provisioning"
     assert provisioning.down_revision == "20260816_public_invoice_token"
     assert invoice.down_revision == "20260818_schema_adoption"

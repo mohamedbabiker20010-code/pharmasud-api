@@ -21,7 +21,7 @@ from models import OwnerActivationToken, Pharmacy, Role, User
 from rbac_seeder import PERMISSION_DEFINITIONS, ROLE_PERMISSIONS
 
 
-P1A_ALEMBIC_HEAD = "20260827_owner_email_password"
+P1A_ALEMBIC_HEAD = "20260901_handover_recovery"
 ACTIVATION_TTL_HOURS = 24
 _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 _REFERENCE_RE = re.compile(r"^[A-Z0-9][A-Z0-9._/-]{2,99}$")

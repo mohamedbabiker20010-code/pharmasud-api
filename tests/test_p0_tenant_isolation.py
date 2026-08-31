@@ -37,6 +37,11 @@ def postgres():
     Base.metadata.create_all(engine)
 
     with engine.begin() as connection:
+        # Reconstruct the historical 20240618 shape before exercising the
+        # complete additive migration chain to the current head.
+        connection.execute(text("DROP TABLE customer_handovers"))
+        connection.execute(text("DROP TABLE password_reset_tokens"))
+        connection.execute(text("ALTER TABLE users DROP COLUMN auth_version"))
         connection.execute(text("DROP TABLE owner_activation_tokens"))
         connection.execute(text("DROP INDEX uq_users_email_normalized"))
         connection.execute(text("ALTER TABLE users DROP COLUMN email"))

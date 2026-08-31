@@ -288,6 +288,7 @@ async def change_password(
 
     # تحديث كلمة السر
     user.password_hash = get_password_hash(data.new_password)
+    user.auth_version += 1
     db.commit()
 
     log_action(

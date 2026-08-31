@@ -42,6 +42,9 @@ from audit import router as audit_router
 from routers.user_context import router as user_context_router
 from startup import initialize_database
 from services.provisioning import ActivationError, activate_owner
+from internal import router as internal_router
+from recovery import router as recovery_router
+from models import CustomerHandover
 
 
 @asynccontextmanager
@@ -127,6 +130,8 @@ app.include_router(alerts_router)
 app.include_router(employees_router)
 app.include_router(audit_router)
 app.include_router(user_context_router)
+app.include_router(internal_router)
+app.include_router(recovery_router)
 
 logger = logging.getLogger(__name__)
 
@@ -439,7 +444,10 @@ def api_owner_activation(request: Request, data: OwnerActivationRequest):
         raise HTTPException(status_code=400, detail="Activation link is invalid or expired")
     try:
         with SessionLocal.begin() as session:
-            activate_owner(session, secret=data.token, password=data.password)
+            owner = activate_owner(session, secret=data.token, password=data.password)
+            handover = session.query(CustomerHandover).filter(CustomerHandover.pharmacy_id == owner.pharmacy_id).one_or_none()
+            if handover:
+                handover.status = "ACTIVE"
     except ActivationError:
         raise HTTPException(status_code=400, detail="Activation link is invalid or expired")
     return {"success": True, "message": "Owner account activated"}
