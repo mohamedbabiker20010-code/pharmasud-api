@@ -654,12 +654,14 @@ class CustomerHandover(Base):
     pharmacy_id = Column(UUID(as_uuid=True), ForeignKey("pharmacies.id"), nullable=True, unique=True)
     activation_email_sent_at = Column(DateTime, nullable=True)
     activation_email_error = Column(String(200), nullable=True)
+    archived_at = Column(DateTime, nullable=True)
+    archived_by = Column(String(100), nullable=True)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
 
     __table_args__ = (
         CheckConstraint(
-            "status IN ('PAYMENT_PENDING','READY_TO_PROVISION','AWAITING_OWNER_ACTIVATION','ACTIVATION_EMAIL_FAILED','ACTIVE')",
+            "status IN ('PAYMENT_PENDING','READY_TO_PROVISION','AWAITING_OWNER_ACTIVATION','ACTIVATION_EMAIL_FAILED','ACTIVE','ARCHIVED')",
             name="ck_customer_handovers_status",
         ),
         Index("uq_customer_handovers_owner_email_normalized", func.lower(owner_email), unique=True),

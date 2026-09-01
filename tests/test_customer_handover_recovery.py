@@ -265,19 +265,69 @@ def test_real_browser_operator_and_recovery_ui(prepared, monkeypatch):
             context = browser.new_context(extra_http_headers={"Authorization": f"Basic {credentials}"})
             page = context.new_page()
             page.goto(f"http://127.0.0.1:{port}/internal/customers")
-            assert page.locator("h1").is_visible()
+            assert page.get_by_role("heading", name="إدارة عملاء Daryonix").is_visible()
+            page.get_by_role("button", name="إضافة عميل جديد").click()
+            assert page.locator("#create-dialog").is_visible()
             page.locator("#pharmacy").fill("Browser Handover")
             page.locator("#owner").fill("Browser Owner")
             page.locator("#email").fill("browser.owner@example.test")
-            page.locator("#customer button").click()
+            page.locator("#customer-form button[type=submit]").click()
             page.get_by_text("Browser Handover").wait_for()
-            row = page.locator("tr", has_text="Browser Handover")
-            assert "PAYMENT_PENDING" in row.inner_text()
-            row.get_by_text("تأكيد الدفع").click()
-            provision = page.locator("tr", has_text="Browser Handover").get_by_text("إنشاء الصيدلية")
+            card = page.locator("article.customer", has_text="Browser Handover")
+            assert "بانتظار الدفع" in card.inner_text()
+            page.once("dialog", lambda dialog: dialog.accept())
+            card.get_by_text("تأكيد استلام الدفع").click()
+            provision = page.locator("article.customer", has_text="Browser Handover").get_by_role("button", name="إنشاء الصيدلية")
             provision.wait_for()
             provision.click()
-            page.locator("tr", has_text="Browser Handover").get_by_text("إعادة إرسال التفعيل").wait_for()
+            card = page.locator("article.customer", has_text="Browser Handover")
+            card.get_by_text("إعادة إرسال رابط التفعيل").wait_for()
+            page.locator("#search").fill("browser.owner@example.test")
+            assert page.locator("article.customer").count() == 1
+            page.locator("#search").fill("")
+            archive_messages = []
+            def accept_archive(dialog):
+                archive_messages.append(dialog.message)
+                dialog.accept()
+            page.once("dialog", accept_archive)
+            card.get_by_text("أرشفة العميل").click()
+            assert archive_messages == ["هل أنت متأكد من أرشفة هذا العميل؟"]
+            page.locator("#filter").select_option("ARCHIVED")
+            archived = page.locator("article.customer", has_text="Browser Handover")
+            archived.wait_for()
+            assert "مؤرشف" in archived.inner_text()
+            assert archived.locator("[data-action]").count() == 0
+            archived_id = archived.get_attribute("data-customer-id")
+            repeated_archive = page.evaluate("""async id => {
+                const response = await fetch(`/api/internal/customers/${id}/archive`, {
+                    method: 'POST', headers: {'X-PharmaSUD-Internal': '1'}
+                });
+                return {status: response.status, body: await response.json()};
+            }""", archived_id)
+            assert repeated_archive["status"] == 200
+            assert repeated_archive["body"]["idempotent"] is True
+            blocked_payment = page.evaluate("""async id => {
+                const response = await fetch(`/api/internal/customers/${id}/confirm-payment`, {
+                    method: 'POST', headers: {'X-PharmaSUD-Internal': '1'}
+                });
+                return response.status;
+            }""", archived_id)
+            assert blocked_payment == 409
+
+            for viewport in ({"width": 390, "height": 844}, {"width": 360, "height": 800}):
+                page.set_viewport_size(viewport)
+                page.locator("#filter").select_option("ALL")
+                assert page.evaluate("document.documentElement.scrollWidth <= document.documentElement.clientWidth")
+                assert page.get_by_role("button", name="إضافة عميل جديد").is_visible()
+                assert page.locator("html").get_attribute("dir") == "rtl"
+
+            page.set_viewport_size({"width": 1280, "height": 800})
+            page.goto(f"http://127.0.0.1:{port}/login")
+            page.locator('input[x-model="username"]').fill("legacy_employee")
+            page.locator('input[x-model="password"]').fill("LegacyEmployee123!")
+            page.locator(".btn-signin").click()
+            page.wait_for_url("**/dashboard")
+            assert page.url.endswith("/dashboard")
 
             page.goto(f"http://127.0.0.1:{port}/forgot-password")
             page.locator("#email").fill("absent@example.test")
@@ -291,3 +341,15 @@ def test_real_browser_operator_and_recovery_ui(prepared, monkeypatch):
         server.should_exit = True
         thread.join(timeout=10)
     assert not thread.is_alive()
+    with SessionLocal() as db:
+        handover = db.query(CustomerHandover).filter(CustomerHandover.pharmacy_name == "Browser Handover").one()
+        pharmacy = db.get(Pharmacy, handover.pharmacy_id)
+        owner = db.query(User).filter(User.pharmacy_id == pharmacy.id).one()
+        archived_audits = db.execute(text(
+            "SELECT count(*) FROM audit_log WHERE action_type='customer_archived' AND target_id=:id"
+        ), {"id": str(handover.id)}).scalar_one()
+        assert handover.status == "ARCHIVED" and handover.archived_at and handover.archived_by
+        assert not pharmacy.is_active and not owner.is_active
+        assert db.query(Pharmacy).filter(Pharmacy.id == pharmacy.id).count() == 1
+        assert db.query(User).filter(User.id == owner.id).count() == 1
+        assert archived_audits == 1

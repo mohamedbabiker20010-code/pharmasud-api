@@ -201,14 +201,17 @@ def _serialize(db: Session, row: CustomerHandover) -> dict:
         owner_role = db.query(Role).filter(Role.name == "owner").one()
         owner = db.query(User).filter(User.pharmacy_id == row.pharmacy_id, User.role_id == owner_role.id).one_or_none()
         active = bool(owner and owner.is_active)
-        if active and row.status != "ACTIVE":
+        if active and row.status not in {"ACTIVE", "ARCHIVED"}:
             row.status = "ACTIVE"
             db.flush()
     return {
         "id": str(row.id), "pharmacy_name": row.pharmacy_name, "owner_name": row.owner_name,
         "owner_email": row.owner_email, "owner_phone": row.owner_phone or "", "city": row.city or "",
         "payment_confirmed": bool(row.payment_confirmed_at), "status": row.status,
-        "activation_active": active, "created_at": row.created_at.isoformat() if row.created_at else None,
+        "payment_confirmed_at": row.payment_confirmed_at.isoformat() if row.payment_confirmed_at else None,
+        "activation_active": active, "activation_email_sent_at": row.activation_email_sent_at.isoformat() if row.activation_email_sent_at else None,
+        "archived_at": row.archived_at.isoformat() if row.archived_at else None,
+        "created_at": row.created_at.isoformat() if row.created_at else None,
     }
 
 
@@ -276,6 +279,8 @@ def confirm_payment(customer_id: uuid.UUID, operator: str = Depends(require_plat
     row = db.get(CustomerHandover, customer_id)
     if not row:
         raise HTTPException(status_code=404, detail="Customer not found")
+    if row.status == "ARCHIVED":
+        raise HTTPException(status_code=409, detail="Archived customer cannot be changed")
     if not row.payment_confirmed_at:
         row.payment_confirmed_at = datetime.utcnow(); row.payment_confirmed_by = operator
         row.status = "READY_TO_PROVISION"
@@ -298,6 +303,8 @@ def provision(customer_id: uuid.UUID, operator: str = Depends(require_platform_o
     row = db.get(CustomerHandover, customer_id)
     if not row:
         raise HTTPException(status_code=404, detail="Customer not found")
+    if row.status == "ARCHIVED":
+        raise HTTPException(status_code=409, detail="Archived customer cannot be changed")
     if not row.payment_confirmed_at:
         raise HTTPException(status_code=409, detail="Payment must be confirmed before provisioning")
     if row.pharmacy_id:
@@ -334,6 +341,8 @@ def resend_activation(customer_id: uuid.UUID, operator: str = Depends(require_pl
     row = db.get(CustomerHandover, customer_id)
     if not row or not row.pharmacy_id:
         raise HTTPException(status_code=409, detail="Customer is not provisioned")
+    if row.status == "ARCHIVED":
+        raise HTTPException(status_code=409, detail="Archived customer cannot be changed")
     try:
         result = ProvisioningService(SessionLocal).reissue_activation(row.customer_reference, operator)
     except ProvisioningError:
@@ -346,3 +355,39 @@ def resend_activation(customer_id: uuid.UUID, operator: str = Depends(require_pl
         row.status = "ACTIVATION_EMAIL_FAILED"; row.activation_email_error = "Delivery failed"
     db.commit()
     return {"customer": _serialize(db, row)}
+
+
+@router.post("/api/internal/customers/{customer_id}/archive", dependencies=[Depends(require_internal_request)])
+def archive_customer(
+    customer_id: uuid.UUID,
+    operator: str = Depends(require_platform_operator),
+    db: Session = Depends(get_db),
+):
+    """Archive without deleting tenant, identity, history, or audit records."""
+    row = db.get(CustomerHandover, customer_id)
+    if not row:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    if row.status == "ARCHIVED":
+        return {"customer": _serialize(db, row), "idempotent": True}
+
+    previous_status = row.status
+    row.status = "ARCHIVED"
+    row.archived_at = datetime.utcnow()
+    row.archived_by = operator
+    if row.pharmacy_id:
+        pharmacy = db.get(Pharmacy, row.pharmacy_id)
+        if pharmacy:
+            pharmacy.is_active = False
+        users = db.query(User).filter(User.pharmacy_id == row.pharmacy_id).all()
+        for user in users:
+            user.is_active = False
+            user.auth_version += 1
+    add_audit_event(
+        db, pharmacy_id=str(row.pharmacy_id) if row.pharmacy_id else None,
+        user_id=None, user_name=operator, action_type="customer_archived",
+        description="Customer archived without destructive deletion",
+        target_entity="customer_handover", target_id=str(row.id),
+        old_value=previous_status, new_value="ARCHIVED",
+    )
+    db.commit()
+    return {"customer": _serialize(db, row), "idempotent": False}
