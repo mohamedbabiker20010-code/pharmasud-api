@@ -197,21 +197,47 @@ def require_internal_request(request: Request) -> None:
 
 def _serialize(db: Session, row: CustomerHandover) -> dict:
     active = False
+    pharmacy_active = False
     if row.pharmacy_id:
+        pharmacy = db.get(Pharmacy, row.pharmacy_id)
+        pharmacy_active = bool(pharmacy and pharmacy.is_active)
         owner_role = db.query(Role).filter(Role.name == "owner").one()
-        owner = db.query(User).filter(User.pharmacy_id == row.pharmacy_id, User.role_id == owner_role.id).one_or_none()
+        owner = db.get(User, row.owner_user_id) if row.owner_user_id else None
+        if owner is None:
+            owner = db.query(User).filter(User.pharmacy_id == row.pharmacy_id, User.role_id == owner_role.id).one_or_none()
         active = bool(owner and owner.is_active)
-        if active and row.status not in {"ACTIVE", "ARCHIVED"}:
+        if active and pharmacy_active and row.status not in {"ACTIVE", "ABANDONED", "ARCHIVED"}:
             row.status = "ACTIVE"
             db.flush()
     return {
         "id": str(row.id), "pharmacy_name": row.pharmacy_name, "owner_name": row.owner_name,
-        "owner_email": row.owner_email, "owner_phone": row.owner_phone or "", "city": row.city or "",
+        "owner_email": row.owner_email or "", "owner_phone": row.owner_phone or "", "city": row.city or "",
         "payment_confirmed": bool(row.payment_confirmed_at), "status": row.status,
+        "classification": row.classification, "origin": row.origin,
         "payment_confirmed_at": row.payment_confirmed_at.isoformat() if row.payment_confirmed_at else None,
-        "activation_active": active, "activation_email_sent_at": row.activation_email_sent_at.isoformat() if row.activation_email_sent_at else None,
+        "activation_active": active, "pharmacy_active": pharmacy_active,
+        "activation_email_sent_at": row.activation_email_sent_at.isoformat() if row.activation_email_sent_at else None,
         "archived_at": row.archived_at.isoformat() if row.archived_at else None,
         "created_at": row.created_at.isoformat() if row.created_at else None,
+    }
+
+
+def _commercial_summary(customers: list[dict]) -> dict:
+    commercial = [
+        row for row in customers
+        if row["classification"] == "COMMERCIAL" and row["status"] not in {"ABANDONED", "ARCHIVED"}
+    ]
+    return {
+        "total": len(commercial),
+        "payment_pending": sum(row["status"] == "PAYMENT_PENDING" for row in commercial),
+        "activation_pending": sum(
+            row["status"] in {"AWAITING_OWNER_ACTIVATION", "ACTIVATION_EMAIL_FAILED"}
+            for row in commercial
+        ),
+        "active": sum(
+            row["status"] == "ACTIVE" and row["pharmacy_active"] and row["activation_active"]
+            for row in commercial
+        ),
     }
 
 
@@ -226,7 +252,7 @@ def list_customers(operator: str = Depends(require_platform_operator), db: Sessi
     rows = db.query(CustomerHandover).order_by(CustomerHandover.created_at.desc()).all()
     result = [_serialize(db, row) for row in rows]
     db.commit()
-    return {"customers": result}
+    return {"customers": result, "summary": _commercial_summary(result)}
 
 
 @router.post("/api/internal/customers", dependencies=[Depends(require_internal_request)])
@@ -238,6 +264,8 @@ def create_customer(data: CustomerCreate, operator: str = Depends(require_platfo
         same = existing.pharmacy_name == data.pharmacy_name and existing.owner_name == data.owner_name
         if not same:
             raise HTTPException(status_code=409, detail="Owner email is already assigned to another customer")
+        if existing.status in {"ABANDONED", "ARCHIVED"}:
+            raise HTTPException(status_code=409, detail="Customer lifecycle does not allow this action")
         if data.payment_confirmed and not existing.payment_confirmed_at:
             existing.payment_confirmed_at = datetime.utcnow()
             existing.payment_confirmed_by = operator
@@ -252,6 +280,7 @@ def create_customer(data: CustomerCreate, operator: str = Depends(require_platfo
         id=uuid.uuid4(), customer_reference=reference,
         pharmacy_name=data.pharmacy_name.strip(), owner_name=data.owner_name.strip(),
         owner_email=data.owner_email.strip().lower(), owner_phone=data.owner_phone.strip(), city=data.city.strip(),
+        classification="COMMERCIAL", origin="HANDOVER",
         status="READY_TO_PROVISION" if data.payment_confirmed else "PAYMENT_PENDING",
         payment_confirmed_at=datetime.utcnow() if data.payment_confirmed else None,
         payment_confirmed_by=operator if data.payment_confirmed else None,
@@ -279,8 +308,8 @@ def confirm_payment(customer_id: uuid.UUID, operator: str = Depends(require_plat
     row = db.get(CustomerHandover, customer_id)
     if not row:
         raise HTTPException(status_code=404, detail="Customer not found")
-    if row.status == "ARCHIVED":
-        raise HTTPException(status_code=409, detail="Archived customer cannot be changed")
+    if row.status in {"ABANDONED", "ARCHIVED"} or row.classification == "DEMO":
+        raise HTTPException(status_code=409, detail="Customer lifecycle does not allow this action")
     if not row.payment_confirmed_at:
         row.payment_confirmed_at = datetime.utcnow(); row.payment_confirmed_by = operator
         row.status = "READY_TO_PROVISION"
@@ -303,8 +332,8 @@ def provision(customer_id: uuid.UUID, operator: str = Depends(require_platform_o
     row = db.get(CustomerHandover, customer_id)
     if not row:
         raise HTTPException(status_code=404, detail="Customer not found")
-    if row.status == "ARCHIVED":
-        raise HTTPException(status_code=409, detail="Archived customer cannot be changed")
+    if row.status in {"ABANDONED", "ARCHIVED"} or row.classification == "DEMO":
+        raise HTTPException(status_code=409, detail="Customer lifecycle does not allow this action")
     if not row.payment_confirmed_at:
         raise HTTPException(status_code=409, detail="Payment must be confirmed before provisioning")
     if row.pharmacy_id:
@@ -319,6 +348,9 @@ def provision(customer_id: uuid.UUID, operator: str = Depends(require_platform_o
         raise HTTPException(status_code=409, detail="Customer could not be provisioned")
     pharmacy = db.query(Pharmacy).filter(Pharmacy.customer_reference == row.customer_reference).one()
     row.pharmacy_id = pharmacy.id
+    owner_role = db.query(Role).filter(Role.name == "owner").one()
+    owner = db.query(User).filter(User.pharmacy_id == pharmacy.id, User.role_id == owner_role.id).one()
+    row.owner_user_id = owner.id
     activation_secret = result.activation_secret
     if not activation_secret:
         # Recover safely if provisioning committed but the handover row was not linked
@@ -341,8 +373,8 @@ def resend_activation(customer_id: uuid.UUID, operator: str = Depends(require_pl
     row = db.get(CustomerHandover, customer_id)
     if not row or not row.pharmacy_id:
         raise HTTPException(status_code=409, detail="Customer is not provisioned")
-    if row.status == "ARCHIVED":
-        raise HTTPException(status_code=409, detail="Archived customer cannot be changed")
+    if row.status in {"ABANDONED", "ARCHIVED"} or row.classification == "DEMO":
+        raise HTTPException(status_code=409, detail="Customer lifecycle does not allow this action")
     try:
         result = ProvisioningService(SessionLocal).reissue_activation(row.customer_reference, operator)
     except ProvisioningError:
@@ -369,6 +401,8 @@ def archive_customer(
         raise HTTPException(status_code=404, detail="Customer not found")
     if row.status == "ARCHIVED":
         return {"customer": _serialize(db, row), "idempotent": True}
+    if row.status == "ABANDONED":
+        raise HTTPException(status_code=409, detail="Abandoned handover cannot be archived")
 
     previous_status = row.status
     row.status = "ARCHIVED"

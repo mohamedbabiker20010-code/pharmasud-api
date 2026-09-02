@@ -26,8 +26,10 @@ def test_public_invoice_migration_follows_schema_adoption():
 
     handover = script.get_revision("20260901_handover_recovery")
     archive = script.get_revision("20260901_operator_archive")
-    assert script.get_current_head() == "20260901_operator_archive"
+    semantics = script.get_revision("20260902_customer_semantics")
+    assert script.get_current_head() == "20260902_customer_semantics"
     assert archive.down_revision == "20260901_handover_recovery"
+    assert semantics.down_revision == "20260901_operator_archive"
     assert handover.down_revision == "20260827_owner_email_password"
     assert activation_contract.down_revision == "20260818_p1a_provisioning"
     assert provisioning.down_revision == "20260816_public_invoice_token"

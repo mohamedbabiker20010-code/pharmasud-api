@@ -645,13 +645,18 @@ class CustomerHandover(Base):
     customer_reference = Column(String(100), unique=True, nullable=False)
     pharmacy_name = Column(String(100), nullable=False)
     owner_name = Column(String(100), nullable=False)
-    owner_email = Column(String(320), nullable=False)
+    # Required by the normal handover API; nullable only for legacy/demo
+    # representations whose existing identity has no stored email.
+    owner_email = Column(String(320), nullable=True)
     owner_phone = Column(String(20), nullable=True)
     city = Column(String(100), nullable=True)
     status = Column(String(40), nullable=False, default="PAYMENT_PENDING")
+    classification = Column(String(20), nullable=False, default="COMMERCIAL", server_default="COMMERCIAL")
+    origin = Column(String(20), nullable=False, default="HANDOVER", server_default="HANDOVER")
     payment_confirmed_at = Column(DateTime, nullable=True)
     payment_confirmed_by = Column(String(100), nullable=True)
     pharmacy_id = Column(UUID(as_uuid=True), ForeignKey("pharmacies.id"), nullable=True, unique=True)
+    owner_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True, unique=True)
     activation_email_sent_at = Column(DateTime, nullable=True)
     activation_email_error = Column(String(200), nullable=True)
     archived_at = Column(DateTime, nullable=True)
@@ -661,8 +666,16 @@ class CustomerHandover(Base):
 
     __table_args__ = (
         CheckConstraint(
-            "status IN ('PAYMENT_PENDING','READY_TO_PROVISION','AWAITING_OWNER_ACTIVATION','ACTIVATION_EMAIL_FAILED','ACTIVE','ARCHIVED')",
+            "status IN ('PAYMENT_PENDING','READY_TO_PROVISION','AWAITING_OWNER_ACTIVATION','ACTIVATION_EMAIL_FAILED','ACTIVE','ABANDONED','ARCHIVED')",
             name="ck_customer_handovers_status",
+        ),
+        CheckConstraint(
+            "classification IN ('COMMERCIAL','QA','DEMO')",
+            name="ck_customer_handovers_classification",
+        ),
+        CheckConstraint(
+            "origin IN ('HANDOVER','LEGACY_BACKFILL')",
+            name="ck_customer_handovers_origin",
         ),
         Index("uq_customer_handovers_owner_email_normalized", func.lower(owner_email), unique=True),
     )
