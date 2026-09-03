@@ -258,7 +258,8 @@ def list_customers(operator: str = Depends(require_platform_operator), db: Sessi
 @router.post("/api/internal/customers", dependencies=[Depends(require_internal_request)])
 def create_customer(data: CustomerCreate, operator: str = Depends(require_platform_operator), db: Session = Depends(get_db)):
     existing = db.query(CustomerHandover).filter(
-        func.lower(CustomerHandover.owner_email) == data.owner_email
+        func.lower(CustomerHandover.owner_email) == data.owner_email,
+        CustomerHandover.status != "ABANDONED",
     ).one_or_none()
     if existing:
         same = existing.pharmacy_name == data.pharmacy_name and existing.owner_name == data.owner_name
@@ -295,7 +296,8 @@ def create_customer(data: CustomerCreate, operator: str = Depends(require_platfo
     except IntegrityError:
         db.rollback()
         existing = db.query(CustomerHandover).filter(
-            func.lower(CustomerHandover.owner_email) == data.owner_email
+            func.lower(CustomerHandover.owner_email) == data.owner_email,
+            CustomerHandover.status != "ABANDONED",
         ).one_or_none()
         if existing and existing.pharmacy_name == data.pharmacy_name and existing.owner_name == data.owner_name:
             return {"customer": _serialize(db, existing), "idempotent": True}

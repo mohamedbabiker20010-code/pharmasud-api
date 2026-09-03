@@ -27,7 +27,9 @@ def test_public_invoice_migration_follows_schema_adoption():
     handover = script.get_revision("20260901_handover_recovery")
     archive = script.get_revision("20260901_operator_archive")
     semantics = script.get_revision("20260902_customer_semantics")
-    assert script.get_current_head() == "20260902_customer_semantics"
+    abandoned_email = script.get_revision("20260903_abandoned_owner_email")
+    assert script.get_current_head() == "20260903_abandoned_owner_email"
+    assert abandoned_email.down_revision == "20260902_customer_semantics"
     assert archive.down_revision == "20260901_handover_recovery"
     assert semantics.down_revision == "20260901_operator_archive"
     assert handover.down_revision == "20260827_owner_email_password"

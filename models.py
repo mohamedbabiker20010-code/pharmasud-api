@@ -677,7 +677,12 @@ class CustomerHandover(Base):
             "origin IN ('HANDOVER','LEGACY_BACKFILL')",
             name="ck_customer_handovers_origin",
         ),
-        Index("uq_customer_handovers_owner_email_normalized", func.lower(owner_email), unique=True),
+        Index(
+            "uq_customer_handovers_owner_email_normalized",
+            func.lower(owner_email),
+            unique=True,
+            postgresql_where=(owner_email.isnot(None) & (status != "ABANDONED")),
+        ),
     )
 
 

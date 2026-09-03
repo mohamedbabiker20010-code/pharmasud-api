@@ -268,7 +268,7 @@ def test_customer_classification_backfill_and_commercial_summary(prepared):
         abandoned = CustomerHandover(
             id=uuid.uuid4(), customer_reference="SEM-ABANDONED",
             pharmacy_name="Failed QA", owner_name="Failed QA Owner",
-            owner_email="failed.qa@example.test", status="READY_TO_PROVISION",
+            owner_email=legacy_owner.email, status="READY_TO_PROVISION",
             classification="COMMERCIAL", origin="HANDOVER",
         )
         db.add_all([qa_row, abandoned])
@@ -328,16 +328,50 @@ def test_customer_classification_backfill_and_commercial_summary(prepared):
             status="ARCHIVED", classification="COMMERCIAL", origin="HANDOVER",
             archived_at=datetime.utcnow(),
         )
-        db.add_all([pending, awaiting, archived]); db.flush()
+        reusable_abandoned = CustomerHandover(
+            id=uuid.uuid4(), customer_reference="SEM-REUSABLE-ABANDONED",
+            pharmacy_name="Reusable Abandoned", owner_name="Old Attempt",
+            owner_email="reusable.semantic@example.test", status="ABANDONED",
+            classification="QA", origin="HANDOVER",
+        )
+        db.add_all([pending, awaiting, archived, reusable_abandoned]); db.flush()
         rows = [commercial_legacy, demo_legacy, db.get(CustomerHandover, qa_row_id),
                 db.get(CustomerHandover, abandoned_id), pending, awaiting, archived]
         summary = _commercial_summary([_serialize(db, row) for row in rows])
         assert summary == {"total": 3, "payment_pending": 1, "activation_pending": 1, "active": 1}
+        db.commit()
 
     from main import app
     client = TestClient(app)
     auth = (os.environ["PLATFORM_OPERATOR_USERNAME"], os.environ["PLATFORM_OPERATOR_PASSWORD"])
     headers = {"X-PharmaSUD-Internal": "1"}
+    reuse = client.post("/api/internal/customers", auth=auth, headers=headers, json={
+        "pharmacy_name": "Legitimate Reuse", "owner_name": "New Owner",
+        "owner_email": "REUSABLE.SEMANTIC@example.test", "owner_phone": "", "city": "",
+        "payment_confirmed": False,
+    })
+    assert reuse.status_code == 200
+    assert reuse.json()["customer"]["status"] == "PAYMENT_PENDING"
+    live_duplicate = client.post("/api/internal/customers", auth=auth, headers=headers, json={
+        "pharmacy_name": "Duplicate Live", "owner_name": "Duplicate Owner",
+        "owner_email": "legacy.semantic@example.test", "owner_phone": "", "city": "",
+        "payment_confirmed": False,
+    })
+    assert live_duplicate.status_code == 409
+    archived_duplicate = client.post("/api/internal/customers", auth=auth, headers=headers, json={
+        "pharmacy_name": "Archived Reuse", "owner_name": "Archived Reuse Owner",
+        "owner_email": "archived.semantic@example.test", "owner_phone": "", "city": "",
+        "payment_confirmed": False,
+    })
+    assert archived_duplicate.status_code == 409
+
+    from services.provisioning import ProvisioningError, ProvisioningInput, ProvisioningService
+    with pytest.raises(ProvisioningError):
+        ProvisioningService(SessionLocal).provision(ProvisioningInput(
+            customer_reference="SEM-SECOND-TENANT", pharmacy_name="Second Tenant",
+            owner_name="Existing Owner", owner_email="legacy.semantic@example.test",
+            operator="test-operator", provisioning_request_id=uuid.uuid4(),
+        ))
     for action in ("confirm-payment", "provision", "resend-activation", "archive"):
         response = client.post(f"/api/internal/customers/{abandoned_id}/{action}", auth=auth, headers=headers)
         assert response.status_code == 409
@@ -382,6 +416,15 @@ def test_real_browser_operator_and_recovery_ui(prepared, monkeypatch):
                 "الكل", "العملاء", "بانتظار الدفع", "بانتظار التفعيل", "النشطون",
                 "QA / اختبار", "Demo / تجريبي", "غير مكتمل / ملغى", "مؤرشف",
             ]
+            for name in ("Legacy Commercial", "Marketing Semantics Demo", "Active QA", "Failed QA"):
+                page.get_by_role("heading", name=name).wait_for()
+            assert "تجاري" in page.locator("article.customer", has_text="Legacy Commercial").inner_text()
+            assert "QA / اختبار" in page.locator("article.customer", has_text="Active QA").inner_text()
+            assert "Demo / تجريبي" in page.locator("article.customer", has_text="Marketing Semantics Demo").inner_text()
+            failed_card = page.locator("article.customer", has_text="Failed QA")
+            assert "محاولة ملغاة" in failed_card.inner_text()
+            assert "جاهز لإنشاء الصيدلية" not in failed_card.inner_text()
+            assert failed_card.locator("[data-action]").count() == 0
             page.locator("#open-create").click()
             assert page.locator("#create-dialog").is_visible()
             page.locator("#pharmacy").fill("Browser Handover")

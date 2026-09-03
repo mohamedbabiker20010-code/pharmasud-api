@@ -82,6 +82,12 @@ def apply_semantics(db, *, commercial_pharmacy_id, demo_pharmacy_id,
     if abandoned.status not in {"READY_TO_PROVISION", "ABANDONED"}:
         raise RuntimeError("abandoned handover is not in the expected lifecycle state")
 
+    # Preserve the failed attempt while releasing its identity claim before
+    # inserting a legitimate legacy representation using the same email.
+    abandoned.classification = "QA"
+    abandoned.status = "ABANDONED"
+    db.flush()
+
     commercial_owner = _owner(db, commercial, owner_role)
     demo_owner = _owner(db, demo, owner_role)
     qa_owner = _owner(db, qa, owner_role)
@@ -92,8 +98,6 @@ def apply_semantics(db, *, commercial_pharmacy_id, demo_pharmacy_id,
         raise RuntimeError("QA handover is linked to a different Owner")
     qa_row.owner_user_id = qa_owner.id
     qa_row.classification = "QA"
-    abandoned.classification = "QA"
-    abandoned.status = "ABANDONED"
 
     targets = (commercial_row, demo_row, qa_row, abandoned)
     changed = any(db.is_modified(row, include_collections=False) for row in targets) or commercial_created or demo_created
