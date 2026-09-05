@@ -10,8 +10,10 @@
       display: flex;
       align-items: flex-end;
       justify-content: space-between;
+      gap: 16px;
       margin-bottom: 24px;
     }
+    .page-header > div { min-width: 0; }
     .page-header h1 {
       margin: 0 0 6px;
       font: 700 26px/1.1 'IBM Plex Sans Arabic', sans-serif;
@@ -25,6 +27,7 @@
     .page-header .actions {
       display: flex;
       gap: 10px;
+      flex-shrink: 0;
     }
     .page-header .btn {
       display: flex;
@@ -110,7 +113,8 @@
     /* ─── Category Chips ─── */
     .chips-bar {
       display: flex; gap: 6px; margin-bottom: 20px; overflow-x: auto;
-      padding-bottom: 2px;
+      width: 100%; max-width: 100%; min-width: 0; padding-bottom: 4px;
+      overscroll-behavior-inline: contain; -webkit-overflow-scrolling: touch;
     }
     .chip {
       display: inline-flex; align-items: center; gap: 5px;
@@ -128,13 +132,13 @@
 
     /* ─── Medicines Grid ─── */
     .med-grid {
-      display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+      display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px;
     }
 
     /* ─── Medicine Card Desktop ─── */
     .med-card {
       background: #fff; border: 1px solid #EEF2F6; border-radius: 16px;
-      overflow: hidden; transition: all 0.25s ease;
+      min-width: 0; max-width: 100%; overflow: hidden; transition: all 0.25s ease;
     }
     .med-card:hover {
       border-color: #CBD5E1; box-shadow: 0 8px 20px -6px rgba(15, 23, 42, 0.08);
@@ -276,9 +280,11 @@
       /* Mobile text in horizontal layout */
       .card-content .med-name {
         font-size: 13px; margin-bottom: 2px;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
       }
       .card-content .med-category {
         font-size: 11px; margin-bottom: 4px;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
       }
       .card-content .med-stock {
         font-size: 11px; margin-bottom: 0;
@@ -341,6 +347,10 @@
     }
     @media (max-width: 640px) {
       .med-grid { grid-template-columns: 1fr; gap: 10px; }
+      .page-header { align-items: stretch; flex-direction: column; }
+      .page-header .actions, .page-header .btn { width: 100%; }
+      .search-bar .search-box { width: 100%; max-width: 100% !important; min-width: 0; }
+      .search-bar input { width: 100%; min-width: 0; }
     }
 
     /* ─── Category Chips Desktop Readability ─── */

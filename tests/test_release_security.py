@@ -276,7 +276,8 @@ def test_post_acceptance_ui_contracts_have_no_runtime_dashboard_fixtures():
     assert "/api/settings/employees" not in settings
     assert "sidebar-collapsed" in shared
     assert "body.mobile-drawer-open { overflow: hidden; }" in shared
-    assert "html, body { overflow-x: hidden; }" in shared
+    assert "html, body { max-width: 100%; }" in shared
+    assert 'href="/static/css/responsive.css?v1.0.0"' in shared
     assert ":class=\"{ 'visible': sidebarOpen }\"" in shared
     assert "sidebar-close-btn" in sidebar and "sidebar-collapse-btn" in sidebar
 

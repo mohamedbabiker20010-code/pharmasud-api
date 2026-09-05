@@ -204,7 +204,7 @@
 
     /* ─── Mobile ─── */
     @media (max-width: 1024px) {
-      html, body { overflow-x: hidden; }
+      html, body { max-width: 100%; }
       body.mobile-drawer-open { overflow: hidden; }
       .sidebar { transform: translateX(100%); }
       .sidebar.mobile-open { transform: translateX(0); }
@@ -256,6 +256,7 @@
 
   <!-- ===== PAGE-SPECIFIC CSS (injected by child template) ===== -->
   {% block extra_css %}{% endblock %}
+  <link rel="stylesheet" href="/static/css/responsive.css?v1.0.0">
 </head>
 
 <body x-data="pageApp()"

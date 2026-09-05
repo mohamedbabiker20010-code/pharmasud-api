@@ -1,0 +1,278 @@
+/* PharmaSUD responsive safety layer — layout only, no visual redesign. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+}
+
+.app-layout,
+.main-content,
+.page-content,
+.main-content > *,
+.page-content > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.main-content {
+  width: calc(100% - var(--sidebar-width, 248px));
+}
+
+body.sidebar-collapsed .main-content {
+  width: calc(100% - 76px);
+}
+
+.page-header {
+  gap: 16px;
+}
+
+.page-header > *,
+.page-header .actions,
+.card,
+.card-header,
+.metric-card,
+.toolbar,
+.search-bar,
+.search-box,
+.table-container,
+.form-grid,
+.modal,
+dialog {
+  min-width: 0;
+  max-width: 100%;
+}
+
+img,
+video,
+canvas {
+  max-width: 100%;
+}
+
+input,
+select,
+textarea,
+button {
+  max-width: 100%;
+}
+
+input,
+select,
+textarea {
+  min-width: 0;
+}
+
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.chips-bar,
+.filter-chips,
+.filters-row {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.modal-overlay {
+  padding: 12px;
+}
+
+.modal,
+dialog {
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.notif-dropdown {
+  max-width: calc(100vw - 24px);
+}
+
+.toast {
+  max-width: 100%;
+}
+
+/* In-flow status messages must not translate beyond the viewport while entering. */
+.step-flow > .toast {
+  animation: none;
+}
+
+@media (max-width: 1024px) {
+  .main-content,
+  body.sidebar-collapsed .main-content {
+    width: 100%;
+    margin-inline: 0;
+    transition: none;
+  }
+
+  .topbar,
+  body.sidebar-collapsed .topbar {
+    inset-inline: 0;
+    transition: none;
+  }
+
+  .sidebar {
+    width: min(248px, calc(100vw - 32px));
+    max-width: 100%;
+  }
+
+  .sidebar:not(.mobile-open) {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .sidebar.mobile-open {
+    visibility: visible;
+    pointer-events: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .pos-header {
+    padding-inline: 10px;
+    gap: 8px;
+  }
+
+  .pos-header .logo-section,
+  .pos-header .user-section {
+    min-width: 0;
+  }
+
+  .pos-header .user-section {
+    gap: 6px;
+  }
+
+  .pos-header .user-section .name,
+  .pos-header .user-section .pharmacy-name,
+  .pos-header .user-section .user-avatar {
+    display: none;
+  }
+
+  .pos-header .icon-btn {
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+  }
+
+  .pos-header .lang-toggle button {
+    padding-inline: 8px;
+  }
+
+  .main-content {
+    padding: calc(var(--topbar-height, 70px) + 16px) 12px 28px;
+  }
+
+  .topbar {
+    padding-inline: 12px;
+    gap: 8px;
+  }
+
+  .topbar .search-box {
+    display: none;
+  }
+
+  .topbar .actions {
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .topbar .icon-btn,
+  .topbar .mobile-menu-btn {
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+  }
+
+  .topbar .lang-toggle span {
+    padding-inline: 9px;
+  }
+
+  .notif-dropdown,
+  .topbar + .notif-dropdown {
+    inset-inline: 12px !important;
+    left: 12px !important;
+    width: auto !important;
+  }
+
+  .page-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .page-header .actions {
+    display: flex;
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .page-header .actions > .btn,
+  .page-header .actions > a,
+  .page-header .actions > button {
+    width: 100%;
+  }
+
+  .page-header h1,
+  .page-title,
+  .page-header .subtitle,
+  .page-subtitle {
+    overflow-wrap: anywhere;
+  }
+
+  .search-bar .search-box,
+  .search-filter-bar .search-box {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .search-box input,
+  .search-bar input,
+  .search-filter-bar input {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .card,
+  .metric-card {
+    padding-inline: 16px;
+  }
+
+  .card-header {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .form-actions,
+  .modal-actions {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .form-actions > *,
+  .modal-actions > * {
+    flex: 1 1 100%;
+  }
+
+  .toast-container {
+    inset-inline: 12px;
+    left: 12px;
+  }
+
+  .toast-container > .toast {
+    width: 100%;
+  }
+}
